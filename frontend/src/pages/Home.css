@@ -1,0 +1,17 @@
+ion-searchbar {
+  --border-radius: var(--ion-border-radius);
+  --box-shadow: var(--ion-box-shadow);
+  margin: 1rem;
+}
+
+ion-select {
+  --border-radius: var(--ion-border-radius);
+  --box-shadow: var(--ion-box-shadow);
+  margin: 1rem;
+}
+
+ion-item {
+  --border-radius: var(--ion-border-radius);
+  --box-shadow: var(--ion-box-shadow);
+  margin-bottom: 1rem;
+}

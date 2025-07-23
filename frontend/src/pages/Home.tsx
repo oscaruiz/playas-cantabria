@@ -13,7 +13,9 @@ import {
   IonSearchbar,
   IonSelect,
   IonSelectOption,
+  IonIcon,
 } from '@ionic/react';
+import { sunnyOutline } from 'ionicons/icons';
 import { Playa, getPlayas } from '../services/api';
 import { useHistory } from 'react-router-dom';
 
@@ -49,7 +51,10 @@ const Home: React.FC = () => {
     <IonPage>
       <IonHeader>
         <IonToolbar>
-          <IonTitle>Playas de Cantabria</IonTitle>
+          <IonTitle>
+            <IonIcon icon={sunnyOutline} style={{ marginRight: '10px' }} />
+            Playas de Cantabria
+          </IonTitle>
         </IonToolbar>
       </IonHeader>
       <IonContent>
