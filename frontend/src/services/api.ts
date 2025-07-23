@@ -5,8 +5,10 @@ export interface Playa {
   idCruzRoja: number;
 }
 
+const BASE_URL = process.env.REACT_APP_BASE_API_URL;
+
 export async function getPlayas(): Promise<Playa[]> {
-  const res = await fetch('http://localhost:4000/api/playas');
+  const res = await fetch(`${BASE_URL}/api/playas`);
   if (!res.ok) throw new Error('Error al obtener playas');
   return res.json();
 }
@@ -39,7 +41,7 @@ export interface PlayaDetalle {
 }
 
 export async function getDetallePlaya(codigo: string): Promise<PlayaDetalle> {
-  const res = await fetch(`http://localhost:4000/api/playas/${codigo}`);
+  const res = await fetch(`${BASE_URL}/api/playas/${codigo}`);
   if (!res.ok) throw new Error('No se pudo cargar el detalle de la playa');
   return res.json();
 }

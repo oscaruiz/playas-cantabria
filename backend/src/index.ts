@@ -27,5 +27,6 @@ app.use((_req, res) => {
 
 // Inicio de servidor
 app.listen(PORT, () => {
-  console.log(`🚀 Servidor activo en http://localhost:${PORT}`);
+  const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
+  console.log(`🚀 Servidor activo en ${BASE_URL}`);
 });
