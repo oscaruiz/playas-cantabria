@@ -1,4 +1,3 @@
-// Tipos base
 export interface Playa {
   nombre: string;
   municipio: string;
@@ -12,7 +11,6 @@ export async function getPlayas(): Promise<Playa[]> {
   return res.json();
 }
 
-// Tipos para detalle
 export interface PrediccionDia {
   estadoCielo: { descripcion1: string };
   viento: { descripcion1: string };
@@ -26,7 +24,9 @@ export interface PrediccionDia {
 
 export interface PlayaDetalle {
   nombre: string;
+  municipio: string;
   codigo: string;
+  idCruzRoja: number;
   aemet: {
     nombre: string;
     prediccion: {

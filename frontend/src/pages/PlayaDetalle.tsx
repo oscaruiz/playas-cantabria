@@ -15,11 +15,11 @@ import {
   IonCardContent,
 } from '@ionic/react';
 import { useParams } from 'react-router-dom';
-import { getDetallePlaya, PlayaDetalle as PlayaDetalleData, PrediccionDia } from '../services/api'; // 👈 Renombramos la interfaz
+import { getDetallePlaya, PlayaDetalle as PlayaDetalleData, PrediccionDia } from '../services/api';
 
-const PlayaDetallePage: React.FC = () => { // 👈 Renombramos el componente
+const PlayaDetallePage: React.FC = () => {
   const { codigo } = useParams<{ codigo: string }>();
-  const [datos, setDatos] = useState<PlayaDetalleData | null>(null); // 👈 Usamos alias aquí también
+  const [datos, setDatos] = useState<PlayaDetalleData | null>(null);
   const [hoy, setHoy] = useState<PrediccionDia | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -42,7 +42,7 @@ const PlayaDetallePage: React.FC = () => { // 👈 Renombramos el componente
           <IonButtons slot="start">
             <IonBackButton defaultHref="/" />
           </IonButtons>
-          <IonTitle>Detalle de Playa</IonTitle>
+          <IonTitle>{datos?.nombre || 'Detalle de Playa'}</IonTitle>
         </IonToolbar>
       </IonHeader>
       <IonContent className="ion-padding">
@@ -75,16 +75,17 @@ const PlayaDetallePage: React.FC = () => { // 👈 Renombramos el componente
           </IonCard>
         )}
 
-        {datos?.cruzRoja?.bandera && (
+        {datos?.idCruzRoja !== 0 && datos?.cruzRoja?.bandera !== 'Desconocida' && (
           <IonCard>
             <IonCardHeader>
               <IonCardTitle>Bandera Cruz Roja</IonCardTitle>
             </IonCardHeader>
             <IonCardContent>
-              <p><strong>Bandera actual:</strong> {datos.cruzRoja.bandera}</p>
+              <p><strong>Bandera actual:</strong> {datos?.cruzRoja?.bandera}</p>
             </IonCardContent>
           </IonCard>
         )}
+
       </IonContent>
     </IonPage>
   );

@@ -11,6 +11,8 @@ import {
   IonSpinner,
   IonText,
   IonSearchbar,
+  IonSelect,
+  IonSelectOption,
 } from '@ionic/react';
 import { Playa, getPlayas } from '../services/api';
 import { useHistory } from 'react-router-dom';
@@ -18,6 +20,7 @@ import { useHistory } from 'react-router-dom';
 const Home: React.FC = () => {
   const [playas, setPlayas] = useState<Playa[] | null>(null);
   const [filtro, setFiltro] = useState('');
+  const [orden, setOrden] = useState<'az' | 'za'>('az');
   const [error, setError] = useState<string | null>(null);
   const history = useHistory();
 
@@ -29,9 +32,17 @@ const Home: React.FC = () => {
 
   const filtrarPlayas = () => {
     if (!playas) return [];
-    return playas.filter((p) =>
-      p.nombre.toLowerCase().includes(filtro.toLowerCase())
+
+    const f = filtro.toLowerCase();
+
+    const filtradas = playas.filter((p) =>
+      p.nombre.toLowerCase().includes(f) || p.municipio.toLowerCase().includes(f)
     );
+
+    return filtradas.sort((a, b) => {
+      const comp = a.nombre.localeCompare(b.nombre);
+      return orden === 'az' ? comp : -comp;
+    });
   };
 
   return (
@@ -45,8 +56,20 @@ const Home: React.FC = () => {
         <IonSearchbar
           value={filtro}
           onIonInput={(e) => setFiltro(e.detail.value!)}
-          placeholder="Buscar playa..."
+          placeholder="Buscar por nombre o municipio..."
         />
+
+        <div style={{ padding: '0 1rem 1rem' }}>
+          <IonSelect
+            value={orden}
+            placeholder="Ordenar"
+            onIonChange={(e) => setOrden(e.detail.value)}
+            interface="popover"
+          >
+            <IonSelectOption value="az">A – Z</IonSelectOption>
+            <IonSelectOption value="za">Z – A</IonSelectOption>
+          </IonSelect>
+        </div>
 
         {error && (
           <IonText color="danger">
