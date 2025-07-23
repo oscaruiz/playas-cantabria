@@ -1,0 +1,7 @@
+{
+  "name": "playas-cantabria",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "react"
+}

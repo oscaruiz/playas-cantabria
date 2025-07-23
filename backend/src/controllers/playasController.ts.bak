@@ -1,0 +1,17 @@
+import { Request, Response } from 'express';
+import { obtenerPrediccionPorCodigo } from '../services/aemetService';
+import playasCantabria from '../data/playasCantabria.json';
+
+export function listarPlayas(req: Request, res: Response) {
+  res.json(playasCantabria);
+}
+
+export async function prediccionPlaya(req: Request, res: Response) {
+  const { codigo } = req.params;
+  try {
+    const datos = await obtenerPrediccionPorCodigo(codigo);
+    res.json(datos);
+  } catch (error) {
+    res.status(500).json({ error: 'Error al obtener la predicción de la playa' });
+  }
+}
