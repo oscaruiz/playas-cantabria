@@ -16,6 +16,7 @@ import {
 } from '@ionic/react';
 import { Playa, getPlayas } from '../services/api';
 import { useHistory } from 'react-router-dom';
+import './Home.css';
 
 const Home: React.FC = () => {
   const [playas, setPlayas] = useState<Playa[] | null>(null);
@@ -53,13 +54,13 @@ const Home: React.FC = () => {
         </IonToolbar>
       </IonHeader>
       <IonContent>
-        <IonSearchbar
-          value={filtro}
-          onIonInput={(e) => setFiltro(e.detail.value!)}
-          placeholder="Buscar por nombre o municipio..."
-        />
+        <div className="search-sort-container">
+          <IonSearchbar
+            value={filtro}
+            onIonInput={(e) => setFiltro(e.detail.value!)}
+            placeholder="Buscar por nombre o municipio..."
+          />
 
-        <div style={{ padding: '0 1rem 1rem' }}>
           <IonSelect
             value={orden}
             placeholder="Ordenar"
@@ -73,12 +74,12 @@ const Home: React.FC = () => {
 
         {error && (
           <IonText color="danger">
-            <p style={{ padding: '1rem' }}>{error}</p>
+            <p className="error-message">{error}</p>
           </IonText>
         )}
 
         {!playas && !error && (
-          <div style={{ textAlign: 'center', paddingTop: '2rem' }}>
+          <div className="spinner-container">
             <IonSpinner name="crescent" />
           </div>
         )}
@@ -90,6 +91,7 @@ const Home: React.FC = () => {
                 button
                 key={playa.codigo}
                 onClick={() => history.push(`/playas/${playa.codigo}`)}
+                lines="none"
               >
                 <IonLabel>
                   <h2>{playa.nombre}</h2>
@@ -99,11 +101,7 @@ const Home: React.FC = () => {
                 {playa.idCruzRoja !== 0 && (
                   <div
                     slot="end"
-                    style={{
-                      color: 'red',
-                      fontSize: '20px',
-                      fontWeight: 'bold',
-                    }}
+                    className="cruz-roja-icon"
                     title="Cruz Roja"
                   >
                     ✚
