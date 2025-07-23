@@ -35,6 +35,9 @@ export interface PlayaDetalle {
   };
   cruzRoja?: {
     bandera?: string;
+    coberturaDesde?: string;
+    coberturaHasta?: string;
+    horario?: string;
   };
 }
 

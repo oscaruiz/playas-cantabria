@@ -16,7 +16,7 @@ import {
 } from '@ionic/react';
 import { Playa, getPlayas } from '../services/api';
 import { useHistory } from 'react-router-dom';
-import './Home.css';
+import './Home.css';  // Asegúrate de importar el CSS
 
 const Home: React.FC = () => {
   const [playas, setPlayas] = useState<Playa[] | null>(null);

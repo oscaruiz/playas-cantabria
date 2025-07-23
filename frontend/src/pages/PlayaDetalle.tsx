@@ -18,6 +18,22 @@ import {
 import { useParams } from 'react-router-dom';
 import { getDetallePlaya, PlayaDetalle as PlayaDetalleData, PrediccionDia } from '../services/api';
 
+// Función para limpiar caracteres mal codificados (ejemplo para 'débil')
+function limpiarTexto(texto: string): string {
+  if (!texto) return texto;
+  return texto.replace(/\uFFFD/g, 'é');
+}
+
+// Función para mostrar emoji según el color de la bandera
+function emojiBandera(bandera?: string): string {
+  if (!bandera) return '';
+  const b = bandera.toLowerCase();
+  if (b.includes('roja')) return '🟥';
+  if (b.includes('amarilla')) return '🟨';
+  if (b.includes('verde')) return '🟩';
+  return '';
+}
+
 const PlayaDetallePage: React.FC = () => {
   const { codigo } = useParams<{ codigo: string }>();
   const [datos, setDatos] = useState<PlayaDetalleData | null>(null);
@@ -81,31 +97,18 @@ const PlayaDetallePage: React.FC = () => {
               <IonCardTitle>Hoy ({formatearFecha(hoy.fecha)})</IonCardTitle>
             </IonCardHeader>
             <IonCardContent>
-              <p><strong>Cielo:</strong> {hoy.estadoCielo.descripcion1}</p>
-              <p><strong>Viento:</strong> {hoy.viento.descripcion1}</p>
-              <p><strong>Oleaje:</strong> {hoy.oleaje.descripcion1}</p>
-              <p><strong>Temperatura agua:</strong> {hoy.tagua.valor1} ºC</p>
-              <p><strong>Temperatura máxima:</strong> {hoy.tmaxima.valor1} ºC</p>
-              <p><strong>Sensación térmica:</strong> {hoy.stermica.descripcion1}</p>
-              <p><strong>Índice UV:</strong> {hoy.uvMax.valor1}</p>
+              <p><strong>🌤️ Cielo:</strong> {hoy.estadoCielo.descripcion1}</p>
+              <p><strong>🌬️ Viento:</strong> {hoy.viento.descripcion1}</p>
+              <p><strong>🌊 Oleaje:</strong> {limpiarTexto(hoy.oleaje.descripcion1)}</p>
+              <p><strong>💧 Temperatura agua:</strong> {hoy.tagua.valor1} ºC</p>
+              <p><strong>🌡️ Temperatura máxima:</strong> {hoy.tmaxima.valor1} ºC</p>
+              <p><strong>🔥 Sensación térmica:</strong> {hoy.stermica.descripcion1}</p>
+              <p><strong>☀️ Índice UV:</strong> {hoy.uvMax.valor1}</p>
             </IonCardContent>
           </IonCard>
         )}
 
-
-
-        {datos?.idCruzRoja !== 0 && datos?.cruzRoja?.bandera && datos.cruzRoja.bandera !== 'Desconocida' && (
-          <IonCard>
-            <IonCardHeader>
-              <IonCardTitle>Bandera Cruz Roja</IonCardTitle>
-            </IonCardHeader>
-            <IonCardContent>
-              <p><strong>Bandera actual:</strong> {datos.cruzRoja.bandera}</p>
-            </IonCardContent>
-          </IonCard>
-        )}
-
-                {manana && (
+        {manana && (
           <IonCard>
             <IonCardHeader>
               <IonCardTitle>
@@ -122,15 +125,31 @@ const PlayaDetallePage: React.FC = () => {
             </IonCardHeader>
             {mananaExpanded && (
               <IonCardContent>
-                <p><strong>Cielo:</strong> {manana.estadoCielo.descripcion1}</p>
-                <p><strong>Viento:</strong> {manana.viento.descripcion1}</p>
-                <p><strong>Oleaje:</strong> {manana.oleaje.descripcion1}</p>
-                <p><strong>Temperatura agua:</strong> {manana.tagua.valor1} ºC</p>
-                <p><strong>Temperatura máxima:</strong> {manana.tmaxima.valor1} ºC</p>
-                <p><strong>Sensación térmica:</strong> {manana.stermica.descripcion1}</p>
-                <p><strong>Índice UV:</strong> {manana.uvMax.valor1}</p>
+                <p><strong>🌤️ Cielo:</strong> {manana.estadoCielo.descripcion1}</p>
+                <p><strong>🌬️ Viento:</strong> {manana.viento.descripcion1}</p>
+                <p><strong>🌊 Oleaje:</strong> {limpiarTexto(manana.oleaje.descripcion1)}</p>
+                <p><strong>💧 Temperatura agua:</strong> {manana.tagua.valor1} ºC</p>
+                <p><strong>🌡️ Temperatura máxima:</strong> {manana.tmaxima.valor1} ºC</p>
+                <p><strong>🔥 Sensación térmica:</strong> {manana.stermica.descripcion1}</p>
+                <p><strong>☀️ Índice UV:</strong> {manana.uvMax.valor1}</p>
               </IonCardContent>
             )}
+          </IonCard>
+        )}
+
+        {datos?.idCruzRoja !== 0 && datos?.cruzRoja?.bandera && datos.cruzRoja.bandera !== 'Desconocida' && (
+          <IonCard>
+            <IonCardHeader>
+              <IonCardTitle>Datos Cruz Roja</IonCardTitle>
+            </IonCardHeader>
+            <IonCardContent>
+              <p>
+                🚩 <strong>Bandera actual:</strong> {emojiBandera(datos.cruzRoja?.bandera)} {datos.cruzRoja.bandera}
+              </p>
+              <p>📅 <strong>Cobertura desde:</strong> {datos.cruzRoja.coberturaDesde || 'N/A'}</p>
+              <p>📅 <strong>Cobertura hasta:</strong> {datos.cruzRoja.coberturaHasta || 'N/A'}</p>
+              <p>⏰ <strong>Horario:</strong> {datos.cruzRoja.horario || 'N/A'}</p>
+            </IonCardContent>
           </IonCard>
         )}
       </IonContent>

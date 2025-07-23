@@ -24,8 +24,18 @@ export async function obtenerEstadoCruzRoja(id: number): Promise<any> {
     // Buscamos la imagen de la bandera dentro del ul#listaFicha
     const banderaImgAlt = $('#listaFicha img[alt]').attr('alt')?.trim();
 
+    // Ejemplo selector para cobertura desde y hasta (ajustar según estructura real)
+    const coberturaDesde = $('li:contains("Cobertura desde")').next().text().trim() || 'Desconocido';
+    const coberturaHasta = $('li:contains("Hasta")').next().text().trim() || 'Desconocido';
+
+    // Selector para horario
+    const horario = $('li:contains("Horario")').next().text().trim() || 'Desconocido';
+
     return {
-      bandera: banderaImgAlt || 'Desconocida'
+      bandera: banderaImgAlt || 'Desconocida',
+      coberturaDesde,
+      coberturaHasta,
+      horario,
     };
   } catch (error: any) {
     console.error(`❌ Error en Cruz Roja (id ${id}):`, error.message);
