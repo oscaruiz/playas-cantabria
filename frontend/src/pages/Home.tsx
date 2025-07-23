@@ -47,16 +47,19 @@ const Home: React.FC = () => {
           onIonInput={(e) => setFiltro(e.detail.value!)}
           placeholder="Buscar playa..."
         />
+
         {error && (
           <IonText color="danger">
             <p style={{ padding: '1rem' }}>{error}</p>
           </IonText>
         )}
+
         {!playas && !error && (
           <div style={{ textAlign: 'center', paddingTop: '2rem' }}>
             <IonSpinner name="crescent" />
           </div>
         )}
+
         {playas && (
           <IonList>
             {filtrarPlayas().map((playa) => (
@@ -67,9 +70,22 @@ const Home: React.FC = () => {
               >
                 <IonLabel>
                   <h2>{playa.nombre}</h2>
-                  <p>Código: {playa.codigo}</p>
-                  <p>ID Cruz Roja: {playa.idCruzRoja}</p>
+                  <p>Municipio: {playa.municipio}</p>
                 </IonLabel>
+
+                {playa.idCruzRoja !== 0 && (
+                  <div
+                    slot="end"
+                    style={{
+                      color: 'red',
+                      fontSize: '20px',
+                      fontWeight: 'bold',
+                    }}
+                    title="Cruz Roja"
+                  >
+                    ✚
+                  </div>
+                )}
               </IonItem>
             ))}
           </IonList>

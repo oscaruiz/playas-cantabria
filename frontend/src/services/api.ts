@@ -1,6 +1,7 @@
 // Tipos base
 export interface Playa {
   nombre: string;
+  municipio: string;
   codigo: string;
   idCruzRoja: number;
 }
