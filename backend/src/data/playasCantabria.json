@@ -3,5 +3,100 @@
     "nombre": "La Concha",
     "codigo": "3908503",
     "idCruzRoja": 373
+  },
+  {
+    "nombre": "Luaña-Cobreces",
+    "codigo": "3900101",
+    "idCruzRoja": 482
+  },
+  {
+    "nombre": "La Arena",
+    "codigo": "3900602",
+    "idCruzRoja": 0
+  },
+  {
+    "nombre": "Cuberris - Bareyo",
+    "codigo": "3901102",
+    "idCruzRoja": 1014
+  },
+  {
+    "nombre": "Oriñon",
+    "codigo": "3902002",
+    "idCruzRoja": 0
+  },
+  {
+    "nombre": "Ostende",
+    "codigo": "3902004",
+    "idCruzRoja": 0
+  },
+  {
+    "nombre": "Comillas",
+    "codigo": "3902401",
+    "idCruzRoja": 37
+  },
+  {
+    "nombre": "La Salve - Laredo",
+    "codigo": "3903502",
+    "idCruzRoja": 328
+  },
+  {
+    "nombre": "Cuchia-Marzan",
+    "codigo": "3904401",
+    "idCruzRoja": 0
+  },
+  {
+    "nombre": "Mogro-Usil",
+    "codigo": "3904405",
+    "idCruzRoja": 373
+  },
+  {
+    "nombre": "Ris - Noja",
+    "codigo": "3904701",
+    "idCruzRoja": 1233
+  },
+  {
+    "nombre": "Valdearenas - Piélagos",
+    "codigo": "3905201",
+    "idCruzRoja": 30
+  },
+  {
+    "nombre": "Somo-Loredo",
+    "codigo": "3906102",
+    "idCruzRoja": 369
+  },
+  {
+    "nombre": "San Juan de la Canal",
+    "codigo": "3907302",
+    "idCruzRoja": 35
+  },
+  {
+    "nombre": "Sardinero",
+    "codigo": "3907506",
+    "idCruzRoja": 278
+  },
+  {
+    "nombre": "La Magdalena",
+    "codigo": "3907511",
+    "idCruzRoja": 283
+  },
+  {
+    "nombre": "San Martín",
+    "codigo": "3907902",
+    "idCruzRoja": 1033
+  },
+  {
+    "nombre": "El Sable de Merón - San Vicente de la Barquera",
+    "codigo": "3908004",
+    "idCruzRoja": 1127
+  },
+  {
+    "nombre": "Oyambre",
+    "codigo": "3909101",
+    "idCruzRoja": 1120
+  },
+  {
+    "nombre": "Amio",
+    "codigo": "3909504",
+    "idCruzRoja": 0
   }
 ]
