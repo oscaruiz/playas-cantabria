@@ -15,8 +15,10 @@ export async function obtenerEstadoCruzRoja(id: number): Promise<any> {
     const response = await axios.post(url, payload, {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
-      }
+      },
+      timeout: 10000 // timeout en milisegundos (10 segundos)
     });
+
 
     const html = response.data as string;
     const $ = cheerio.load(html);

@@ -8,13 +8,19 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 4000;
 
+// Detectar entorno producción o desarrollo
+const isProduction = process.env.NODE_ENV === 'production';
+const PROD_URL = process.env.PROD_URL || ''; 
+
+const BASE_URL = isProduction && PROD_URL ? PROD_URL : `http://localhost:${PORT}`;
+
 // Middlewares
 app.use(cors());
 app.use(express.json());
 
 // Rutas
 app.get('/', (_req, res) => {
-  res.send('🌊 API de playas de Cantabria. Visita /api/playas');
+  res.send(`🌊 API de playas de Cantabria. Visita ${BASE_URL}/api/playas`);
 });
 
 app.get('/api/playas', listarPlayas);
@@ -27,5 +33,5 @@ app.use((_req, res) => {
 
 // Inicio de servidor
 app.listen(PORT, () => {
-  console.log(`🚀 Servidor activo en http://localhost:${PORT}`);
+  console.log(`🚀 Servidor activo en ${BASE_URL}`);
 });
