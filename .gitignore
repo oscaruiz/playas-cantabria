@@ -44,9 +44,13 @@ yarn-error.log*
 /frontend/.turbo
 /frontend/.vite
 /frontend/.parcel-cache
+/frontend/android
+/frontend/.firebase
+/frontend/.vscode
 
 # --- Backend ---
 /backend/node_modules
+/backend/functions
 /backend/.env
 /backend/.env.*.local
 /backend/dist
@@ -61,3 +65,8 @@ yarn-error.log*
 /backend/.mypy_cache
 /backend/.pytest_cache
 /backend/.turbo
+/backend/.turbo
+/node_modules
+/dist
+.env
+
