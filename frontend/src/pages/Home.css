@@ -6,6 +6,16 @@ ion-content {
 ion-toolbar {
   --background: var(--ion-color-primary);
   --color: var(--ion-color-primary-contrast);
+    text-align: center;
+}
+
+.title-toolbar ion-title {
+  font-family: 'Pacifico', cursive;
+  cursor: pointer;
+}
+
+.title-toolbar ion-title:hover {
+  opacity: 0.8;
 }
 
 ion-searchbar {
@@ -94,4 +104,9 @@ ion-card-title {
 .spinner-container {
   text-align: center;
   padding-top: 2rem;
+}
+
+
+.search-sort-container ion-searchbar {
+  flex-grow: 1;
 }

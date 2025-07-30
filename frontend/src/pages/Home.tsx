@@ -16,7 +16,7 @@ import {
   IonText,
   IonIcon,
 } from '@ionic/react';
-import { flagOutline, locationOutline, searchOutline } from 'ionicons/icons';
+import { flagOutline, locationOutline, searchOutline, umbrellaOutline } from 'ionicons/icons';
 import { Playa, getPlayas } from '../services/api';
 import { useHistory } from 'react-router-dom';
 import './Home.css';
@@ -52,8 +52,10 @@ const Home: React.FC = () => {
   return (
     <IonPage>
       <IonHeader>
-        <IonToolbar>
-          <IonTitle>Playas de Cantabria</IonTitle>
+        <IonToolbar className="title-toolbar">
+          <IonTitle onClick={() => window.location.reload()}>
+            <IonIcon icon={umbrellaOutline} /> Playas de Cantabria
+          </IonTitle>
         </IonToolbar>
       </IonHeader>
       <IonContent fullscreen>
