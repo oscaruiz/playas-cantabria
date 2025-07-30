@@ -5,18 +5,21 @@ import {
   IonToolbar,
   IonTitle,
   IonContent,
-  IonList,
-  IonItem,
-  IonLabel,
-  IonSpinner,
-  IonText,
+  IonCard,
+  IonCardHeader,
+  IonCardTitle,
+  IonCardContent,
   IonSearchbar,
   IonSelect,
   IonSelectOption,
+  IonSpinner,
+  IonText,
+  IonIcon,
 } from '@ionic/react';
+import { flagOutline, locationOutline, searchOutline } from 'ionicons/icons';
 import { Playa, getPlayas } from '../services/api';
 import { useHistory } from 'react-router-dom';
-import './Home.css';  // Asegúrate de importar el CSS
+import './Home.css';
 
 const Home: React.FC = () => {
   const [playas, setPlayas] = useState<Playa[] | null>(null);
@@ -53,14 +56,13 @@ const Home: React.FC = () => {
           <IonTitle>Playas de Cantabria</IonTitle>
         </IonToolbar>
       </IonHeader>
-      <IonContent>
+      <IonContent fullscreen>
         <div className="search-sort-container">
           <IonSearchbar
             value={filtro}
             onIonInput={(e) => setFiltro(e.detail.value!)}
             placeholder="Buscar por nombre o municipio..."
           />
-
           <IonSelect
             value={orden}
             placeholder="Ordenar"
@@ -84,33 +86,28 @@ const Home: React.FC = () => {
           </div>
         )}
 
-        {playas && (
-          <IonList>
-            {filtrarPlayas().map((playa) => (
-              <IonItem
-                button
-                key={playa.codigo}
-                onClick={() => history.push(`/playas/${playa.codigo}`)}
-                lines="none"
-              >
-                <IonLabel>
-                  <h2>{playa.nombre}</h2>
-                  <p>Municipio: {playa.municipio}</p>
-                </IonLabel>
-
+        {playas &&
+          filtrarPlayas().map((playa) => (
+            <IonCard
+              key={playa.codigo}
+              button={true}
+              onClick={() => history.push(`/playas/${playa.codigo}`)}
+            >
+              <IonCardHeader>
+                <IonCardTitle>
+                  <IonIcon icon={locationOutline} /> {playa.nombre}
+                </IonCardTitle>
+              </IonCardHeader>
+              <IonCardContent>
+                <p>Municipio: {playa.municipio}</p>
                 {playa.idCruzRoja !== 0 && (
-                  <div
-                    slot="end"
-                    className="cruz-roja-icon"
-                    title="Cruz Roja"
-                  >
-                    ✚
-                  </div>
+                  <p className="section-title">
+                    <IonIcon icon={flagOutline} color="danger" /> Vigilada por Cruz Roja
+                  </p>
                 )}
-              </IonItem>
-            ))}
-          </IonList>
-        )}
+              </IonCardContent>
+            </IonCard>
+          ))}
       </IonContent>
     </IonPage>
   );

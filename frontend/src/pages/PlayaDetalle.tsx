@@ -14,24 +14,39 @@ import {
   IonCardTitle,
   IonCardContent,
   IonButton,
+  IonIcon,
+  IonItem,
+  IonLabel,
 } from '@ionic/react';
 import { useParams } from 'react-router-dom';
-import { getDetallePlaya, PlayaDetalle as PlayaDetalleData, PrediccionDia } from '../services/api';
+import {
+  getDetallePlaya,
+  PlayaDetalle as PlayaDetalleData,
+  PrediccionDia,
+} from '../services/api';
+import {
+  sunnyOutline,
+  cloudOutline,
+  water,
+  flameOutline,
+  warningOutline,
+  timeOutline,
+  todayOutline,
+  calendarClearOutline,
+  flagOutline,
+} from 'ionicons/icons';
 
-// Función para limpiar caracteres mal codificados (ejemplo para 'débil')
 function limpiarTexto(texto: string): string {
   if (!texto) return texto;
   return texto.replace(/\uFFFD/g, 'é');
 }
 
-// Función para mostrar emoji según el color de la bandera
-function emojiBandera(bandera?: string): string {
-  if (!bandera) return '';
-  const b = bandera.toLowerCase();
+function iconoBandera(bandera?: string): string {
+  const b = bandera?.toLowerCase() || '';
   if (b.includes('roja')) return '🟥';
   if (b.includes('amarilla')) return '🟨';
   if (b.includes('verde')) return '🟩';
-  return '';
+  return '⚐';
 }
 
 const PlayaDetallePage: React.FC = () => {
@@ -92,27 +107,50 @@ const PlayaDetallePage: React.FC = () => {
         )}
 
         {hoy && (
-          <IonCard>
+          <IonCard className="tropical">
             <IonCardHeader>
-              <IonCardTitle>Hoy ({formatearFecha(hoy.fecha)})</IonCardTitle>
+              <IonCardTitle>
+                <IonIcon icon={todayOutline} /> Hoy ({formatearFecha(hoy.fecha)})
+              </IonCardTitle>
             </IonCardHeader>
             <IonCardContent>
-              <p><strong>🌤️ Cielo:</strong> {hoy.estadoCielo.descripcion1}</p>
-              <p><strong>🌬️ Viento:</strong> {hoy.viento.descripcion1}</p>
-              <p><strong>🌊 Oleaje:</strong> {limpiarTexto(hoy.oleaje.descripcion1)}</p>
-              <p><strong>💧 Temperatura agua:</strong> {hoy.tagua.valor1} ºC</p>
-              <p><strong>🌡️ Temperatura máxima:</strong> {hoy.tmaxima.valor1} ºC</p>
-              <p><strong>🔥 Sensación térmica:</strong> {hoy.stermica.descripcion1}</p>
-              <p><strong>☀️ Índice UV:</strong> {hoy.uvMax.valor1}</p>
+              <IonItem lines="none">
+                <IonIcon icon={cloudOutline} slot="start" />
+                <IonLabel>Cielo: {hoy.estadoCielo.descripcion1}</IonLabel>
+              </IonItem>
+              <IonItem lines="none">
+                <IonIcon icon={sunnyOutline} slot="start" />
+                <IonLabel>Viento: {hoy.viento.descripcion1}</IonLabel>
+              </IonItem>
+              <IonItem lines="none">
+                <IonIcon icon={water} slot="start" />
+                <IonLabel>Oleaje: {limpiarTexto(hoy.oleaje.descripcion1)}</IonLabel>
+              </IonItem>
+              <IonItem lines="none">
+                <IonIcon icon={water} slot="start" />
+                <IonLabel>Temperatura agua: {hoy.tagua.valor1} ºC</IonLabel>
+              </IonItem>
+              <IonItem lines="none">
+                <IonIcon icon={flameOutline} slot="start" />
+                <IonLabel>Temperatura máxima: {hoy.tmaxima.valor1} ºC</IonLabel>
+              </IonItem>
+              <IonItem lines="none">
+                <IonIcon icon={flameOutline} slot="start" />
+                <IonLabel>Sensación térmica: {hoy.stermica.descripcion1}</IonLabel>
+              </IonItem>
+              <IonItem lines="none">
+                <IonIcon icon={warningOutline} slot="start" />
+                <IonLabel>Índice UV: {hoy.uvMax.valor1}</IonLabel>
+              </IonItem>
             </IonCardContent>
           </IonCard>
         )}
 
         {manana && (
-          <IonCard>
+          <IonCard className="tropical">
             <IonCardHeader>
               <IonCardTitle>
-                Mañana ({formatearFecha(manana.fecha)})
+                <IonIcon icon={calendarClearOutline} /> Mañana ({formatearFecha(manana.fecha)})
                 <IonButton
                   fill="clear"
                   size="small"
@@ -125,30 +163,63 @@ const PlayaDetallePage: React.FC = () => {
             </IonCardHeader>
             {mananaExpanded && (
               <IonCardContent>
-                <p><strong>🌤️ Cielo:</strong> {manana.estadoCielo.descripcion1}</p>
-                <p><strong>🌬️ Viento:</strong> {manana.viento.descripcion1}</p>
-                <p><strong>🌊 Oleaje:</strong> {limpiarTexto(manana.oleaje.descripcion1)}</p>
-                <p><strong>💧 Temperatura agua:</strong> {manana.tagua.valor1} ºC</p>
-                <p><strong>🌡️ Temperatura máxima:</strong> {manana.tmaxima.valor1} ºC</p>
-                <p><strong>🔥 Sensación térmica:</strong> {manana.stermica.descripcion1}</p>
-                <p><strong>☀️ Índice UV:</strong> {manana.uvMax.valor1}</p>
+                <IonItem lines="none">
+                  <IonIcon icon={cloudOutline} slot="start" />
+                  <IonLabel>Cielo: {manana.estadoCielo.descripcion1}</IonLabel>
+                </IonItem>
+                <IonItem lines="none">
+                  <IonIcon icon={sunnyOutline} slot="start" />
+                  <IonLabel>Viento: {manana.viento.descripcion1}</IonLabel>
+                </IonItem>
+                <IonItem lines="none">
+                  <IonIcon icon={water} slot="start" />
+                  <IonLabel>Oleaje: {limpiarTexto(manana.oleaje.descripcion1)}</IonLabel>
+                </IonItem>
+                <IonItem lines="none">
+                  <IonIcon icon={water} slot="start" />
+                  <IonLabel>Temperatura agua: {manana.tagua.valor1} ºC</IonLabel>
+                </IonItem>
+                <IonItem lines="none">
+                  <IonIcon icon={flameOutline} slot="start" />
+                  <IonLabel>Temperatura máxima: {manana.tmaxima.valor1} ºC</IonLabel>
+                </IonItem>
+                <IonItem lines="none">
+                  <IonIcon icon={flameOutline} slot="start" />
+                  <IonLabel>Sensación térmica: {manana.stermica.descripcion1}</IonLabel>
+                </IonItem>
+                <IonItem lines="none">
+                  <IonIcon icon={warningOutline} slot="start" />
+                  <IonLabel>Índice UV: {manana.uvMax.valor1}</IonLabel>
+                </IonItem>
               </IonCardContent>
             )}
           </IonCard>
         )}
 
         {datos?.idCruzRoja !== 0 && datos?.cruzRoja?.bandera && datos.cruzRoja.bandera !== 'Desconocida' && (
-          <IonCard>
+          <IonCard className="tropical">
             <IonCardHeader>
-              <IonCardTitle>Datos Cruz Roja</IonCardTitle>
+              <IonCardTitle>
+                <IonIcon icon={flagOutline} /> Datos Cruz Roja
+              </IonCardTitle>
             </IonCardHeader>
             <IonCardContent>
-              <p>
-                🚩 <strong>Bandera actual:</strong> {emojiBandera(datos.cruzRoja?.bandera)} {datos.cruzRoja.bandera}
-              </p>
-              <p>📅 <strong>Cobertura desde:</strong> {datos.cruzRoja.coberturaDesde || 'N/A'}</p>
-              <p>📅 <strong>Cobertura hasta:</strong> {datos.cruzRoja.coberturaHasta || 'N/A'}</p>
-              <p>⏰ <strong>Horario:</strong> {datos.cruzRoja.horario || 'N/A'}</p>
+              <IonItem lines="none">
+                <IonIcon icon={flagOutline} slot="start" />
+                <IonLabel>Bandera actual: {iconoBandera(datos.cruzRoja.bandera)} {datos.cruzRoja.bandera}</IonLabel>
+              </IonItem>
+              <IonItem lines="none">
+                <IonIcon icon={calendarClearOutline} slot="start" />
+                <IonLabel>Cobertura desde: {datos.cruzRoja.coberturaDesde || 'N/A'}</IonLabel>
+              </IonItem>
+              <IonItem lines="none">
+                <IonIcon icon={calendarClearOutline} slot="start" />
+                <IonLabel>Cobertura hasta: {datos.cruzRoja.coberturaHasta || 'N/A'}</IonLabel>
+              </IonItem>
+              <IonItem lines="none">
+                <IonIcon icon={timeOutline} slot="start" />
+                <IonLabel>Horario: {datos.cruzRoja.horario || 'N/A'}</IonLabel>
+              </IonItem>
             </IonCardContent>
           </IonCard>
         )}
