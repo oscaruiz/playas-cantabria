@@ -22,7 +22,6 @@ import { useParams } from 'react-router-dom';
 import {
   getDetallePlaya,
   PlayaDetalle as PlayaDetalleData,
-  PrediccionDia,
 } from '../services/api';
 import {
   sunnyOutline,
@@ -52,8 +51,6 @@ function iconoBandera(bandera?: string): string {
 const PlayaDetallePage: React.FC = () => {
   const { codigo } = useParams<{ codigo: string }>();
   const [datos, setDatos] = useState<PlayaDetalleData | null>(null);
-  const [hoy, setHoy] = useState<PrediccionDia | null>(null);
-  const [manana, setManana] = useState<PrediccionDia | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [mananaExpanded, setMananaExpanded] = useState(false);
 
@@ -61,9 +58,6 @@ const PlayaDetallePage: React.FC = () => {
     getDetallePlaya(codigo)
       .then((data) => {
         setDatos(data);
-        const dias = data?.aemet?.prediccion?.dia ?? [];
-        setHoy(dias[0] ?? null);
-        setManana(dias[1] ?? null);
       })
       .catch((err: Error) => {
         setError(err.message);
@@ -106,97 +100,123 @@ const PlayaDetallePage: React.FC = () => {
           </div>
         )}
 
-        {hoy && (
-          <IonCard className="tropical">
-            <IonCardHeader>
-              <IonCardTitle>
-                <IonIcon icon={todayOutline} /> Hoy ({formatearFecha(hoy.fecha)})
-              </IonCardTitle>
-            </IonCardHeader>
-            <IonCardContent>
-              <IonItem lines="none">
-                <IonIcon icon={cloudOutline} slot="start" />
-                <IonLabel>Cielo: {hoy.estadoCielo.descripcion1}</IonLabel>
-              </IonItem>
-              <IonItem lines="none">
-                <IonIcon icon={sunnyOutline} slot="start" />
-                <IonLabel>Viento: {hoy.viento.descripcion1}</IonLabel>
-              </IonItem>
-              <IonItem lines="none">
-                <IonIcon icon={water} slot="start" />
-                <IonLabel>Oleaje: {limpiarTexto(hoy.oleaje.descripcion1)}</IonLabel>
-              </IonItem>
-              <IonItem lines="none">
-                <IonIcon icon={water} slot="start" />
-                <IonLabel>Temperatura agua: {hoy.tagua.valor1} ºC</IonLabel>
-              </IonItem>
-              <IonItem lines="none">
-                <IonIcon icon={flameOutline} slot="start" />
-                <IonLabel>Temperatura máxima: {hoy.tmaxima.valor1} ºC</IonLabel>
-              </IonItem>
-              <IonItem lines="none">
-                <IonIcon icon={flameOutline} slot="start" />
-                <IonLabel>Sensación térmica: {hoy.stermica.descripcion1}</IonLabel>
-              </IonItem>
-              <IonItem lines="none">
-                <IonIcon icon={warningOutline} slot="start" />
-                <IonLabel>Índice UV: {hoy.uvMax.valor1}</IonLabel>
-              </IonItem>
-            </IonCardContent>
-          </IonCard>
-        )}
+        {datos?.clima && (
+          <>
+            <IonCard className="tropical">
+              <IonCardHeader>
+                <IonCardTitle>
+                  <IonIcon icon={todayOutline} /> Hoy
+                  <small style={{ float: 'right', color: '#666' }}>
+                    Fuente: {datos.clima.fuente}
+                  </small>
+                </IonCardTitle>
+              </IonCardHeader>
 
-        {manana && (
-          <IonCard className="tropical">
-            <IonCardHeader>
-              <IonCardTitle>
-                <IonIcon icon={calendarClearOutline} /> Mañana ({formatearFecha(manana.fecha)})
-                <IonButton
-                  fill="clear"
-                  size="small"
-                  onClick={() => setMananaExpanded(!mananaExpanded)}
-                  style={{ float: 'right' }}
-                >
-                  {mananaExpanded ? '▲' : '▼'}
-                </IonButton>
-              </IonCardTitle>
-            </IonCardHeader>
-            {mananaExpanded && (
               <IonCardContent>
                 <IonItem lines="none">
                   <IonIcon icon={cloudOutline} slot="start" />
-                  <IonLabel>Cielo: {manana.estadoCielo.descripcion1}</IonLabel>
+                  <IonLabel>Cielo: {datos.clima.hoy.summary}</IonLabel>
                 </IonItem>
+
+                <IonItem lines="none">
+                  <IonIcon icon={flameOutline} slot="start" />
+                  <IonLabel>Temperatura: {datos.clima.hoy.temperature} ºC</IonLabel>
+                </IonItem>
+
+                <IonItem lines="none">
+                  <IonIcon icon={water} slot="start" />
+                  <IonLabel>Temperatura agua: {datos.clima.hoy.waterTemperature} ºC</IonLabel>
+                </IonItem>
+
+                <IonItem lines="none">
+                  <IonIcon icon={flameOutline} slot="start" />
+                  <IonLabel>Sensación: {datos.clima.hoy.sensation}</IonLabel>
+                </IonItem>
+
                 <IonItem lines="none">
                   <IonIcon icon={sunnyOutline} slot="start" />
-                  <IonLabel>Viento: {manana.viento.descripcion1}</IonLabel>
+                  <IonLabel>Viento: {datos.clima.hoy.wind}</IonLabel>
                 </IonItem>
+
                 <IonItem lines="none">
                   <IonIcon icon={water} slot="start" />
-                  <IonLabel>Oleaje: {limpiarTexto(manana.oleaje.descripcion1)}</IonLabel>
+                  <IonLabel>Oleaje: {datos.clima.hoy.waves}</IonLabel>
                 </IonItem>
+
+                {datos.clima.hoy.uvIndex !== undefined && (
+                  <IonItem lines="none">
+                    <IonIcon icon={warningOutline} slot="start" />
+                    <IonLabel>Índice UV: {datos.clima.hoy.uvIndex}</IonLabel>
+                  </IonItem>
+                )}
+
                 <IonItem lines="none">
-                  <IonIcon icon={water} slot="start" />
-                  <IonLabel>Temperatura agua: {manana.tagua.valor1} ºC</IonLabel>
-                </IonItem>
-                <IonItem lines="none">
-                  <IonIcon icon={flameOutline} slot="start" />
-                  <IonLabel>Temperatura máxima: {manana.tmaxima.valor1} ºC</IonLabel>
-                </IonItem>
-                <IonItem lines="none">
-                  <IonIcon icon={flameOutline} slot="start" />
-                  <IonLabel>Sensación térmica: {manana.stermica.descripcion1}</IonLabel>
-                </IonItem>
-                <IonItem lines="none">
-                  <IonIcon icon={warningOutline} slot="start" />
-                  <IonLabel>Índice UV: {manana.uvMax.valor1}</IonLabel>
+                  <IonIcon icon={timeOutline} slot="start" />
+                  <IonLabel>Actualizado: {new Date(datos.clima.ultimaActualizacion).toLocaleTimeString()}</IonLabel>
                 </IonItem>
               </IonCardContent>
-            )}
-          </IonCard>
+            </IonCard>
+
+            <IonCard className="tropical">
+              <IonCardHeader>
+                <IonCardTitle>
+                  <IonIcon icon={calendarClearOutline} /> Mañana
+                  <IonButton
+                    fill="clear"
+                    size="small"
+                    onClick={() => setMananaExpanded(!mananaExpanded)}
+                    style={{ float: 'right' }}
+                  >
+                    {mananaExpanded ? '▲' : '▼'}
+                  </IonButton>
+                </IonCardTitle>
+              </IonCardHeader>
+
+              {mananaExpanded && (
+                <IonCardContent>
+                  <IonItem lines="none">
+                    <IonIcon icon={cloudOutline} slot="start" />
+                    <IonLabel>Cielo: {datos.clima.manana.summary}</IonLabel>
+                  </IonItem>
+
+                  <IonItem lines="none">
+                    <IonIcon icon={flameOutline} slot="start" />
+                    <IonLabel>Temperatura: {datos.clima.manana.temperature} ºC</IonLabel>
+                  </IonItem>
+
+                  <IonItem lines="none">
+                    <IonIcon icon={water} slot="start" />
+                    <IonLabel>Temperatura agua: {datos.clima.manana.waterTemperature} ºC</IonLabel>
+                  </IonItem>
+
+                  <IonItem lines="none">
+                    <IonIcon icon={flameOutline} slot="start" />
+                    <IonLabel>Sensación: {datos.clima.manana.sensation}</IonLabel>
+                  </IonItem>
+
+                  <IonItem lines="none">
+                    <IonIcon icon={sunnyOutline} slot="start" />
+                    <IonLabel>Viento: {datos.clima.manana.wind}</IonLabel>
+                  </IonItem>
+
+                  <IonItem lines="none">
+                    <IonIcon icon={water} slot="start" />
+                    <IonLabel>Oleaje: {datos.clima.manana.waves}</IonLabel>
+                  </IonItem>
+
+                  {datos.clima.manana.uvIndex !== undefined && (
+                    <IonItem lines="none">
+                      <IonIcon icon={warningOutline} slot="start" />
+                      <IonLabel>Índice UV: {datos.clima.manana.uvIndex}</IonLabel>
+                    </IonItem>
+                  )}
+                </IonCardContent>
+              )}
+            </IonCard>
+          </>
         )}
 
-        {datos?.idCruzRoja !== 0 && datos?.cruzRoja?.bandera && datos.cruzRoja.bandera !== 'Desconocida' && (
+        {datos?.cruzRoja?.bandera && datos.cruzRoja.bandera !== 'Desconocida' && (
           <IonCard className="tropical">
             <IonCardHeader>
               <IonCardTitle>
