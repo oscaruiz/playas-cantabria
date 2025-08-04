@@ -2,7 +2,11 @@
 import axios from 'axios';
 import dotenv from 'dotenv';
 import { cache } from '../utils/cacheInstance';
-import playas from '../data/playasCantabria.json';
+import playasJson from '../data/playasCantabria.json';
+import { Beach } from '../core/types/Beach';
+import { StandardWeather, WeatherSource, DailyForecast } from '../core/types/Weather';
+
+const playas: Beach[] = playasJson as Beach[];
 
 dotenv.config();
 
@@ -14,21 +18,15 @@ if (!OWM_API_KEY) {
   throw new Error('❌ Falta la variable OPENWEATHER_API_KEY en el .env');
 }
 
-type Playa = {
-  codigo: string;
-  nombre: string;
-  municipio: string;
-  lat: number;
-  lon: number;
-  idCruzRoja: number;
-};
 
 function getCoordenadasPorCodigo(codigo: string): { lat: number, lon: number } | null {
-  const playa = (playas as Playa[]).find(p => p.codigo === codigo);
+  // Extraer el código base si es un código modificado (e.g., "3908503_TEST" -> "3908503")
+  const codigoBase = codigo.split('_')[0];
+  const playa = (playas as Beach[]).find(p => p.codigo === codigoBase);
   return playa ? { lat: playa.lat, lon: playa.lon } : null;
 }
 
-async function fetchAemetPrediccion(codigo: string): Promise<any> {
+async function fetchAemetPrediccion(codigo: string): Promise<StandardWeather> {
   console.log(`🌤️ [AEMET] Solicitando predicción para código ${codigo}...`);
 
   const url = `${BASE_AEMET}/prediccion/especifica/playa/${codigo}?api_key=${AEMET_API_KEY}`;
@@ -50,16 +48,66 @@ async function fetchAemetPrediccion(codigo: string): Promise<any> {
     throw new Error('Respuesta vacía de AEMET');
   }
 
+  console.log('📊 [AEMET] Estructura de datos recibida:', JSON.stringify(parsed[0], null, 2));
   console.log(`✅ [AEMET] Predicción obtenida con éxito para código ${codigo}`);
 
+  const aemetData = parsed[0];
+  
+  function extractDailyForecast(dia: any): DailyForecast {
+    // Extraer descripción del estado del cielo (prioriza f2 sobre f1)
+    const skyDescription = dia?.estadoCielo?.descripcion2 || dia?.estadoCielo?.descripcion1 || 'Sin datos';
+    
+    // Extraer temperatura máxima
+    const temp = dia?.tmaxima?.valor1 ?? dia?.tMaxima?.valor1 ?? null;
+    
+    // Extraer sensación térmica
+    const sensation = dia?.stermica?.descripcion1 ?? dia?.sTermica?.descripcion1 ?? null;
+
+    // Extraer descripción del viento
+    const windDesc = dia?.viento?.descripcion2 || dia?.viento?.descripcion1 || 'Sin datos';
+
+    // Extraer descripción del oleaje
+    const waveDesc = dia?.oleaje?.descripcion2 || dia?.oleaje?.descripcion1 || 'Sin datos';
+
+    // Temperatura del agua
+    const waterTemp = dia?.tagua?.valor1 ?? dia?.tAgua?.valor1 ?? null;
+
+    // Índice UV máximo
+    const uvIndex = dia?.uvMax?.valor1 ?? null;
+
+    return {
+      summary: skyDescription,
+      temperature: temp,
+      waterTemperature: waterTemp,
+      sensation: sensation,
+      wind: windDesc,
+      waves: waveDesc,
+      uvIndex: uvIndex,
+      icon: dia?.estadoCielo?.f2 || dia?.estadoCielo?.f1 || null
+    };
+  }
+
+  // Verificar que existan los datos necesarios
+  if (!aemetData?.prediccion?.dia || !Array.isArray(aemetData.prediccion.dia)) {
+    throw new Error('Estructura de datos de AEMET inválida');
+  }
+
+  const today: DailyForecast = extractDailyForecast(aemetData.prediccion.dia[0]);
+  const tomorrow: DailyForecast = aemetData.prediccion.dia.length > 1 
+    ? extractDailyForecast(aemetData.prediccion.dia[1])
+    : today;
+
   return {
-    fuente: 'AEMET',
-    prediccion: parsed[0],
-    ultimaActualizacion: new Date().toISOString()
+    source: 'AEMET',
+    lastUpdated: new Date().toISOString(),
+    forecast: {
+      today,
+      tomorrow
+    }
   };
 }
 
-async function fetchOpenWeatherFallback(codigo: string): Promise<any> {
+async function fetchOpenWeatherFallback(codigo: string): Promise<StandardWeather> {
   console.log(`🌥️ [OWM] Usando OpenWeatherMap como alternativa para código ${codigo}`);
 
   const coords = getCoordenadasPorCodigo(codigo);
@@ -72,21 +120,47 @@ async function fetchOpenWeatherFallback(codigo: string): Promise<any> {
 
   console.log(`✅ [OWM] Predicción obtenida desde OpenWeatherMap para código ${codigo}`);
 
+  const weatherData = res.data;
+  // Función auxiliar para determinar el estado del mar basado en el viento
+  const getWaveStatus = (windSpeed: number): string => {
+    if (windSpeed > 20) return 'agitado';
+    if (windSpeed > 10) return 'moderado';
+    return 'tranquilo';
+  };
+
+  const forecast: DailyForecast = {
+    summary: weatherData.weather?.[0]?.description || 'Sin descripción',
+    temperature: Math.round(weatherData.main.temp * 10) / 10, // Redondear a 1 decimal
+    waterTemperature: 22, // Temperatura media del mar Cantábrico en verano
+    sensation: weatherData.main.feels_like 
+      ? `${Math.round(weatherData.main.feels_like)}°C (${
+          weatherData.main.feels_like > 25 ? 'caluroso' :
+          weatherData.main.feels_like > 20 ? 'agradable' :
+          weatherData.main.feels_like > 15 ? 'fresco' : 'frío'
+        })`
+      : undefined,
+    wind: `${
+      weatherData.wind.speed > 20 ? 'fuerte' :
+      weatherData.wind.speed > 10 ? 'moderado' : 'flojo'
+    } (${Math.round(weatherData.wind.speed * 3.6)} km/h)`, // Convertir m/s a km/h
+    waves: getWaveStatus(weatherData.wind.speed),
+    uvIndex: weatherData.clouds?.all 
+      ? Math.max(1, Math.round(10 * (1 - weatherData.clouds.all / 100))) // Estimación basada en nubosidad
+      : undefined,
+    icon: weatherData.weather?.[0]?.icon
+  };
+
   return {
-    fuente: 'OpenWeatherMap',
-    prediccion: {
-      resumen: res.data.weather?.[0]?.description || 'Sin descripción',
-      temperatura: res.data.main.temp,
-      humedad: res.data.main.humidity,
-      viento: res.data.wind.speed,
-      icono: res.data.weather?.[0]?.icon,
-      datosCrudos: res.data
-    },
-    ultimaActualizacion: new Date().toISOString()
+    source: 'OpenWeatherMap',
+    lastUpdated: new Date().toISOString(),
+    forecast: {
+      today: forecast,
+      tomorrow: forecast // OpenWeather free API no provee predicción para mañana
+    }
   };
 }
 
-export async function obtenerPrediccionConFallback(codigo: string): Promise<any> {
+export async function obtenerPrediccionConFallback(codigo: string): Promise<StandardWeather> {
   const cacheKey = `prediccion-${codigo}`;
   const cached = cache.get<any>(cacheKey);
   if (cached) {
@@ -100,16 +174,9 @@ export async function obtenerPrediccionConFallback(codigo: string): Promise<any>
     return datos;
   } catch (err: any) {
     const msg = err.message || '';
-    const isRedError = msg.includes('socket hang up') || msg.includes('timeout') || msg.includes('ECONNRESET') || msg.includes('getaddrinfo') || msg.includes('ENOTFOUND');
-
-    if (isRedError || err.response?.status === 429 || err.response?.status === 500) {
-      console.warn(`⚠️ [FALLBACK] AEMET falló (${msg}). Usando OpenWeatherMap...`);
-      const fallback = await fetchOpenWeatherFallback(codigo);
-      cache.set(cacheKey, fallback);
-      return fallback;
-    } else {
-      console.error('❌ [ERROR] Fallo no recuperable al consultar AEMET:', err);
-      throw new Error(`Error consultando AEMET: ${msg}`);
-    }
+    console.warn(`⚠️ [FALLBACK] AEMET falló (${msg}). Usando OpenWeatherMap...`);
+    const fallback = await fetchOpenWeatherFallback(codigo);
+    cache.set(cacheKey, fallback);
+    return fallback;
   }
 }

@@ -25,9 +25,12 @@ export async function prediccionPlaya(req: Request, res: Response) {
             nombre: playa.nombre,
             municipio: playa.municipio,
             codigo,
-            fuente: prediccion.fuente,
-            ultimaActualizacion: prediccion.ultimaActualizacion,
-            prediccion: prediccion.prediccion,
+            clima: {
+                fuente: prediccion.source,
+                ultimaActualizacion: prediccion.lastUpdated,
+                hoy: prediccion.forecast.today,
+                manana: prediccion.forecast.tomorrow
+            },
             cruzRoja
         });
     } catch (error) {
