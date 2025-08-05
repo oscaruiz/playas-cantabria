@@ -1,4 +1,4 @@
-# playas-cantabria
+# 💢🏖️ playas-cantabria
 ¡Bienvenido/a a la aplicación de Playas de Cantabria!
 
 ## 🎯 Objetivo
@@ -14,6 +14,16 @@ El objetivo de esta aplicación es ofrecer una forma sencilla y rápida de consu
     *   Estado de la bandera de la Cruz Roja.
     *   Información sobre mareas.
 *   **Búsqueda y filtrado:** Encuentra fácilmente la playa que te interesa.
+
+## 🌐 Producción y Servicios
+
+*   **Hosting y backend:** Usamos **Firebase Functions** para desplegar el backend sin servidor.
+*   **Demo en producción:** Puedes probar la aplicación accediendo a  
+    👉 [https://playas-cantabria-front.web.app/](https://playas-cantabria-front.web.app/)
+*   **Fuentes de datos:**
+    *   Principal: [AEMET](https://www.aemet.es/)
+    *   Alternativa en caso de error: [OpenWeatherMap](https://openweathermap.org/)
+    *   Cruz Roja: [CruzRoja](https://www.cruzroja.es/appjv/consPlayas/listaPlayas.do)
 
 ## 🛠️ Tecnologías Utilizadas
 
@@ -59,7 +69,21 @@ El objetivo de esta aplicación es ofrecer una forma sencilla y rápida de consu
     npm install
     ```
 
-### Ejecución
+
+## 🔐 Variables de Entorno
+
+Antes de ejecutar el proyecto, asegúrate de definir las variables necesarias en un archivo `.env` en el directorio `backend/`.
+
+Ejemplo de `.env`:
+
+```env
+PORT=4000
+AEMET_API_KEY=tu_clave_de_aemet
+OPENWEATHER_API_KEY=tu_clave_de_openweather
+CROSS_ORIGIN=http://localhost:8100
+```
+
+## 🚀 Ejecución
 
 1.  **Inicia el backend:**
     ```bash
@@ -76,6 +100,7 @@ El objetivo de esta aplicación es ofrecer una forma sencilla y rápida de consu
 ¡Y listo! La aplicación debería estar corriendo en tu navegador.
 
 ## 🤝 Contribuciones
+
 
 Las contribuciones son bienvenidas. Si tienes alguna idea o quieres reportar un error, por favor, abre un *issue* en este repositorio.
 
