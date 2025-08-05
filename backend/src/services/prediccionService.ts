@@ -1,6 +1,7 @@
 // src/services/prediccionService.ts
 import axios from 'axios';
 import dotenv from 'dotenv';
+import iconv from 'iconv-lite';
 import { cache } from '../utils/cacheInstance';
 import playasJson from '../data/playasCantabria.json';
 import { Beach } from '../core/types/Beach';
@@ -36,14 +37,18 @@ async function fetchAemetPrediccion(codigo: string): Promise<StandardWeather> {
   console.log(`🔗 [AEMET] URL de datos: ${datosUrl}`);
   if (!datosUrl) throw new Error('No se recibió URL de datos');
 
-  const res2 = await axios.get(datosUrl, { timeout: 2000 });
-  const raw = res2.data;
+  const res2 = await axios.get(datosUrl, {
+    responseType: 'arraybuffer',
+    timeout: 2000
+  });
 
-  if (typeof raw === 'string' && (raw.includes('<html') || raw.startsWith('<!DOCTYPE'))) {
+  const decodedData = iconv.decode(res2.data, 'latin1');
+
+  if (decodedData.includes('<html') || decodedData.startsWith('<!DOCTYPE')) {
     throw new Error('La URL de datos devolvió HTML en lugar de JSON');
   }
 
-  const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+  const parsed = JSON.parse(decodedData);
   if (!Array.isArray(parsed) || parsed.length === 0) {
     throw new Error('Respuesta vacía de AEMET');
   }
