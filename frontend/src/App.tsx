@@ -20,6 +20,7 @@ import '@ionic/react/css/text-alignment.css';
 import '@ionic/react/css/display.css';
 import './theme/variables.css';
 import PlayaDetallePage from './pages/PlayaDetalle';
+import MapaPage from './pages/MapaPage';
 
 setupIonicReact();
 
@@ -29,6 +30,7 @@ const App: React.FC = () => (
       <IonRouterOutlet>
         <Route exact path="/" component={Home} />
         <Route exact path="/playas/:codigo" component={PlayaDetallePage} />
+        <Route path="/mapa" component={MapaPage} exact />
       </IonRouterOutlet>
     </IonReactRouter>
   </IonApp>

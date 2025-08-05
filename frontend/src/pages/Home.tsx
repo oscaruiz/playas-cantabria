@@ -15,8 +15,10 @@ import {
   IonSpinner,
   IonText,
   IonIcon,
+  IonFab,
+  IonFabButton,
 } from '@ionic/react';
-import { flagOutline, locationOutline, searchOutline, umbrellaOutline } from 'ionicons/icons';
+import { flagOutline, locationOutline, mapOutline, searchOutline, umbrellaOutline } from 'ionicons/icons';
 import { Playa, getPlayas } from '../services/api';
 import { useHistory } from 'react-router-dom';
 import './Home.css';
@@ -59,6 +61,7 @@ const Home: React.FC = () => {
         </IonToolbar>
       </IonHeader>
       <IonContent fullscreen>
+
         <div className="search-sort-container">
           <IonSearchbar
             value={filtro}
@@ -110,6 +113,19 @@ const Home: React.FC = () => {
               </IonCardContent>
             </IonCard>
           ))}
+
+        <IonFab vertical="bottom" horizontal="end" slot="fixed">
+          <IonFabButton
+            className="fab-mapa-grande"
+            routerLink="/mapa"
+            title="Ver mapa general"
+          >
+            <IonIcon icon={mapOutline} />
+          </IonFabButton>
+        </IonFab>
+
+
+
       </IonContent>
     </IonPage>
   );
