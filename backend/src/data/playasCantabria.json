@@ -3,30 +3,40 @@
     "nombre": "La Concha",
     "municipio": "Suances",
     "codigo": "3908503",
+    "lat": 43.43553526584305,
+    "lon": -4.0427976710155225,
     "idCruzRoja": 373
   },
   {
     "nombre": "Luaña-Cobreces",
     "municipio": "Cobreces",
     "codigo": "3900101",
+    "lat": 43.394411412417575,
+    "lon": -4.220509796726789,
     "idCruzRoja": 482
   },
   {
     "nombre": "La Arena",
     "municipio": "Amuero",
     "codigo": "3900602",
+    "lat": 43.50376068544449,
+    "lon": -3.577431874716216,
     "idCruzRoja": 0
   },
   {
     "nombre": "Cuberris",
     "municipio": "Bareyo",
     "codigo": "3901102",
+    "lat": 43.497207094319876,
+    "lon": -3.6144803196250317,
     "idCruzRoja": 1014
   },
   {
     "nombre": "Oriñon",
     "municipio": "Castro Urdiales",
     "codigo": "3902002",
+    "lat": 43.39937929830378,
+    "lon": -3.3210950057077557,
     "idCruzRoja": 0
   },
   {
@@ -39,84 +49,112 @@
     "nombre": "Comillas",
     "municipio": "Comillas",
     "codigo": "3902401",
+    "lat": 43.38789810194597,
+    "lon": -3.226869746814603,
     "idCruzRoja": 37
   },
   {
     "nombre": "La Salvé ",
     "municipio": "Laredo",
     "codigo": "3903502",
+    "lat": 43.41904926443771,
+    "lon": -3.437040159832106,
     "idCruzRoja": 328
   },
   {
     "nombre": "Cuchia - Marzan",
     "municipio": "Miengo",
     "codigo": "3904401",
+    "lat": 43.43595619518627,
+    "lon": -4.0308170936788255,
     "idCruzRoja": 0
   },
   {
     "nombre": "Mogro - Usil",
     "municipio": "Miengo",
     "codigo": "3904405",
+    "lat": 43.4391698944411,
+    "lon": -3.9726999236382476,
     "idCruzRoja": 373
   },
   {
     "nombre": "Ris - Noja",
     "municipio": "Noja",
     "codigo": "3904701",
+    "lat": 43.4914462044969,
+    "lon": -3.5289174541786283,
     "idCruzRoja": 1233
   },
   {
     "nombre": "Valdearenas",
     "municipio": "Piélagos",
     "codigo": "3905201",
+    "lat": 43.449335352132174,
+    "lon": -3.9692452714848985,
     "idCruzRoja": 30
   },
   {
     "nombre": "Somo",
     "municipio": "Ribamontán al Mar",
     "codigo": "3906102",
+    "lat": 43.45839029165217,
+    "lon": -3.735182762115226,
     "idCruzRoja": 369
   },
   {
     "nombre": "San Juan de la Canal",
     "municipio": "Santa Cruz de Bezana",
     "codigo": "3907302",
+    "lat": 43.47398663727131,
+    "lon": -3.8934552387426336,
     "idCruzRoja": 35
   },
   {
     "nombre": "Sardinero",
     "municipio": "Santander",
     "codigo": "3907506",
+    "lat": 43.47711066141211,
+    "lon": -3.7870797897346318,
     "idCruzRoja": 278
   },
   {
     "nombre": "La Magdalena",
     "municipio": "Santander",
     "codigo": "3907511",
+    "lat": 43.46697927750584,
+    "lon": -3.7766047718502676,
     "idCruzRoja": 283
   },
   {
-    "nombre": "San Martín",
+    "nombre": "San Martín - Virgen Del Mar",
     "municipio": "Santander",
     "codigo": "3907902",
+    "lat": 43.47683316210268,
+    "lon": -3.8765310105943294,
     "idCruzRoja": 1033
   },
   {
     "nombre": "El Sable de Merón",
     "municipio": "San Vicente de la Barquera",
     "codigo": "3908004",
+    "lat": 43.390554164871766,
+    "lon": -4.37798552043929,
     "idCruzRoja": 1127
   },
   {
     "nombre": "Oyambre",
     "municipio": "Val de San Vicente",
     "codigo": "3909101",
+    "lat": 43.390715750738,
+    "lon": -4.330638101332154,
     "idCruzRoja": 1120
   },
   {
     "nombre": "Amió",
     "municipio": "Val de San Vicente",
     "codigo": "3909504",
+    "lat": 43.394724003892236,
+    "lon": -4.483401034277786,
     "idCruzRoja": 0
   }
 ]
