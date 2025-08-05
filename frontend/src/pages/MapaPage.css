@@ -1,0 +1,23 @@
+.mapa-content {
+  --padding-top: 0;
+  --padding-bottom: 0;
+  height: 100%;
+}
+
+#mapa-container {
+  height: 100%;
+  width: 100%;
+  position: relative;
+}
+
+.leaflet-map {
+  height: 100%;
+  width: 100%;
+  z-index: 0;
+}
+
+.leaflet-popup-content {
+  font-family: system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.4;
+}
