@@ -1,12 +1,25 @@
 ion-content {
   --background: url('/assets/background.jpg') no-repeat center center / cover;
-  background-color: rgba(255, 255, 255, 0.8); /* fallback */
 }
 
-ion-toolbar {
+@media (prefers-color-scheme: light) {
+  ion-content {
+    background-color: rgba(255, 255, 255, 0.8);
+  }
+
+  ion-item {
+    --background: rgba(255, 255, 255, 0.8);
+  }
+
+  ion-card {
+    background: rgba(255, 255, 255, 0.85);
+  }
+}
+
+.home-toolbar {
   --background: var(--ion-color-primary);
   --color: var(--ion-color-primary-contrast);
-    text-align: center;
+  text-align: center;
 }
 
 .title-toolbar ion-title {
@@ -29,11 +42,11 @@ ion-searchbar {
 }
 
 ion-item {
-  --background: rgba(255, 255, 255, 0.8);
   --border-radius: 15px;
   margin-bottom: 1rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
+
 
 ion-list {
   background: transparent;
@@ -46,7 +59,7 @@ h2 {
 }
 
 p {
-  color: var(--ion-color-dark);
+  color: var(--ion-text-color);
 }
 
 .cruz-roja-icon {
@@ -59,15 +72,17 @@ p {
   display: flex;
   align-items: center;
   padding: 0 1rem;
-  color: #fff;
+  color: var(--ion-text-color);
 }
 
 ion-select {
-  background: white;
+  --background: var(--ion-item-background);
+  --color: var(--ion-text-color);
+  background: var(--ion-item-background);
+  color: var(--ion-text-color);
   border-radius: 10px;
   padding: 4px 10px;
   margin-left: 1rem;
-  color: #000;
 }
 
 ion-card {
@@ -75,12 +90,12 @@ ion-card {
   border-radius: 20px;
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
   backdrop-filter: blur(4px);
-  background: rgba(255, 255, 255, 0.85);
 }
+
 
 ion-card-title {
   font-size: 1.2rem;
-  color: #00796b;
+  color: var(--ion-color-primary);
   font-weight: 600;
   display: flex;
   align-items: center;
@@ -90,7 +105,7 @@ ion-card-title {
 .section-title {
   font-size: 1rem;
   font-weight: bold;
-  color: #00695c;
+  color: var(--ion-color-secondary);
   margin-bottom: 0.3rem;
   display: flex;
   align-items: center;
@@ -111,7 +126,12 @@ ion-card-title {
   flex-grow: 1;
 }
 
-html, body, #root, ion-app, ion-page, ion-content {
+html,
+body,
+#root,
+ion-app,
+ion-page,
+ion-content {
   height: 100%;
   margin: 0;
   padding: 0;
@@ -125,3 +145,21 @@ html, body, #root, ion-app, ion-page, ion-content {
   --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
+@media (prefers-color-scheme: dark) {
+  ion-content {
+    background-color: rgba(18, 18, 18, 0.8);
+  }
+
+  ion-card {
+    background: rgba(30, 30, 30, 0.85);
+  }
+
+  ion-item {
+    --background: rgba(30, 30, 30, 0.8);
+  }
+
+  ion-select {
+    background: var(--ion-color-step-100);
+    color: var(--ion-text-color);
+  }
+}
