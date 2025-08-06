@@ -2,7 +2,6 @@
 import axios from 'axios';
 import qs from 'qs';
 import * as cheerio from 'cheerio';
-import iconv from 'iconv-lite';
 import { cache } from '../utils/cacheInstance';
 
 export async function obtenerEstadoCruzRoja(id: number): Promise<any> {
@@ -27,11 +26,10 @@ export async function obtenerEstadoCruzRoja(id: number): Promise<any> {
 
     const response = await axios.post(url, payload, {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      responseType: 'arraybuffer',
       timeout: 10000
     });
 
-    const html = iconv.decode(response.data, 'latin1');
+    const html = response.data;
     const $ = cheerio.load(html);
 
     const banderaImgAlt = $('#listaFicha img[alt]').attr('alt')?.trim();

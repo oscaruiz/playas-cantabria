@@ -54,7 +54,7 @@ const Home: React.FC = () => {
   return (
     <IonPage>
       <IonHeader>
-        <IonToolbar className="title-toolbar">
+        <IonToolbar className="title-toolbar home-toolbar">
           <IonTitle onClick={() => window.location.reload()}>
             <IonIcon icon={umbrellaOutline} /> Playas de Cantabria
           </IonTitle>
