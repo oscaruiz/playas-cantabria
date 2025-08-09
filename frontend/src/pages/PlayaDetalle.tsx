@@ -48,6 +48,49 @@ function iconoBandera(bandera?: string): string {
   return '⚐';
 }
 
+// ---- Helpers de fecha ----
+function formatearFechaNumYYYYMMDD(fechaNum?: number): Date | null {
+  if (!fechaNum) return null;
+  const s = String(fechaNum);
+  const y = parseInt(s.slice(0, 4), 10);
+  const m = parseInt(s.slice(4, 6), 10) - 1;
+  const d = parseInt(s.slice(6, 8), 10);
+  return new Date(y, m, d);
+}
+
+function sumarDias(base: Date, dias: number): Date {
+  const out = new Date(base);
+  out.setDate(out.getDate() + dias);
+  return out;
+}
+
+function formatearDiaVisual(date: Date): string {
+  return date
+    .toLocaleDateString('es-ES', {
+      weekday: 'short',
+      day: '2-digit',
+      month: 'short',
+    })
+    .replace(/\.$/, ''); 
+}
+
+function fechaPrevision(
+  fechaNum?: number,
+  ultimaActualizacion?: string,
+  offsetDias = 0
+): Date | null {
+  const byNum = formatearFechaNumYYYYMMDD(fechaNum);
+  if (byNum) return byNum;
+  if (!ultimaActualizacion) return null;
+  const base = new Date(ultimaActualizacion);
+  return sumarDias(base, offsetDias);
+}
+
+// Type guard para objetos con campo opcional 'fecha'
+function hasFecha(x: unknown): x is { fecha?: number } {
+  return typeof x === 'object' && x !== null && 'fecha' in x;
+}
+
 const PlayaDetallePage: React.FC = () => {
   const { codigo } = useParams<{ codigo: string }>();
   const [datos, setDatos] = useState<PlayaDetalleData | null>(null);
@@ -63,19 +106,6 @@ const PlayaDetallePage: React.FC = () => {
         setError(err.message);
       });
   }, [codigo]);
-
-  function formatearFecha(fechaNum: number): string {
-    const fechaStr = fechaNum.toString();
-    const year = parseInt(fechaStr.slice(0, 4));
-    const month = parseInt(fechaStr.slice(4, 6)) - 1;
-    const day = parseInt(fechaStr.slice(6, 8));
-    const date = new Date(year, month, day);
-    return date.toLocaleDateString(undefined, {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    });
-  }
 
   return (
     <IonPage>
@@ -102,13 +132,26 @@ const PlayaDetallePage: React.FC = () => {
 
         {datos?.clima && (
           <>
+            {/* TARJETA HOY */}
             <IonCard className="tropical">
               <IonCardHeader>
-                <IonCardTitle>
-                  <IonIcon icon={todayOutline} /> Hoy
-                  <small style={{ float: 'right', color: '#666' }}>
-                    Fuente: {datos.clima.fuente}
-                  </small>
+                <IonCardTitle style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <IonIcon icon={todayOutline} />
+                  <span>Hoy</span>
+                  <span className="chip-fecha">
+                    {(() => {
+                      const hoyFechaNum = hasFecha(datos?.clima?.hoy) ? datos!.clima.hoy!.fecha : undefined;
+                      const f = fechaPrevision(
+                        hoyFechaNum,
+                        datos?.clima?.ultimaActualizacion,
+                        0
+                      );
+                      return f ? formatearDiaVisual(f) : '';
+                    })()}
+                  </span>
+                  <span style={{ marginLeft: 'auto', color: '#666', fontSize: '0.9rem' }}>
+                    Fuente: {datos!.clima.fuente}
+                  </span>
                 </IonCardTitle>
               </IonCardHeader>
 
@@ -157,15 +200,31 @@ const PlayaDetallePage: React.FC = () => {
               </IonCardContent>
             </IonCard>
 
+            {/* TARJETA MAÑANA */}
             <IonCard className="tropical">
               <IonCardHeader>
-                <IonCardTitle>
-                  <IonIcon icon={calendarClearOutline} /> Mañana
+                <IonCardTitle style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <IonIcon icon={calendarClearOutline} />
+                  <span>Mañana</span>
+                  <span className="chip-fecha">
+                    {(() => {
+                      const mananaFechaNum = hasFecha(datos?.clima?.manana) ? datos!.clima.manana!.fecha : undefined;
+                      const f = fechaPrevision(
+                        mananaFechaNum,
+                        datos?.clima?.ultimaActualizacion,
+                        1
+                      );
+                      return f ? formatearDiaVisual(f) : '';
+                    })()}
+                  </span>
+                  <span style={{ marginLeft: 'auto', color: '#666', fontSize: '0.9rem' }}>
+                    Fuente: {datos!.clima.fuente}
+                  </span>
                   <IonButton
                     fill="clear"
                     size="small"
                     onClick={() => setMananaExpanded(!mananaExpanded)}
-                    style={{ float: 'right' }}
+                    style={{ marginLeft: '8px' }}
                   >
                     {mananaExpanded ? '▲' : '▼'}
                   </IonButton>
@@ -226,7 +285,9 @@ const PlayaDetallePage: React.FC = () => {
             <IonCardContent>
               <IonItem lines="none">
                 <IonIcon icon={flagOutline} slot="start" />
-                <IonLabel>Bandera actual: {iconoBandera(datos.cruzRoja.bandera)} {datos.cruzRoja.bandera}</IonLabel>
+                <IonLabel>
+                  Bandera actual: {iconoBandera(datos.cruzRoja.bandera)} {datos.cruzRoja.bandera}
+                </IonLabel>
               </IonItem>
               <IonItem lines="none">
                 <IonIcon icon={calendarClearOutline} slot="start" />
@@ -244,6 +305,16 @@ const PlayaDetallePage: React.FC = () => {
           </IonCard>
         )}
       </IonContent>
+
+      {/* Estilo inline, puedes moverlo a un CSS */}
+      <style>{`
+        .chip-fecha {
+          padding: 2px 8px;
+          border-radius: 999px;
+          background: rgba(0,0,0,0.06);
+          font-size: 0.85rem;
+        }
+      `}</style>
     </IonPage>
   );
 };
