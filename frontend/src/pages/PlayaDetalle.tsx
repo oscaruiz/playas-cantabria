@@ -13,7 +13,6 @@ import {
   IonCardHeader,
   IonCardTitle,
   IonCardContent,
-  IonButton,
   IonIcon,
   IonItem,
   IonLabel,
@@ -33,6 +32,8 @@ import {
   todayOutline,
   calendarClearOutline,
   flagOutline,
+  chevronDownOutline,
+  chevronUpOutline,
 } from 'ionicons/icons';
 
 function limpiarTexto(texto: string): string {
@@ -71,7 +72,7 @@ function formatearDiaVisual(date: Date): string {
       day: '2-digit',
       month: 'short',
     })
-    .replace(/\.$/, ''); 
+    .replace(/\.$/, ''); // quita el punto final de "sáb."
 }
 
 function fechaPrevision(
@@ -107,6 +108,8 @@ const PlayaDetallePage: React.FC = () => {
       });
   }, [codigo]);
 
+  const fuente = datos?.clima?.fuente ?? '';
+
   return (
     <IonPage>
       <IonHeader>
@@ -140,7 +143,7 @@ const PlayaDetallePage: React.FC = () => {
                   <span>Hoy</span>
                   <span className="chip-fecha">
                     {(() => {
-                      const hoyFechaNum = hasFecha(datos?.clima?.hoy) ? datos!.clima.hoy!.fecha : undefined;
+                      const hoyFechaNum = hasFecha(datos?.clima?.hoy) ? datos?.clima?.hoy?.fecha : undefined;
                       const f = fechaPrevision(
                         hoyFechaNum,
                         datos?.clima?.ultimaActualizacion,
@@ -150,7 +153,7 @@ const PlayaDetallePage: React.FC = () => {
                     })()}
                   </span>
                   <span style={{ marginLeft: 'auto', color: '#666', fontSize: '0.9rem' }}>
-                    Fuente: {datos!.clima.fuente}
+                    Fuente: {fuente}
                   </span>
                 </IonCardTitle>
               </IonCardHeader>
@@ -195,7 +198,12 @@ const PlayaDetallePage: React.FC = () => {
 
                 <IonItem lines="none">
                   <IonIcon icon={timeOutline} slot="start" />
-                  <IonLabel>Actualizado: {new Date(datos.clima.ultimaActualizacion).toLocaleTimeString()}</IonLabel>
+                  <IonLabel>
+                    Actualizado:{' '}
+                    {datos?.clima?.ultimaActualizacion
+                      ? new Date(datos.clima.ultimaActualizacion).toLocaleTimeString()
+                      : 'N/A'}
+                  </IonLabel>
                 </IonItem>
               </IonCardContent>
             </IonCard>
@@ -203,32 +211,41 @@ const PlayaDetallePage: React.FC = () => {
             {/* TARJETA MAÑANA */}
             <IonCard className="tropical">
               <IonCardHeader>
-                <IonCardTitle style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <IonIcon icon={calendarClearOutline} />
-                  <span>Mañana</span>
-                  <span className="chip-fecha">
-                    {(() => {
-                      const mananaFechaNum = hasFecha(datos?.clima?.manana) ? datos!.clima.manana!.fecha : undefined;
-                      const f = fechaPrevision(
-                        mananaFechaNum,
-                        datos?.clima?.ultimaActualizacion,
-                        1
-                      );
-                      return f ? formatearDiaVisual(f) : '';
-                    })()}
-                  </span>
-                  <span style={{ marginLeft: 'auto', color: '#666', fontSize: '0.9rem' }}>
-                    Fuente: {datos!.clima.fuente}
-                  </span>
-                  <IonButton
-                    fill="clear"
-                    size="small"
-                    onClick={() => setMananaExpanded(!mananaExpanded)}
-                    style={{ marginLeft: '8px' }}
-                  >
-                    {mananaExpanded ? '▲' : '▼'}
-                  </IonButton>
-                </IonCardTitle>
+                {/* FILA TAPPABLE GRANDE */}
+                <IonItem
+                  button
+                  detail={false}
+                  lines="none"
+                  onClick={() => setMananaExpanded((v) => !v)}
+                  className="touch-row"
+                >
+                  <IonIcon icon={calendarClearOutline} slot="start" />
+                  <IonLabel className="header-label">
+                    <div className="header-line">
+                      <strong>Mañana</strong>
+                      <span className="chip-fecha">
+                        {(() => {
+                          const mananaFechaNum = hasFecha(datos?.clima?.manana)
+                            ? datos?.clima?.manana?.fecha
+                            : undefined;
+                          const f = fechaPrevision(
+                            mananaFechaNum,
+                            datos?.clima?.ultimaActualizacion,
+                            1
+                          );
+                          return f ? formatearDiaVisual(f) : '';
+                        })()}
+                      </span>
+                    </div>
+                    <div className="fuente">Fuente: {fuente}</div>
+                  </IonLabel>
+                  <IonIcon
+                    icon={mananaExpanded ? chevronUpOutline : chevronDownOutline}
+                    slot="end"
+                    className={`chevron ${mananaExpanded ? 'open' : ''}`}
+                    aria-hidden="true"
+                  />
+                </IonItem>
               </IonCardHeader>
 
               {mananaExpanded && (
@@ -306,13 +323,38 @@ const PlayaDetallePage: React.FC = () => {
         )}
       </IonContent>
 
-      {/* Estilo inline, puedes moverlo a un CSS */}
+      {/* Estilos inline (puedes moverlos al CSS del proyecto) */}
       <style>{`
         .chip-fecha {
-          padding: 2px 8px;
+          padding: 4px 10px;
           border-radius: 999px;
           background: rgba(0,0,0,0.06);
-          font-size: 0.85rem;
+          font-size: 0.9rem;
+          margin-left: 8px;
+        }
+        .touch-row {
+          min-height: 56px; /* mayor área táctil en móvil */
+        }
+        .header-label {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+        .header-line {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .fuente {
+          color: #666;
+          font-size: 0.9rem;
+        }
+        .chevron {
+          transition: transform 0.2s ease;
+          font-size: 24px;
+        }
+        .chevron.open {
+          transform: rotate(180deg);
         }
       `}</style>
     </IonPage>
