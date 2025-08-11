@@ -5,6 +5,7 @@
   "dependencies": {
     "@capacitor/android": "^7.4.2",
     "@capacitor/app": "7.0.1",
+    "@capacitor/browser": "^7.0.2",
     "@capacitor/core": "^7.4.2",
     "@capacitor/haptics": "7.0.1",
     "@capacitor/keyboard": "7.0.1",
@@ -22,8 +23,10 @@
     "@types/react-router-dom": "^5.1.7",
     "history": "^4.9.0",
     "ionicons": "^7.0.0",
+    "leaflet": "^1.9.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-leaflet": "^4.2.1",
     "react-router": "^5.2.0",
     "react-router-dom": "^5.2.0",
     "react-scripts": "^5.0.0",
@@ -40,9 +43,7 @@
     "workbox-range-requests": "^5.1.4",
     "workbox-routing": "^5.1.4",
     "workbox-strategies": "^5.1.4",
-    "workbox-streams": "^5.1.4",
-    "leaflet": "^1.9.4",
-    "react-leaflet": "^4.2.1"
+    "workbox-streams": "^5.1.4"
   },
   "devDependencies": {
     "@capacitor/cli": "^7.4.2",
