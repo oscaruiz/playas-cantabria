@@ -1,4 +1,4 @@
-import * as functions from 'firebase-functions';
+import * as functions from 'firebase-functions/v1';
 import { buildExpressApp } from '../src/express/server';
 import { InMemoryCache } from '../src/infrastructure/cache/InMemoryCache';
 // Importing ensures config is initialized from functions.config() in Firebase env

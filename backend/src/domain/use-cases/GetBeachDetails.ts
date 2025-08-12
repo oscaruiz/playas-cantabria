@@ -3,13 +3,13 @@ import { Weather } from '../entities/Weather';
 import { FlagStatus } from '../entities/Flag';
 import { Tides } from '../entities/Tides';
 import { BeachRepository } from '../ports/BeachRepository';
-import { WeatherProvider, ProviderError } from '../ports/WeatherProvider';
+import { WeatherProvider } from '../ports/WeatherProvider';
 import { FlagProvider } from '../ports/FlagProvider';
 import { TidesProvider } from '../ports/TidesProvider';
 
 export interface BeachDetails {
   beach: Beach;
-  weather: Weather | null; // If both providers fail, we still return the beach & other details.
+  weather: Weather | null;
   flag: FlagStatus | null;
   tides: Tides | null;
 }
@@ -22,9 +22,10 @@ export class DetailsError extends Error {
 }
 
 /**
- * Business rule: try AEMET first, fallback to OpenWeather on error/timeout.
- * - If both fail, we return `weather: null` but do NOT fail the whole details call.
- * - Flag/Tides failures are non-fatal and yield nulls.
+ * Fallback policy for weather:
+ * - Try AEMET first as primary weather provider.
+ * - If AEMET fails, fallback to OpenWeather automatically.
+ * - Return null only if both providers fail.
  */
 export class GetBeachDetails {
   constructor(
@@ -32,7 +33,7 @@ export class GetBeachDetails {
     private readonly aemet: WeatherProvider,
     private readonly openWeather: WeatherProvider,
     private readonly flags: FlagProvider,
-    private readonly tides: TidesProvider | null // optional, may be stubbed for now
+    private readonly tides: TidesProvider | null
   ) {}
 
   async execute(id: string): Promise<BeachDetails> {
@@ -42,28 +43,35 @@ export class GetBeachDetails {
     }
 
     const [weather, flag, tideInfo] = await Promise.all([
-      this.getWeatherWithFallback(beach.latitude, beach.longitude),
+      this.getWeatherHedged(beach.latitude, beach.longitude, 500),
       this.getFlagSafe(beach.redCrossId),
       this.getTidesSafe(beach.latitude, beach.longitude),
     ]);
 
-    return {
-      beach,
-      weather,
-      flag,
-      tides: tideInfo,
-    };
+    return { beach, weather, flag, tides: tideInfo };
   }
 
-  private async getWeatherWithFallback(lat: number, lon: number): Promise<Weather | null> {
+  private async getWeatherHedged(lat: number, lon: number, hedgeDelayMs: number): Promise<Weather | null> {
+    // 🥇 INTENTAR AEMET PRIMERO
     try {
-      return await this.aemet.getCurrentByCoords(lat, lon);
-    } catch (errAemet) {
-      // If AEMET fails, try OpenWeather
+      console.log('🌤️ Intentando obtener datos de AEMET...');
+      const aemetWeather = await this.aemet.getCurrentByCoords(lat, lon);
+      console.log('✅ AEMET exitoso:', aemetWeather.source);
+      return aemetWeather;
+    } catch (aemetError) {
+      console.log('❌ AEMET falló:', aemetError);
+      
+      // 🥈 FALLBACK A OPENWEATHER
       try {
-        return await this.openWeather.getCurrentByCoords(lat, lon);
-      } catch (errOpen) {
-        // Swallow both errors but keep logs upstream; return null to keep the endpoint stable.
+        console.log('🌤️ Fallback: Intentando OpenWeather...');
+        const openWeatherData = await this.openWeather.getCurrentByCoords(lat, lon);
+        console.log('✅ OpenWeather exitoso:', openWeatherData.source);
+        return openWeatherData;
+      } catch (openWeatherError) {
+        console.log('❌ OpenWeather también falló:', openWeatherError);
+        
+        // 🚨 AMBOS FALLARON
+        console.log('🚨 Todos los proveedores de clima fallaron');
         return null;
       }
     }
@@ -73,7 +81,7 @@ export class GetBeachDetails {
     if (!redCrossId || redCrossId <= 0) return null;
     try {
       return await this.flags.getFlagByRedCrossId(redCrossId);
-    } catch (_e) {
+    } catch {
       return null;
     }
   }
@@ -82,7 +90,7 @@ export class GetBeachDetails {
     if (!this.tides) return null;
     try {
       return await this.tides.getTidesByCoords(lat, lon);
-    } catch (_e) {
+    } catch {
       return null;
     }
   }

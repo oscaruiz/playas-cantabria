@@ -28,31 +28,25 @@ export class RedCrossFlagProvider implements FlagProvider {
           new URLSearchParams({
             id: String(redCrossId),
             action: '',
-            aplicacion: 'consultaPlayas',
+            aplicacion: 'consultaPlayas'
           }).toString(),
           {
-            headers: {
-              'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            timeout: 7000,
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            timeout: 7000
           }
         );
 
         const $ = load(resp.data as string);
-
-        // Heuristics: search for text/icon indicating the flag color.
-        // This may vary; adjust selectors to your current markup.
         const text = $('body').text().toLowerCase();
 
         const color = this.detectColor(text);
         const status: FlagStatus = {
           color,
           message: color === 'unknown' ? undefined : `Flag: ${color}`,
-          timestamp: Date.now(),
+          timestamp: Date.now()
         };
         return status;
-      } catch (_e) {
-        // Non-fatal: return null on scraping errors.
+      } catch {
         return null;
       }
     });

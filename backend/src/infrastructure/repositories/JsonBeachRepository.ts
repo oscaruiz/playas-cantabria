@@ -22,7 +22,6 @@ export class JsonBeachRepository implements BeachRepository {
   }
 
   async getAll(): Promise<Beach[]> {
-    // Load once per process; also expose through cache to avoid repeated mapping.
     const cached = this.cache.get<Beach[]>(CacheKeys.beachesAll);
     if (cached) return cached;
 
@@ -30,8 +29,7 @@ export class JsonBeachRepository implements BeachRepository {
       const raw = JSON.parse(fs.readFileSync(this.dataPath, 'utf-8')) as RawBeach[];
       this.loaded = raw.map((b) => this.mapToEntity(b));
     }
-    // Save to cache without TTL (treat as immutable)
-    this.cache.set(CacheKeys.beachesAll, this.loaded, 60 * 60 * 24 * 365); // 1 year
+    this.cache.set(CacheKeys.beachesAll, this.loaded, 60 * 60 * 24 * 365);
     return this.loaded;
   }
 
@@ -54,7 +52,7 @@ export class JsonBeachRepository implements BeachRepository {
       aemetCode: r.codigo,
       latitude: r.lat,
       longitude: r.lon,
-      redCrossId: r.idCruzRoja || 0,
+      redCrossId: r.idCruzRoja || 0
     };
   }
 }

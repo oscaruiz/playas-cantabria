@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { logger } from '../../../utils/logger'; // Adjust the path as needed
+import { logger } from '../../utils/logger'; // Adjust the path as needed
 
 export class AppError extends Error {
   constructor(

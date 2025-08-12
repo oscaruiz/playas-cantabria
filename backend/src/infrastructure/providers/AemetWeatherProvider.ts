@@ -10,7 +10,13 @@ import { Config } from '../config/config';
  * - This implementation focuses on shape + error handling + caching. Adjust endpoint parsing to your current AEMET integration.
  */
 export class AemetWeatherProvider implements WeatherProvider {
+  private lastRaw: unknown = null;
+
   constructor(private readonly cache: InMemoryCache) {}
+
+  getLastRaw() {
+    return this.lastRaw;
+  }
 
   async getCurrentByCoords(lat: number, lon: number): Promise<Weather> {
     const cfg = Config.get();
@@ -20,38 +26,56 @@ export class AemetWeatherProvider implements WeatherProvider {
     const cacheKey = CacheKeys.weatherByCoords(lat, lon, 'AEMET');
     return this.cache.getOrSet(cacheKey, cfg.cacheTtlSeconds, async () => {
       try {
-        // Example flow (AEMET usually returns a redirect URL first):
-        // 1) Request metadata URL
-        const meta = await http.get(
-          'https://opendata.aemet.es/opendata/api/observacion/convencional/todas',
-          {
-            params: { api_key: cfg.aemetApiKey },
-            timeout: 7000,
-          }
-        );
+        const meta = await http.get('https://opendata.aemet.es/opendata/api/observacion/convencional/todas', {
+          params: { api_key: cfg.aemetApiKey },
+          timeout: 7000
+        });
+        debugLog('aemet.meta', meta.data);
 
-        // AEMET opendata often responds with { estado, datos, metadatos }
-        const datosUrl: string | undefined = (meta.data && meta.data.datos) || undefined;
+        const datosUrl: string | undefined = meta.data?.datos;
         if (!datosUrl) {
+          this.lastRaw = meta.data;
           throw new ProviderError('AEMET', 'Unexpected response: missing datos URL', 'BAD_PAYLOAD');
         }
 
-        // 2) Fetch actual payload
-        const obsResp = await http.get(datosUrl, { timeout: 7000 });
-        // Here you would select the closest station by (lat,lon) and map fields.
-        // For demonstration, produce a minimal stable Weather object.
-        const now = Date.now();
+        const obsResp = await http.get<AemetObs[]>(datosUrl, { timeout: 7000, responseType: 'json' });
+        const arr = Array.isArray(obsResp.data) ? obsResp.data : [];
+        this.lastRaw = arr;
+        debugLog('aemet.obs', arr.slice(0, 5));
+
+        if (arr.length === 0) {
+          throw new ProviderError('AEMET', 'Empty observations payload', 'EMPTY');
+        }
+
+        let best: AemetObs | null = null;
+        let bestD = Number.POSITIVE_INFINITY;
+        for (const s of arr) {
+          if (typeof s.lat !== 'number' || typeof s.lon !== 'number') continue;
+          const d = haversineSq(lat, lon, s.lat, s.lon);
+          if (d < bestD) {
+            bestD = d;
+            best = s;
+          }
+        }
+        if (!best) {
+          throw new ProviderError('AEMET', 'No station with coordinates found', 'NO_STATION');
+        }
+
+        const timestamp = best.fint ? parseAemetTime(best.fint) : Date.now();
+        const pressure = typeof best.pres_nmar === 'number' ? best.pres_nmar : best.pres;
+
         const weather: Weather = {
           source: 'AEMET',
-          timestamp: now,
-          temperatureC: null,
-          description: 'AEMET data',
+          timestamp,
+          temperatureC: typeof best.ta === 'number' ? best.ta : null,
+          description: null,
           icon: null,
-          windSpeedMs: null,
-          windDirectionDeg: null,
-          humidityPct: null,
-          pressureHPa: null,
+          windSpeedMs: typeof best.vv === 'number' ? best.vv : null,
+          windDirectionDeg: typeof best.dv === 'number' ? best.dv : null,
+          humidityPct: typeof best.hr === 'number' ? best.hr : null,
+          pressureHPa: typeof pressure === 'number' ? pressure : null
         };
+
         return weather;
       } catch (e: any) {
         const name = e?.code || e?.name;

@@ -2,6 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { GetAllBeaches } from '../../domain/use-cases/GetAllBeaches';
 import { GetBeachById } from '../../domain/use-cases/GetBeachById';
 import { DetailsAssembler } from '../../application/services/DetailsAssembler';
+import { LegacyDetailsAssembler } from '../../application/services/LegacyDetailsAssembler';
 import { BeachMapper } from '../../application/mappers/BeachMapper';
 import { BeachIdSchema } from '../../application/validation/params';
 
@@ -9,6 +10,7 @@ export interface BeachesRoutesDeps {
   getAllBeaches: GetAllBeaches;
   getBeachById: GetBeachById;
   detailsAssembler: DetailsAssembler;
+  legacyDetailsAssembler?: LegacyDetailsAssembler;
 }
 
 export function createBeachesRouter(deps: BeachesRoutesDeps): Router {
@@ -39,14 +41,17 @@ export function createBeachesRouter(deps: BeachesRoutesDeps): Router {
     }
   });
 
-  // GET /api/beaches/:id/details
+  // GET /api/beaches/:id/details  -> devuelve el JSON LEGADO
   router.get('/:id/details', async (req: Request, res: Response, next: NextFunction) => {
     try {
       const parsed = BeachIdSchema.safeParse(req.params);
       if (!parsed.success) {
         return res.status(400).json({ error: 'Invalid beach id' });
       }
-      const detailsDto = await deps.detailsAssembler.getBeachWithDetails(parsed.data.id);
+      if (!deps.legacyDetailsAssembler) {
+        return res.status(500).json({ error: 'Details assembler not configured' });
+      }
+      const detailsDto = await deps.legacyDetailsAssembler.assemble(parsed.data.id);
       res.json(detailsDto);
     } catch (e) {
       next(e);

@@ -1,20 +1,24 @@
 import express, { Express } from 'express';
+import compression from 'compression';
 import { corsMiddleware } from './middlewares/cors';
 import { errorHandler } from './middlewares/errorHandler';
 import { notFoundHandler } from './middlewares/notFoundHandler';
 
 import { InMemoryCache } from '../infrastructure/cache/InMemoryCache';
-import { JsonBeachRepository } from '../infrastructure/repositories/JsonBeachRepository';
-import { AemetWeatherProvider } from '../infrastructure/providers/AemetWeatherProvider';
-import { OpenWeatherWeatherProvider } from '../infrastructure/providers/OpenWeatherWeatherProvider';
-import { RedCrossFlagProvider } from '../infrastructure/providers/RedCrossFlagProvider';
+import { DIContainer } from '../infrastructure/di/DIContainer';
+import { configureDependencies } from '../infrastructure/di/dependencies';
 
+// Import types for better typing
 import { GetAllBeaches } from '../domain/use-cases/GetAllBeaches';
 import { GetBeachById } from '../domain/use-cases/GetBeachById';
-import { GetBeachDetails } from '../domain/use-cases/GetBeachDetails';
 import { DetailsAssembler } from '../application/services/DetailsAssembler';
+import { LegacyDetailsAssembler } from '../application/services/LegacyDetailsAssembler';
+import { WeatherProvider } from '../domain/ports/WeatherProvider';
 
 import { createBeachesRouter } from './routes/beachesRouter';
+// OJO: mantengo tu ruta actual del debugRouter
+import { createDebugRouter } from '../infrastructure/express/routes/debugRouter';
+import { DEBUG_WEATHER } from '../infrastructure/utils/debug';
 
 export interface BuildDeps {
   /**
@@ -31,30 +35,48 @@ export interface BuildDeps {
 export function buildExpressApp({ cache }: BuildDeps = {}): Express {
   const app = express();
 
-  // Core middlewares
+  // Middleware configuration
+  app.use(compression());
   app.use(corsMiddleware());
   app.use(express.json());
 
-  // --- Infrastructure instances ---
-  const sharedCache = cache ?? new InMemoryCache();
+  // 🏗️ DEPENDENCY INJECTION CONTAINER
+  const container = new DIContainer();
+  configureDependencies(container, { cache });
 
-  const beachRepo = new JsonBeachRepository(sharedCache);
-  const aemet = new AemetWeatherProvider(sharedCache);
-  const openWeather = new OpenWeatherWeatherProvider(sharedCache);
-  const redCross = new RedCrossFlagProvider(sharedCache);
+  // Get dependencies from container with proper typing
+  const getAllBeaches = container.get<GetAllBeaches>('getAllBeaches');
+  const getBeachById = container.get<GetBeachById>('getBeachById');
+  const detailsAssembler = container.get<DetailsAssembler>('detailsAssembler');
+  const legacyDetailsAssembler = container.get<LegacyDetailsAssembler>('legacyDetailsAssembler');
 
-  // --- Domain use-cases ---
-  const getAllBeaches = new GetAllBeaches(beachRepo);
-  const getBeachById = new GetBeachById(beachRepo);
-  const getBeachDetails = new GetBeachDetails(beachRepo, aemet, openWeather, redCross, null);
+  // Routes configuration
+  app.use(
+    '/api/beaches',
+    createBeachesRouter({
+      getAllBeaches,
+      getBeachById,
+      detailsAssembler,
+      legacyDetailsAssembler,
+    })
+  );
 
-  // --- Application services ---
-  const detailsAssembler = new DetailsAssembler(getBeachDetails);
+  // Debug routes (conditional)
+  if (DEBUG_WEATHER) {
+    const aemet = container.get<WeatherProvider & { getLastRaw?: () => unknown }>('aemetWeatherProvider');
+    const openWeather = container.get<WeatherProvider & { getLastRaw?: () => unknown }>('openWeatherProvider');
 
-  // Routes
-  app.use('/api/beaches', createBeachesRouter({ getAllBeaches, getBeachById, detailsAssembler }));
+    app.use(
+      '/api/_debug',
+      createDebugRouter({
+        getBeachById,
+        aemet,
+        openWeather,
+      })
+    );
+  }
 
-  // 404 + Errors
+  // Error handling middleware (must be last)
   app.use(notFoundHandler);
   app.use(errorHandler);
 

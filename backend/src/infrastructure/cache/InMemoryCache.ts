@@ -1,11 +1,7 @@
-type CacheRecord<V> = {
-  value: V;
-  expiresAt: number; // epoch ms
-};
+type CacheRecord<V> = { value: V; expiresAt: number };
 
 export class InMemoryCache {
   private store = new Map<string, CacheRecord<unknown>>();
-
   constructor(private readonly now: () => number = () => Date.now()) {}
 
   get<T>(key: string): T | undefined {

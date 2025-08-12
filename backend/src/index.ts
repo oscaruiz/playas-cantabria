@@ -1,11 +1,24 @@
 import { buildExpressApp } from './express/server';
 import { InMemoryCache } from './infrastructure/cache/InMemoryCache';
-import { Config, loadConfig } from './infrastructure/config/config';
+import { loadConfig } from './infrastructure/config/config';
+
+function wireProcessGuards() {
+  process.on('unhandledRejection', (reason) => {
+    // eslint-disable-next-line no-console
+    console.error('[process] Unhandled promise rejection:', reason);
+    // No salimos; dejamos el proceso vivo para que Express responda con 5xx
+  });
+  process.on('uncaughtException', (err) => {
+    // eslint-disable-next-line no-console
+    console.error('[process] Uncaught exception:', err);
+    // No salimos; podríamos hacer graceful restart si usamos un PM2 / supervisor
+  });
+}
 
 async function main() {
-  // Load config (dotenv in local/docker; functions.config() in Firebase is handled there)
-  const cfg = loadConfig();
+  wireProcessGuards();
 
+  const cfg = loadConfig();
   const app = buildExpressApp({ cache: new InMemoryCache() });
   const port = cfg.port;
 
@@ -14,7 +27,6 @@ async function main() {
     console.log(`[server] Listening on http://0.0.0.0:${port}`);
   });
 
-  // Graceful shutdown
   const shutdown = (signal: string) => {
     // eslint-disable-next-line no-console
     console.log(`[server] Received ${signal}, shutting down...`);
@@ -34,6 +46,6 @@ async function main() {
 
 main().catch((err) => {
   // eslint-disable-next-line no-console
-  console.error('[server] Fatal error:', err);
+  console.error('[server] Fatal error during bootstrap:', err);
   process.exit(1);
 });
