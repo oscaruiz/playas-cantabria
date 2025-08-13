@@ -35,8 +35,7 @@ export interface TidesDTO {
 }
 
 /**
- * Public API shape for details.
- * Route: GET /api/beaches/:id/details
+ * Deprecated: BeachDetailsDTO is no longer used.
  */
 export interface BeachDetailsDTO {
   beach: BeachDTO;

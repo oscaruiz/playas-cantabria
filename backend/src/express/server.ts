@@ -11,7 +11,6 @@ import { configureDependencies } from '../infrastructure/di/dependencies';
 // Import types for better typing
 import { GetAllBeaches } from '../domain/use-cases/GetAllBeaches';
 import { GetBeachById } from '../domain/use-cases/GetBeachById';
-import { DetailsAssembler } from '../application/services/DetailsAssembler';
 import { LegacyDetailsAssembler } from '../application/services/LegacyDetailsAssembler';
 import { WeatherProvider } from '../domain/ports/WeatherProvider';
 
@@ -47,7 +46,6 @@ export function buildExpressApp({ cache }: BuildDeps = {}): Express {
   // Get dependencies from container with proper typing
   const getAllBeaches = container.get<GetAllBeaches>('getAllBeaches');
   const getBeachById = container.get<GetBeachById>('getBeachById');
-  const detailsAssembler = container.get<DetailsAssembler>('detailsAssembler');
   const legacyDetailsAssembler = container.get<LegacyDetailsAssembler>('legacyDetailsAssembler');
 
   // Routes configuration
@@ -56,7 +54,6 @@ export function buildExpressApp({ cache }: BuildDeps = {}): Express {
     createBeachesRouter({
       getAllBeaches,
       getBeachById,
-      detailsAssembler,
       legacyDetailsAssembler,
     })
   );

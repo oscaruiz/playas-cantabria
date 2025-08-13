@@ -7,7 +7,6 @@ import { RedCrossFlagProvider } from '../providers/RedCrossFlagProvider';
 import { GetAllBeaches } from '../../domain/use-cases/GetAllBeaches';
 import { GetBeachById } from '../../domain/use-cases/GetBeachById';
 import { GetBeachDetails } from '../../domain/use-cases/GetBeachDetails';
-import { DetailsAssembler } from '../../application/services/DetailsAssembler';
 import { LegacyDetailsAssembler } from '../../application/services/LegacyDetailsAssembler';
 import { AemetBeachForecastProvider } from '../providers/AemetBeachForecastProvider';
 
@@ -55,10 +54,6 @@ export function configureDependencies(container: DIContainer, overrides: { cache
   );
 
   // Application Layer - Services
-  container.register('detailsAssembler', (c) => 
-    new DetailsAssembler(c.get('getBeachDetails'))
-  );
-  
   container.register('legacyDetailsAssembler', (c) => 
     new LegacyDetailsAssembler(
       c.get('getBeachDetails'),
