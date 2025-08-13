@@ -74,9 +74,9 @@ export class LegacyDetailsMapper {
   private static mapCruzRoja(f: FlagStatus): CruzRojaDTO {
     return {
       bandera: this.flagToEs(f),
-      coberturaDesde: null,
-      coberturaHasta: null,
-      horario: null,
+      coberturaDesde: f.coverageFrom ?? null,
+      coberturaHasta: f.coverageTo ?? null,
+      horario: f.schedule ?? null,
       ultimaActualizacion: new Date(f.timestamp).toISOString(),
     };
   }

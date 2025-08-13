@@ -32,18 +32,29 @@ export class RedCrossFlagProvider implements FlagProvider {
           }).toString(),
           {
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            timeout: 7000
+            timeout: 10000
           }
         );
 
         const $ = load(resp.data as string);
-        const text = $('body').text().toLowerCase();
 
-        const color = this.detectColor(text);
+        // Bandera (texto alt de la imagen)
+        const banderaImgAlt = $('#listaFicha img[alt]').attr('alt')?.trim() || '';
+
+        // Campos adyacentes
+        const coberturaDesde = $('li:contains("Cobertura desde")').next().text().trim() || null;
+        const coberturaHasta = $('li:contains("Hasta")').next().text().trim() || null;
+        const horario = $('li:contains("Horario")').next().text().trim() || null;
+
+        const color = this.detectColorFromAlt(banderaImgAlt) ?? this.detectColor(($('body').text() || '').toLowerCase());
+
         const status: FlagStatus = {
           color,
-          message: color === 'unknown' ? undefined : `Flag: ${color}`,
-          timestamp: Date.now()
+          message: banderaImgAlt || undefined,
+          timestamp: Date.now(),
+          coverageFrom: coberturaDesde,
+          coverageTo: coberturaHasta,
+          schedule: horario,
         };
         return status;
       } catch {
@@ -58,5 +69,14 @@ export class RedCrossFlagProvider implements FlagProvider {
     if (text.includes('bandera verde') || text.includes('verde')) return 'green';
     if (text.includes('bandera negra') || text.includes('negra')) return 'black';
     return 'unknown';
+  }
+
+  private detectColorFromAlt(alt: string): FlagColor | null {
+    const s = alt.toLowerCase();
+    if (s.includes('roja')) return 'red';
+    if (s.includes('amarilla')) return 'yellow';
+    if (s.includes('verde')) return 'green';
+    if (s.includes('negra')) return 'black';
+    return null;
   }
 }

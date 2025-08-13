@@ -6,4 +6,8 @@ export interface FlagStatus {
   message?: string;
   /** Unix epoch (ms) when the flag info was observed. */
   timestamp: number;
+  /** Optional Cruz Roja details */
+  coverageFrom?: string | null;
+  coverageTo?: string | null;
+  schedule?: string | null;
 }
