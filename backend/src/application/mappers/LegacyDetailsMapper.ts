@@ -121,15 +121,17 @@ export class LegacyDetailsMapper {
 
   private static iconToLegacy(source: Weather['source'], icon: string | null): number | null {
     if (!icon) return null;
-    if (source === 'OpenWeather') {
-      if (icon.startsWith('01')) return 100;
-      if (icon.startsWith('02')) return 110;
-      if (icon.startsWith('03') || icon.startsWith('04')) return 120;
-      if (icon.startsWith('09') || icon.startsWith('10')) return 200;
-      if (icon.startsWith('11')) return 210;
-      if (icon.startsWith('13')) return 300;
-      if (icon.startsWith('50')) return 400;
+    
+    if (source === 'OpenWeather' || source === 'AEMET') {
+      if (icon.startsWith('01')) return 100; // ☀️ Despejado
+      if (icon.startsWith('02')) return 110; // ⛅ Parcialmente nublado
+      if (icon.startsWith('03') || icon.startsWith('04')) return 120; // ☁️ Nublado
+      if (icon.startsWith('09') || icon.startsWith('10')) return 200; // 🌧️ Lluvia
+      if (icon.startsWith('11')) return 210; // ⛈️ Tormenta
+      if (icon.startsWith('13')) return 300; // ❄️ Nieve
+      if (icon.startsWith('50')) return 400; // 🌫️ Niebla
     }
+    
     return null;
   }
 }

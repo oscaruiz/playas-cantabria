@@ -3,6 +3,43 @@ import { ProviderError, WeatherProvider } from '../../domain/ports/WeatherProvid
 import { http } from '../http/axiosClient';
 import { InMemoryCache, CacheKeys } from '../cache/InMemoryCache';
 import { Config } from '../config/config';
+import { debugLog } from '../utils/debug';
+
+// 🌤️ TIPOS DE AEMET
+interface AemetObs {
+  idema?: string;    // ID estación
+  lat?: number;      // Latitud  
+  lon?: number;      // Longitud
+  fint?: string;     // "2025-08-13T12:00:00+0000"
+  ta?: number;       // 🌡️ Temperatura ambiente (°C)
+  hr?: number;       // 💧 Humedad relativa (%)
+  pres?: number;     // 📊 Presión (hPa)
+  pres_nmar?: number; // 📊 Presión nivel del mar (hPa)
+  vv?: number;       // 👁️ Visibilidad (km) - NO es velocidad viento
+  dv?: number;       // 🧭 Dirección viento (grados)
+  vmax?: number;     // 💨 Velocidad máxima viento (m/s)
+  ubi?: string;      // 📍 Ubicación
+}
+
+// 🧮 HAVERSINE FORMULA (distancia entre coordenadas)
+function haversineSq(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371; // Radio tierra en km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) *
+            Math.sin(dLon/2) * Math.sin(dLon/2);
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+
+// ⏰ PARSER DE TIEMPO AEMET
+function parseAemetTime(fint: string): number {
+  try {
+    return new Date(fint).getTime();
+  } catch {
+    return Date.now();
+  }
+}
 
 /**
  * AEMET provider:
@@ -68,9 +105,9 @@ export class AemetWeatherProvider implements WeatherProvider {
           source: 'AEMET',
           timestamp,
           temperatureC: typeof best.ta === 'number' ? best.ta : null,
-          description: null,
-          icon: null,
-          windSpeedMs: typeof best.vv === 'number' ? best.vv : null,
+          description: this.generateAemetDescription(best),
+          icon: this.generateAemetIcon(best),
+          windSpeedMs: typeof best.vmax === 'number' ? best.vmax : null, // ✅ CORREGIDO: vmax es velocidad viento
           windDirectionDeg: typeof best.dv === 'number' ? best.dv : null,
           humidityPct: typeof best.hr === 'number' ? best.hr : null,
           pressureHPa: typeof pressure === 'number' ? pressure : null
@@ -82,5 +119,57 @@ export class AemetWeatherProvider implements WeatherProvider {
         throw new ProviderError('AEMET', e?.message || 'AEMET request failed', name);
       }
     });
+  }
+
+  /**
+   * 📝 Generar descripción basada en datos de AEMET
+   */
+  private generateAemetDescription(obs: AemetObs): string | null {
+    const temp = obs.ta;
+    const humidity = obs.hr;
+    const pressure = obs.pres || obs.pres_nmar;
+    
+    if (typeof temp !== 'number') return null;
+    
+    let desc = '';
+    
+    // Temperatura
+    if (temp < 10) desc += 'Frío';
+    else if (temp < 20) desc += 'Templado';
+    else if (temp < 30) desc += 'Cálido';
+    else desc += 'Muy cálido';
+    
+    // Humedad
+    if (typeof humidity === 'number') {
+      if (humidity > 80) desc += ' y húmedo';
+      else if (humidity < 40) desc += ' y seco';
+    }
+    
+    // Presión (tendencia del tiempo)
+    if (typeof pressure === 'number') {
+      if (pressure > 1020) desc += ', tiempo estable';
+      else if (pressure < 1000) desc += ', tiempo inestable';
+    }
+    
+    return desc || null;
+  }
+
+  /**
+   * 🎨 Generar icono basado en datos de AEMET
+   */
+  private generateAemetIcon(obs: AemetObs): string | null {
+    const temp = obs.ta;
+    const humidity = obs.hr;
+    
+    if (typeof temp !== 'number') return null;
+    
+    // Lógica simple basada en temperatura y humedad
+    if (typeof humidity === 'number' && humidity > 80) {
+      return '04d'; // Nublado/húmedo
+    } else if (typeof humidity === 'number' && humidity < 40) {
+      return '01d'; // Despejado/seco
+    } else {
+      return '02d'; // Parcialmente nublado
+    }
   }
 }

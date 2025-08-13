@@ -1,7 +1,12 @@
+import { InMemoryCache } from "../cache/InMemoryCache";
+
 type Factory<T = any> = (container: DIContainer) => T;
 type Singleton<T = any> = { instance: T };
 
 export class DIContainer {
+  set(arg0: string, cache: InMemoryCache) {
+      throw new Error('Method not implemented.');
+  }
   private factories = new Map<string, Factory>();
   private singletons = new Map<string, Singleton>();
 

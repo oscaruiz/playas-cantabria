@@ -9,6 +9,7 @@ import { GetBeachById } from '../../domain/use-cases/GetBeachById';
 import { GetBeachDetails } from '../../domain/use-cases/GetBeachDetails';
 import { DetailsAssembler } from '../../application/services/DetailsAssembler';
 import { LegacyDetailsAssembler } from '../../application/services/LegacyDetailsAssembler';
+import { AemetBeachForecastProvider } from '../providers/AemetBeachForecastProvider';
 
 export function configureDependencies(container: DIContainer, overrides: { cache?: InMemoryCache } = {}): void {
   // Infrastructure Layer - Singletons
@@ -28,6 +29,10 @@ export function configureDependencies(container: DIContainer, overrides: { cache
   
   container.registerSingleton('redCrossFlagProvider', (c) => 
     new RedCrossFlagProvider(c.get('cache'))
+  );
+
+  container.registerSingleton('aemetBeachForecastProvider', (c) =>
+    new AemetBeachForecastProvider(c.get('cache'))
   );
 
   // Domain Layer - Use Cases
@@ -57,7 +62,8 @@ export function configureDependencies(container: DIContainer, overrides: { cache
   container.register('legacyDetailsAssembler', (c) => 
     new LegacyDetailsAssembler(
       c.get('getBeachDetails'),
-      c.get('openWeatherProvider')
+      c.get('openWeatherProvider'),
+      c.get('aemetBeachForecastProvider')
     )
   );
 }
