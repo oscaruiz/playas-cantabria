@@ -22,7 +22,7 @@ export class OpenWeatherWeatherProvider implements WeatherProvider {
     return this.cache.getOrSet(cacheKey, cfg.cacheTtlSeconds, async () => {
       try {
         const resp = await http.get('https://api.openweathermap.org/data/2.5/weather', {
-          params: { lat, lon, units: 'metric', appid: cfg.openWeatherApiKey },
+          params: { lat, lon, units: 'metric', lang: 'es', appid: cfg.openWeatherApiKey },
           timeout: 7000
         });
 
@@ -59,7 +59,7 @@ export class OpenWeatherWeatherProvider implements WeatherProvider {
     return this.cache.getOrSet(cacheKey, cfg.cacheTtlSeconds, async () => {
       try {
         const resp = await http.get('https://api.openweathermap.org/data/2.5/forecast', {
-          params: { lat, lon, units: 'metric', appid: cfg.openWeatherApiKey },
+          params: { lat, lon, units: 'metric', lang: 'es', appid: cfg.openWeatherApiKey },
           timeout: 8000
         });
 
@@ -113,6 +113,85 @@ export class OpenWeatherWeatherProvider implements WeatherProvider {
       } catch (e: any) {
         const name = e?.code || e?.name;
         throw new ProviderError('OpenWeather', e?.message || 'OpenWeather forecast failed', name);
+      }
+    });
+  }
+
+  async getDailyUVIndex(lat: number, lon: number): Promise<{ today: number | null; tomorrow: number | null }> {
+    const cfg = Config.get();
+    if (!cfg.openWeatherApiKey) throw new ProviderError('OpenWeather', 'Missing OpenWeather API key');
+
+    const cacheKey = `ow:onecall:uv:${lat.toFixed(4)},${lon.toFixed(4)}`;
+    return this.cache.getOrSet(cacheKey, cfg.cacheTtlSeconds, async () => {
+      try {
+        const resp = await http.get('https://api.openweathermap.org/data/2.5/onecall', {
+          params: {
+            lat,
+            lon,
+            units: 'metric',
+            exclude: 'minutely,hourly,alerts',
+            appid: cfg.openWeatherApiKey
+          },
+          timeout: 8000
+        });
+
+        const daily: any[] = Array.isArray(resp.data?.daily) ? resp.data.daily : [];
+        const todayUv = daily[0]?.uvi ?? null;
+        const tomorrowUv = daily[1]?.uvi ?? null;
+        debugLog('openweather.onecall.uv', { todayUv, tomorrowUv });
+        return { today: todayUv, tomorrow: tomorrowUv };
+      } catch (e: any) {
+        const name = e?.code || e?.name;
+        throw new ProviderError('OpenWeather', e?.message || 'OpenWeather onecall failed', name);
+      }
+    });
+  }
+
+  async getCloudinessTodayAndTomorrow(lat: number, lon: number): Promise<{ today: number | null; tomorrow: number | null }> {
+    const cfg = Config.get();
+    if (!cfg.openWeatherApiKey) throw new ProviderError('OpenWeather', 'Missing OpenWeather API key');
+
+    const cacheKey = `ow:clouds:today-tomorrow:${lat.toFixed(4)},${lon.toFixed(4)}`;
+    return this.cache.getOrSet(cacheKey, cfg.cacheTtlSeconds, async () => {
+      try {
+        const [current, forecast] = await Promise.all([
+          http.get('https://api.openweathermap.org/data/2.5/weather', {
+            params: { lat, lon, units: 'metric', lang: 'es', appid: cfg.openWeatherApiKey },
+            timeout: 7000
+          }),
+          http.get('https://api.openweathermap.org/data/2.5/forecast', {
+            params: { lat, lon, units: 'metric', lang: 'es', appid: cfg.openWeatherApiKey },
+            timeout: 8000
+          })
+        ]);
+
+        const todayClouds: number | null = typeof current.data?.clouds?.all === 'number' ? current.data.clouds.all : null;
+
+        const list: any[] = Array.isArray(forecast.data?.list) ? forecast.data.list : [];
+        if (list.length === 0) return { today: todayClouds, tomorrow: null };
+        const tzSec: number = forecast.data?.city?.timezone ?? 0;
+        const now = Date.now();
+        const inLocal = (tMs: number) => new Date(tMs + tzSec * 1000);
+        const todayLocal = inLocal(now);
+        const y = todayLocal.getUTCFullYear();
+        const m = todayLocal.getUTCMonth();
+        const d = todayLocal.getUTCDate() + 1;
+        const isTomorrow = (dt: number) => {
+          const nd = inLocal(dt * 1000);
+          return nd.getUTCFullYear() === y && nd.getUTCMonth() === m && nd.getUTCDate() === d;
+        };
+        const slots = list.filter((it) => typeof it.dt === 'number' && isTomorrow(it.dt));
+        const chosen =
+          slots.find((it) => {
+            const h = inLocal(it.dt * 1000).getUTCHours();
+            return h >= 11 && h <= 14;
+          }) ?? slots[Math.floor(slots.length / 2)] ?? list[list.length - 1];
+
+        const tomorrowClouds: number | null = typeof chosen?.clouds?.all === 'number' ? chosen.clouds.all : null;
+        return { today: todayClouds, tomorrow: tomorrowClouds };
+      } catch (e: any) {
+        const name = e?.code || e?.name;
+        throw new ProviderError('OpenWeather', e?.message || 'OpenWeather clouds failed', name);
       }
     });
   }
