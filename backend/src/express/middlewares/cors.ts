@@ -2,10 +2,22 @@ import cors from 'cors';
 import { Config } from '../../infrastructure/config/config';
 
 export function corsMiddleware() {
-  const origin = Config.corsOrigin();
+  const originCfg = Config.corsOrigin();
+
+  // Support comma-separated list of origins
+  const origins = originCfg
+    .split(',')
+    .map((o) => o.trim())
+    .filter(Boolean);
+
+  const origin = origins.length > 1 ? origins : origins[0] || '*';
+
+  // Do not send credentials with wildcard origin (browser blocks it)
+  const credentials = origin !== '*';
+
   return cors({
     origin,
-    credentials: true,
-    maxAge: 86400
+    credentials,
+    maxAge: 86400,
   });
 }
