@@ -20,14 +20,15 @@ You can try the client application consuming this API here:
 
 👉 **https://playas-cantabria-front.web.app/**
 
-## ✨ Features
+## 🐚 Features
 
-* **Beach list:** View all the beaches in Cantabria.  
-* **Beach details:** Get detailed information for each beach, including:  
-  * Sea conditions (waves and wind).  
-  * Water and air temperature.  
-  * Red Cross flag status.  
-* **Search and filter:** Easily find the beach you’re interested in.  
+* 🏝️ **Beach listing:** View all the beaches in Cantabria.  
+* 🌊 **Beach details:** Get detailed information for each beach, including:  
+  * 🌬️ Sea conditions (waves and wind).  
+  * 🌡️ Water and air temperature.  
+  * 🚩 Flag status from the Red Cross.  
+* 🔍 **Search and filter:** Easily find the beach you're looking for.  
+* 📍 **Location:** Explore beaches on the map using your current position with OpenStreetMap.  
 
 ## ✨ Key Highlights
 
