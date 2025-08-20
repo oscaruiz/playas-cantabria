@@ -30,6 +30,7 @@ Puedes probar la aplicación cliente que consume esta API aquí:
     *   Temperatura del agua y del ambiente.
     *   Estado de la bandera de la Cruz Roja.
 *   **Búsqueda y filtrado:** Encuentra fácilmente la playa que te interesa.
+*   **Localización:** Busca playas en el mapa usando tu posición con OpenStreetMap.
 
 ## ✨ Características Principales
 
