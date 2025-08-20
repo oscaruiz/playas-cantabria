@@ -1,37 +1,51 @@
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import { listarPlayas, prediccionPlaya } from './controllers/playasController';
+import { buildExpressApp } from './infrastructure/express/server';
+import { InMemoryCache } from './infrastructure/cache/InMemoryCache';
+import { loadConfig } from './infrastructure/config/config';
 
-dotenv.config();
+function wireProcessGuards() {
+  process.on('unhandledRejection', (reason) => {
+    // eslint-disable-next-line no-console
+    console.error('[process] Unhandled promise rejection:', reason);
+    // No salimos; dejamos el proceso vivo para que Express responda con 5xx
+  });
+  process.on('uncaughtException', (err) => {
+    // eslint-disable-next-line no-console
+    console.error('[process] Uncaught exception:', err);
+    // No salimos; podríamos hacer graceful restart si usamos un PM2 / supervisor
+  });
+}
 
-const app = express();
-const PORT = process.env.PORT || 4000;
+async function main() {
+  wireProcessGuards();
 
-// Detectar entorno producción o desarrollo
-const isProduction = process.env.NODE_ENV === 'production';
-const PROD_URL = process.env.PROD_URL || ''; 
+  const cfg = loadConfig();
+  const app = buildExpressApp({ cache: new InMemoryCache() });
+  const port = cfg.port;
 
-const BASE_URL = isProduction && PROD_URL ? PROD_URL : `http://localhost:${PORT}`;
+  const server = app.listen(port, () => {
+    // eslint-disable-next-line no-console
+    console.log(`[server] Listening on http://0.0.0.0:${port}`);
+  });
 
-// Middlewares
-app.use(cors());
-app.use(express.json());
+  const shutdown = (signal: string) => {
+    // eslint-disable-next-line no-console
+    console.log(`[server] Received ${signal}, shutting down...`);
+    server.close((err?: Error) => {
+      if (err) {
+        // eslint-disable-next-line no-console
+        console.error('[server] Error during shutdown:', err);
+        process.exit(1);
+      }
+      process.exit(0);
+    });
+  };
 
-// Rutas
-app.get('/', (_req, res) => {
-  res.send(`🌊 API de playas de Cantabria. Visita ${BASE_URL}/api/playas`);
-});
+  process.on('SIGINT', () => shutdown('SIGINT'));
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+}
 
-app.get('/api/playas', listarPlayas);
-app.get('/api/playas/:codigo', prediccionPlaya);
-
-// Error 404 por defecto
-app.use((_req, res) => {
-  res.status(404).json({ error: 'Ruta no encontrada' });
-});
-
-// Inicio de servidor
-app.listen(PORT, () => {
-  console.log(`🚀 Servidor activo en ${BASE_URL}`);
+main().catch((err) => {
+  // eslint-disable-next-line no-console
+  console.error('[server] Fatal error during bootstrap:', err);
+  process.exit(1);
 });

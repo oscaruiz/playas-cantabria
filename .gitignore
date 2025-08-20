@@ -71,3 +71,4 @@ yarn-error.log*
 .env
 *.bak
 .vscode/
+backend/.env.example
