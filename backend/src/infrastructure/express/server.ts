@@ -4,20 +4,19 @@ import { corsMiddleware } from './middlewares/cors';
 import { errorHandler } from './middlewares/errorHandler';
 import { notFoundHandler } from './middlewares/notFoundHandler';
 
-import { InMemoryCache } from '../infrastructure/cache/InMemoryCache';
-import { DIContainer } from '../infrastructure/di/DIContainer';
-import { configureDependencies } from '../infrastructure/di/dependencies';
+import { InMemoryCache } from '../cache/InMemoryCache';
+import { DIContainer } from '../di/DIContainer';
+import { configureDependencies } from '../di/dependencies';
 
 // Import types for better typing
-import { GetAllBeaches } from '../domain/use-cases/GetAllBeaches';
-import { GetBeachById } from '../domain/use-cases/GetBeachById';
-import { LegacyDetailsAssembler } from '../application/services/LegacyDetailsAssembler';
-import { WeatherProvider } from '../domain/ports/WeatherProvider';
+import { GetAllBeaches } from '../../domain/use-cases/GetAllBeaches';
+import { GetBeachById } from '../../domain/use-cases/GetBeachById';
+import { LegacyDetailsAssembler } from '../../application/services/LegacyDetailsAssembler';
+import { WeatherProvider } from '../../domain/ports/WeatherProvider';
 
 import { createBeachesRouter } from './routes/beachesRouter';
-// OJO: mantengo tu ruta actual del debugRouter
-import { createDebugRouter } from '../infrastructure/express/routes/debugRouter';
-import { DEBUG_WEATHER } from '../infrastructure/utils/debug';
+import { createDebugRouter } from './routes/debugRouter';
+import { DEBUG_WEATHER } from '../utils/debug';
 
 export interface BuildDeps {
   /**

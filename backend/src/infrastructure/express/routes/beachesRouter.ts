@@ -1,9 +1,9 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { GetAllBeaches } from '../../domain/use-cases/GetAllBeaches';
-import { GetBeachById } from '../../domain/use-cases/GetBeachById';
-import { LegacyDetailsAssembler } from '../../application/services/LegacyDetailsAssembler';
-import { BeachMapper } from '../../application/mappers/BeachMapper';
-import { BeachIdSchema } from '../../application/validation/params';
+import { GetAllBeaches } from '../../../domain/use-cases/GetAllBeaches';
+import { GetBeachById } from '../../../domain/use-cases/GetBeachById';
+import { LegacyDetailsAssembler } from '../../../application/services/LegacyDetailsAssembler';
+import { BeachMapper } from '../../../application/mappers/BeachMapper';
+import { BeachIdSchema } from '../../../application/validation/params';
 
 export interface BeachesRoutesDeps {
   getAllBeaches: GetAllBeaches;

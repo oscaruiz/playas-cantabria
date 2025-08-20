@@ -1,5 +1,5 @@
 import cors from 'cors';
-import { Config } from '../../infrastructure/config/config';
+import { Config } from '../../config/config';
 
 export function corsMiddleware() {
   const originCfg = Config.corsOrigin();
@@ -7,7 +7,7 @@ export function corsMiddleware() {
   // Support comma-separated list of origins
   const origins = originCfg
     .split(',')
-    .map((o) => o.trim())
+    .map((o: string) => o.trim())
     .filter(Boolean);
 
   const origin = origins.length > 1 ? origins : origins[0] || '*';

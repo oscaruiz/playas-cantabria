@@ -1,4 +1,4 @@
-import { buildExpressApp } from './express/server';
+import { buildExpressApp } from './infrastructure/express/server';
 import { InMemoryCache } from './infrastructure/cache/InMemoryCache';
 import { loadConfig } from './infrastructure/config/config';
 
@@ -30,7 +30,7 @@ async function main() {
   const shutdown = (signal: string) => {
     // eslint-disable-next-line no-console
     console.log(`[server] Received ${signal}, shutting down...`);
-    server.close((err) => {
+    server.close((err?: Error) => {
       if (err) {
         // eslint-disable-next-line no-console
         console.error('[server] Error during shutdown:', err);

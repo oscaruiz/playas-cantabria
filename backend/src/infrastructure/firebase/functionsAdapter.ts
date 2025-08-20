@@ -1,8 +1,8 @@
 import * as functions from 'firebase-functions/v1';
-import { buildExpressApp } from '../src/infrastructure/express/server';
-import { InMemoryCache } from '../src/infrastructure/cache/InMemoryCache';
+import { buildExpressApp } from '../express/server';
+import { InMemoryCache } from '../cache/InMemoryCache';
 // Importing ensures config is initialized from functions.config() in Firebase env
-import { loadConfig } from '../src/infrastructure/config/config';
+import { loadConfig } from '../config/config';
 
 // Load/validate config once (will read from functions.config() in Firebase)
 loadConfig();

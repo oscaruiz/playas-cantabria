@@ -1,12 +1,16 @@
 import { Request, Response, NextFunction } from 'express';
-import { BeachNotFoundError } from '../../domain/use-cases/GetBeachById';
+
+export interface ApiError extends Error {
+  statusCode?: number;
+  code?: string;
+}
 
 /**
  * Central error handler that keeps response shapes consistent.
  */
 export function errorHandler(err: unknown, _req: Request, res: Response, _next: NextFunction) {
-  // Minimal discriminated handling; expand as needed.
-  if (err instanceof BeachNotFoundError) {
+  // Handle specific error types
+  if (err instanceof Error && err.message.includes('not found')) {
     return res.status(404).json({ error: err.message });
   }
 
