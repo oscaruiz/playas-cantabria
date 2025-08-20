@@ -20,6 +20,12 @@ You can try the client application consuming this API here:
 
 👉 **https://playas-cantabria-front.web.app/**
 
+## 📸 Preview
+
+![Pantallazo List (Home)](./docs/screenshots/list.png)
+![Pantallazo Map](./docs/screenshots/map.png)
+![Pantallazo Details](./docs/screenshots/details.png)
+
 ## 🐚 Features
 
 * 🏝️ **Beach listing:** View all the beaches in Cantabria.  
