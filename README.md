@@ -22,15 +22,15 @@ Puedes probar la aplicación cliente que consume esta API aquí:
 👉 **[https://playas-cantabria-front.web.app/](https://playas-cantabria-front.web.app/)**
 
 
-## ✨ Funcionalidades
+## 🐚 Funcionalidades
 
-*   **Listado de playas:** Visualiza todas las playas de Cantabria.
-*   **Detalles de la playa:** Obtén información detallada de cada playa, incluyendo:
-    *   Estado del mar (oleaje y viento).
-    *   Temperatura del agua y del ambiente.
-    *   Estado de la bandera de la Cruz Roja.
-*   **Búsqueda y filtrado:** Encuentra fácilmente la playa que te interesa.
-*   **Localización:** Busca playas en el mapa usando tu posición con OpenStreetMap.
+* 🏝️ **Listado de playas:** Visualiza todas las playas de Cantabria.  
+* 🌊 **Detalles de la playa:** Obtén información detallada de cada playa, incluyendo:  
+  * 🌬️ Estado del mar (oleaje y viento).  
+  * 🌡️ Temperatura del agua y del ambiente.  
+  * 🚩 Estado de la bandera de la Cruz Roja.  
+* 🔍 **Búsqueda y filtrado:** Encuentra fácilmente la playa que te interesa.  
+* 📍 **Localización:** Explora playas en el mapa usando tu posición con OpenStreetMap.  
 
 ## ✨ Características Principales
 
