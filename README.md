@@ -4,7 +4,7 @@
 ---
 
 [![Version](https://img.shields.io/badge/version-1.0.0-blue)](../../releases)
-[![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](./LICENSE)
+[![License: MIT-NC](https://img.shields.io/badge/License-MIT--NC-yellow.svg)](./LICENSE)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.x-informational)
 ![Node.js](https://img.shields.io/badge/Node.js-20.x-informational)
 ![Express](https://img.shields.io/badge/Express-4.x-informational)
