@@ -2,7 +2,9 @@ import { z } from 'zod';
 
 function isFirebaseEnv(): boolean {
   return Boolean(
-    process.env.FUNCTIONS_EMULATOR || process.env.K_SERVICE || process.env.FIREBASE_CONFIG
+    process.env.FUNCTIONS_EMULATOR ||
+      process.env.K_SERVICE ||
+      process.env.FIREBASE_CONFIG
   );
 }
 
@@ -16,7 +18,8 @@ function readFirebaseRuntimeConfig():
     }
   | undefined {
   try {
-    const functions = require('firebase-functions') as typeof import('firebase-functions');
+    const functions = require('firebase-functions') as any;
+
     const cfg = functions.config?.() ?? {};
     const flat = cfg as any;
     const ns = (cfg as any).playas ?? {};
@@ -64,7 +67,7 @@ const ConfigSchema = z.object({
   corsOrigin: z.string().default('*'),
   aemetApiKey: z.string().min(1).optional(),
   openWeatherApiKey: z.string().min(1).optional(),
-  cacheTtlSeconds: z.coerce.number().int().positive().default(300)
+  cacheTtlSeconds: z.coerce.number().int().positive().default(300),
 });
 
 export type AppConfig = z.infer<typeof ConfigSchema>;
@@ -73,6 +76,7 @@ let cachedConfig: AppConfig | null = null;
 
 export function loadConfig(): AppConfig {
   if (cachedConfig) return cachedConfig;
+
   if (!isFirebaseEnv()) {
     require('dotenv').config();
   }
@@ -82,11 +86,16 @@ export function loadConfig(): AppConfig {
 
   const merged = {
     port: fromFirebase?.port ?? fromEnv.port,
-    corsOrigin: (fromFirebase?.cors_origin ?? fromEnv.cors_origin) as string | undefined,
-    aemetApiKey: (fromFirebase?.aemet_api_key ?? fromEnv.aemet_api_key) as string | undefined,
+    corsOrigin: (fromFirebase?.cors_origin ?? fromEnv.cors_origin) as
+      | string
+      | undefined,
+    aemetApiKey: (fromFirebase?.aemet_api_key ?? fromEnv.aemet_api_key) as
+      | string
+      | undefined,
     openWeatherApiKey: (fromFirebase?.openweather_api_key ??
       fromEnv.openweather_api_key) as string | undefined,
-    cacheTtlSeconds: fromFirebase?.cache_ttl_seconds ?? fromEnv.cache_ttl_seconds,
+    cacheTtlSeconds:
+      fromFirebase?.cache_ttl_seconds ?? fromEnv.cache_ttl_seconds,
   };
 
   const parsed = ConfigSchema.parse(merged);
