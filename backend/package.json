@@ -4,14 +4,14 @@
   "private": true,
   "license": "MIT",
   "type": "commonjs",
-  "main": "dist/src/index.js",
+  "main": "dist/index.js",
   "engines": {
     "node": ">=20.0.0"
   },
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc -p config/tsconfig.json",
-    "start": "node dist/src/index.js",
+    "start": "node dist/index.js",
     "test": "vitest"
   },
   "dependencies": {
