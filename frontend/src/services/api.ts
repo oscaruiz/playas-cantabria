@@ -1,6 +1,7 @@
 export async function getPlayas(): Promise<Playa[]> {
+  // TO-DO - create varible out of it
   //const res = await fetch('http://localhost:4000/api/playas');
-  const res = await fetch('https://us-central1-playas-cantabria.cloudfunctions.net/api/api/playas/');
+  const res = await fetch('https://playas-cantabria.onrender.com/api/beaches');
   if (!res.ok) throw new Error('Error al obtener playas');
   return res.json();
 }
@@ -110,7 +111,7 @@ export interface PlayaDetalle {
 
 export async function getDetallePlaya(codigo: string): Promise<PlayaDetalle> {
   // const res = await fetch(`http://localhost:4000/api/playas/${codigo}`);
-  const res = await fetch(`https://us-central1-playas-cantabria.cloudfunctions.net/api/api/playas/${codigo}`);
+  const res = await fetch(`https://playas-cantabria.onrender.com/api/beaches/${codigo}/details`);
 
   if (!res.ok) throw new Error('No se pudo cargar el detalle de la playa');
   return res.json();
