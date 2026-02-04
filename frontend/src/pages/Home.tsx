@@ -31,7 +31,9 @@ const Home: React.FC = () => {
   const history = useHistory();
 
   useEffect(() => {
-    getPlayas()
+    getPlayas({
+      onBackendData: (data) => setPlayas(data),
+    })
       .then(setPlayas)
       .catch((err: Error) => setError(err.message));
   }, []);

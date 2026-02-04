@@ -1,9 +1,46 @@
 import { buildApiUrl } from '../config/api';
+import fallbackPlayas from '../data/beaches.json';
 
-export async function getPlayas(): Promise<Playa[]> {
-  const res = await fetch(buildApiUrl('/api/beaches'));
-  if (!res.ok) throw new Error('Error al obtener playas');
-  return res.json();
+const PLAYAS_FALLBACK_TIMEOUT_MS = 2500;
+
+type GetPlayasOptions = {
+  timeoutMs?: number;
+  onBackendData?: (data: Playa[]) => void;
+};
+
+export async function getPlayas(options: GetPlayasOptions = {}): Promise<Playa[]> {
+  const { timeoutMs = PLAYAS_FALLBACK_TIMEOUT_MS, onBackendData } = options;
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+  let didReturnFallback = false;
+
+  const fetchPromise = fetch(buildApiUrl('/api/beaches'))
+    .then((res) => {
+      if (!res.ok) throw new Error('Error al obtener playas');
+      return res.json() as Promise<Playa[]>;
+    })
+    .then((data) => {
+      if (didReturnFallback) {
+        onBackendData?.(data);
+      }
+      return data;
+    });
+
+  const timeoutPromise = new Promise<Playa[]>((resolve) => {
+    timeoutId = setTimeout(() => {
+      didReturnFallback = true;
+      resolve(fallbackPlayas as Playa[]);
+    }, timeoutMs);
+  });
+
+  try {
+    return await Promise.race([fetchPromise, timeoutPromise]);
+  } catch (error) {
+    return fallbackPlayas as Playa[];
+  } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+  }
 }
 
 // ------------------------------
