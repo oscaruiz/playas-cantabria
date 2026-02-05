@@ -50,8 +50,7 @@ const MapaPage: React.FC = () => {
   });
 
   useEffect(() => {
-    // Cargar playas y ordenarlas de oeste a este
-    getPlayas().then((data) => {
+    const handlePlayas = (data: Playa[]) => {
       const validas = data
         .filter(
           (p) =>
@@ -62,7 +61,10 @@ const MapaPage: React.FC = () => {
         )
         .sort((a, b) => a.lon - b.lon); // Oeste a este
       setPlayas(validas);
-    });
+    };
+
+    // Cargar playas y ordenarlas de oeste a este
+    getPlayas({ onBackendData: handlePlayas }).then(handlePlayas);
 
     // Obtener ubicación del usuario
     if (navigator.geolocation) {
