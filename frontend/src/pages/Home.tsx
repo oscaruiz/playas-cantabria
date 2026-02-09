@@ -3,8 +3,6 @@ import {
   IonPage,
   IonContent,
   IonSpinner,
-  IonFab,
-  IonFabButton,
   IonIcon,
 } from '@ionic/react';
 import { mapOutline } from 'ionicons/icons';
@@ -46,10 +44,15 @@ const Home: React.FC = () => {
 
   return (
     <IonPage className="home-page">
+      {/* Sticky header */}
+      <div className="home-sticky-header">
+        <h1 className="home-sticky-title">Playas de Cantabria</h1>
+      </div>
+
       <IonContent fullscreen>
         {/* Hero header */}
         <div className="home-hero">
-          <h1 className="home-hero-title">Playas de Cantabria</h1>
+          <div className="home-hero-spacer" />
           <p className="home-hero-subtitle">
             Consulta el estado de las playas antes de ir
           </p>
@@ -148,16 +151,17 @@ const Home: React.FC = () => {
           </div>
         )}
 
-        {/* Map FAB */}
-        <IonFab vertical="bottom" horizontal="end" slot="fixed">
-          <IonFabButton
-            className="fab-mapa-grande"
-            routerLink="/mapa"
-            title="Ver mapa general"
+        {/* Map button */}
+        <div className="map-button-container" slot="fixed">
+          <button
+            className="map-button-prominent"
+            onClick={() => history.push('/mapa')}
+            aria-label="Ver mapa de playas"
           >
             <IonIcon icon={mapOutline} />
-          </IonFabButton>
-        </IonFab>
+            <span>Mapa</span>
+          </button>
+        </div>
       </IonContent>
     </IonPage>
   );

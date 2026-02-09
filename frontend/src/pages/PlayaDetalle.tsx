@@ -82,17 +82,26 @@ function hasFecha(x: unknown): x is { fecha?: number } {
 
 // ---- Sub-components ----
 
+function isFlagAvailable(cruzRoja?: PlayaDetalleData['cruzRoja']): boolean {
+  if (!cruzRoja) return false;
+  const b = cruzRoja.bandera?.toLowerCase() || '';
+  return b.includes('roja') || b.includes('amarilla') || b.includes('verde');
+}
+
 const FlagBanner: React.FC<{ cruzRoja?: PlayaDetalleData['cruzRoja'] }> = ({ cruzRoja }) => {
-  if (!cruzRoja?.bandera || cruzRoja.bandera === 'Desconocida') {
+  if (!isFlagAvailable(cruzRoja)) {
     return (
       <div className="no-flag-banner">
-        <span style={{ fontSize: '1.3rem' }}>&#9872;</span>
-        <span>Sin datos de bandera disponibles</span>
+        <span className="no-flag-icon" aria-hidden="true">&#9872;</span>
+        <div className="no-flag-info">
+          <div className="no-flag-label">Estado de la playa</div>
+          <div className="no-flag-value">No disponible</div>
+        </div>
       </div>
     );
   }
 
-  const colorClass = flagColorClass(cruzRoja.bandera);
+  const colorClass = flagColorClass(cruzRoja!.bandera);
 
   return (
     <div className="flag-banner">
@@ -101,9 +110,9 @@ const FlagBanner: React.FC<{ cruzRoja?: PlayaDetalleData['cruzRoja'] }> = ({ cru
       </div>
       <div className="flag-info">
         <div className="flag-label">Estado de la playa</div>
-        <div className="flag-value">{flagDisplayText(cruzRoja.bandera)}</div>
-        {cruzRoja.horario && (
-          <div className="flag-horario">Vigilancia: {cruzRoja.horario}</div>
+        <div className="flag-value">{flagDisplayText(cruzRoja!.bandera)}</div>
+        {cruzRoja!.horario && (
+          <div className="flag-horario">{'Vigilancia: ' + cruzRoja!.horario}</div>
         )}
       </div>
     </div>
@@ -230,10 +239,15 @@ const WeatherCard: React.FC<WeatherCardProps> = ({
   );
 };
 
+function cruzRojaField(value?: string): string {
+  if (!value || value.trim() === '' || value === 'N/A') return 'No disponible';
+  return value;
+}
+
 const CruzRojaCard: React.FC<{ cruzRoja?: PlayaDetalleData['cruzRoja'] }> = ({ cruzRoja }) => {
   const [expanded, setExpanded] = useState(true);
 
-  if (!cruzRoja?.bandera || cruzRoja.bandera === 'Desconocida') return null;
+  const hasData = isFlagAvailable(cruzRoja);
 
   return (
     <div className="detail-card">
@@ -250,10 +264,10 @@ const CruzRojaCard: React.FC<{ cruzRoja?: PlayaDetalleData['cruzRoja'] }> = ({ c
           }
         }}
       >
-        <div className="card-header-icon cruz-roja">{'\u2695'}</div>
+        <div className={`card-header-icon ${hasData ? 'cruz-roja' : 'cruz-roja-neutral'}`}>{'\u2695'}</div>
         <div>
           <div className="card-header-title">Cruz Roja</div>
-          <div className="card-header-subtitle">Vigilancia y cobertura</div>
+          <div className="card-header-subtitle">{hasData ? 'Vigilancia y cobertura' : 'Sin cobertura activa'}</div>
         </div>
         <span className={`card-header-chevron ${expanded ? 'open' : ''}`}>&#9662;</span>
       </div>
@@ -262,24 +276,32 @@ const CruzRojaCard: React.FC<{ cruzRoja?: PlayaDetalleData['cruzRoja'] }> = ({ c
         <div className="card-body card-body-enter">
           <div className="info-rows">
             <div className="info-row">
-              <div className="info-row-icon">{'\u{1F6A9}'}</div>
+              <div className={`info-row-icon ${hasData ? '' : 'neutral'}`}>{'\u{1F6A9}'}</div>
               <span className="info-row-label">Bandera actual</span>
-              <span className="info-row-value">{cruzRoja.bandera}</span>
+              <span className={`info-row-value ${!hasData ? 'muted' : ''}`}>
+                {hasData ? cruzRoja!.bandera : 'No disponible'}
+              </span>
             </div>
             <div className="info-row">
-              <div className="info-row-icon">{'\u{1F4C5}'}</div>
+              <div className={`info-row-icon ${hasData ? '' : 'neutral'}`}>{'\u{1F4C5}'}</div>
               <span className="info-row-label">Cobertura desde</span>
-              <span className="info-row-value">{cruzRoja.coberturaDesde || 'N/A'}</span>
+              <span className={`info-row-value ${!cruzRoja?.coberturaDesde ? 'muted' : ''}`}>
+                {cruzRojaField(cruzRoja?.coberturaDesde)}
+              </span>
             </div>
             <div className="info-row">
-              <div className="info-row-icon">{'\u{1F4C5}'}</div>
+              <div className={`info-row-icon ${hasData ? '' : 'neutral'}`}>{'\u{1F4C5}'}</div>
               <span className="info-row-label">Cobertura hasta</span>
-              <span className="info-row-value">{cruzRoja.coberturaHasta || 'N/A'}</span>
+              <span className={`info-row-value ${!cruzRoja?.coberturaHasta ? 'muted' : ''}`}>
+                {cruzRojaField(cruzRoja?.coberturaHasta)}
+              </span>
             </div>
             <div className="info-row">
-              <div className="info-row-icon">{'\u{1F552}'}</div>
+              <div className={`info-row-icon ${hasData ? '' : 'neutral'}`}>{'\u{1F552}'}</div>
               <span className="info-row-label">Horario</span>
-              <span className="info-row-value">{cruzRoja.horario || 'N/A'}</span>
+              <span className={`info-row-value ${!cruzRoja?.horario ? 'muted' : ''}`}>
+                {cruzRojaField(cruzRoja?.horario)}
+              </span>
             </div>
           </div>
         </div>

@@ -355,6 +355,23 @@
   max-width: 55%;
 }
 
+.info-row-value.muted {
+  color: var(--playa-text-muted);
+  font-weight: 400;
+  font-style: italic;
+}
+
+/* Neutral Cruz Roja icons when data unavailable */
+.info-row-icon.neutral {
+  background: var(--playa-ocean-light);
+  color: var(--playa-text-muted);
+}
+
+.card-header-icon.cruz-roja-neutral {
+  background: var(--playa-ocean-light);
+  color: var(--playa-text-muted);
+}
+
 /* Source label at bottom */
 .source-label {
   text-align: center;
@@ -392,17 +409,40 @@
   text-align: center;
 }
 
-/* No flag banner – when no Cruz Roja data */
+/* No flag banner – neutral state when no Cruz Roja data */
 .no-flag-banner {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
   border-radius: 16px;
-  padding: 12px 18px;
+  padding: 14px 18px;
   margin-bottom: 18px;
-  font-size: 0.85rem;
-  opacity: 0.8;
+}
+
+.no-flag-icon {
+  font-size: 1.5rem;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.no-flag-info {
+  flex: 1;
+}
+
+.no-flag-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.7;
+  margin-bottom: 2px;
+}
+
+.no-flag-value {
+  font-size: 1rem;
+  font-weight: 600;
+  opacity: 0.85;
 }
 
 /* Animation for expand/collapse */
@@ -458,6 +498,16 @@
 
   .card-header-icon.tomorrow {
     background: rgba(202, 138, 4, 0.15);
+  }
+
+  .card-header-icon.cruz-roja-neutral {
+    background: rgba(14, 116, 144, 0.2);
+    color: var(--playa-text-muted);
+  }
+
+  .info-row-icon.neutral {
+    background: rgba(14, 116, 144, 0.2);
+    color: var(--playa-text-muted);
   }
 
   .error-container {
