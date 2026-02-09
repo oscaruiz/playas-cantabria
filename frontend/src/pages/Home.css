@@ -1,165 +1,402 @@
-ion-content {
-  --background: url('/assets/background.jpg') no-repeat center center / cover;
+/* =============================================
+   Home – Beach List Page Styles
+   Coastal, fresh design with soft colors
+   ============================================= */
+
+/* --- Color tokens (shared with detail page) --- */
+:root {
+  --playa-sand: #faf6f1;
+  --playa-ocean: #0a7ea4;
+  --playa-ocean-light: #e8f4f8;
+  --playa-ocean-dark: #065a75;
+  --playa-foam: #ffffff;
+  --playa-text: #1e293b;
+  --playa-text-muted: #64748b;
+  --playa-border: #e2e8f0;
+  --playa-card-bg: rgba(255, 255, 255, 0.92);
+  --playa-card-radius: 18px;
 }
 
-@media (prefers-color-scheme: light) {
-  ion-content {
-    background-color: rgba(255, 255, 255, 0.8);
-  }
-
-  ion-item {
-    --background: rgba(255, 255, 255, 0.8);
-  }
-
-  ion-card {
-    background: rgba(255, 255, 255, 0.85);
-  }
+/* --- Page --- */
+.home-page ion-content {
+  --background: var(--playa-sand);
 }
 
-.home-toolbar {
-  --background: var(--ion-color-primary);
-  --color: var(--ion-color-primary-contrast);
-  text-align: center;
+.home-page ion-toolbar.home-toolbar {
+  --background: var(--playa-ocean);
+  --color: #ffffff;
 }
 
-.title-toolbar ion-title {
+/* --- Sticky header --- */
+.home-sticky-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: var(--playa-ocean);
+  padding: 12px 20px;
+  padding-top: calc(env(safe-area-inset-top, 0px) + 12px);
+}
+
+.home-sticky-title {
   font-family: 'Pacifico', cursive;
-  cursor: pointer;
-}
-
-.title-toolbar ion-title:hover {
-  opacity: 0.8;
-}
-
-ion-searchbar {
-  --background: var(--ion-color-light);
-  --color: var(--ion-color-dark);
-  --placeholder-color: var(--ion-color-medium);
-  --icon-color: var(--ion-color-primary);
-  border-radius: 20px;
-  margin: 1rem;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-ion-item {
-  --border-radius: 15px;
-  margin-bottom: 1rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-
-ion-list {
-  background: transparent;
-  padding: 0 1rem;
-}
-
-h2 {
-  font-weight: 600;
-  color: var(--ion-color-primary);
-}
-
-p {
-  color: var(--ion-text-color);
-}
-
-.cruz-roja-icon {
-  color: var(--ion-color-danger) !important;
-  font-size: 24px !important;
-  font-weight: bold !important;
-}
-
-.search-sort-container {
-  display: flex;
-  align-items: center;
-  padding: 0 1rem;
-  color: var(--ion-text-color);
-}
-
-ion-select {
-  --background: var(--ion-item-background);
-  --color: var(--ion-text-color);
-  background: var(--ion-item-background);
-  color: var(--ion-text-color);
-  border-radius: 10px;
-  padding: 4px 10px;
-  margin-left: 1rem;
-}
-
-ion-card {
-  margin: 1rem;
-  border-radius: 20px;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(4px);
-}
-
-
-ion-card-title {
-  font-size: 1.2rem;
-  color: var(--ion-color-primary);
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.section-title {
-  font-size: 1rem;
-  font-weight: bold;
-  color: var(--ion-color-secondary);
-  margin-bottom: 0.3rem;
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.error-message {
-  padding: 1rem;
-}
-
-.spinner-container {
-  text-align: center;
-  padding-top: 2rem;
-}
-
-
-.search-sort-container ion-searchbar {
-  flex-grow: 1;
-}
-
-html,
-body,
-#root,
-ion-app,
-ion-page,
-ion-content {
-  height: 100%;
+  font-size: 1.3rem;
   margin: 0;
-  padding: 0;
+  line-height: 1.3;
+  color: #ffffff;
 }
 
-.fab-mapa-grande {
-  width: 80px;
-  height: 80px;
-  font-size: 32px;
-  --border-radius: 50%;
-  --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+/* --- Header hero area --- */
+.home-hero {
+  background: linear-gradient(135deg, var(--playa-ocean) 0%, var(--playa-ocean-dark) 100%);
+  color: #ffffff;
+  padding: 0 20px 36px;
+  position: relative;
 }
 
+.home-hero-spacer {
+  height: calc(env(safe-area-inset-top, 0px) + 52px);
+}
+
+.home-hero::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 28px;
+  background: var(--playa-sand);
+  border-radius: 24px 24px 0 0;
+}
+
+.home-hero-subtitle {
+  font-size: 0.85rem;
+  opacity: 0.8;
+  margin: 0;
+  font-weight: 400;
+}
+
+/* --- Search & sort bar --- */
+.search-bar-container {
+  padding: 0 16px;
+  margin-top: -8px;
+  position: relative;
+  z-index: 2;
+}
+
+.search-bar-inner {
+  background: var(--playa-foam);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  padding: 6px 8px 6px 14px;
+  gap: 8px;
+  border: 1px solid var(--playa-border);
+}
+
+.search-bar-inner .search-icon {
+  color: var(--playa-ocean);
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.search-bar-inner input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 0.9rem;
+  color: var(--playa-text);
+  font-family: 'Poppins', sans-serif;
+  padding: 10px 0;
+}
+
+.search-bar-inner input::placeholder {
+  color: var(--playa-text-muted);
+}
+
+.sort-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--playa-ocean-light);
+  color: var(--playa-ocean);
+  border: none;
+  border-radius: 10px;
+  width: 38px;
+  height: 38px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+  font-family: 'Poppins', sans-serif;
+  transition: background 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sort-button:active {
+  background: var(--playa-ocean);
+  color: #ffffff;
+}
+
+/* --- Beach count --- */
+.beach-count {
+  padding: 14px 20px 6px;
+  font-size: 0.75rem;
+  color: var(--playa-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+}
+
+/* --- Beach list --- */
+.beach-list {
+  padding: 0 16px 100px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.beach-card {
+  background: var(--playa-card-bg);
+  border-radius: var(--playa-card-radius);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--playa-border);
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  gap: 14px;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.beach-card:active {
+  transform: scale(0.98);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
+}
+
+.beach-card-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: var(--playa-ocean-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 1.3rem;
+  color: var(--playa-ocean);
+}
+
+.beach-card-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.beach-card-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--playa-text);
+  margin: 0;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.beach-card-municipio {
+  font-size: 0.78rem;
+  color: var(--playa-text-muted);
+  margin: 2px 0 0;
+}
+
+.beach-card-badges {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.badge-vigilada {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #fef2f2;
+  color: #dc2626;
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 8px;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.badge-vigilada-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #dc2626;
+  flex-shrink: 0;
+}
+
+.beach-card-arrow {
+  color: var(--playa-text-muted);
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  opacity: 0.5;
+}
+
+/* --- Map button (prominent, fixed bottom-right) --- */
+.map-button-container {
+  position: fixed;
+  bottom: 24px;
+  right: 16px;
+  z-index: 50;
+}
+
+.map-button-prominent {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--playa-ocean);
+  color: #ffffff;
+  border: none;
+  border-radius: 18px;
+  padding: 14px 22px;
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: 'Poppins', sans-serif;
+  cursor: pointer;
+  box-shadow: 0 6px 24px rgba(10, 126, 164, 0.4);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+  min-height: 52px;
+}
+
+.map-button-prominent ion-icon {
+  font-size: 1.3rem;
+}
+
+.map-button-prominent:active {
+  transform: scale(0.95);
+  box-shadow: 0 3px 12px rgba(10, 126, 164, 0.3);
+  background: var(--playa-ocean-dark);
+}
+
+/* --- Loading state --- */
+.home-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-top: 4rem;
+  gap: 12px;
+  color: var(--playa-ocean);
+}
+
+.home-loading-text {
+  font-size: 0.85rem;
+  color: var(--playa-text-muted);
+}
+
+/* --- Error state --- */
+.home-error {
+  margin: 16px;
+  padding: 16px;
+  background: #fef2f2;
+  border-radius: 14px;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+/* --- Empty state --- */
+.home-empty {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: var(--playa-text-muted);
+}
+
+.home-empty-icon {
+  font-size: 2.5rem;
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+
+.home-empty-text {
+  font-size: 0.9rem;
+}
+
+/* --- Dark mode --- */
 @media (prefers-color-scheme: dark) {
-  ion-content {
-    background-color: rgba(18, 18, 18, 0.8);
+  :root {
+    --playa-sand: #0f172a;
+    --playa-card-bg: rgba(30, 41, 59, 0.95);
+    --playa-foam: #1e293b;
+    --playa-text: #e2e8f0;
+    --playa-text-muted: #94a3b8;
+    --playa-border: #334155;
+    --playa-ocean-light: rgba(14, 116, 144, 0.2);
   }
 
-  ion-card {
-    background: rgba(30, 30, 30, 0.85);
+  .home-hero {
+    background: linear-gradient(135deg, #0c4a6e 0%, #0f172a 100%);
   }
 
-  ion-item {
-    --background: rgba(30, 30, 30, 0.8);
+  .home-hero::after {
+    background: var(--playa-sand);
   }
 
-  ion-select {
-    background: var(--ion-color-step-100);
-    color: var(--ion-text-color);
+  .search-bar-inner {
+    background: var(--playa-foam);
+    border-color: var(--playa-border);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   }
+
+  .search-bar-inner input {
+    color: var(--playa-text);
+  }
+
+  .beach-card-icon {
+    background: rgba(14, 116, 144, 0.2);
+  }
+
+  .badge-vigilada {
+    background: rgba(239, 68, 68, 0.15);
+    color: #fca5a5;
+  }
+
+  .badge-vigilada-dot {
+    background: #fca5a5;
+  }
+
+  .home-error {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #fca5a5;
+  }
+
+  .home-sticky-header {
+    background: #0c4a6e;
+  }
+
+  .map-button-prominent {
+    background: #38bdf8;
+    color: #0f172a;
+    box-shadow: 0 6px 24px rgba(56, 189, 248, 0.3);
+  }
+
+  .map-button-prominent:active {
+    background: #0ea5e9;
+  }
+}
+
+/* Reset some global Ionic styles we no longer need on this page */
+.home-page ion-searchbar,
+.home-page .search-sort-container {
+  display: none;
 }

@@ -8,48 +8,37 @@ import {
   IonTitle,
   IonContent,
   IonSpinner,
-  IonText,
-  IonCard,
-  IonCardHeader,
-  IonCardTitle,
-  IonCardContent,
-  IonIcon,
-  IonItem,
-  IonLabel,
 } from '@ionic/react';
 import { useParams } from 'react-router-dom';
 import {
   getDetallePlaya,
   PlayaDetalle as PlayaDetalleData,
 } from '../services/api';
-import {
-  sunnyOutline,
-  cloudOutline,
-  water,
-  flameOutline,
-  warningOutline,
-  timeOutline,
-  todayOutline,
-  calendarClearOutline,
-  flagOutline,
-  chevronDownOutline,
-  chevronUpOutline,
-} from 'ionicons/icons';
+import './PlayaDetalle.css';
+
+// ---- Helpers ----
 
 function limpiarTexto(texto: string): string {
   if (!texto) return texto;
-  return texto.replace(/\uFFFD/g, 'é');
+  return texto.replace(/\uFFFD/g, 'e');
 }
 
-function iconoBandera(bandera?: string): string {
+function flagColorClass(bandera?: string): string {
   const b = bandera?.toLowerCase() || '';
-  if (b.includes('roja')) return '🟥';
-  if (b.includes('amarilla')) return '🟨';
-  if (b.includes('verde')) return '🟩';
-  return '⚐';
+  if (b.includes('roja')) return 'red';
+  if (b.includes('amarilla')) return 'yellow';
+  if (b.includes('verde')) return 'green';
+  return 'unknown';
 }
 
-// ---- Helpers de fecha ----
+function flagDisplayText(bandera?: string): string {
+  const b = bandera?.toLowerCase() || '';
+  if (b.includes('roja')) return 'Bandera Roja';
+  if (b.includes('amarilla')) return 'Bandera Amarilla';
+  if (b.includes('verde')) return 'Bandera Verde';
+  return 'Sin datos';
+}
+
 function formatearFechaNumYYYYMMDD(fechaNum?: number): Date | null {
   if (!fechaNum) return null;
   const s = String(fechaNum);
@@ -72,7 +61,7 @@ function formatearDiaVisual(date: Date): string {
       day: '2-digit',
       month: 'short',
     })
-    .replace(/\.$/, ''); // quita el punto final de "sáb."
+    .replace(/\.$/, '');
 }
 
 function fechaPrevision(
@@ -87,276 +76,347 @@ function fechaPrevision(
   return sumarDias(base, offsetDias);
 }
 
-// Type guard para objetos con campo opcional 'fecha'
 function hasFecha(x: unknown): x is { fecha?: number } {
   return typeof x === 'object' && x !== null && 'fecha' in x;
 }
+
+// ---- Sub-components ----
+
+function isFlagAvailable(cruzRoja?: PlayaDetalleData['cruzRoja']): boolean {
+  if (!cruzRoja) return false;
+  const b = cruzRoja.bandera?.toLowerCase() || '';
+  return b.includes('roja') || b.includes('amarilla') || b.includes('verde');
+}
+
+const FlagBanner: React.FC<{ cruzRoja?: PlayaDetalleData['cruzRoja'] }> = ({ cruzRoja }) => {
+  if (!isFlagAvailable(cruzRoja)) {
+    return (
+      <div className="no-flag-banner">
+        <span className="no-flag-icon" aria-hidden="true">&#9872;</span>
+        <div className="no-flag-info">
+          <div className="no-flag-label">Estado de la playa</div>
+          <div className="no-flag-value">No disponible</div>
+        </div>
+      </div>
+    );
+  }
+
+  const colorClass = flagColorClass(cruzRoja!.bandera);
+
+  return (
+    <div className="flag-banner">
+      <div className={`flag-indicator ${colorClass}`}>
+        <span className="flag-icon-inner" role="img" aria-label="bandera">&#9873;</span>
+      </div>
+      <div className="flag-info">
+        <div className="flag-label">Estado de la playa</div>
+        <div className="flag-value">{flagDisplayText(cruzRoja!.bandera)}</div>
+        {cruzRoja!.horario && (
+          <div className="flag-horario">{'Vigilancia: ' + cruzRoja!.horario}</div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const QuickStats: React.FC<{ clima: PlayaDetalleData['clima'] }> = ({ clima }) => {
+  if (!clima) return null;
+
+  return (
+    <div className="quick-stats">
+      <div className="quick-stat">
+        <div className="quick-stat-icon" role="img" aria-label="temperatura">&#x1F321;&#xFE0F;</div>
+        <div className="quick-stat-value">{clima.hoy.temperature}&#176;</div>
+        <div className="quick-stat-label">Temp.</div>
+      </div>
+      <div className="quick-stat">
+        <div className="quick-stat-icon" role="img" aria-label="agua">&#x1F30A;</div>
+        <div className="quick-stat-value">{clima.hoy.waterTemperature}&#176;</div>
+        <div className="quick-stat-label">Agua</div>
+      </div>
+      <div className="quick-stat">
+        <div className="quick-stat-icon" role="img" aria-label="viento">&#x1F4A8;</div>
+        <div className="quick-stat-value">{clima.hoy.wind || '--'}</div>
+        <div className="quick-stat-label">Viento</div>
+      </div>
+    </div>
+  );
+};
+
+interface WeatherCardProps {
+  title: string;
+  subtitle?: string;
+  iconClass: string;
+  clima: PlayaDetalleData['clima'];
+  day: 'hoy' | 'manana';
+  defaultExpanded?: boolean;
+}
+
+const WeatherCard: React.FC<WeatherCardProps> = ({
+  title,
+  subtitle,
+  iconClass,
+  clima,
+  day,
+  defaultExpanded = true,
+}) => {
+  const [expanded, setExpanded] = useState(defaultExpanded);
+  if (!clima) return null;
+  const data = clima[day];
+  if (!data) return null;
+
+  return (
+    <div className="detail-card">
+      <div
+        className="card-header"
+        onClick={() => setExpanded((v) => !v)}
+        role="button"
+        tabIndex={0}
+        aria-expanded={expanded}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setExpanded((v) => !v);
+          }
+        }}
+      >
+        <div className={`card-header-icon ${iconClass}`}>
+          {day === 'hoy' ? '\u2600' : '\u26C5'}
+        </div>
+        <div>
+          <div className="card-header-title">
+            {title}
+            {subtitle && <span className="card-header-subtitle"> &middot; {subtitle}</span>}
+          </div>
+        </div>
+        <span className={`card-header-chevron ${expanded ? 'open' : ''}`}>&#9662;</span>
+      </div>
+
+      {expanded && (
+        <div className="card-body card-body-enter">
+          <div className="weather-rows">
+            <div className="weather-row">
+              <div className="weather-row-icon">{'\u2601'}</div>
+              <span className="weather-row-label">Cielo</span>
+              <span className="weather-row-value">{limpiarTexto(data.summary)}</span>
+            </div>
+            <div className="weather-row">
+              <div className="weather-row-icon">{'\u{1F321}'}</div>
+              <span className="weather-row-label">Temperatura</span>
+              <span className="weather-row-value">{data.temperature} &#176;C</span>
+            </div>
+            <div className="weather-row">
+              <div className="weather-row-icon">{'\u{1F30A}'}</div>
+              <span className="weather-row-label">Agua</span>
+              <span className="weather-row-value">{data.waterTemperature} &#176;C</span>
+            </div>
+            <div className="weather-row">
+              <div className="weather-row-icon">{'\u{1F525}'}</div>
+              <span className="weather-row-label">{'Sensaci\u00f3n'}</span>
+              <span className="weather-row-value">{limpiarTexto(data.sensation)}</span>
+            </div>
+            <div className="weather-row">
+              <div className="weather-row-icon">{'\u{1F4A8}'}</div>
+              <span className="weather-row-label">Viento</span>
+              <span className="weather-row-value">{limpiarTexto(data.wind)}</span>
+            </div>
+            <div className="weather-row">
+              <div className="weather-row-icon">{'\u{1F30A}'}</div>
+              <span className="weather-row-label">Oleaje</span>
+              <span className="weather-row-value">{limpiarTexto(data.waves)}</span>
+            </div>
+            {data.uvIndex !== undefined && (
+              <div className="weather-row">
+                <div className="weather-row-icon">{'\u2600'}</div>
+                <span className="weather-row-label">{'Indice UV'}</span>
+                <span className="weather-row-value">{data.uvIndex}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+function cruzRojaField(value?: string): string {
+  if (!value || value.trim() === '' || value === 'N/A') return 'No disponible';
+  return value;
+}
+
+const CruzRojaCard: React.FC<{ cruzRoja?: PlayaDetalleData['cruzRoja'] }> = ({ cruzRoja }) => {
+  const [expanded, setExpanded] = useState(true);
+
+  const hasData = isFlagAvailable(cruzRoja);
+
+  return (
+    <div className="detail-card">
+      <div
+        className="card-header"
+        onClick={() => setExpanded((v) => !v)}
+        role="button"
+        tabIndex={0}
+        aria-expanded={expanded}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setExpanded((v) => !v);
+          }
+        }}
+      >
+        <div className={`card-header-icon ${hasData ? 'cruz-roja' : 'cruz-roja-neutral'}`}>{'\u2695'}</div>
+        <div>
+          <div className="card-header-title">Cruz Roja</div>
+          <div className="card-header-subtitle">{hasData ? 'Vigilancia y cobertura' : 'Sin cobertura activa'}</div>
+        </div>
+        <span className={`card-header-chevron ${expanded ? 'open' : ''}`}>&#9662;</span>
+      </div>
+
+      {expanded && (
+        <div className="card-body card-body-enter">
+          <div className="info-rows">
+            <div className="info-row">
+              <div className={`info-row-icon ${hasData ? '' : 'neutral'}`}>{'\u{1F6A9}'}</div>
+              <span className="info-row-label">Bandera actual</span>
+              <span className={`info-row-value ${!hasData ? 'muted' : ''}`}>
+                {hasData ? cruzRoja!.bandera : 'No disponible'}
+              </span>
+            </div>
+            <div className="info-row">
+              <div className={`info-row-icon ${hasData ? '' : 'neutral'}`}>{'\u{1F4C5}'}</div>
+              <span className="info-row-label">Cobertura desde</span>
+              <span className={`info-row-value ${!cruzRoja?.coberturaDesde ? 'muted' : ''}`}>
+                {cruzRojaField(cruzRoja?.coberturaDesde)}
+              </span>
+            </div>
+            <div className="info-row">
+              <div className={`info-row-icon ${hasData ? '' : 'neutral'}`}>{'\u{1F4C5}'}</div>
+              <span className="info-row-label">Cobertura hasta</span>
+              <span className={`info-row-value ${!cruzRoja?.coberturaHasta ? 'muted' : ''}`}>
+                {cruzRojaField(cruzRoja?.coberturaHasta)}
+              </span>
+            </div>
+            <div className="info-row">
+              <div className={`info-row-icon ${hasData ? '' : 'neutral'}`}>{'\u{1F552}'}</div>
+              <span className="info-row-label">Horario</span>
+              <span className={`info-row-value ${!cruzRoja?.horario ? 'muted' : ''}`}>
+                {cruzRojaField(cruzRoja?.horario)}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ---- Main Page ----
 
 const PlayaDetallePage: React.FC = () => {
   const { codigo } = useParams<{ codigo: string }>();
   const [datos, setDatos] = useState<PlayaDetalleData | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [mananaExpanded, setMananaExpanded] = useState(false);
 
   useEffect(() => {
     getDetallePlaya(codigo)
-      .then((data) => {
-        setDatos(data);
-      })
-      .catch((err: Error) => {
-        setError(err.message);
-      });
+      .then(setDatos)
+      .catch((err: Error) => setError(err.message));
   }, [codigo]);
 
   const fuente = datos?.clima?.fuente ?? '';
 
+  // Compute date labels
+  const hoyLabel = (() => {
+    if (!datos?.clima) return '';
+    const hoyFechaNum = hasFecha(datos.clima.hoy) ? datos.clima.hoy.fecha : undefined;
+    const f = fechaPrevision(hoyFechaNum, datos.clima.ultimaActualizacion, 0);
+    return f ? formatearDiaVisual(f) : '';
+  })();
+
+  const mananaLabel = (() => {
+    if (!datos?.clima) return '';
+    const mananaFechaNum = hasFecha(datos.clima.manana) ? datos.clima.manana.fecha : undefined;
+    const f = fechaPrevision(mananaFechaNum, datos.clima.ultimaActualizacion, 1);
+    return f ? formatearDiaVisual(f) : '';
+  })();
+
   return (
-    <IonPage>
+    <IonPage className="playa-detalle-page">
       <IonHeader>
         <IonToolbar>
           <IonButtons slot="start">
-            <IonBackButton defaultHref="/" />
+            <IonBackButton defaultHref="/" text="" />
           </IonButtons>
-          <IonTitle>{datos?.nombre || 'Detalle de Playa'}</IonTitle>
+          <IonTitle>{datos?.nombre || 'Detalle'}</IonTitle>
         </IonToolbar>
       </IonHeader>
-      <IonContent className="ion-padding">
-        {error && (
-          <IonText color="danger">
-            <p>{error}</p>
-          </IonText>
-        )}
 
-        {!datos && !error && (
-          <div style={{ textAlign: 'center', paddingTop: '2rem' }}>
-            <IonSpinner name="crescent" />
+      <IonContent>
+        {error && (
+          <div className="error-container">
+            <p style={{ margin: 0 }}>{error}</p>
           </div>
         )}
 
-        {datos?.clima && (
+        {!datos && !error && (
+          <div className="loading-container">
+            <IonSpinner name="crescent" />
+            <span className="loading-text">Cargando datos de la playa...</span>
+          </div>
+        )}
+
+        {datos && (
           <>
-            {/* TARJETA HOY */}
-            <IonCard className="tropical">
-              <IonCardHeader>
-                <IonCardTitle style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <IonIcon icon={todayOutline} />
-                  <span>Hoy</span>
-                  <span className="chip-fecha">
-                    {(() => {
-                      const hoyFechaNum = hasFecha(datos?.clima?.hoy) ? datos?.clima?.hoy?.fecha : undefined;
-                      const f = fechaPrevision(
-                        hoyFechaNum,
-                        datos?.clima?.ultimaActualizacion,
-                        0
-                      );
-                      return f ? formatearDiaVisual(f) : '';
-                    })()}
-                  </span>
-                  <span style={{ marginLeft: 'auto', color: '#666', fontSize: '0.9rem' }}>
-                    Fuente: {fuente}
-                  </span>
-                </IonCardTitle>
-              </IonCardHeader>
+            {/* HERO SECTION */}
+            <div className="hero-section">
+              <h1 className="hero-beach-name">{datos.nombre}</h1>
+              <p className="hero-municipio">{datos.municipio}</p>
 
-              <IonCardContent>
-                <IonItem lines="none">
-                  <IonIcon icon={cloudOutline} slot="start" />
-                  <IonLabel>Cielo: {datos.clima.hoy.summary}</IonLabel>
-                </IonItem>
+              <FlagBanner cruzRoja={datos.cruzRoja} />
+              <QuickStats clima={datos.clima} />
+            </div>
 
-                <IonItem lines="none">
-                  <IonIcon icon={flameOutline} slot="start" />
-                  <IonLabel>Temperatura: {datos.clima.hoy.temperature} ºC</IonLabel>
-                </IonItem>
+            {/* DETAIL CARDS */}
+            <div className="detail-content">
+              <WeatherCard
+                title="Hoy"
+                subtitle={hoyLabel}
+                iconClass="weather"
+                clima={datos.clima}
+                day="hoy"
+                defaultExpanded={true}
+              />
 
-                <IonItem lines="none">
-                  <IonIcon icon={water} slot="start" />
-                  <IonLabel>Temperatura agua: {datos.clima.hoy.waterTemperature} ºC</IonLabel>
-                </IonItem>
+              <WeatherCard
+                title={'Ma\u00f1ana'}
+                subtitle={mananaLabel}
+                iconClass="tomorrow"
+                clima={datos.clima}
+                day="manana"
+                defaultExpanded={false}
+              />
 
-                <IonItem lines="none">
-                  <IonIcon icon={flameOutline} slot="start" />
-                  <IonLabel>Sensación: {datos.clima.hoy.sensation}</IonLabel>
-                </IonItem>
+              <CruzRojaCard cruzRoja={datos.cruzRoja} />
 
-                <IonItem lines="none">
-                  <IonIcon icon={sunnyOutline} slot="start" />
-                  <IonLabel>Viento: {datos.clima.hoy.wind}</IonLabel>
-                </IonItem>
-
-                <IonItem lines="none">
-                  <IonIcon icon={water} slot="start" />
-                  <IonLabel>Oleaje: {datos.clima.hoy.waves}</IonLabel>
-                </IonItem>
-
-                {datos.clima.hoy.uvIndex !== undefined && (
-                  <IonItem lines="none">
-                    <IonIcon icon={warningOutline} slot="start" />
-                    <IonLabel>Índice UV: {datos.clima.hoy.uvIndex}</IonLabel>
-                  </IonItem>
-                )}
-
-                <IonItem lines="none">
-                  <IonIcon icon={timeOutline} slot="start" />
-                  <IonLabel>
-                    Actualizado:{' '}
-                    {datos?.clima?.ultimaActualizacion
-                      ? new Date(datos.clima.ultimaActualizacion).toLocaleTimeString()
-                      : 'N/A'}
-                  </IonLabel>
-                </IonItem>
-              </IonCardContent>
-            </IonCard>
-
-            {/* TARJETA MAÑANA */}
-            <IonCard className="tropical">
-              <IonCardHeader>
-                {/* FILA TAPPABLE GRANDE */}
-                <IonItem
-                  button
-                  detail={false}
-                  lines="none"
-                  onClick={() => setMananaExpanded((v) => !v)}
-                  className="touch-row"
-                >
-                  <IonIcon icon={calendarClearOutline} slot="start" />
-                  <IonLabel className="header-label">
-                    <div className="header-line">
-                      <strong>Mañana</strong>
-                      <span className="chip-fecha">
-                        {(() => {
-                          const mananaFechaNum = hasFecha(datos?.clima?.manana)
-                            ? datos?.clima?.manana?.fecha
-                            : undefined;
-                          const f = fechaPrevision(
-                            mananaFechaNum,
-                            datos?.clima?.ultimaActualizacion,
-                            1
-                          );
-                          return f ? formatearDiaVisual(f) : '';
-                        })()}
-                      </span>
-                    </div>
-                    <div className="fuente">Fuente: {fuente}</div>
-                  </IonLabel>
-                  <IonIcon
-                    icon={mananaExpanded ? chevronUpOutline : chevronDownOutline}
-                    slot="end"
-                    className={`chevron ${mananaExpanded ? 'open' : ''}`}
-                    aria-hidden="true"
-                  />
-                </IonItem>
-              </IonCardHeader>
-
-              {mananaExpanded && (
-                <IonCardContent>
-                  <IonItem lines="none">
-                    <IonIcon icon={cloudOutline} slot="start" />
-                    <IonLabel>Cielo: {datos.clima.manana.summary}</IonLabel>
-                  </IonItem>
-
-                  <IonItem lines="none">
-                    <IonIcon icon={flameOutline} slot="start" />
-                    <IonLabel>Temperatura: {datos.clima.manana.temperature} ºC</IonLabel>
-                  </IonItem>
-
-                  <IonItem lines="none">
-                    <IonIcon icon={water} slot="start" />
-                    <IonLabel>Temperatura agua: {datos.clima.manana.waterTemperature} ºC</IonLabel>
-                  </IonItem>
-
-                  <IonItem lines="none">
-                    <IonIcon icon={flameOutline} slot="start" />
-                    <IonLabel>Sensación: {datos.clima.manana.sensation}</IonLabel>
-                  </IonItem>
-
-                  <IonItem lines="none">
-                    <IonIcon icon={sunnyOutline} slot="start" />
-                    <IonLabel>Viento: {datos.clima.manana.wind}</IonLabel>
-                  </IonItem>
-
-                  <IonItem lines="none">
-                    <IonIcon icon={water} slot="start" />
-                    <IonLabel>Oleaje: {datos.clima.manana.waves}</IonLabel>
-                  </IonItem>
-
-                  {datos.clima.manana.uvIndex !== undefined && (
-                    <IonItem lines="none">
-                      <IonIcon icon={warningOutline} slot="start" />
-                      <IonLabel>Índice UV: {datos.clima.manana.uvIndex}</IonLabel>
-                    </IonItem>
+              {fuente && (
+                <p className="source-label">
+                  Datos {'meteorol\u00f3gicos'}: {fuente}
+                  {datos.clima?.ultimaActualizacion && (
+                    <>
+                      {' '}
+                      &middot; Actualizado:{' '}
+                      {new Date(datos.clima.ultimaActualizacion).toLocaleTimeString('es-ES', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </>
                   )}
-                </IonCardContent>
+                </p>
               )}
-            </IonCard>
+            </div>
           </>
         )}
-
-        {datos?.cruzRoja?.bandera && datos.cruzRoja.bandera !== 'Desconocida' && (
-          <IonCard className="tropical">
-            <IonCardHeader>
-              <IonCardTitle>
-                <IonIcon icon={flagOutline} /> Datos Cruz Roja
-              </IonCardTitle>
-            </IonCardHeader>
-            <IonCardContent>
-              <IonItem lines="none">
-                <IonIcon icon={flagOutline} slot="start" />
-                <IonLabel>
-                  Bandera actual: {iconoBandera(datos.cruzRoja.bandera)} {datos.cruzRoja.bandera}
-                </IonLabel>
-              </IonItem>
-              <IonItem lines="none">
-                <IonIcon icon={calendarClearOutline} slot="start" />
-                <IonLabel>Cobertura desde: {datos.cruzRoja.coberturaDesde || 'N/A'}</IonLabel>
-              </IonItem>
-              <IonItem lines="none">
-                <IonIcon icon={calendarClearOutline} slot="start" />
-                <IonLabel>Cobertura hasta: {datos.cruzRoja.coberturaHasta || 'N/A'}</IonLabel>
-              </IonItem>
-              <IonItem lines="none">
-                <IonIcon icon={timeOutline} slot="start" />
-                <IonLabel>Horario: {datos.cruzRoja.horario || 'N/A'}</IonLabel>
-              </IonItem>
-            </IonCardContent>
-          </IonCard>
-        )}
       </IonContent>
-
-      {/* Estilos inline (puedes moverlos al CSS del proyecto) */}
-      <style>{`
-        .chip-fecha {
-          padding: 4px 10px;
-          border-radius: 999px;
-          background: rgba(0,0,0,0.06);
-          font-size: 0.9rem;
-          margin-left: 8px;
-        }
-        .touch-row {
-          min-height: 56px; /* mayor área táctil en móvil */
-        }
-        .header-label {
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-        }
-        .header-line {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-        .fuente {
-          color: #666;
-          font-size: 0.9rem;
-        }
-        .chevron {
-          transition: transform 0.2s ease;
-          font-size: 24px;
-        }
-        .chevron.open {
-          transform: rotate(180deg);
-        }
-      `}</style>
     </IonPage>
   );
 };

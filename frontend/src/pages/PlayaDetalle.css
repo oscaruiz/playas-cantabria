@@ -1,0 +1,518 @@
+/* =============================================
+   PlayaDetalle – Beach Detail Page Styles
+   Coastal, fresh design with soft colors
+   ============================================= */
+
+/* --- Color tokens --- */
+:root {
+  --playa-sand: #faf6f1;
+  --playa-ocean: #0a7ea4;
+  --playa-ocean-light: #e8f4f8;
+  --playa-ocean-dark: #065a75;
+  --playa-sky: #87ceeb;
+  --playa-foam: #ffffff;
+  --playa-text: #1e293b;
+  --playa-text-muted: #64748b;
+  --playa-border: #e2e8f0;
+  --playa-card-bg: rgba(255, 255, 255, 0.92);
+  --playa-card-radius: 20px;
+  --playa-flag-green: #22c55e;
+  --playa-flag-yellow: #eab308;
+  --playa-flag-red: #ef4444;
+}
+
+/* --- Page background --- */
+.playa-detalle-page ion-content {
+  --background: var(--playa-sand);
+}
+
+.playa-detalle-page ion-toolbar {
+  --background: var(--playa-ocean);
+  --color: #ffffff;
+}
+
+.playa-detalle-page ion-back-button {
+  --color: #ffffff;
+}
+
+/* --- Hero section: flag + key weather --- */
+.hero-section {
+  background: linear-gradient(135deg, var(--playa-ocean) 0%, var(--playa-ocean-dark) 100%);
+  color: #ffffff;
+  padding: 20px 20px 28px;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-section::before {
+  content: '';
+  position: absolute;
+  bottom: -30px;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: var(--playa-sand);
+  border-radius: 50% 50% 0 0;
+}
+
+.hero-beach-name {
+  font-family: 'Pacifico', cursive;
+  font-size: 1.6rem;
+  margin: 0 0 4px;
+  line-height: 1.3;
+}
+
+.hero-municipio {
+  font-size: 0.85rem;
+  opacity: 0.85;
+  margin-bottom: 16px;
+  font-weight: 400;
+}
+
+/* Flag banner within hero */
+.flag-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(8px);
+  border-radius: 16px;
+  padding: 14px 18px;
+  margin-bottom: 18px;
+}
+
+.flag-indicator {
+  width: 48px;
+  height: 64px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  position: relative;
+}
+
+.flag-indicator::after {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 3px;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 2px;
+}
+
+.flag-indicator.green {
+  background: var(--playa-flag-green);
+}
+.flag-indicator.yellow {
+  background: var(--playa-flag-yellow);
+}
+.flag-indicator.red {
+  background: var(--playa-flag-red);
+}
+.flag-indicator.unknown {
+  background: var(--playa-text-muted);
+}
+
+.flag-icon-inner {
+  font-size: 24px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+}
+
+.flag-info {
+  flex: 1;
+}
+
+.flag-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.85;
+  margin-bottom: 2px;
+}
+
+.flag-value {
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.flag-horario {
+  font-size: 0.75rem;
+  opacity: 0.7;
+  margin-top: 2px;
+}
+
+/* Quick stats grid in hero */
+.quick-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  position: relative;
+  z-index: 1;
+}
+
+.quick-stat {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(8px);
+  border-radius: 14px;
+  padding: 12px 10px;
+  text-align: center;
+}
+
+.quick-stat-icon {
+  font-size: 1.4rem;
+  margin-bottom: 4px;
+}
+
+.quick-stat-value {
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.quick-stat-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.8;
+  margin-top: 2px;
+}
+
+/* --- Content area --- */
+.detail-content {
+  padding: 8px 16px 32px;
+  position: relative;
+  z-index: 1;
+}
+
+/* --- Section cards --- */
+.detail-card {
+  background: var(--playa-card-bg);
+  border-radius: var(--playa-card-radius);
+  padding: 0;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  border: 1px solid var(--playa-border);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 18px 12px;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.card-header-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 1.1rem;
+}
+
+.card-header-icon.weather {
+  background: var(--playa-ocean-light);
+  color: var(--playa-ocean);
+}
+
+.card-header-icon.cruz-roja {
+  background: #fef2f2;
+  color: #ef4444;
+}
+
+.card-header-icon.tomorrow {
+  background: #fef9c3;
+  color: #ca8a04;
+}
+
+.card-header-title {
+  flex: 1;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--playa-text);
+  line-height: 1.3;
+}
+
+.card-header-subtitle {
+  font-size: 0.75rem;
+  color: var(--playa-text-muted);
+  font-weight: 400;
+}
+
+.card-header-chevron {
+  font-size: 20px;
+  color: var(--playa-text-muted);
+  transition: transform 0.25s ease;
+}
+
+.card-header-chevron.open {
+  transform: rotate(180deg);
+}
+
+.card-body {
+  padding: 0 18px 18px;
+}
+
+/* Weather detail rows */
+.weather-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.weather-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--playa-border);
+}
+
+.weather-row:last-child {
+  border-bottom: none;
+}
+
+.weather-row-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--playa-ocean-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 0.95rem;
+  color: var(--playa-ocean);
+}
+
+.weather-row-label {
+  flex: 1;
+  font-size: 0.85rem;
+  color: var(--playa-text-muted);
+}
+
+.weather-row-value {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--playa-text);
+  text-align: right;
+}
+
+/* Cruz Roja info rows */
+.info-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--playa-border);
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.info-row-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #fef2f2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 0.95rem;
+  color: #ef4444;
+}
+
+.info-row-label {
+  flex: 1;
+  font-size: 0.85rem;
+  color: var(--playa-text-muted);
+}
+
+.info-row-value {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--playa-text);
+  text-align: right;
+  max-width: 55%;
+}
+
+.info-row-value.muted {
+  color: var(--playa-text-muted);
+  font-weight: 400;
+  font-style: italic;
+}
+
+/* Neutral Cruz Roja icons when data unavailable */
+.info-row-icon.neutral {
+  background: var(--playa-ocean-light);
+  color: var(--playa-text-muted);
+}
+
+.card-header-icon.cruz-roja-neutral {
+  background: var(--playa-ocean-light);
+  color: var(--playa-text-muted);
+}
+
+/* Source label at bottom */
+.source-label {
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--playa-text-muted);
+  padding: 8px 16px 16px;
+  opacity: 0.7;
+}
+
+/* Loading state */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-top: 4rem;
+  gap: 12px;
+  color: var(--playa-ocean);
+}
+
+.loading-text {
+  font-size: 0.85rem;
+  color: var(--playa-text-muted);
+}
+
+/* Error state */
+.error-container {
+  margin: 20px;
+  padding: 16px;
+  background: #fef2f2;
+  border-radius: 14px;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+/* No flag banner – neutral state when no Cruz Roja data */
+.no-flag-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  border-radius: 16px;
+  padding: 14px 18px;
+  margin-bottom: 18px;
+}
+
+.no-flag-icon {
+  font-size: 1.5rem;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.no-flag-info {
+  flex: 1;
+}
+
+.no-flag-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.7;
+  margin-bottom: 2px;
+}
+
+.no-flag-value {
+  font-size: 1rem;
+  font-weight: 600;
+  opacity: 0.85;
+}
+
+/* Animation for expand/collapse */
+.card-body-enter {
+  animation: slideDown 0.25s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --playa-sand: #0f172a;
+    --playa-card-bg: rgba(30, 41, 59, 0.95);
+    --playa-text: #e2e8f0;
+    --playa-text-muted: #94a3b8;
+    --playa-border: #334155;
+    --playa-ocean-light: rgba(14, 116, 144, 0.2);
+  }
+
+  .hero-section {
+    background: linear-gradient(135deg, #0c4a6e 0%, #0f172a 100%);
+  }
+
+  .hero-section::before {
+    background: var(--playa-sand);
+  }
+
+  .weather-row-icon {
+    background: rgba(14, 116, 144, 0.2);
+  }
+
+  .info-row-icon {
+    background: rgba(239, 68, 68, 0.15);
+  }
+
+  .card-header-icon.weather {
+    background: rgba(14, 116, 144, 0.2);
+  }
+
+  .card-header-icon.cruz-roja {
+    background: rgba(239, 68, 68, 0.15);
+  }
+
+  .card-header-icon.tomorrow {
+    background: rgba(202, 138, 4, 0.15);
+  }
+
+  .card-header-icon.cruz-roja-neutral {
+    background: rgba(14, 116, 144, 0.2);
+    color: var(--playa-text-muted);
+  }
+
+  .info-row-icon.neutral {
+    background: rgba(14, 116, 144, 0.2);
+    color: var(--playa-text-muted);
+  }
+
+  .error-container {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #fca5a5;
+  }
+}

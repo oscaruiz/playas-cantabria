@@ -7,7 +7,8 @@ import {
 import { IonReactRouter } from '@ionic/react-router';
 import { Route } from 'react-router-dom';
 import Home from './pages/Home';
-import PlayaDetalle from './pages/PlayaDetalle';
+import PlayaDetallePage from './pages/PlayaDetalle';
+import MapaPage from './pages/MapaPage';
 
 /* Ionic core styles */
 import '@ionic/react/css/core.css';
@@ -19,8 +20,6 @@ import '@ionic/react/css/float-elements.css';
 import '@ionic/react/css/text-alignment.css';
 import '@ionic/react/css/display.css';
 import './theme/variables.css';
-import PlayaDetallePage from './pages/PlayaDetalle';
-import MapaPage from './pages/MapaPage';
 
 setupIonicReact();
 

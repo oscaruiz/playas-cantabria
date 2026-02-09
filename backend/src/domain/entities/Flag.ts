@@ -1,7 +1,7 @@
 export type FlagColor = 'green' | 'yellow' | 'red' | 'black' | 'unknown';
 
 export interface FlagStatus {
-  color: FlagColor;
+  color?: FlagColor;
   /** Optional human message scraped/provided by the source. */
   message?: string;
   /** Unix epoch (ms) when the flag info was observed. */
