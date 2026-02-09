@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Coastal / beach palette */
+    --background: 195 30% 97%;
+    --foreground: 210 25% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 210 25% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 210 25% 15%;
+
+    --primary: 199 78% 42%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 180 25% 92%;
+    --secondary-foreground: 210 25% 20%;
+
+    --muted: 195 20% 94%;
+    --muted-foreground: 210 10% 45%;
+
+    --accent: 38 92% 55%;
+    --accent-foreground: 210 25% 12%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 195 20% 88%;
+    --input: 195 20% 88%;
+    --ring: 199 78% 42%;
+
+    --radius: 0.75rem;
+
+    /* Custom flag colors */
+    --flag-green: 142 72% 42%;
+    --flag-yellow: 45 93% 50%;
+    --flag-red: 0 72% 51%;
+
+    /* Custom beach accent */
+    --sand: 38 50% 92%;
+    --ocean: 199 78% 42%;
+    --ocean-light: 199 60% 90%;
+    --sky: 200 60% 96%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
