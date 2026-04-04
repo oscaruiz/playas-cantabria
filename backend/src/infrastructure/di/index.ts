@@ -28,7 +28,9 @@ export const SERVICES = {
   AEMET_WEATHER_PROVIDER: 'aemetWeatherProvider',
   OPENWEATHER_PROVIDER: 'openWeatherProvider',
   REDCROSS_FLAG_PROVIDER: 'redCrossFlagProvider',
-  
+  AEMET_BEACH_FORECAST_PROVIDER: 'aemetBeachForecastProvider',
+  AEMET_BEACH_WEB_SCRAPER: 'aemetBeachWebScraper',
+
   // Use Cases
   GET_ALL_BEACHES: 'getAllBeaches',
   GET_BEACH_BY_ID: 'getBeachById',

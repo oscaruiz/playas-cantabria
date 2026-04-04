@@ -13,13 +13,16 @@ import { useParams } from 'react-router-dom';
 import {
   getDetallePlaya,
   PlayaDetalle as PlayaDetalleData,
+  DiaPrediccionDTO,
+  HalfDayDTO,
+  PrediccionCompletaDTO,
 } from '../services/api';
 import './PlayaDetalle.css';
 
 // ---- Helpers ----
 
-function limpiarTexto(texto: string): string {
-  if (!texto) return texto;
+function limpiarTexto(texto: string | null | undefined): string {
+  if (!texto) return '';
   return texto.replace(/\uFFFD/g, 'e');
 }
 
@@ -39,66 +42,41 @@ function flagDisplayText(bandera?: string): string {
   return 'Sin datos';
 }
 
-function formatearFechaNumYYYYMMDD(fechaNum?: number): Date | null {
-  if (!fechaNum) return null;
-  const s = String(fechaNum);
-  const y = parseInt(s.slice(0, 4), 10);
-  const m = parseInt(s.slice(4, 6), 10) - 1;
-  const d = parseInt(s.slice(6, 8), 10);
-  return new Date(y, m, d);
-}
-
-function sumarDias(base: Date, dias: number): Date {
-  const out = new Date(base);
-  out.setDate(out.getDate() + dias);
-  return out;
-}
-
-function formatearDiaVisual(date: Date): string {
-  return date
-    .toLocaleDateString('es-ES', {
-      weekday: 'short',
-      day: '2-digit',
-      month: 'short',
-    })
-    .replace(/\.$/, '');
-}
-
-function fechaPrevision(
-  fechaNum?: number,
-  ultimaActualizacion?: string,
-  offsetDias = 0
-): Date | null {
-  const byNum = formatearFechaNumYYYYMMDD(fechaNum);
-  if (byNum) return byNum;
-  if (!ultimaActualizacion) return null;
-  const base = new Date(ultimaActualizacion);
-  return sumarDias(base, offsetDias);
-}
-
-function hasFecha(x: unknown): x is { fecha?: number } {
-  return typeof x === 'object' && x !== null && 'fecha' in x;
-}
-
-// ---- Sub-components ----
-
 function isFlagAvailable(cruzRoja?: PlayaDetalleData['cruzRoja']): boolean {
   if (!cruzRoja) return false;
   const b = cruzRoja.bandera?.toLowerCase() || '';
   return b.includes('roja') || b.includes('amarilla') || b.includes('verde');
 }
 
+function cruzRojaField(value?: string): string {
+  if (!value || value.trim() === '' || value === 'N/A') return 'No disponible';
+  return value;
+}
+
+function capitalizar(s: string | null | undefined): string {
+  if (!s) return '';
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+const DAY_TITLES = ['Hoy', 'Ma\u00f1ana', 'Pasado ma\u00f1ana'];
+
+function daySubtitle(offset: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() + offset);
+  const dias = ['domingo', 'lunes', 'martes', 'mi\u00e9rcoles', 'jueves', 'viernes', 's\u00e1bado'];
+  const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+  return `${capitalizar(dias[d.getDay()])} ${d.getDate()} de ${meses[d.getMonth()]}`;
+}
+
+function hasHalfDayData(h: HalfDayDTO): boolean {
+  return h.cielo != null || h.viento != null || h.oleaje != null;
+}
+
+// ---- Sub-components ----
+
 const FlagBanner: React.FC<{ cruzRoja?: PlayaDetalleData['cruzRoja'] }> = ({ cruzRoja }) => {
   if (!isFlagAvailable(cruzRoja)) {
-    return (
-      <div className="no-flag-banner">
-        <span className="no-flag-icon" aria-hidden="true">&#9872;</span>
-        <div className="no-flag-info">
-          <div className="no-flag-label">Estado de la playa</div>
-          <div className="no-flag-value">No disponible</div>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   const colorClass = flagColorClass(cruzRoja!.bandera);
@@ -109,7 +87,7 @@ const FlagBanner: React.FC<{ cruzRoja?: PlayaDetalleData['cruzRoja'] }> = ({ cru
         <span className="flag-icon-inner" role="img" aria-label="bandera">&#9873;</span>
       </div>
       <div className="flag-info">
-        <div className="flag-label">Estado de la playa</div>
+        <div className="flag-label">Estado para bañarse (según Cruz Roja)</div>
         <div className="flag-value">{flagDisplayText(cruzRoja!.bandera)}</div>
         {cruzRoja!.horario && (
           <div className="flag-horario">{'Vigilancia: ' + cruzRoja!.horario}</div>
@@ -119,29 +97,319 @@ const FlagBanner: React.FC<{ cruzRoja?: PlayaDetalleData['cruzRoja'] }> = ({ cru
   );
 };
 
-const QuickStats: React.FC<{ clima: PlayaDetalleData['clima'] }> = ({ clima }) => {
-  if (!clima) return null;
+const QuickStats: React.FC<{
+  clima: PlayaDetalleData['clima'];
+  prediccion?: PrediccionCompletaDTO;
+}> = ({ clima, prediccion }) => {
+  const day0 = prediccion?.dias[0];
+
+  const temp = day0?.temperaturaMaxima ?? clima?.hoy.temperature;
+  const agua = day0?.temperaturaAgua ?? clima?.hoy.waterTemperature;
+  const viento = day0?.tarde.viento ?? day0?.manana.viento ?? clima?.hoy.wind;
+
+  if (temp == null && agua == null && !viento) return null;
 
   return (
     <div className="quick-stats">
       <div className="quick-stat">
         <div className="quick-stat-icon" role="img" aria-label="temperatura">&#x1F321;&#xFE0F;</div>
-        <div className="quick-stat-value">{clima.hoy.temperature}&#176;</div>
+        <div className="quick-stat-value">{temp != null ? `${temp}\u00B0` : '--'}</div>
         <div className="quick-stat-label">Temp.</div>
       </div>
       <div className="quick-stat">
         <div className="quick-stat-icon" role="img" aria-label="agua">&#x1F30A;</div>
-        <div className="quick-stat-value">{clima.hoy.waterTemperature}&#176;</div>
+        <div className="quick-stat-value">{agua != null ? `${agua}\u00B0` : '--'}</div>
         <div className="quick-stat-label">Agua</div>
       </div>
       <div className="quick-stat">
         <div className="quick-stat-icon" role="img" aria-label="viento">&#x1F4A8;</div>
-        <div className="quick-stat-value">{clima.hoy.wind || '--'}</div>
+        <div className="quick-stat-value">{viento || '--'}</div>
         <div className="quick-stat-label">Viento</div>
       </div>
     </div>
   );
 };
+
+// ---- Helpers (aviso / UV) ----
+
+function avisoLevelClass(nivel: number | null): string {
+  if (nivel === 1) return 'aviso-red';
+  if (nivel === 2) return 'aviso-orange';
+  if (nivel === 3) return 'aviso-yellow';
+  return 'aviso-green';
+}
+
+function uvColorClass(uv: number): string {
+  if (uv <= 2) return 'uv-low';
+  if (uv <= 5) return 'uv-moderate';
+  if (uv <= 7) return 'uv-high';
+  return 'uv-very-high';
+}
+
+function aemetIconUrl(iconoCielo: number | null): string | null {
+  return iconoCielo != null
+    ? `https://www.aemet.es/imagenes/png/estado_cielo/${iconoCielo}.png`
+    : null;
+}
+
+// ---- Day Selector (pill tabs) ----
+
+const DaySelector: React.FC<{
+  count: number;
+  selectedDay: number;
+  onSelect: (i: number) => void;
+}> = ({ count, selectedDay, onSelect }) => (
+  <div className="day-selector">
+    {Array.from({ length: count }, (_, i) => (
+      <button
+        key={i}
+        className={`day-pill${i === selectedDay ? ' active' : ''}`}
+        onClick={() => onSelect(i)}
+      >
+        <span className="day-pill-title">{DAY_TITLES[i] ?? `D\u00eda ${i + 1}`}</span>
+        <span className="day-pill-date">{daySubtitle(i)}</span>
+      </button>
+    ))}
+  </div>
+);
+
+// ---- Forecast Hero (big icon + temp + badges) ----
+
+const ForecastHero: React.FC<{ dia: DiaPrediccionDTO }> = ({ dia }) => {
+  const [imgError, setImgError] = useState(false);
+  const iconCode = dia.tarde.iconoCielo ?? dia.manana.iconoCielo;
+  const iconUrl = aemetIconUrl(iconCode);
+  const skyText = capitalizar(dia.tarde.cielo ?? dia.manana.cielo ?? '');
+  const viento = capitalizar(dia.tarde.viento ?? dia.manana.viento ?? '');
+  const oleaje = capitalizar(dia.tarde.oleaje ?? dia.manana.oleaje ?? '');
+
+  return (
+    <div className="detail-card forecast-hero">
+      <div className="forecast-hero-main">
+        <div className="forecast-hero-icon-wrap">
+          {iconUrl && !imgError ? (
+            <img
+              className="forecast-hero-icon"
+              src={iconUrl}
+              alt={skyText}
+              onError={() => setImgError(true)}
+            />
+          ) : (
+            <span className="forecast-hero-icon-fallback">{'\u26C5'}</span>
+          )}
+        </div>
+        <div className="forecast-hero-text">
+          {dia.temperaturaMaxima != null && (
+            <div className="forecast-hero-temp">{dia.temperaturaMaxima}&deg;</div>
+          )}
+          {skyText && <div className="forecast-hero-sky">{skyText}</div>}
+        </div>
+      </div>
+      <div className="forecast-hero-badges">
+        {dia.temperaturaAgua != null && (
+          <span className="forecast-badge badge-water">{'\u{1F4A7}'} {dia.temperaturaAgua}&deg;C</span>
+        )}
+        {viento && (
+          <span className="forecast-badge badge-wind">{'\u{1F4A8}'} {viento}</span>
+        )}
+        {oleaje && (
+          <span className="forecast-badge badge-waves">{'\u{1F30A}'} {oleaje}</span>
+        )}
+        {dia.indiceUV != null && (
+          <span className={`forecast-badge badge-uv ${uvColorClass(dia.indiceUV)}`}>
+            {'\u2600'} UV {dia.indiceUV}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// ---- Half-day detail (morning / afternoon side by side) ----
+
+const HalfDayDetail: React.FC<{
+  manana: HalfDayDTO;
+  tarde: HalfDayDTO;
+}> = ({ manana, tarde }) => {
+  const hasMorning = hasHalfDayData(manana);
+
+  const renderBlock = (data: HalfDayDTO, period: 'morning' | 'afternoon') => {
+    const label = period === 'morning' ? 'Ma\u00f1ana' : 'Tarde';
+    const emoji = period === 'morning' ? '\u2600\uFE0F' : '\u{1F305}';
+    return (
+      <div className={`halfday-block ${period}`}>
+        <div className="halfday-block-header">
+          <span className="halfday-block-emoji">{emoji}</span>
+          <span className="halfday-block-label">{label}</span>
+        </div>
+        <div className="halfday-block-rows">
+          <div className="halfday-block-row">
+            <span className="halfday-block-row-icon">{'\u2601\uFE0F'}</span>
+            <span>{capitalizar(data.cielo) || '--'}</span>
+          </div>
+          <div className="halfday-block-row">
+            <span className="halfday-block-row-icon">{'\u{1F4A8}'}</span>
+            <span>{capitalizar(data.viento) || '--'}</span>
+          </div>
+          <div className="halfday-block-row">
+            <span className="halfday-block-row-icon">{'\u{1F30A}'}</span>
+            <span>{capitalizar(data.oleaje) || '--'}</span>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className={`halfday-detail${hasMorning ? '' : ' single'}`}>
+      {hasMorning && renderBlock(manana, 'morning')}
+      {renderBlock(tarde, 'afternoon')}
+    </div>
+  );
+};
+
+// ---- Daily Stats (sensation, UV badge, warning) ----
+
+const DailyStats: React.FC<{ dia: DiaPrediccionDTO }> = ({ dia }) => {
+  const hasAny = dia.sensacionTermica || dia.indiceUV != null || (dia.aviso && dia.aviso.descripcion);
+  if (!hasAny) return null;
+
+  return (
+    <div className="detail-card daily-stats-card">
+      <div className="daily-stats-body">
+        {dia.sensacionTermica && (
+          <div className="daily-stat-row">
+            <span className="daily-stat-icon">{'\u{1F525}'}</span>
+            <span className="daily-stat-label">{'Sensaci\u00f3n t\u00e9rmica'}</span>
+            <span className="daily-stat-value">{capitalizar(dia.sensacionTermica)}</span>
+          </div>
+        )}
+        {dia.indiceUV != null && (
+          <div className="daily-stat-row">
+            <span className="daily-stat-icon">{'\u2600'}</span>
+            <span className="daily-stat-label">{'Indice UV'}</span>
+            <span className={`uv-badge ${uvColorClass(dia.indiceUV)}`}>
+              {dia.indiceUV}
+              {dia.nivelUV && ` \u2014 ${dia.nivelUV.replace(/^índice ultravioleta\s*/i, '')}`}
+            </span>
+          </div>
+        )}
+        {dia.aviso && dia.aviso.descripcion && (
+          <div className="daily-stat-row">
+            <span className="daily-stat-icon">
+              {dia.aviso.nivel != null && dia.aviso.nivel <= 3 ? '\u26A0\uFE0F' : '\u2705'}
+            </span>
+            <span className="daily-stat-label">Aviso litoral</span>
+            <span className={`daily-stat-value ${avisoLevelClass(dia.aviso.nivel)}`}>
+              {capitalizar(dia.aviso.descripcion)}
+            </span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// ---- Tides Section (selected day only, sorted by time) ----
+
+function parseTimeMinutes(t: string): number {
+  const [h, m] = t.split(':').map(Number);
+  return h * 60 + (m || 0);
+}
+
+function getTideStatus(
+  entries: Array<{ time: string; type: 'pleamar' | 'bajamar'; minutes: number }>,
+  isToday: boolean,
+): { label: string; className: string } | null {
+  if (!isToday || entries.length === 0) return null;
+
+  const now = new Date();
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+
+  // Buscar entre qué dos eventos estamos
+  for (let i = 0; i < entries.length; i++) {
+    if (nowMinutes < entries[i].minutes) {
+      // Estamos antes de este evento → la marea se dirige hacia él
+      const next = entries[i];
+      if (next.type === 'pleamar') {
+        return { label: 'Subiendo', className: 'tide-status-rising' };
+      } else {
+        return { label: 'Bajando', className: 'tide-status-falling' };
+      }
+    }
+  }
+
+  // Después del último evento del día: si el último fue pleamar → bajando, y viceversa
+  const last = entries[entries.length - 1];
+  if (last.type === 'pleamar') {
+    return { label: 'Bajando', className: 'tide-status-falling' };
+  }
+  return { label: 'Subiendo', className: 'tide-status-rising' };
+}
+
+const TidesSection: React.FC<{
+  marea: { pleamar: string[]; bajamar: string[] };
+  fuenteMareas: string | null;
+  isToday: boolean;
+}> = ({ marea, fuenteMareas, isToday }) => {
+  if (marea.pleamar.length === 0 && marea.bajamar.length === 0) return null;
+
+  // Combinar y ordenar por hora
+  const entries = [
+    ...marea.pleamar.map((t) => ({ time: t, type: 'pleamar' as const, minutes: parseTimeMinutes(t) })),
+    ...marea.bajamar.map((t) => ({ time: t, type: 'bajamar' as const, minutes: parseTimeMinutes(t) })),
+  ].sort((a, b) => a.minutes - b.minutes);
+
+  const status = getTideStatus(entries, isToday);
+
+  return (
+    <div className="detail-card tides-section">
+      <div className="tides-section-header">
+        <div className="card-header-icon tides">{'\u{1F30A}'}</div>
+        <div className="tides-section-header-text">
+          <div className="card-header-title">Mareas</div>
+          {status && (
+            <div className={`tide-status ${status.className}`}>
+              {status.className === 'tide-status-rising' ? '\u2197' : '\u2198'} {status.label}
+            </div>
+          )}
+        </div>
+      </div>
+      <div className="tides-list">
+        {entries.map((entry, i) => (
+          <div className={`tide-entry ${entry.type}`} key={i}>
+            <span className={`tide-arrow ${entry.type === 'pleamar' ? 'up' : 'down'}`}>
+              {entry.type === 'pleamar' ? '\u2B06' : '\u2B07'}
+            </span>
+            <span className="tide-label">{entry.type === 'pleamar' ? 'Pleamar' : 'Bajamar'}</span>
+            <span className="tide-time-value">{entry.time}</span>
+          </div>
+        ))}
+      </div>
+      {fuenteMareas && (
+        <div className="tides-source">{fuenteMareas.replace(/^\*/, '')}</div>
+      )}
+    </div>
+  );
+};
+
+// ---- Metadata Footer ----
+
+const MetadataFooter: React.FC<{
+  zonaAvisos: string | null;
+  elaboracion: string | null;
+}> = ({ zonaAvisos, elaboracion }) => {
+  if (!zonaAvisos && !elaboracion) return null;
+  return (
+    <div className="forecast-metadata">
+      {zonaAvisos && <span>Zona de avisos: {zonaAvisos}</span>}
+      {zonaAvisos && elaboracion && <span> &middot; </span>}
+      {elaboracion && <span>{elaboracion}</span>}
+    </div>
+  );
+};
+
+// ---- Legacy WeatherCard (fallback when no prediccionCompleta) ----
 
 interface WeatherCardProps {
   title: string;
@@ -239,37 +507,33 @@ const WeatherCard: React.FC<WeatherCardProps> = ({
   );
 };
 
-function cruzRojaField(value?: string): string {
-  if (!value || value.trim() === '' || value === 'N/A') return 'No disponible';
-  return value;
-}
+// ---- Cruz Roja Card (unchanged) ----
 
 const CruzRojaCard: React.FC<{ cruzRoja?: PlayaDetalleData['cruzRoja'] }> = ({ cruzRoja }) => {
-  const [expanded, setExpanded] = useState(true);
-
   const hasData = isFlagAvailable(cruzRoja);
+  const [expanded, setExpanded] = useState(hasData);
 
   return (
     <div className="detail-card">
       <div
-        className="card-header"
-        onClick={() => setExpanded((v) => !v)}
-        role="button"
-        tabIndex={0}
-        aria-expanded={expanded}
-        onKeyDown={(e) => {
+        className={`card-header${!hasData ? ' card-header-disabled' : ''}`}
+        onClick={hasData ? () => setExpanded((v) => !v) : undefined}
+        role={hasData ? 'button' : undefined}
+        tabIndex={hasData ? 0 : undefined}
+        aria-expanded={hasData ? expanded : undefined}
+        onKeyDown={hasData ? (e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
             setExpanded((v) => !v);
           }
-        }}
+        } : undefined}
       >
-        <div className={`card-header-icon ${hasData ? 'cruz-roja' : 'cruz-roja-neutral'}`}>{'\u2695'}</div>
+        <div className={`card-header-icon ${hasData ? 'cruz-roja' : 'cruz-roja-neutral'}`}>{'\u271A'}</div>
         <div>
           <div className="card-header-title">Cruz Roja</div>
-          <div className="card-header-subtitle">{hasData ? 'Vigilancia y cobertura' : 'Sin cobertura activa'}</div>
+          <div className="card-header-subtitle">{hasData ? 'Vigilancia y cobertura' : 'Informaci\u00f3n de Cruz Roja a\u00fan no disponible'}</div>
         </div>
-        <span className={`card-header-chevron ${expanded ? 'open' : ''}`}>&#9662;</span>
+        {hasData && <span className={`card-header-chevron ${expanded ? 'open' : ''}`}>&#9662;</span>}
       </div>
 
       {expanded && (
@@ -323,22 +587,10 @@ const PlayaDetallePage: React.FC = () => {
       .catch((err: Error) => setError(err.message));
   }, [codigo]);
 
-  const fuente = datos?.clima?.fuente ?? '';
-
-  // Compute date labels
-  const hoyLabel = (() => {
-    if (!datos?.clima) return '';
-    const hoyFechaNum = hasFecha(datos.clima.hoy) ? datos.clima.hoy.fecha : undefined;
-    const f = fechaPrevision(hoyFechaNum, datos.clima.ultimaActualizacion, 0);
-    return f ? formatearDiaVisual(f) : '';
-  })();
-
-  const mananaLabel = (() => {
-    if (!datos?.clima) return '';
-    const mananaFechaNum = hasFecha(datos.clima.manana) ? datos.clima.manana.fecha : undefined;
-    const f = fechaPrevision(mananaFechaNum, datos.clima.ultimaActualizacion, 1);
-    return f ? formatearDiaVisual(f) : '';
-  })();
+  const [selectedDay, setSelectedDay] = useState(0);
+  const pred = datos?.prediccionCompleta;
+  const fuente = pred?.fuente ?? datos?.clima?.fuente ?? '';
+  const safeDayIndex = pred ? Math.min(selectedDay, pred.dias.length - 1) : 0;
 
   return (
     <IonPage className="playa-detalle-page">
@@ -373,44 +625,80 @@ const PlayaDetallePage: React.FC = () => {
               <p className="hero-municipio">{datos.municipio}</p>
 
               <FlagBanner cruzRoja={datos.cruzRoja} />
-              <QuickStats clima={datos.clima} />
             </div>
 
             {/* DETAIL CARDS */}
             <div className="detail-content">
-              <WeatherCard
-                title="Hoy"
-                subtitle={hoyLabel}
-                iconClass="weather"
-                clima={datos.clima}
-                day="hoy"
-                defaultExpanded={true}
-              />
+              {pred && pred.dias.length > 0 ? (
+                <>
+                  <DaySelector
+                    count={pred.dias.length}
+                    selectedDay={safeDayIndex}
+                    onSelect={setSelectedDay}
+                  />
+                  <ForecastHero dia={pred.dias[safeDayIndex]} />
+                  <HalfDayDetail
+                    manana={pred.dias[safeDayIndex].manana}
+                    tarde={pred.dias[safeDayIndex].tarde}
+                  />
+                  <DailyStats dia={pred.dias[safeDayIndex]} />
+                  {pred.mareas?.[safeDayIndex] && (
+                    <TidesSection
+                      marea={pred.mareas[safeDayIndex]}
+                      fuenteMareas={pred.fuenteMareas}
+                      isToday={safeDayIndex === 0}
+                    />
+                  )}
+                </>
+              ) : (
+                <>
+                  <WeatherCard
+                    title="Hoy"
+                    iconClass="weather"
+                    clima={datos.clima}
+                    day="hoy"
+                    defaultExpanded={true}
+                  />
+                  <WeatherCard
+                    title={'Ma\u00f1ana'}
+                    iconClass="tomorrow"
+                    clima={datos.clima}
+                    day="manana"
+                    defaultExpanded={false}
+                  />
+                  {pred?.mareas?.[0] && (
+                    <TidesSection
+                      marea={pred.mareas[0]}
+                      fuenteMareas={pred.fuenteMareas}
+                      isToday={true}
+                    />
+                  )}
+                </>
+              )}
 
-              <WeatherCard
-                title={'Ma\u00f1ana'}
-                subtitle={mananaLabel}
-                iconClass="tomorrow"
-                clima={datos.clima}
-                day="manana"
-                defaultExpanded={false}
-              />
+              {datos.cruzRoja != null && <CruzRojaCard cruzRoja={datos.cruzRoja} />}
 
-              <CruzRojaCard cruzRoja={datos.cruzRoja} />
+              {datos.lat != null && datos.lon != null && (
+                <a
+                  className="directions-button"
+                  href={`https://www.google.com/maps/dir/?api=1&destination=${datos.lat},${datos.lon}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {'\uD83D\uDCCD'} C&oacute;mo llegar
+                </a>
+              )}
+
+              {pred && (
+                <MetadataFooter
+                  zonaAvisos={pred.zonaAvisos}
+                  elaboracion={pred.elaboracion}
+                />
+              )}
 
               {fuente && (
                 <p className="source-label">
-                  Datos {'meteorol\u00f3gicos'}: {fuente}
-                  {datos.clima?.ultimaActualizacion && (
-                    <>
-                      {' '}
-                      &middot; Actualizado:{' '}
-                      {new Date(datos.clima.ultimaActualizacion).toLocaleTimeString('es-ES', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </>
-                  )}
+                  Datos {'meteorol\u00f3gicos'}: {fuente.replace('AEMET_HTML', 'AEMET').replace('AEMET_XML', 'AEMET')}
                 </p>
               )}
             </div>

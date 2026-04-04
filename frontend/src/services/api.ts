@@ -131,18 +131,54 @@ export interface DatosClima {
 }
 
 // ------------------------------
+// Predicción completa (AEMET web scraper)
+// ------------------------------
+export interface HalfDayDTO {
+  cielo: string | null;
+  iconoCielo: number | null;
+  viento: string | null;
+  oleaje: string | null;
+}
+
+export interface DiaPrediccionDTO {
+  fecha: string;
+  manana: HalfDayDTO;
+  tarde: HalfDayDTO;
+  temperaturaMaxima: number | null;
+  sensacionTermica: string | null;
+  temperaturaAgua: number | null;
+  indiceUV: number | null;
+  nivelUV: string | null;
+  aviso: { nivel: number | null; descripcion: string | null } | null;
+}
+
+export interface PrediccionCompletaDTO {
+  fuente: 'AEMET_XML' | 'AEMET_HTML';
+  elaboracion: string | null;
+  zonaAvisos: string | null;
+  dias: DiaPrediccionDTO[];
+  mareas: Array<{ pleamar: string[]; bajamar: string[] }>;
+  fuenteMareas: string | null;
+}
+
+// ------------------------------
 // Detalle de Playa
 // ------------------------------
 export interface PlayaDetalle {
   nombre: string;
   municipio: string;
   codigo: string;
+  lat?: number;
+  lon?: number;
 
   // Datos meteorológicos estandarizados
   clima?: DatosClima;
 
   // Puede no venir
   cruzRoja?: DatosCruzRoja;
+
+  // Predicción enriquecida (3 días, mareas, avisos)
+  prediccionCompleta?: PrediccionCompletaDTO;
 }
 
 export async function getDetallePlaya(codigo: string): Promise<PlayaDetalle> {

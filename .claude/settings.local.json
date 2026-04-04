@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -n \"useEffect\" /d/Dev/playas-cantabria/frontend/src/pages/*.tsx)",
+      "Bash(grep:*)",
+      "Bash(git check-ignore:*)",
+      "Bash(git ls-tree:*)",
+      "Bash(git checkout:*)",
+      "Bash(node:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run:*)",
+      "Bash(DEBUG_WEATHER=1 npx tsx src/scripts/test-scraper.ts)",
+      "Bash(npx tsx:*)",
+      "WebFetch(domain:www.aemet.es)",
+      "Bash(npx react-scripts:*)",
+      "Bash(REACT_APP_API_BASE_URL=http://localhost:4000 npm start)",
+      "Bash(curl -s http://localhost:4000/api/beaches)",
+      "Bash(npm start:*)",
+      "Bash(curl -s \"http://localhost:4000/api/beaches/3900401/details\")",
+      "Bash(python -m json.tool)",
+      "Bash(curl -s \"http://localhost:4000/api/beaches\")",
+      "Bash(curl -s \"http://localhost:4000/api/beaches/3902401/details\")",
+      "Bash(curl -s http://localhost:4000/api/beaches/__TRACKED_VAR__/details)"
+    ]
+  }
+}
