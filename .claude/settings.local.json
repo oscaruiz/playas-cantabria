@@ -14,7 +14,13 @@
       "WebFetch(domain:www.aemet.es)",
       "Bash(npx react-scripts:*)",
       "Bash(REACT_APP_API_BASE_URL=http://localhost:4000 npm start)",
-      "Bash(curl -s http://localhost:4000/api/beaches)"
+      "Bash(curl -s http://localhost:4000/api/beaches)",
+      "Bash(npm start:*)",
+      "Bash(curl -s \"http://localhost:4000/api/beaches/3900401/details\")",
+      "Bash(python -m json.tool)",
+      "Bash(curl -s \"http://localhost:4000/api/beaches\")",
+      "Bash(curl -s \"http://localhost:4000/api/beaches/3902401/details\")",
+      "Bash(curl -s http://localhost:4000/api/beaches/__TRACKED_VAR__/details)"
     ]
   }
 }
