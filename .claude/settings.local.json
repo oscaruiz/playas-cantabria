@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -n \"useEffect\" /d/Dev/playas-cantabria/frontend/src/pages/*.tsx)",
+      "Bash(grep:*)",
+      "Bash(git check-ignore:*)",
+      "Bash(git ls-tree:*)",
+      "Bash(git checkout:*)",
+      "Bash(node:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run:*)",
+      "Bash(DEBUG_WEATHER=1 npx tsx src/scripts/test-scraper.ts)",
+      "Bash(npx tsx:*)",
+      "WebFetch(domain:www.aemet.es)"
+    ]
+  }
+}

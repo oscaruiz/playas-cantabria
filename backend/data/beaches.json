@@ -51,12 +51,12 @@
     "nombre": "Comillas",
     "municipio": "Comillas",
     "codigo": "3902401",
-    "lat": 43.38789810194597,
-    "lon": -3.226869746814603,
+    "lat": 43.3908333333,
+    "lon": -4.2861111111,
     "idCruzRoja": 37
   },
   {
-    "nombre": "La Salvé ",
+    "nombre": "La Salve",
     "municipio": "Laredo",
     "codigo": "3903502",
     "lat": 43.41904926443771,
@@ -64,7 +64,7 @@
     "idCruzRoja": 328
   },
   {
-    "nombre": "Cuchia - Marzan",
+    "nombre": "Cuchia-Marzan",
     "municipio": "Miengo",
     "codigo": "3904401",
     "lat": 43.43595619518627,
@@ -72,7 +72,7 @@
     "idCruzRoja": 0
   },
   {
-    "nombre": "Mogro - Usil",
+    "nombre": "Mogro-Usil",
     "municipio": "Miengo",
     "codigo": "3904405",
     "lat": 43.4391698944411,
@@ -80,7 +80,7 @@
     "idCruzRoja": 373
   },
   {
-    "nombre": "Ris - Noja",
+    "nombre": "Ris",
     "municipio": "Noja",
     "codigo": "3904701",
     "lat": 43.4914462044969,
@@ -128,8 +128,8 @@
     "idCruzRoja": 283
   },
   {
-    "nombre": "San Martín - Virgen Del Mar",
-    "municipio": "Santander",
+    "nombre": "San Martín",
+    "municipio": "Santoña",
     "codigo": "3907902",
     "lat": 43.47683316210268,
     "lon": -3.8765310105943294,
@@ -152,7 +152,7 @@
     "idCruzRoja": 1120
   },
   {
-    "nombre": "Amió",
+    "nombre": "Amio",
     "municipio": "Val de San Vicente",
     "codigo": "3909504",
     "lat": 43.394724003892236,

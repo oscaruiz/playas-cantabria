@@ -2,6 +2,7 @@ type CacheRecord<V> = { value: V; expiresAt: number };
 
 export class InMemoryCache {
   private store = new Map<string, CacheRecord<unknown>>();
+  private inFlight = new Map<string, Promise<unknown>>();
   constructor(private readonly now: () => number = () => Date.now()) {}
 
   get<T>(key: string): T | undefined {
@@ -20,14 +21,27 @@ export class InMemoryCache {
   }
 
   /**
-   * Convenience: get or compute atomically-ish.
+   * Get cached value or compute it. Concurrent calls for the same key
+   * share a single in-flight promise (singleflight pattern).
    */
   async getOrSet<T>(key: string, ttlSeconds: number, compute: () => Promise<T>): Promise<T> {
     const existing = this.get<T>(key);
     if (existing !== undefined) return existing;
-    const value = await compute();
-    this.set<T>(key, value, ttlSeconds);
-    return value;
+
+    const pending = this.inFlight.get(key);
+    if (pending) return pending as Promise<T>;
+
+    const promise = compute()
+      .then((value) => {
+        this.set(key, value, ttlSeconds);
+        return value;
+      })
+      .finally(() => {
+        this.inFlight.delete(key);
+      });
+
+    this.inFlight.set(key, promise);
+    return promise as Promise<T>;
   }
 }
 

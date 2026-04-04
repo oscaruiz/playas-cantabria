@@ -12,7 +12,9 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc -p config/tsconfig.json",
     "start": "node dist/index.js",
-    "test": "vitest"
+    "test": "vitest",
+    "test:scraper": "tsx src/scripts/test-scraper.ts",
+    "test:full": "tsx src/scripts/test-full-details.ts"
   },
   "dependencies": {
     "axios": "^1.7.7",

@@ -9,6 +9,7 @@ import { GetBeachById } from '../../domain/use-cases/GetBeachById';
 import { GetBeachDetails } from '../../domain/use-cases/GetBeachDetails';
 import { LegacyDetailsAssembler } from '../../application/services/LegacyDetailsAssembler';
 import { AemetBeachForecastProvider } from '../providers/AemetBeachForecastProvider';
+import { AemetBeachWebScraper } from '../providers/AemetBeachWebScraper';
 
 export function configureDependencies(container: DIContainer, overrides: { cache?: InMemoryCache } = {}): void {
   // Infrastructure Layer - Singletons
@@ -34,6 +35,10 @@ export function configureDependencies(container: DIContainer, overrides: { cache
     new AemetBeachForecastProvider(c.get('cache'))
   );
 
+  container.registerSingleton('aemetBeachWebScraper', (c) =>
+    new AemetBeachWebScraper(c.get('cache'))
+  );
+
   // Domain Layer - Use Cases
   container.register('getAllBeaches', (c) => 
     new GetAllBeaches(c.get('beachRepository'))
@@ -54,11 +59,12 @@ export function configureDependencies(container: DIContainer, overrides: { cache
   );
 
   // Application Layer - Services
-  container.register('legacyDetailsAssembler', (c) => 
+  container.register('legacyDetailsAssembler', (c) =>
     new LegacyDetailsAssembler(
       c.get('getBeachDetails'),
+      c.get('aemetBeachWebScraper'),
+      c.get('aemetBeachForecastProvider'),
       c.get('openWeatherProvider'),
-      c.get('aemetBeachForecastProvider')
     )
   );
 }

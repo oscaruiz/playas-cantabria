@@ -3,7 +3,7 @@ import { Beach } from '../../domain/entities/Beach';
 import { FlagStatus } from '../../domain/entities/Flag';
 import { Weather } from '../../domain/entities/Weather';
 
-type ClimaDiaDTO = {
+export type ClimaDiaDTO = {
   summary: string | null;
   temperature: number | null;
   waterTemperature: number | null;
@@ -14,7 +14,7 @@ type ClimaDiaDTO = {
   icon: number | null;
 };
 
-type ClimaDTO = {
+export type ClimaDTO = {
   fuente: 'AEMET' | 'OpenWeather';
   ultimaActualizacion: string;
   hoy: ClimaDiaDTO;
@@ -29,12 +29,32 @@ type CruzRojaDTO = {
   ultimaActualizacion: string;
 };
 
+export type PrediccionCompletaDTO = {
+  fuente: 'AEMET_XML' | 'AEMET_HTML';
+  elaboracion: string | null;
+  zonaAvisos: string | null;
+  dias: Array<{
+    fecha: string;
+    manana: { cielo: string | null; iconoCielo: number | null; viento: string | null; oleaje: string | null };
+    tarde: { cielo: string | null; iconoCielo: number | null; viento: string | null; oleaje: string | null };
+    temperaturaMaxima: number | null;
+    sensacionTermica: string | null;
+    temperaturaAgua: number | null;
+    indiceUV: number | null;
+    nivelUV: string | null;
+    aviso: { nivel: number | null; descripcion: string | null } | null;
+  }>;
+  mareas: Array<{ pleamar: string[]; bajamar: string[] }>;
+  fuenteMareas: string | null;
+};
+
 export type LegacyDetailsDTO = {
   nombre: string;
   municipio: string;
   codigo: string;
   clima: ClimaDTO | null;
   cruzRoja: CruzRojaDTO | null;
+  prediccionCompleta: PrediccionCompletaDTO | null;
 };
 
 export class LegacyDetailsMapper {
@@ -45,6 +65,7 @@ export class LegacyDetailsMapper {
       ...this.mapBeach(beach),
       clima: weather ? this.mapClima(weather) : null,
       cruzRoja: flag ? this.mapCruzRoja(flag) : null,
+      prediccionCompleta: null,
     };
   }
 
