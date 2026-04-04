@@ -445,6 +445,179 @@
   opacity: 0.85;
 }
 
+/* --- Half-day 2-column grid within ForecastDayCard --- */
+.halfday-grid {
+  display: grid;
+  gap: 0;
+  border: 1px solid var(--playa-border);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+
+.halfday-grid.two-cols {
+  grid-template-columns: 1fr 1fr;
+}
+
+.halfday-grid.one-col {
+  grid-template-columns: 1fr;
+}
+
+.halfday-col {
+  padding: 10px 12px;
+}
+
+.halfday-grid.two-cols .halfday-col:first-child {
+  border-right: 1px solid var(--playa-border);
+}
+
+.halfday-col-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--playa-text-muted);
+  margin-bottom: 8px;
+}
+
+.halfday-col-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: var(--playa-text);
+  padding: 3px 0;
+}
+
+.halfday-col-icon {
+  font-size: 0.78rem;
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+/* --- Aviso level colors (inline in day-stat) --- */
+.aviso-green {
+  color: var(--playa-text-muted) !important;
+  font-weight: 400 !important;
+}
+
+.aviso-yellow {
+  color: #854d0e !important;
+}
+
+.aviso-orange {
+  color: #9a3412 !important;
+}
+
+.aviso-red {
+  color: #991b1b !important;
+  font-weight: 700 !important;
+}
+
+/* --- Day stats (temp, water, sensation, UV) --- */
+.day-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--playa-border);
+}
+
+.day-stat {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--playa-border);
+}
+
+.day-stat:last-child {
+  border-bottom: none;
+}
+
+.day-stat-icon {
+  width: 28px;
+  text-align: center;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.day-stat-label {
+  flex: 1;
+  font-size: 0.82rem;
+  color: var(--playa-text-muted);
+}
+
+.day-stat-value {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--playa-text);
+  text-align: right;
+}
+
+.uv-level {
+  font-weight: 400;
+  font-size: 0.75rem;
+  color: var(--playa-text-muted);
+}
+
+/* --- Tides Card (horizontal columns) --- */
+.card-header-icon.tides {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.tides-columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+  gap: 0;
+  border: 1px solid var(--playa-border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.tide-column {
+  padding: 10px 12px;
+  text-align: center;
+  border-right: 1px solid var(--playa-border);
+}
+
+.tide-column:last-child {
+  border-right: none;
+}
+
+.tide-column-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--playa-text);
+  margin-bottom: 8px;
+  text-transform: capitalize;
+}
+
+.tide-time {
+  font-size: 0.82rem;
+  padding: 2px 0;
+  font-weight: 500;
+}
+
+.tide-time.pleamar {
+  color: #0369a1;
+}
+
+.tide-time.bajamar {
+  color: #9a3412;
+}
+
+.tides-source {
+  margin-top: 10px;
+  font-size: 0.68rem;
+  color: var(--playa-text-muted);
+  opacity: 0.7;
+  text-align: center;
+}
+
 /* Animation for expand/collapse */
 .card-body-enter {
   animation: slideDown 0.25s ease;
@@ -514,5 +687,43 @@
     background: rgba(239, 68, 68, 0.15);
     border-color: rgba(239, 68, 68, 0.3);
     color: #fca5a5;
+  }
+
+  .halfday-grid {
+    border-color: var(--playa-border);
+  }
+
+  .halfday-grid.two-cols .halfday-col:first-child {
+    border-right-color: var(--playa-border);
+  }
+
+  .aviso-yellow {
+    color: #fef08a !important;
+  }
+  .aviso-orange {
+    color: #fdba74 !important;
+  }
+  .aviso-red {
+    color: #fca5a5 !important;
+  }
+
+  .card-header-icon.tides {
+    background: rgba(14, 116, 144, 0.2);
+    color: #7dd3fc;
+  }
+
+  .tides-columns {
+    border-color: var(--playa-border);
+  }
+
+  .tide-column {
+    border-right-color: var(--playa-border);
+  }
+
+  .tide-time.pleamar {
+    color: #7dd3fc;
+  }
+  .tide-time.bajamar {
+    color: #fdba74;
   }
 }

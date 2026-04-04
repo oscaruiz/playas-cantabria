@@ -11,7 +11,10 @@
       "Bash(npm run:*)",
       "Bash(DEBUG_WEATHER=1 npx tsx src/scripts/test-scraper.ts)",
       "Bash(npx tsx:*)",
-      "WebFetch(domain:www.aemet.es)"
+      "WebFetch(domain:www.aemet.es)",
+      "Bash(npx react-scripts:*)",
+      "Bash(REACT_APP_API_BASE_URL=http://localhost:4000 npm start)",
+      "Bash(curl -s http://localhost:4000/api/beaches)"
     ]
   }
 }

@@ -13,13 +13,16 @@ import { useParams } from 'react-router-dom';
 import {
   getDetallePlaya,
   PlayaDetalle as PlayaDetalleData,
+  DiaPrediccionDTO,
+  HalfDayDTO,
+  PrediccionCompletaDTO,
 } from '../services/api';
 import './PlayaDetalle.css';
 
 // ---- Helpers ----
 
-function limpiarTexto(texto: string): string {
-  if (!texto) return texto;
+function limpiarTexto(texto: string | null | undefined): string {
+  if (!texto) return '';
   return texto.replace(/\uFFFD/g, 'e');
 }
 
@@ -39,54 +42,29 @@ function flagDisplayText(bandera?: string): string {
   return 'Sin datos';
 }
 
-function formatearFechaNumYYYYMMDD(fechaNum?: number): Date | null {
-  if (!fechaNum) return null;
-  const s = String(fechaNum);
-  const y = parseInt(s.slice(0, 4), 10);
-  const m = parseInt(s.slice(4, 6), 10) - 1;
-  const d = parseInt(s.slice(6, 8), 10);
-  return new Date(y, m, d);
-}
-
-function sumarDias(base: Date, dias: number): Date {
-  const out = new Date(base);
-  out.setDate(out.getDate() + dias);
-  return out;
-}
-
-function formatearDiaVisual(date: Date): string {
-  return date
-    .toLocaleDateString('es-ES', {
-      weekday: 'short',
-      day: '2-digit',
-      month: 'short',
-    })
-    .replace(/\.$/, '');
-}
-
-function fechaPrevision(
-  fechaNum?: number,
-  ultimaActualizacion?: string,
-  offsetDias = 0
-): Date | null {
-  const byNum = formatearFechaNumYYYYMMDD(fechaNum);
-  if (byNum) return byNum;
-  if (!ultimaActualizacion) return null;
-  const base = new Date(ultimaActualizacion);
-  return sumarDias(base, offsetDias);
-}
-
-function hasFecha(x: unknown): x is { fecha?: number } {
-  return typeof x === 'object' && x !== null && 'fecha' in x;
-}
-
-// ---- Sub-components ----
-
 function isFlagAvailable(cruzRoja?: PlayaDetalleData['cruzRoja']): boolean {
   if (!cruzRoja) return false;
   const b = cruzRoja.bandera?.toLowerCase() || '';
   return b.includes('roja') || b.includes('amarilla') || b.includes('verde');
 }
+
+function cruzRojaField(value?: string): string {
+  if (!value || value.trim() === '' || value === 'N/A') return 'No disponible';
+  return value;
+}
+
+function capitalizar(s: string | null | undefined): string {
+  if (!s) return '';
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+const DAY_TITLES = ['Hoy', 'Ma\u00f1ana', 'Pasado ma\u00f1ana'];
+
+function hasHalfDayData(h: HalfDayDTO): boolean {
+  return h.cielo != null || h.viento != null || h.oleaje != null;
+}
+
+// ---- Sub-components ----
 
 const FlagBanner: React.FC<{ cruzRoja?: PlayaDetalleData['cruzRoja'] }> = ({ cruzRoja }) => {
   if (!isFlagAvailable(cruzRoja)) {
@@ -119,29 +97,228 @@ const FlagBanner: React.FC<{ cruzRoja?: PlayaDetalleData['cruzRoja'] }> = ({ cru
   );
 };
 
-const QuickStats: React.FC<{ clima: PlayaDetalleData['clima'] }> = ({ clima }) => {
-  if (!clima) return null;
+const QuickStats: React.FC<{
+  clima: PlayaDetalleData['clima'];
+  prediccion?: PrediccionCompletaDTO;
+}> = ({ clima, prediccion }) => {
+  const day0 = prediccion?.dias[0];
+
+  const temp = day0?.temperaturaMaxima ?? clima?.hoy.temperature;
+  const agua = day0?.temperaturaAgua ?? clima?.hoy.waterTemperature;
+  const viento = day0?.tarde.viento ?? day0?.manana.viento ?? clima?.hoy.wind;
+
+  if (temp == null && agua == null && !viento) return null;
 
   return (
     <div className="quick-stats">
       <div className="quick-stat">
         <div className="quick-stat-icon" role="img" aria-label="temperatura">&#x1F321;&#xFE0F;</div>
-        <div className="quick-stat-value">{clima.hoy.temperature}&#176;</div>
+        <div className="quick-stat-value">{temp != null ? `${temp}\u00B0` : '--'}</div>
         <div className="quick-stat-label">Temp.</div>
       </div>
       <div className="quick-stat">
         <div className="quick-stat-icon" role="img" aria-label="agua">&#x1F30A;</div>
-        <div className="quick-stat-value">{clima.hoy.waterTemperature}&#176;</div>
+        <div className="quick-stat-value">{agua != null ? `${agua}\u00B0` : '--'}</div>
         <div className="quick-stat-label">Agua</div>
       </div>
       <div className="quick-stat">
         <div className="quick-stat-icon" role="img" aria-label="viento">&#x1F4A8;</div>
-        <div className="quick-stat-value">{clima.hoy.wind || '--'}</div>
+        <div className="quick-stat-value">{viento || '--'}</div>
         <div className="quick-stat-label">Viento</div>
       </div>
     </div>
   );
 };
+
+// ---- Half-day column (used inside the 2-col grid) ----
+
+const HalfDayColumn: React.FC<{
+  label: string;
+  data: HalfDayDTO;
+}> = ({ label, data }) => (
+  <div className="halfday-col">
+    <div className="halfday-col-label">{label}</div>
+    <div className="halfday-col-row">
+      <span className="halfday-col-icon">{'\u2601'}</span>
+      <span>{capitalizar(data.cielo) || '--'}</span>
+    </div>
+    <div className="halfday-col-row">
+      <span className="halfday-col-icon">{'\u{1F4A8}'}</span>
+      <span>{capitalizar(data.viento) || '--'}</span>
+    </div>
+    <div className="halfday-col-row">
+      <span className="halfday-col-icon">{'\u{1F30A}'}</span>
+      <span>{capitalizar(data.oleaje) || '--'}</span>
+    </div>
+  </div>
+);
+
+// ---- Aviso badge ----
+
+function avisoLevelClass(nivel: number | null): string {
+  if (nivel === 1) return 'aviso-red';
+  if (nivel === 2) return 'aviso-orange';
+  if (nivel === 3) return 'aviso-yellow';
+  return 'aviso-green';
+}
+
+// ---- Forecast Day Card ----
+
+const ForecastDayCard: React.FC<{
+  dia: DiaPrediccionDTO;
+  index: number;
+  defaultExpanded?: boolean;
+}> = ({ dia, index, defaultExpanded = false }) => {
+  const [expanded, setExpanded] = useState(defaultExpanded);
+
+  const iconClass = index === 0 ? 'weather' : 'tomorrow';
+  const icon = index === 0 ? '\u2600' : '\u26C5';
+  const title = DAY_TITLES[index] ?? capitalizar(dia.fecha);
+
+  const hasMorning = hasHalfDayData(dia.manana);
+
+  return (
+    <div className="detail-card">
+      <div
+        className="card-header"
+        onClick={() => setExpanded((v) => !v)}
+        role="button"
+        tabIndex={0}
+        aria-expanded={expanded}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setExpanded((v) => !v);
+          }
+        }}
+      >
+        <div className={`card-header-icon ${iconClass}`}>{icon}</div>
+        <div>
+          <div className="card-header-title">{title}</div>
+          <div className="card-header-subtitle">{dia.fecha}{!hasMorning ? ' \u00B7 solo tarde' : ''}</div>
+        </div>
+        <span className={`card-header-chevron ${expanded ? 'open' : ''}`}>&#9662;</span>
+      </div>
+
+      {expanded && (
+        <div className="card-body card-body-enter">
+          {/* Morning / Afternoon grid */}
+          <div className={`halfday-grid ${hasMorning ? 'two-cols' : 'one-col'}`}>
+            {hasMorning && <HalfDayColumn label={'\u2600\uFE0F Ma\u00f1ana'} data={dia.manana} />}
+            <HalfDayColumn label={'\u{1F305} Tarde'} data={dia.tarde} />
+          </div>
+
+          {/* Daily aggregate stats */}
+          <div className="day-stats">
+            {dia.temperaturaMaxima != null && (
+              <div className="day-stat">
+                <span className="day-stat-icon">{'\u{1F321}'}</span>
+                <span className="day-stat-label">Temperatura</span>
+                <span className="day-stat-value">{dia.temperaturaMaxima} &#176;C</span>
+              </div>
+            )}
+            {dia.temperaturaAgua != null && (
+              <div className="day-stat">
+                <span className="day-stat-icon">{'\u{1F30A}'}</span>
+                <span className="day-stat-label">Agua</span>
+                <span className="day-stat-value">{dia.temperaturaAgua} &#176;C</span>
+              </div>
+            )}
+            {dia.sensacionTermica && (
+              <div className="day-stat">
+                <span className="day-stat-icon">{'\u{1F525}'}</span>
+                <span className="day-stat-label">{'Sensaci\u00f3n'}</span>
+                <span className="day-stat-value">{capitalizar(dia.sensacionTermica)}</span>
+              </div>
+            )}
+            {dia.indiceUV != null && (
+              <div className="day-stat">
+                <span className="day-stat-icon">{'\u2600'}</span>
+                <span className="day-stat-label">{'Indice UV'}</span>
+                <span className="day-stat-value">
+                  {dia.indiceUV}
+                  {dia.nivelUV && (
+                    <span className="uv-level"> ({dia.nivelUV.replace(/^índice ultravioleta\s*/i, '')})</span>
+                  )}
+                </span>
+              </div>
+            )}
+            {dia.aviso && dia.aviso.descripcion && (
+              <div className="day-stat">
+                <span className="day-stat-icon">{dia.aviso.nivel != null && dia.aviso.nivel <= 3 ? '\u26A0\uFE0F' : '\u2705'}</span>
+                <span className="day-stat-label">Aviso</span>
+                <span className={`day-stat-value ${avisoLevelClass(dia.aviso.nivel)}`}>
+                  {capitalizar(dia.aviso.descripcion)}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ---- Tides Card (horizontal 3-column grid) ----
+
+const TidesCard: React.FC<{
+  prediccion: PrediccionCompletaDTO;
+}> = ({ prediccion }) => {
+  const [expanded, setExpanded] = useState(false);
+
+  if (!prediccion.mareas || prediccion.mareas.length === 0) return null;
+
+  return (
+    <div className="detail-card">
+      <div
+        className="card-header"
+        onClick={() => setExpanded((v) => !v)}
+        role="button"
+        tabIndex={0}
+        aria-expanded={expanded}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setExpanded((v) => !v);
+          }
+        }}
+      >
+        <div className="card-header-icon tides">{'\u{1F30A}'}</div>
+        <div>
+          <div className="card-header-title">Mareas</div>
+          <div className="card-header-subtitle">Pleamar y bajamar</div>
+        </div>
+        <span className={`card-header-chevron ${expanded ? 'open' : ''}`}>&#9662;</span>
+      </div>
+
+      {expanded && (
+        <div className="card-body card-body-enter">
+          <div className="tides-columns">
+            {prediccion.mareas.map((marea, i) => {
+              const diaLabel = prediccion.dias[i]?.fecha ?? `D\u00eda ${i + 1}`;
+              return (
+                <div className="tide-column" key={i}>
+                  <div className="tide-column-label">{capitalizar(diaLabel)}</div>
+                  {marea.pleamar.map((t, j) => (
+                    <div className="tide-time pleamar" key={`p${j}`}>{'\u2B06'} {t}</div>
+                  ))}
+                  {marea.bajamar.map((t, j) => (
+                    <div className="tide-time bajamar" key={`b${j}`}>{'\u2B07'} {t}</div>
+                  ))}
+                </div>
+              );
+            })}
+          </div>
+          {prediccion.fuenteMareas && (
+            <div className="tides-source">{prediccion.fuenteMareas.replace(/^\*/, '')}</div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ---- Legacy WeatherCard (fallback when no prediccionCompleta) ----
 
 interface WeatherCardProps {
   title: string;
@@ -239,14 +416,10 @@ const WeatherCard: React.FC<WeatherCardProps> = ({
   );
 };
 
-function cruzRojaField(value?: string): string {
-  if (!value || value.trim() === '' || value === 'N/A') return 'No disponible';
-  return value;
-}
+// ---- Cruz Roja Card (unchanged) ----
 
 const CruzRojaCard: React.FC<{ cruzRoja?: PlayaDetalleData['cruzRoja'] }> = ({ cruzRoja }) => {
   const [expanded, setExpanded] = useState(true);
-
   const hasData = isFlagAvailable(cruzRoja);
 
   return (
@@ -323,22 +496,8 @@ const PlayaDetallePage: React.FC = () => {
       .catch((err: Error) => setError(err.message));
   }, [codigo]);
 
-  const fuente = datos?.clima?.fuente ?? '';
-
-  // Compute date labels
-  const hoyLabel = (() => {
-    if (!datos?.clima) return '';
-    const hoyFechaNum = hasFecha(datos.clima.hoy) ? datos.clima.hoy.fecha : undefined;
-    const f = fechaPrevision(hoyFechaNum, datos.clima.ultimaActualizacion, 0);
-    return f ? formatearDiaVisual(f) : '';
-  })();
-
-  const mananaLabel = (() => {
-    if (!datos?.clima) return '';
-    const mananaFechaNum = hasFecha(datos.clima.manana) ? datos.clima.manana.fecha : undefined;
-    const f = fechaPrevision(mananaFechaNum, datos.clima.ultimaActualizacion, 1);
-    return f ? formatearDiaVisual(f) : '';
-  })();
+  const pred = datos?.prediccionCompleta;
+  const fuente = pred?.fuente ?? datos?.clima?.fuente ?? '';
 
   return (
     <IonPage className="playa-detalle-page">
@@ -373,43 +532,50 @@ const PlayaDetallePage: React.FC = () => {
               <p className="hero-municipio">{datos.municipio}</p>
 
               <FlagBanner cruzRoja={datos.cruzRoja} />
-              <QuickStats clima={datos.clima} />
+              <QuickStats clima={datos.clima} prediccion={pred} />
             </div>
 
             {/* DETAIL CARDS */}
             <div className="detail-content">
-              <WeatherCard
-                title="Hoy"
-                subtitle={hoyLabel}
-                iconClass="weather"
-                clima={datos.clima}
-                day="hoy"
-                defaultExpanded={true}
-              />
-
-              <WeatherCard
-                title={'Ma\u00f1ana'}
-                subtitle={mananaLabel}
-                iconClass="tomorrow"
-                clima={datos.clima}
-                day="manana"
-                defaultExpanded={false}
-              />
+              {/* Forecast: use prediccionCompleta if available, else legacy WeatherCards */}
+              {pred && pred.dias.length > 0 ? (
+                <>
+                  {pred.dias.map((dia, i) => (
+                    <ForecastDayCard
+                      key={dia.fecha}
+                      dia={dia}
+                      index={i}
+                      defaultExpanded={i === 0}
+                    />
+                  ))}
+                  <TidesCard prediccion={pred} />
+                </>
+              ) : (
+                <>
+                  <WeatherCard
+                    title="Hoy"
+                    iconClass="weather"
+                    clima={datos.clima}
+                    day="hoy"
+                    defaultExpanded={true}
+                  />
+                  <WeatherCard
+                    title={'Ma\u00f1ana'}
+                    iconClass="tomorrow"
+                    clima={datos.clima}
+                    day="manana"
+                    defaultExpanded={false}
+                  />
+                </>
+              )}
 
               <CruzRojaCard cruzRoja={datos.cruzRoja} />
 
               {fuente && (
                 <p className="source-label">
-                  Datos {'meteorol\u00f3gicos'}: {fuente}
-                  {datos.clima?.ultimaActualizacion && (
-                    <>
-                      {' '}
-                      &middot; Actualizado:{' '}
-                      {new Date(datos.clima.ultimaActualizacion).toLocaleTimeString('es-ES', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </>
+                  Datos {'meteorol\u00f3gicos'}: {fuente.replace('AEMET_HTML', 'AEMET').replace('AEMET_XML', 'AEMET')}
+                  {pred?.elaboracion && (
+                    <> &middot; {pred.elaboracion}</>
                   )}
                 </p>
               )}
