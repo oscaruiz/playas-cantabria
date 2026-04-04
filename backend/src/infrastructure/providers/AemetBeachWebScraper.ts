@@ -24,6 +24,7 @@ const SCRAPER_HEADERS = {
 const XML_TIMEOUT = 7000;
 const HTML_TIMEOUT = 10000;
 const CACHE_TTL = 300;
+const TIDES_CACHE_TTL = 43200; // 12 hours — tides are astronomical, barely change
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -65,13 +66,38 @@ export class AemetBeachWebScraper {
     return this.cache.getOrSet(cacheKey, CACHE_TTL, async () => {
       // 1. Try HTML first (has mareas, avisos, UV level)
       try {
-        return await this.fetchAndParseHtml(codigo);
+        const result = await this.fetchAndParseHtml(codigo);
+        this.persistTides(codigo, result);
+        return result;
       } catch (htmlErr: any) {
         debugLog('aemet.web.html.fail', { codigo, error: htmlErr?.message });
       }
       // 2. Fallback XML (3 days but no mareas/avisos)
-      return await this.fetchAndParseXml(codigo);
+      const xmlResult = await this.fetchAndParseXml(codigo);
+      if (xmlResult.tides.length === 0) {
+        const cached = this.getCachedTides(codigo);
+        if (cached) {
+          xmlResult.tides = cached.tides;
+          xmlResult.tidesSource = cached.tidesSource;
+        }
+      }
+      return xmlResult;
     });
+  }
+
+  /** Persist tides to a long-lived separate cache (12h TTL). */
+  private persistTides(codigo: string, forecast: BeachFullForecast): void {
+    if (forecast.tides.length > 0) {
+      this.cache.set(`tides:${codigo}`, {
+        tides: forecast.tides,
+        tidesSource: forecast.tidesSource,
+      }, TIDES_CACHE_TTL);
+    }
+  }
+
+  /** Retrieve tides from the long-lived cache. */
+  getCachedTides(codigo: string): { tides: DayTides[]; tidesSource: string | null } | undefined {
+    return this.cache.get<{ tides: DayTides[]; tidesSource: string | null }>(`tides:${codigo}`);
   }
 
   // -----------------------------------------------------------------------

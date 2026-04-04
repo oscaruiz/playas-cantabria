@@ -368,11 +368,36 @@
 }
 
 .card-header-icon.cruz-roja-neutral {
-  background: var(--playa-ocean-light);
-  color: var(--playa-text-muted);
+  background: #fef2f2;
+  color: #ef4444;
+}
+
+.card-header.card-header-disabled {
+  cursor: default;
 }
 
 /* Source label at bottom */
+/* --- Directions Button --- */
+.directions-button {
+  display: block;
+  text-align: center;
+  padding: 14px 16px;
+  margin: 12px 0;
+  border-radius: 14px;
+  background: var(--playa-ocean);
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-family: inherit;
+  text-decoration: none;
+  box-shadow: 0 2px 8px rgba(10, 126, 164, 0.3);
+  transition: background 0.2s;
+}
+
+.directions-button:active {
+  background: #0a6d8e;
+}
+
 .source-label {
   text-align: center;
   font-size: 0.72rem;
@@ -643,8 +668,11 @@
 
 .day-pill {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
-  padding: 10px 8px;
+  padding: 10px 8px 8px;
   border-radius: 14px;
   font-size: 0.85rem;
   font-weight: 600;
@@ -655,6 +683,17 @@
   border: none;
   font-family: inherit;
   -webkit-tap-highlight-color: transparent;
+}
+
+.day-pill-title {
+  line-height: 1.3;
+}
+
+.day-pill-date {
+  font-size: 0.65rem;
+  font-weight: 400;
+  opacity: 0.75;
+  line-height: 1.2;
 }
 
 .day-pill.active {

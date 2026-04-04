@@ -168,6 +168,8 @@ export interface PlayaDetalle {
   nombre: string;
   municipio: string;
   codigo: string;
+  lat?: number;
+  lon?: number;
 
   // Datos meteorológicos estandarizados
   clima?: DatosClima;

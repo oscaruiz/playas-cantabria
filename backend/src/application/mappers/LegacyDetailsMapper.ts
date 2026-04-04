@@ -52,6 +52,8 @@ export type LegacyDetailsDTO = {
   nombre: string;
   municipio: string;
   codigo: string;
+  lat: number;
+  lon: number;
   clima: ClimaDTO | null;
   cruzRoja: CruzRojaDTO | null;
   prediccionCompleta: PrediccionCompletaDTO | null;
@@ -70,7 +72,7 @@ export class LegacyDetailsMapper {
   }
 
   private static mapBeach(b: Beach) {
-    return { nombre: b.name, municipio: b.municipality, codigo: b.aemetCode };
+    return { nombre: b.name, municipio: b.municipality, codigo: b.aemetCode, lat: b.latitude, lon: b.longitude };
   }
 
   private static mapClima(w: Weather): ClimaDTO {

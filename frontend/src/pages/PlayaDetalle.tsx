@@ -60,6 +60,14 @@ function capitalizar(s: string | null | undefined): string {
 
 const DAY_TITLES = ['Hoy', 'Ma\u00f1ana', 'Pasado ma\u00f1ana'];
 
+function daySubtitle(offset: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() + offset);
+  const dias = ['domingo', 'lunes', 'martes', 'mi\u00e9rcoles', 'jueves', 'viernes', 's\u00e1bado'];
+  const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+  return `${capitalizar(dias[d.getDay()])} ${d.getDate()} de ${meses[d.getMonth()]}`;
+}
+
 function hasHalfDayData(h: HalfDayDTO): boolean {
   return h.cielo != null || h.viento != null || h.oleaje != null;
 }
@@ -158,7 +166,8 @@ const DaySelector: React.FC<{
         className={`day-pill${i === selectedDay ? ' active' : ''}`}
         onClick={() => onSelect(i)}
       >
-        {DAY_TITLES[i] ?? `D\u00eda ${i + 1}`}
+        <span className="day-pill-title">{DAY_TITLES[i] ?? `D\u00eda ${i + 1}`}</span>
+        <span className="day-pill-date">{daySubtitle(i)}</span>
       </button>
     ))}
   </div>
@@ -235,7 +244,7 @@ const HalfDayDetail: React.FC<{
         </div>
         <div className="halfday-block-rows">
           <div className="halfday-block-row">
-            <span className="halfday-block-row-icon">{'\u2601'}</span>
+            <span className="halfday-block-row-icon">{'\u2601\uFE0F'}</span>
             <span>{capitalizar(data.cielo) || '--'}</span>
           </div>
           <div className="halfday-block-row">
@@ -501,30 +510,30 @@ const WeatherCard: React.FC<WeatherCardProps> = ({
 // ---- Cruz Roja Card (unchanged) ----
 
 const CruzRojaCard: React.FC<{ cruzRoja?: PlayaDetalleData['cruzRoja'] }> = ({ cruzRoja }) => {
-  const [expanded, setExpanded] = useState(true);
   const hasData = isFlagAvailable(cruzRoja);
+  const [expanded, setExpanded] = useState(hasData);
 
   return (
     <div className="detail-card">
       <div
-        className="card-header"
-        onClick={() => setExpanded((v) => !v)}
-        role="button"
-        tabIndex={0}
-        aria-expanded={expanded}
-        onKeyDown={(e) => {
+        className={`card-header${!hasData ? ' card-header-disabled' : ''}`}
+        onClick={hasData ? () => setExpanded((v) => !v) : undefined}
+        role={hasData ? 'button' : undefined}
+        tabIndex={hasData ? 0 : undefined}
+        aria-expanded={hasData ? expanded : undefined}
+        onKeyDown={hasData ? (e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
             setExpanded((v) => !v);
           }
-        }}
+        } : undefined}
       >
-        <div className={`card-header-icon ${hasData ? 'cruz-roja' : 'cruz-roja-neutral'}`}>{'\u2695'}</div>
+        <div className={`card-header-icon ${hasData ? 'cruz-roja' : 'cruz-roja-neutral'}`}>{'\u271A'}</div>
         <div>
           <div className="card-header-title">Cruz Roja</div>
-          <div className="card-header-subtitle">{hasData ? 'Vigilancia y cobertura' : 'Sin cobertura activa'}</div>
+          <div className="card-header-subtitle">{hasData ? 'Vigilancia y cobertura' : 'Informaci\u00f3n de Cruz Roja a\u00fan no disponible'}</div>
         </div>
-        <span className={`card-header-chevron ${expanded ? 'open' : ''}`}>&#9662;</span>
+        {hasData && <span className={`card-header-chevron ${expanded ? 'open' : ''}`}>&#9662;</span>}
       </div>
 
       {expanded && (
@@ -640,10 +649,6 @@ const PlayaDetallePage: React.FC = () => {
                       isToday={safeDayIndex === 0}
                     />
                   )}
-                  <MetadataFooter
-                    zonaAvisos={pred.zonaAvisos}
-                    elaboracion={pred.elaboracion}
-                  />
                 </>
               ) : (
                 <>
@@ -661,10 +666,35 @@ const PlayaDetallePage: React.FC = () => {
                     day="manana"
                     defaultExpanded={false}
                   />
+                  {pred?.mareas?.[0] && (
+                    <TidesSection
+                      marea={pred.mareas[0]}
+                      fuenteMareas={pred.fuenteMareas}
+                      isToday={true}
+                    />
+                  )}
                 </>
               )}
 
-              <CruzRojaCard cruzRoja={datos.cruzRoja} />
+              {datos.cruzRoja != null && <CruzRojaCard cruzRoja={datos.cruzRoja} />}
+
+              {datos.lat != null && datos.lon != null && (
+                <a
+                  className="directions-button"
+                  href={`https://www.google.com/maps/dir/?api=1&destination=${datos.lat},${datos.lon}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {'\uD83D\uDCCD'} C&oacute;mo llegar
+                </a>
+              )}
+
+              {pred && (
+                <MetadataFooter
+                  zonaAvisos={pred.zonaAvisos}
+                  elaboracion={pred.elaboracion}
+                />
+              )}
 
               {fuente && (
                 <p className="source-label">

@@ -323,6 +323,24 @@ export class LegacyDetailsAssembler {
     // Step 8: prediccionCompleta (only when scraper succeeded)
     base.prediccionCompleta = forecast ? this.mapForecastToDTO(forecast) : null;
 
+    // Step 9: If scraper failed entirely, try to recover tides from long-lived cache
+    if (!base.prediccionCompleta) {
+      const cached = this.aemetScraper.getCachedTides(details.beach.aemetCode);
+      if (cached && cached.tides.length > 0) {
+        base.prediccionCompleta = {
+          fuente: 'AEMET_HTML',
+          elaboracion: null,
+          zonaAvisos: null,
+          dias: [],
+          mareas: cached.tides.map((t) => ({
+            pleamar: t.highTide,
+            bajamar: t.lowTide,
+          })),
+          fuenteMareas: cached.tidesSource,
+        };
+      }
+    }
+
     return base;
   }
 }

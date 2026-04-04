@@ -1,146 +1,160 @@
 # 🏖️ Beaches of Cantabria
-*Check the status of the beaches of Cantabria in real time. This application provides detailed information about waves, wind, temperature, tides, and the Red Cross flag status.*
+*Check the status of the beaches of Cantabria in real time. This app provides 3-day forecasts with morning/afternoon detail, tides, UV index, weather warnings, and Red Cross flag status.*
 
 ---
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue)](../../releases)  
+[![Version](https://img.shields.io/badge/version-2.0.0-blue)](../../releases)
 [![License: MIT-NC](https://img.shields.io/badge/License-MIT--NC-yellow.svg)](./LICENSE)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.x-informational)  
-![Node.js](https://img.shields.io/badge/Node.js-20.x-informational)  
-![Express](https://img.shields.io/badge/Express-4.x-informational)  
-![React](https://img.shields.io/badge/React-18-informational)  
-![Ionic](https://img.shields.io/badge/Ionic-React-informational)  
-![Capacitor](https://img.shields.io/badge/Capacitor-mobile-informational)  
+![TypeScript](https://img.shields.io/badge/TypeScript-5.x-informational)
+![Node.js](https://img.shields.io/badge/Node.js-20.x-informational)
+![Express](https://img.shields.io/badge/Express-4.x-informational)
+![React](https://img.shields.io/badge/React-18-informational)
+![Ionic](https://img.shields.io/badge/Ionic-React-informational)
+![Capacitor](https://img.shields.io/badge/Capacitor-mobile-informational)
 
-📖 Available languages: [Spanish](README.md) | **English**
+Available languages: [Español](README.md) | **English**
 
-## 🚀 Production Demo
+## Production Demo
 
-You can try the client application consuming this API here:
+Try the app here: **[https://playas-cantabria-front.web.app/](https://playas-cantabria-front.web.app/)**
 
-👉 **https://playas-cantabria-front.web.app/**
+Backend API: `https://playas-cantabria.onrender.com`
 
-## 📸 Preview
+## Preview
 
-![Pantallazo List (Home)](./docs/screenshots/list.png)
-![Pantallazo Map](./docs/screenshots/map.png)
-![Pantallazo Details](./docs/screenshots/details.png)
+![Screenshot List (Home)](./docs/screenshots/list.png)
+![Screenshot Map](./docs/screenshots/map.png)
+![Screenshot Details](./docs/screenshots/details.png)
 
-## 🐚 Features
+## Features
 
-* 🏝️ **Beach listing:** View all the beaches in Cantabria.  
-* 🌊 **Beach details:** Get detailed information for each beach, including:  
-  * 🌬️ Sea conditions (waves and wind).  
-  * 🌡️ Water and air temperature.  
-  * 🚩 Flag status from the Red Cross.  
-* 🔍 **Search and filter:** Easily find the beach you're looking for.  
-* 📍 **Location:** Explore beaches on the map using your current position with OpenStreetMap.  
+* **Beach listing** with search by name or municipality and A-Z / Z-A sorting.
+* **Beach detail** with full information:
+  * 3-day forecast with day selector (Today, Tomorrow, Day after tomorrow) and date display.
+  * Morning/afternoon breakdown: sky, wind and wave conditions for each half of the day.
+  * Max temperature, water temperature and thermal sensation.
+  * UV index with color-coded levels.
+  * Weather warnings with severity level.
+  * Tides: high and low tide times, with a real-time rising/falling indicator for today.
+  * Red Cross: flag status, coverage dates and lifeguard schedule.
+  * "Get directions" button that opens Google Maps with directions to the beach.
+* **Interactive map** (Leaflet/OpenStreetMap) with your current location and direct access to beach details.
+* **Partial offline mode:** if the backend doesn't respond within 2.5s, the beach list is served from a local JSON file and updated when the server replies.
 
-## ✨ Key Highlights
+## Data Sources
 
-* **Consolidated Data:** Aggregates information from multiple sources for a unified view:  
-  * **AEMET:** Weather data and forecasts.  
-  * **OpenWeatherMap:** Weather data as a fallback source.  
-  * **Red Cross:** Flag status and lifeguard services.  
-* **RESTful API:** Clear and predictable endpoints for beach lists and details.  
-* **Cache Layer:** In-memory cache to reduce latency and external requests.  
-* **Centralized Error Handling:** Middleware for consistent error management.  
-* **Scalable Design:** Hexagonal architecture allows adding or replacing data sources with minimal impact.  
-* **Flexible Configuration:** Environment variables for different environments (dev, prod).  
+The app aggregates information from multiple sources with a fallback chain:
+
+* **AEMET (XML/HTML scraping):** Enriched 3-day forecast, tides, warnings and real UV (primary source).
+* **AEMET OpenData API:** 2-day forecast as fallback.
+* **OpenWeatherMap:** Weather data, estimated UV and tomorrow's forecast as last resort.
+* **Red Cross:** Flag status and lifeguard services (scraping).
+
+In-memory cache with configurable TTL (default 300s) and singleflight deduplication.
 
 ---
 
-## 🏛️ Backend Architecture
+## Backend Architecture
 
-The backend follows a **Hexagonal Architecture** (aka **Ports and Adapters**). This pattern isolates the business core from external dependencies like databases, third-party APIs, or the UI.
+The backend follows a **Hexagonal Architecture** (Ports & Adapters). Dependencies always point inward: `infrastructure → application → domain`.
 
 ### Layers
 
-1. **`Domain` (The Core)**  
-   * **Contents:** Pure business logic, domain rules, `Entities` (e.g. `Beach`, `Weather`), and `Ports` (interfaces such as `IBeachRepository`, `IWeatherProvider`).  
-   * **Key Rule:** No dependencies on other layers.  
+1. **`Domain` (Core)**
+   * Entities: `Beach`, `Weather`, `Flag`, `Tides`, `BeachForecast`.
+   * Ports (interfaces): `BeachRepository`, `WeatherProvider`, `FlagProvider`, `TidesProvider`.
+   * Use cases: `GetAllBeaches`, `GetBeachById`, `GetBeachDetails`.
+   * **No dependencies** on other layers.
 
-2. **`Application` (Orchestration)**  
-   * **Contents:** Orchestrates data flow and applies domain use cases. Contains `Application Services` used by input adapters (e.g. API controllers).  
-   * **Key Rule:** Depends on `Domain`, not on `Infrastructure`.  
+2. **`Application` (Orchestration)**
+   * DTOs: `BeachDTO`, `BeachDetailsDTO`.
+   * Mappers: `BeachMapper`, `LegacyDetailsMapper`.
+   * Services: `LegacyDetailsAssembler` (orchestrates the fallback chain).
+   * Validation: Zod schemas for route parameters.
 
-3. **`Infrastructure` (The Outside)**  
-   * **Contents:** Implements `Ports` defined in the domain. Contains `Adapters` interacting with the outside world.  
-   * **Examples:**  
-     * **Express API** (entry point).  
-     * **Repositories** (data persistence, JSON-based).  
-     * **Third-party Providers** (AEMET, OpenWeatherMap, Red Cross).  
-     * **Dependency Injection container.**  
+3. **`Infrastructure` (Outside)**
+   * Express: Server, routes, middlewares.
+   * Providers: `AemetBeachWebScraper`, `AemetBeachForecastProvider`, `OpenWeatherWeatherProvider`, `RedCrossFlagProvider`.
+   * Repository: `JsonBeachRepository` (reads from static JSON).
+   * Cache: `InMemoryCache` with TTL and singleflight.
+   * DI: Manual container with no framework (`dependencies.ts`).
+
+### Fallback Chain (beach detail)
+
+```
+Layer 1: AemetBeachWebScraper         → Public XML/HTML from aemet.es (3 days, morning/afternoon, tides, warnings, UV)
+Layer 2: AemetBeachForecastProvider   → OpenData API with API key (2 days)
+Layer 3: OpenWeatherWeatherProvider   → OpenWeather API (temp, wind, description)
+Layer 4: GetBeachDetails              → AEMET observation ↔ OpenWeather (hedged, first to respond wins)
+```
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 ### Backend
 
-* **Language:** [TypeScript](https://www.typescriptlang.org/) v5.5  
-* **Runtime:** [Node.js](https://nodejs.org/) v20+  
-* **Framework:** [Express.js](https://expressjs.com/) v4.19  
-* **Architecture:** Hexagonal (Ports & Adapters) + DI  
-* **Validation:** [Zod](https://zod.dev/)  
-* **HTTP:** [Axios](https://axios-http.com/) v1.7  
-* **Scraping:** [Cheerio](https://cheerio.js.org/) v1.0  
-* **Environment:** [Dotenv](https://github.com/motdotla/dotenv)  
-* **Logging:** [Winston](https://github.com/winstonjs/winston)  
-* **Deployment:** [Firebase Functions](https://firebase.google.com/docs/functions)  
+* **Language:** [TypeScript](https://www.typescriptlang.org/) v5.5
+* **Runtime:** [Node.js](https://nodejs.org/) v20+
+* **Framework:** [Express.js](https://expressjs.com/) v4.19
+* **Architecture:** Hexagonal (Ports & Adapters) with manual DI.
+* **Validation:** [Zod](https://zod.dev/)
+* **HTTP:** [Axios](https://axios-http.com/) v1.7
+* **Scraping:** [Cheerio](https://cheerio.js.org/) v1.0
+* **Encoding:** [iconv-lite](https://github.com/ashtuchkin/iconv-lite) (AEMET serves ISO-8859-15)
+* **Environment:** [Dotenv](https://github.com/motdotla/dotenv)
+* **Logging:** [Winston](https://github.com/winstonjs/winston)
+* **Deployment:** [Render](https://render.com/) (primary), [Firebase Functions](https://firebase.google.com/docs/functions) (alternative)
 
 ### Frontend
 
-* **Framework:** [React](https://reactjs.org/)  
-* **UI:** [Ionic](https://ionicframework.com/)  
-* **Language:** [TypeScript](https://www.typescriptlang.org/)  
-* **Router:** [React Router](https://reactrouter.com/)  
-* **Mobile Platform:** [Capacitor](https://capacitorjs.com/)  
+* **Framework:** [React](https://reactjs.org/) 18
+* **UI:** [Ionic](https://ionicframework.com/) React
+* **Language:** [TypeScript](https://www.typescriptlang.org/)
+* **Router:** [React Router](https://reactrouter.com/)
+* **Maps:** [Leaflet](https://leafletjs.com/) / [react-leaflet](https://react-leaflet.js.org/) with OpenStreetMap
+* **Mobile Platform:** [Capacitor](https://capacitorjs.com/)
+* **Web Deployment:** [Firebase Hosting](https://firebase.google.com/docs/hosting)
 
 ---
 
-## 📁 Project Structure (Backend)
+## Project Structure
 
 ```
-backend/src/
-├── application/    # Orchestration & application services
-│   ├── dtos/
-│   ├── mappers/
-│   └── services/
-├── domain/         # Business core
-│   ├── entities/
-│   ├── ports/
-│   └── use-cases/
-├── infrastructure/ # Implementations of ports & adapters
-│   ├── cache/
-│   ├── config/
-│   ├── di/
-│   ├── express/    
-│   ├── firebase/
-│   ├── providers/  
-│   └── repositories/
-└── index.ts
+playas-cantabria/
+├── backend/
+│   └── src/
+│       ├── domain/           # Entities, ports, use cases
+│       ├── application/      # DTOs, mappers, services, validation
+│       └── infrastructure/   # Express, providers, cache, DI, repositories
+├── frontend/
+│   └── src/
+│       ├── pages/            # Home, PlayaDetalle, MapaPage
+│       ├── services/         # API client
+│       ├── config/           # API URL configuration
+│       ├── data/             # Fallback beach JSON
+│       └── theme/            # CSS variables
 ```
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
-* Node.js 20+  
-* Package manager: npm, yarn, or pnpm  
+
+* **Node.js** v20+
+* **npm** (or another package manager)
 
 ### Installation
 
 ```bash
-git clone https://github.com/your-user/playas-cantabria.git
+git clone https://github.com/oscaruiz/playas-cantabria.git
 cd playas-cantabria
 
 # Backend
 cd backend
 npm install
 cp .env.tmp .env
-
 # Fill .env with your API keys
 
 # Frontend
@@ -148,55 +162,82 @@ cd ../frontend
 npm install
 ```
 
----
+### Running
 
-## 🏃 Run the App
-
-* Backend → http://localhost:4000  
-* Frontend → http://localhost:8100  
+You need two terminals:
 
 ```bash
-# Backend
+# Terminal 1 — Backend (http://localhost:4000)
 cd backend
 npm run dev
 
-# Frontend
+# Terminal 2 — Frontend (http://localhost:8100)
 cd frontend
 npm start
 ```
 
 ---
 
-## 🔌 API Examples
+## API Endpoints
+
+| Method | Route | Description |
+|--------|-------|-------------|
+| GET | `/api/beaches` | List all beaches |
+| GET | `/api/beaches/:id` | Basic beach info |
+| GET | `/api/beaches/:id/details` | Full detail: 3-day forecast, tides, Red Cross, coordinates |
+
+### Examples
 
 ```bash
-# Beach list
-curl -X GET "http://localhost:4000/api/beaches" -H "Accept: application/json"
+# List
+curl "http://localhost:4000/api/beaches"
 
-# Beach details
-curl -X GET "http://localhost:4000/api/beaches/3908503/details" -H "Accept: application/json"
-
-# Basic beach info
-curl -X GET "http://localhost:4000/api/beaches/3908503" -H "Accept: application/json"
+# Full details (La Concha de Suances)
+curl "http://localhost:4000/api/beaches/3908503/details"
 ```
 
----
-
-## 🤝 Contributions
-Contributions are welcome! Open an *issue* with your ideas, suggestions, or bug reports.  
+The `/details` endpoint consolidates data from **AEMET, OpenWeatherMap and Red Cross** and includes a 3-day morning/afternoon forecast, tides (high/low), UV index, weather warnings and GPS coordinates.
 
 ---
 
-## 📜 License
-MIT No Commercial (MIT + NC). See [LICENSE](./LICENSE).  
+## Environment Variables
 
-## 📌 Versioning
-Follows [Semantic Versioning](https://semver.org/).  
-Currently **v1.0.0**.  
+### Backend (`.env`)
 
-## 🗺️ Roadmap
-- [ ] Add more beaches  
-- [ ] Add **tide data**  
-- [ ] Improve **frontend architecture**  
-- [ ] Publish **OpenAPI/Swagger**  
-- [ ] Add basic E2E tests (Playwright)  
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `PORT` | Server port | `4000` |
+| `AEMET_API_KEY` | AEMET OpenData API key | — |
+| `OPENWEATHER_API_KEY` | OpenWeatherMap API key | — |
+| `CORS_ORIGIN` | Allowed CORS origin | `*` |
+| `CACHE_TTL_SECONDS` | Cache TTL in seconds | `300` |
+| `DEBUG_WEATHER` | Enables detailed logs and debug endpoint | — |
+
+### Frontend
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `REACT_APP_API_BASE_URL` | Backend URL | `https://playas-cantabria.onrender.com` |
+
+---
+
+## Contributions
+
+Contributions are welcome! Open an *issue* with your ideas, suggestions or bug reports.
+
+---
+
+## License
+MIT No Commercial (MIT + NC). See [LICENSE](./LICENSE).
+
+## Versioning
+Follows [Semantic Versioning](https://semver.org/).
+Currently **v2.0.0**.
+
+## Roadmap
+
+- [x] ~~Add **tide data**~~
+- [ ] Add more beaches
+- [ ] Improve **frontend architecture** (state, discriminated types, caching)
+- [ ] Publish **OpenAPI/Swagger**
+- [ ] Add basic E2E tests (Playwright)
