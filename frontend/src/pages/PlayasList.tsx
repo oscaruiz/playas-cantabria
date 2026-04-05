@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import {
   IonPage,
   IonContent,
@@ -16,6 +16,9 @@ const PlayasList: React.FC = () => {
   const [filtro, setFiltro] = useState('');
   const [orden, setOrden] = useState<'az' | 'za'>('az');
   const [error, setError] = useState<string | null>(null);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [activeIdx, setActiveIdx] = useState(-1);
+  const blurTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const history = useHistory();
 
   useEffect(() => {
@@ -38,6 +41,37 @@ const PlayasList: React.FC = () => {
   const toggleOrden = useCallback(() => {
     setOrden((prev) => (prev === 'az' ? 'za' : 'az'));
   }, []);
+
+  const suggestions = useMemo(() => {
+    if (!playas || filtro.length < 2) return [];
+    const f = filtro.toLowerCase();
+    return playas
+      .filter((p) => p.nombre.toLowerCase().includes(f) || p.municipio.toLowerCase().includes(f))
+      .slice(0, 5);
+  }, [playas, filtro]);
+
+  const selectSuggestion = useCallback((nombre: string) => {
+    setFiltro(nombre);
+    setShowSuggestions(false);
+    setActiveIdx(-1);
+  }, []);
+
+  const handleSearchKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (!showSuggestions || suggestions.length === 0) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setActiveIdx((prev) => (prev < suggestions.length - 1 ? prev + 1 : 0));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setActiveIdx((prev) => (prev > 0 ? prev - 1 : suggestions.length - 1));
+    } else if (e.key === 'Enter' && activeIdx >= 0) {
+      e.preventDefault();
+      selectSuggestion(suggestions[activeIdx].nombre);
+    } else if (e.key === 'Escape') {
+      setShowSuggestions(false);
+      setActiveIdx(-1);
+    }
+  }, [showSuggestions, suggestions, activeIdx, selectSuggestion]);
 
   const filtradas = useMemo(() => {
     if (!playas) return [];
@@ -75,9 +109,22 @@ const PlayasList: React.FC = () => {
             <input
               type="text"
               value={filtro}
-              onChange={(e) => setFiltro(e.target.value)}
+              onChange={(e) => {
+                setFiltro(e.target.value);
+                setShowSuggestions(true);
+                setActiveIdx(-1);
+              }}
+              onFocus={() => { if (filtro.length >= 2) setShowSuggestions(true); }}
+              onBlur={() => {
+                blurTimeout.current = setTimeout(() => setShowSuggestions(false), 150);
+              }}
+              onKeyDown={handleSearchKeyDown}
               placeholder="Buscar playa o municipio..."
               aria-label="Buscar playa o municipio"
+              autoComplete="off"
+              role="combobox"
+              aria-expanded={showSuggestions && suggestions.length > 0}
+              aria-autocomplete="list"
             />
             <button
               className="sort-button"
@@ -88,6 +135,25 @@ const PlayasList: React.FC = () => {
               {orden === 'az' ? 'AZ' : 'ZA'}
             </button>
           </div>
+          {showSuggestions && suggestions.length > 0 && (
+            <ul className="search-suggestions" role="listbox">
+              {suggestions.map((s, i) => (
+                <li
+                  key={s.codigo}
+                  className={`search-suggestion-item${i === activeIdx ? ' search-suggestion-item--active' : ''}`}
+                  role="option"
+                  aria-selected={i === activeIdx}
+                  onMouseDown={() => {
+                    if (blurTimeout.current) clearTimeout(blurTimeout.current);
+                    selectSuggestion(s.nombre);
+                  }}
+                >
+                  <span className="suggestion-name">{s.nombre}</span>
+                  <span className="suggestion-municipio">{s.municipio}</span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
 
         {/* Error state */}

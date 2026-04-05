@@ -126,6 +126,61 @@
   color: #ffffff;
 }
 
+/* --- Autocomplete suggestions --- */
+.search-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin: 4px 0 0;
+  padding: 4px 0;
+  list-style: none;
+  background: var(--playa-foam);
+  border-radius: 14px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+  border: 1px solid var(--playa-border);
+  z-index: 10;
+  overflow: hidden;
+}
+
+.search-suggestion-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: background 0.1s ease;
+}
+
+.search-suggestion-item:hover,
+.search-suggestion-item--active {
+  background: var(--playa-ocean-light);
+}
+
+.suggestion-name {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--playa-text);
+}
+
+.suggestion-municipio {
+  font-size: 0.75rem;
+  color: var(--playa-text-muted);
+}
+
+@media (prefers-color-scheme: dark) {
+  .search-suggestions {
+    background: var(--playa-foam);
+    border-color: var(--playa-border);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
+  }
+
+  .search-suggestion-item:hover,
+  .search-suggestion-item--active {
+    background: rgba(14, 116, 144, 0.2);
+  }
+}
+
 /* --- Beach count --- */
 .beach-count {
   padding: 14px 20px 6px;
