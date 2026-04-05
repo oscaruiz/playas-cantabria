@@ -68,6 +68,20 @@ function daySubtitle(offset: number): string {
   return `${capitalizar(dias[d.getDay()])} ${d.getDate()} de ${meses[d.getMonth()]}`;
 }
 
+function emojiCielo(cielo: string | null): string {
+  if (!cielo) return '\u26C5';
+  const c = cielo.toLowerCase();
+  if (/despejado|soleado/.test(c)) return '\u2600\uFE0F';
+  if (/poco nuboso|intervalos|parcial|claro/.test(c)) return '\u{1F324}\uFE0F';
+  if (/muy nuboso|cubierto/.test(c)) return '\u2601\uFE0F';
+  if (/nuboso|nublado/.test(c)) return '\u26C5';
+  if (/tormenta|el[eé]ctrica|rayos/.test(c)) return '\u26C8\uFE0F';
+  if (/lluvia|llovizna|chubascos/.test(c)) return '\u{1F327}\uFE0F';
+  if (/nieve|nevada|aguanieve/.test(c)) return '\u{1F328}\uFE0F';
+  if (/niebla|bruma|neblina/.test(c)) return '\u{1F32B}\uFE0F';
+  return '\u26C5';
+}
+
 function hasHalfDayData(h: HalfDayDTO): boolean {
   return h.cielo != null || h.viento != null || h.oleaje != null;
 }
@@ -244,7 +258,7 @@ const HalfDayDetail: React.FC<{
         </div>
         <div className="halfday-block-rows">
           <div className="halfday-block-row">
-            <span className="halfday-block-row-icon">{'\u2601\uFE0F'}</span>
+            <span className="halfday-block-row-icon">{emojiCielo(data.cielo)}</span>
             <span>{capitalizar(data.cielo) || '--'}</span>
           </div>
           <div className="halfday-block-row">
@@ -429,6 +443,7 @@ const WeatherCard: React.FC<WeatherCardProps> = ({
   defaultExpanded = true,
 }) => {
   const [expanded, setExpanded] = useState(defaultExpanded);
+  const contentId = `weather-content-${day}`;
   if (!clima) return null;
   const data = clima[day];
   if (!data) return null;
@@ -441,6 +456,8 @@ const WeatherCard: React.FC<WeatherCardProps> = ({
         role="button"
         tabIndex={0}
         aria-expanded={expanded}
+        aria-controls={contentId}
+        aria-label={`${expanded ? 'Contraer' : 'Expandir'} ${title}`}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
@@ -448,7 +465,7 @@ const WeatherCard: React.FC<WeatherCardProps> = ({
           }
         }}
       >
-        <div className={`card-header-icon ${iconClass}`}>
+        <div className={`card-header-icon ${iconClass}`} aria-hidden="true">
           {day === 'hoy' ? '\u2600' : '\u26C5'}
         </div>
         <div>
@@ -457,45 +474,45 @@ const WeatherCard: React.FC<WeatherCardProps> = ({
             {subtitle && <span className="card-header-subtitle"> &middot; {subtitle}</span>}
           </div>
         </div>
-        <span className={`card-header-chevron ${expanded ? 'open' : ''}`}>&#9662;</span>
+        <span className={`card-header-chevron ${expanded ? 'open' : ''}`} aria-hidden="true">&#9662;</span>
       </div>
 
       {expanded && (
-        <div className="card-body card-body-enter">
+        <div className="card-body card-body-enter" id={contentId}>
           <div className="weather-rows">
             <div className="weather-row">
-              <div className="weather-row-icon">{'\u2601'}</div>
+              <div className="weather-row-icon" aria-hidden="true">{emojiCielo(data.summary)}</div>
               <span className="weather-row-label">Cielo</span>
               <span className="weather-row-value">{limpiarTexto(data.summary)}</span>
             </div>
             <div className="weather-row">
-              <div className="weather-row-icon">{'\u{1F321}'}</div>
+              <div className="weather-row-icon" aria-hidden="true">{'\u{1F321}'}</div>
               <span className="weather-row-label">Temperatura</span>
               <span className="weather-row-value">{data.temperature} &#176;C</span>
             </div>
             <div className="weather-row">
-              <div className="weather-row-icon">{'\u{1F30A}'}</div>
+              <div className="weather-row-icon" aria-hidden="true">{'\u{1F30A}'}</div>
               <span className="weather-row-label">Agua</span>
               <span className="weather-row-value">{data.waterTemperature} &#176;C</span>
             </div>
             <div className="weather-row">
-              <div className="weather-row-icon">{'\u{1F525}'}</div>
+              <div className="weather-row-icon" aria-hidden="true">{'\u{1F525}'}</div>
               <span className="weather-row-label">{'Sensaci\u00f3n'}</span>
               <span className="weather-row-value">{limpiarTexto(data.sensation)}</span>
             </div>
             <div className="weather-row">
-              <div className="weather-row-icon">{'\u{1F4A8}'}</div>
+              <div className="weather-row-icon" aria-hidden="true">{'\u{1F4A8}'}</div>
               <span className="weather-row-label">Viento</span>
               <span className="weather-row-value">{limpiarTexto(data.wind)}</span>
             </div>
             <div className="weather-row">
-              <div className="weather-row-icon">{'\u{1F30A}'}</div>
+              <div className="weather-row-icon" aria-hidden="true">{'\u{1F30A}'}</div>
               <span className="weather-row-label">Oleaje</span>
               <span className="weather-row-value">{limpiarTexto(data.waves)}</span>
             </div>
             {data.uvIndex !== undefined && (
               <div className="weather-row">
-                <div className="weather-row-icon">{'\u2600'}</div>
+                <div className="weather-row-icon" aria-hidden="true">{'\u2600'}</div>
                 <span className="weather-row-label">{'Indice UV'}</span>
                 <span className="weather-row-value">{data.uvIndex}</span>
               </div>
@@ -521,6 +538,9 @@ const CruzRojaCard: React.FC<{ cruzRoja?: PlayaDetalleData['cruzRoja'] }> = ({ c
         role={hasData ? 'button' : undefined}
         tabIndex={hasData ? 0 : undefined}
         aria-expanded={hasData ? expanded : undefined}
+        aria-controls={hasData ? 'cruzroja-content' : undefined}
+        aria-label={hasData ? `${expanded ? 'Contraer' : 'Expandir'} Cruz Roja` : undefined}
+        aria-disabled={!hasData ? true : undefined}
         onKeyDown={hasData ? (e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
@@ -528,40 +548,40 @@ const CruzRojaCard: React.FC<{ cruzRoja?: PlayaDetalleData['cruzRoja'] }> = ({ c
           }
         } : undefined}
       >
-        <div className={`card-header-icon ${hasData ? 'cruz-roja' : 'cruz-roja-neutral'}`}>{'\u271A'}</div>
+        <div className={`card-header-icon ${hasData ? 'cruz-roja' : 'cruz-roja-neutral'}`} aria-hidden="true">{'\u271A'}</div>
         <div>
           <div className="card-header-title">Cruz Roja</div>
           <div className="card-header-subtitle">{hasData ? 'Vigilancia y cobertura' : 'Informaci\u00f3n de Cruz Roja a\u00fan no disponible'}</div>
         </div>
-        {hasData && <span className={`card-header-chevron ${expanded ? 'open' : ''}`}>&#9662;</span>}
+        {hasData && <span className={`card-header-chevron ${expanded ? 'open' : ''}`} aria-hidden="true">&#9662;</span>}
       </div>
 
       {expanded && (
-        <div className="card-body card-body-enter">
+        <div className="card-body card-body-enter" id="cruzroja-content">
           <div className="info-rows">
             <div className="info-row">
-              <div className={`info-row-icon ${hasData ? '' : 'neutral'}`}>{'\u{1F6A9}'}</div>
+              <div aria-hidden="true" className={`info-row-icon ${hasData ? '' : 'neutral'}`}>{'\u{1F6A9}'}</div>
               <span className="info-row-label">Bandera actual</span>
               <span className={`info-row-value ${!hasData ? 'muted' : ''}`}>
                 {hasData ? cruzRoja!.bandera : 'No disponible'}
               </span>
             </div>
             <div className="info-row">
-              <div className={`info-row-icon ${hasData ? '' : 'neutral'}`}>{'\u{1F4C5}'}</div>
+              <div aria-hidden="true" className={`info-row-icon ${hasData ? '' : 'neutral'}`}>{'\u{1F4C5}'}</div>
               <span className="info-row-label">Cobertura desde</span>
               <span className={`info-row-value ${!cruzRoja?.coberturaDesde ? 'muted' : ''}`}>
                 {cruzRojaField(cruzRoja?.coberturaDesde)}
               </span>
             </div>
             <div className="info-row">
-              <div className={`info-row-icon ${hasData ? '' : 'neutral'}`}>{'\u{1F4C5}'}</div>
+              <div aria-hidden="true" className={`info-row-icon ${hasData ? '' : 'neutral'}`}>{'\u{1F4C5}'}</div>
               <span className="info-row-label">Cobertura hasta</span>
               <span className={`info-row-value ${!cruzRoja?.coberturaHasta ? 'muted' : ''}`}>
                 {cruzRojaField(cruzRoja?.coberturaHasta)}
               </span>
             </div>
             <div className="info-row">
-              <div className={`info-row-icon ${hasData ? '' : 'neutral'}`}>{'\u{1F552}'}</div>
+              <div aria-hidden="true" className={`info-row-icon ${hasData ? '' : 'neutral'}`}>{'\u{1F552}'}</div>
               <span className="info-row-label">Horario</span>
               <span className={`info-row-value ${!cruzRoja?.horario ? 'muted' : ''}`}>
                 {cruzRojaField(cruzRoja?.horario)}

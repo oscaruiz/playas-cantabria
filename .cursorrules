@@ -1,0 +1,18 @@
+# Playas Cantabria
+
+Spanish-language monorepo: beach info app for Cantabria, Spain.
+- `backend/` — Express + TypeScript, hexagonal architecture
+- `frontend/` — Ionic React + Capacitor mobile/web app
+
+## Conventions
+- All code, comments, UI text in Spanish
+- Backend: strict hexagonal layers, manual DI, never delete providers
+- Frontend: Ionic components, co-located CSS, hooks only, mobile-first
+
+## Skills
+Read `.agents/skills/{name}/SKILL.md` when working on matching tasks:
+- accessibility, frontend-design, vercel-composition-patterns, vercel-react-best-practices (frontend)
+- nodejs-backend-patterns, nodejs-best-practices (backend)
+- typescript-advanced-types (both)
+
+See CLAUDE.md, frontend/CLAUDE.md, backend/CLAUDE.md for full docs.

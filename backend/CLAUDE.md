@@ -145,3 +145,10 @@ Environment variables (or `.env`):
 - **Encoding**: when downloading from aemet.es, always use `responseType: 'arraybuffer'` + `iconv-lite`.
 - **Type-check**: run `npx tsc --noEmit` after every change to verify types.
 - **Logging**: use `debugLog()` from `infrastructure/utils/debug.ts`, not direct console.log (except for critical process errors).
+
+## Backend Skills
+
+When working on the backend, consult the relevant skills from `.agents/skills/` based on the task:
+- **nodejs-backend-patterns** — Express middleware, error handling, API patterns
+- **nodejs-best-practices** — Node.js architecture decisions, async, security
+- **typescript-advanced-types** — advanced TypeScript types

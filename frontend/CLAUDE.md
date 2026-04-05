@@ -112,3 +112,12 @@ Todas las interfaces están en `src/services/api.ts`:
 - El service worker (PWA) está registrado en `index.tsx` pero inactivo por defecto (`serviceWorkerRegistration.unregister()`)
 - Los iconos de clima usan URLs de AEMET (`www.aemet.es/imagenes/png/estado_cielo/`)
 - ESLint: `react-in-jsx-scope` desactivado (React 17+ JSX transform)
+
+## Frontend Skills
+
+When working on the frontend, consult the relevant skills from `.agents/skills/` based on the task:
+- **accessibility** — WCAG audits, aria attributes, keyboard navigation
+- **frontend-design** — visual design, distinctive UI components
+- **vercel-composition-patterns** — compound components, React composition
+- **vercel-react-best-practices** — React performance, bundle size, data fetching
+- **typescript-advanced-types** — advanced TypeScript types

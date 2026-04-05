@@ -112,6 +112,7 @@ const Home: React.FC = () => {
                 onClick={() => history.push(`/playas/${playa.codigo}`)}
                 role="link"
                 tabIndex={0}
+                aria-label={`Ver detalle de ${playa.nombre}, ${playa.municipio}`}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
@@ -128,8 +129,8 @@ const Home: React.FC = () => {
                 </div>
                 {playa.idCruzRoja !== 0 && playa.idCruzRoja !== undefined && (
                   <div className="beach-card-badges">
-                    <span className="badge-vigilada">
-                      <span className="badge-vigilada-dot" />
+                    <span className="badge-vigilada" aria-label="Playa vigilada por Cruz Roja">
+                      <span className="badge-vigilada-dot" aria-hidden="true" />
                       Cruz Roja
                     </span>
                   </div>

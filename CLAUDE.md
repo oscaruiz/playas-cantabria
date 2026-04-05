@@ -97,3 +97,19 @@ API base URL configured via `REACT_APP_API_BASE_URL` env var (defaults to produc
 - Backend deploys to Render (`playas-cantabria.onrender.com`)
 - Frontend can deploy to Firebase Hosting or as a Capacitor Android app
 - Backend also supports Firebase Functions (auto-detected via env vars)
+
+## Skills Reference
+
+This project includes coding skills in `.agents/skills/`. **Do not read these upfront** — only read the relevant SKILL.md when actively working on a matching task.
+
+| Skill | Read when... | Path |
+|-------|-------------|------|
+| accessibility | Auditing WCAG, aria, keyboard nav | `.agents/skills/accessibility/SKILL.md` |
+| frontend-design | Creating/redesigning UI, visual polish | `.agents/skills/frontend-design/SKILL.md` |
+| nodejs-backend-patterns | Express middleware, error handling, API patterns | `.agents/skills/nodejs-backend-patterns/SKILL.md` |
+| nodejs-best-practices | Node.js architecture decisions, async, security | `.agents/skills/nodejs-best-practices/SKILL.md` |
+| typescript-advanced-types | Complex TS types, generics, mapped types | `.agents/skills/typescript-advanced-types/SKILL.md` |
+| vercel-composition-patterns | React compound components, composition | `.agents/skills/vercel-composition-patterns/SKILL.md` |
+| vercel-react-best-practices | React performance, waterfalls, bundle size | `.agents/skills/vercel-react-best-practices/SKILL.md` |
+
+When a task matches, read SKILL.md first, then consult `references/` or `rules/` for detailed patterns.
