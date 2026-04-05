@@ -181,7 +181,7 @@ const PlayasList: React.FC = () => {
           </div>
         )}
 
-        <BottomNavBar currentTab="lista" />
+        <BottomNavBar />
       </IonContent>
     </IonPage>
   );

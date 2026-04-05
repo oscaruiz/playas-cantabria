@@ -1,18 +1,23 @@
 import React from 'react';
 import { IonIcon } from '@ionic/react';
 import { homeOutline, listOutline, mapOutline } from 'ionicons/icons';
-import { useHistory } from 'react-router-dom';
+import { useHistory, useLocation } from 'react-router-dom';
 import './BottomNavBar.css';
 
-interface BottomNavBarProps {
-  currentTab: 'home' | 'lista' | 'mapa';
+function deriveTab(pathname: string): 'home' | 'lista' | 'mapa' {
+  if (pathname === '/') return 'home';
+  if (pathname.startsWith('/playas')) return 'lista';
+  if (pathname.startsWith('/mapa')) return 'mapa';
+  return 'home';
 }
 
-const BottomNavBar: React.FC<BottomNavBarProps> = ({ currentTab }) => {
+const BottomNavBar: React.FC = () => {
   const history = useHistory();
+  const { pathname } = useLocation();
+  const currentTab = deriveTab(pathname);
 
   return (
-    <nav className="bottom-nav-bar" aria-label="Navegaci\u00F3n principal">
+    <nav className="bottom-nav-bar" aria-label={'Navegaci\u00F3n principal'}>
       <button
         className={`bottom-nav-tab${currentTab === 'home' ? ' active' : ''}`}
         onClick={() => { if (currentTab !== 'home') history.push('/'); }}

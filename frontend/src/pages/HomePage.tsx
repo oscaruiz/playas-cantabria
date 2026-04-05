@@ -39,10 +39,10 @@ function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): nu
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-/** Bonus de proximidad: 0-15 pts extra (0km=+15, >=50km=+0) */
+/** Bonus de proximidad: 0-25 pts extra (0km=+25, >=80km=+0) */
 function proximityBonus(distKm: number): number {
-  if (distKm >= 50) return 0;
-  return Math.round(15 * (1 - distKm / 50));
+  if (distKm >= 80) return 0;
+  return Math.round(25 * (1 - distKm / 80));
 }
 
 // ---- Sub-components ----
@@ -57,7 +57,7 @@ const HeroSection: React.FC<{
     <div className="hp-hero-spacer" />
     <h1 className="hp-hero-title">Playas de Cantabria</h1>
     <p className="hp-hero-subtitle">
-      {'Descubre las mejores playas del norte de Espa\u00F1a'}
+      {'Descubre las mejores playas de Cantabria'}
     </p>
     <div className="hp-hero-badges">
       {avgTemp != null && (
@@ -369,7 +369,7 @@ const HomePage: React.FC = () => {
           </section>
         </div>
 
-        <BottomNavBar currentTab="home" />
+        <BottomNavBar />
       </IonContent>
     </IonPage>
   );

@@ -7,29 +7,70 @@ import {
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L, { Map as LeafletMap, DivIcon } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { useEffect, useRef, useState } from 'react';
-import { Playa, getPlayas } from '../services/api';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Playa, FeaturedBeach, getPlayas, getFeaturedBeaches } from '../services/api';
+import { emojiCielo } from '../utils/beachHelpers';
 import BottomNavBar from '../components/BottomNavBar';
 import { useHistory } from 'react-router-dom';
 import './MapaPage.css';
 
+// ---- Marker helpers ----
+
+function markerStatus(score: number): 'good' | 'medium' | 'bad' {
+  if (score >= 60) return 'good';
+  if (score >= 35) return 'medium';
+  return 'bad';
+}
+
+function secondaryBadge(weather: FeaturedBeach): string {
+  if (weather.bandera === 'Roja') return '\u26A0\uFE0F';
+  if (weather.vientoMs != null && weather.vientoMs > 8) return '\u{1F4A8}';
+  return '';
+}
+
+function getBeachIcon(weather: FeaturedBeach, isBest: boolean): DivIcon {
+  const status = markerStatus(weather.puntuacion);
+  const sky = emojiCielo(weather.descripcionClima);
+  const temp = weather.temperatura != null ? `${Math.round(weather.temperatura)}\u00B0` : '';
+  const badge = secondaryBadge(weather);
+  const highlight = isBest;
+  const sizeClass = highlight ? ' beach-marker--highlight' : '';
+  const bestClass = isBest ? ' beach-marker--best' : '';
+  const size = highlight ? 52 : 44;
+
+  const html = `<div class="beach-marker beach-marker--${status}${sizeClass}${bestClass}">
+    <span class="beach-marker__sky">${sky}</span>
+    <span class="beach-marker__temp">${temp}</span>
+    ${badge ? `<span class="beach-marker__badge">${badge}</span>` : ''}
+  </div>`;
+
+  return new L.DivIcon({
+    html,
+    className: '',
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size],
+  });
+}
+
+function getFallbackIcon(numero: number): DivIcon {
+  return new L.DivIcon({
+    html: `<div style="background-color:#3880ff;color:white;font-weight:bold;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;">${numero}</div>`,
+    className: '',
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+  });
+}
+
+// ---- Component ----
+
 const MapaPage: React.FC = () => {
   const [playas, setPlayas] = useState<Playa[]>([]);
+  const [weatherMap, setWeatherMap] = useState<Map<string, FeaturedBeach>>(new Map());
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const mapRef = useRef<LeafletMap | null>(null);
   const history = useHistory();
 
-  // Icono de texto numerado
-  const getTextIcon = (numero: number): DivIcon =>
-    new L.DivIcon({
-      html: `<div style="background-color:#3880ff;color:white;font-weight:bold;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;">${numero}</div>`,
-      className: '',
-      iconSize: [32, 32],
-      iconAnchor: [16, 32],
-    });
-
-  // Icono ubicación usuario
-  const userIcon = new L.DivIcon({
+  const userIcon = useMemo(() => new L.DivIcon({
     html: `<div style="
       background-color:#3880ff;
       color:white;
@@ -41,11 +82,11 @@ const MapaPage: React.FC = () => {
       align-items:center;
       justify-content:center;
       font-size:18px;
-    ">📍</div>`,
+    ">\u{1F4CD}</div>`,
     className: '',
     iconSize: [40, 40],
     iconAnchor: [20, 40],
-  });
+  }), []);
 
   useEffect(() => {
     const handlePlayas = (data: Playa[]) => {
@@ -57,36 +98,47 @@ const MapaPage: React.FC = () => {
             p.lat !== 0 &&
             p.lon !== 0
         )
-        .sort((a, b) => a.lon - b.lon); // Oeste a este
+        .sort((a, b) => a.lon - b.lon);
       setPlayas(validas);
     };
 
-    // Cargar playas y ordenarlas de oeste a este
     getPlayas({ onBackendData: handlePlayas }).then(handlePlayas);
 
-    // Obtener ubicación del usuario
+    getFeaturedBeaches()
+      .then((res) => {
+        const map = new Map<string, FeaturedBeach>();
+        for (const b of res.resumenTodas) map.set(b.codigo, b);
+        setWeatherMap(map);
+      })
+      .catch(() => { /* fallback: numbered markers */ });
+
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          setUserLocation([pos.coords.latitude, pos.coords.longitude]);
-        },
-        (err) => {
-          console.warn('No se pudo obtener ubicación del usuario', err);
-        }
+        (pos) => setUserLocation([pos.coords.latitude, pos.coords.longitude]),
+        (err) => { console.warn('Geolocation unavailable', err); },
       );
     }
   }, []);
 
+  // Best beach = highest score
+  const bestCodigo = useMemo(() => {
+    let bestCode: string | null = null;
+    let bestScore = -1;
+    weatherMap.forEach((w) => {
+      if (w.puntuacion > bestScore) {
+        bestScore = w.puntuacion;
+        bestCode = w.codigo;
+      }
+    });
+    return bestCode;
+  }, [weatherMap]);
+
   useIonViewWillLeave(() => {
-    if (mapRef.current) {
-      mapRef.current.closePopup();
-    }
+    if (mapRef.current) mapRef.current.closePopup();
   });
 
   useIonViewDidEnter(() => {
-    if (mapRef.current) {
-      mapRef.current.invalidateSize();
-    }
+    if (mapRef.current) mapRef.current.invalidateSize();
   });
 
   return (
@@ -98,14 +150,12 @@ const MapaPage: React.FC = () => {
       <IonContent className="mapa-content">
         <div id="mapa-container">
           <MapContainer
-            center={[43.4, -4.05]} // Centro Cantabria
+            center={[43.4, -4.05]}
             zoom={9}
             scrollWheelZoom={true}
             className="leaflet-map"
             ref={(mapInstance) => {
-              if (mapInstance) {
-                mapRef.current = mapInstance;
-              }
+              if (mapInstance) mapRef.current = mapInstance;
             }}
           >
             <TileLayer
@@ -113,31 +163,43 @@ const MapaPage: React.FC = () => {
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
 
-            {/* Playa markers */}
             {playas.map((playa, index) => {
+              const weather = weatherMap.get(playa.codigo);
+              const icon = weather
+                ? getBeachIcon(weather, playa.codigo === bestCodigo)
+                : getFallbackIcon(index + 1);
               const isVigilada = playa.idCruzRoja && playa.idCruzRoja > 0;
 
               return (
                 <Marker
                   key={playa.codigo}
                   position={[playa.lat!, playa.lon!]}
-                  icon={getTextIcon(index + 1)}
+                  icon={icon}
                 >
                   <Popup>
                     <div style={{ minWidth: '180px' }}>
                       <h3 style={{ margin: '0 0 6px', fontSize: '16px' }}>
-                        🏖 {playa.nombre}
+                        {'\u{1F3D6}'} {playa.nombre}
                       </h3>
-                      <p style={{ margin: '0' }}>
+                      <p style={{ margin: '0 0 4px' }}>
                         <strong>Municipio:</strong> {playa.municipio}
                       </p>
-                      {isVigilada
-                        ? '🛟 Vigilada por Cruz Roja'
-                        : '🚫 No hay info de Cruz Roja'}
+                      {weather && (
+                        <p style={{ margin: '0 0 4px' }}>
+                          {emojiCielo(weather.descripcionClima)}{' '}
+                          {weather.temperatura != null ? `${Math.round(weather.temperatura)}\u00B0` : ''}{' '}
+                          {weather.razonRanking}
+                        </p>
+                      )}
+                      <p style={{ margin: '0 0 6px' }}>
+                        {isVigilada
+                          ? '\u{1F6DF} Vigilada por Cruz Roja'
+                          : '\u{1F6AB} No hay info de Cruz Roja'}
+                      </p>
                       <button
                         onClick={() => history.push(`/playas/${playa.codigo}`)}
                         style={{
-                          marginTop: '8px',
+                          marginTop: '4px',
                           padding: '6px 10px',
                           backgroundColor: '#3880ff',
                           color: 'white',
@@ -155,15 +217,14 @@ const MapaPage: React.FC = () => {
               );
             })}
 
-            {/* User location marker */}
             {userLocation && (
               <Marker position={userLocation} icon={userIcon}>
-                <Popup>📍 Tu ubicación actual</Popup>
+                <Popup>{'\u{1F4CD}'} Tu ubicaci{'ó'}n actual</Popup>
               </Marker>
             )}
           </MapContainer>
         </div>
-        <BottomNavBar currentTab="mapa" />
+        <BottomNavBar />
       </IonContent>
     </IonPage>
   );

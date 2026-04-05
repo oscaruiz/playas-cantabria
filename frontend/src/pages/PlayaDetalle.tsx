@@ -17,6 +17,7 @@ import {
   HalfDayDTO,
   PrediccionCompletaDTO,
 } from '../services/api';
+import BottomNavBar from '../components/BottomNavBar';
 import './PlayaDetalle.css';
 import {
   limpiarTexto,
@@ -716,6 +717,7 @@ const PlayaDetallePage: React.FC = () => {
             </div>
           </>
         )}
+        <BottomNavBar />
       </IonContent>
     </IonPage>
   );
