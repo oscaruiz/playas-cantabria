@@ -18,44 +18,21 @@ import {
   PrediccionCompletaDTO,
 } from '../services/api';
 import './PlayaDetalle.css';
+import {
+  limpiarTexto,
+  flagColorClass,
+  flagDisplayText,
+  isFlagAvailable,
+  capitalizar,
+  emojiCielo,
+  getActiveAttrs,
+} from '../utils/beachHelpers';
 
 // ---- Helpers ----
-
-function limpiarTexto(texto: string | null | undefined): string {
-  if (!texto) return '';
-  return texto.replace(/\uFFFD/g, 'e');
-}
-
-function flagColorClass(bandera?: string): string {
-  const b = bandera?.toLowerCase() || '';
-  if (b.includes('roja')) return 'red';
-  if (b.includes('amarilla')) return 'yellow';
-  if (b.includes('verde')) return 'green';
-  return 'unknown';
-}
-
-function flagDisplayText(bandera?: string): string {
-  const b = bandera?.toLowerCase() || '';
-  if (b.includes('roja')) return 'Bandera Roja';
-  if (b.includes('amarilla')) return 'Bandera Amarilla';
-  if (b.includes('verde')) return 'Bandera Verde';
-  return 'Sin datos';
-}
-
-function isFlagAvailable(cruzRoja?: PlayaDetalleData['cruzRoja']): boolean {
-  if (!cruzRoja) return false;
-  const b = cruzRoja.bandera?.toLowerCase() || '';
-  return b.includes('roja') || b.includes('amarilla') || b.includes('verde');
-}
 
 function cruzRojaField(value?: string): string {
   if (!value || value.trim() === '' || value === 'N/A') return 'No disponible';
   return value;
-}
-
-function capitalizar(s: string | null | undefined): string {
-  if (!s) return '';
-  return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 const DAY_TITLES = ['Hoy', 'Ma\u00f1ana', 'Pasado ma\u00f1ana'];
@@ -66,20 +43,6 @@ function daySubtitle(offset: number): string {
   const dias = ['domingo', 'lunes', 'martes', 'mi\u00e9rcoles', 'jueves', 'viernes', 's\u00e1bado'];
   const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
   return `${capitalizar(dias[d.getDay()])} ${d.getDate()} de ${meses[d.getMonth()]}`;
-}
-
-function emojiCielo(cielo: string | null): string {
-  if (!cielo) return '\u26C5';
-  const c = cielo.toLowerCase();
-  if (/despejado|soleado/.test(c)) return '\u2600\uFE0F';
-  if (/poco nuboso|intervalos|parcial|claro/.test(c)) return '\u{1F324}\uFE0F';
-  if (/muy nuboso|cubierto/.test(c)) return '\u2601\uFE0F';
-  if (/nuboso|nublado/.test(c)) return '\u26C5';
-  if (/tormenta|el[eé]ctrica|rayos/.test(c)) return '\u26C8\uFE0F';
-  if (/lluvia|llovizna|chubascos/.test(c)) return '\u{1F327}\uFE0F';
-  if (/nieve|nevada|aguanieve/.test(c)) return '\u{1F328}\uFE0F';
-  if (/niebla|bruma|neblina/.test(c)) return '\u{1F32B}\uFE0F';
-  return '\u26C5';
 }
 
 function hasHalfDayData(h: HalfDayDTO): boolean {
@@ -524,6 +487,33 @@ const WeatherCard: React.FC<WeatherCardProps> = ({
   );
 };
 
+// ---- Beach Attributes Section ----
+
+const BeachAttributesSection: React.FC<{ atributos: PlayaDetalleData['atributos'] }> = ({ atributos }) => {
+  const attrs = getActiveAttrs(atributos);
+  if (attrs.length === 0) return null;
+
+  return (
+    <div className="detail-card attr-card">
+      <div
+        className="card-header"
+        role="heading"
+        aria-level={3}
+      >
+        <span className="card-header-icon" aria-hidden="true">{'\u2139\uFE0F'}</span>
+        <span className="card-header-text">{'Servicios y caracter\u00EDsticas'}</span>
+      </div>
+      <div className="attr-chips">
+        {attrs.map((a) => (
+          <span key={a.key} className="attr-chip" aria-label={a.label}>
+            <span aria-hidden="true">{a.emoji}</span> {a.label}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 // ---- Cruz Roja Card (unchanged) ----
 
 const CruzRojaCard: React.FC<{ cruzRoja?: PlayaDetalleData['cruzRoja'] }> = ({ cruzRoja }) => {
@@ -708,6 +698,8 @@ const PlayaDetallePage: React.FC = () => {
               )}
 
               {datos.cruzRoja != null && <CruzRojaCard cruzRoja={datos.cruzRoja} />}
+
+              {datos.atributos && <BeachAttributesSection atributos={datos.atributos} />}
 
               {pred && (
                 <MetadataFooter

@@ -12,6 +12,19 @@ export interface WeatherDTO {
   icono: string | null;
 }
 
+export interface BeachAttributesDTO {
+  accesoBanista?: boolean;
+  accesible?: boolean;
+  mascotas?: boolean;
+  duchas?: boolean;
+  aseos?: boolean;
+  parking?: boolean;
+  chiringuito?: boolean;
+  socorrismo?: boolean;
+  nudista?: boolean;
+  surf?: boolean;
+}
+
 /**
  * Public API shape for a beach item (Spanish keys preserved).
  * Mirrors data/beaches.json keys with added weather and flag info.
@@ -23,6 +36,7 @@ export interface BeachDTO {
   lat: number;
   lon: number;
   idCruzRoja: number;
+  atributos?: BeachAttributesDTO;
   clima?: WeatherDTO;
   bandera?: string;
 }

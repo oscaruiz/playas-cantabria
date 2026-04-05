@@ -4,13 +4,15 @@ import {
   IonContent,
   IonSpinner,
 } from '@ionic/react';
-import { Playa, getPlayas } from '../services/api';
-import ViewToggleFab from '../components/ViewToggleFab';
+import { Playa, FeaturedBeach, getPlayas, getFeaturedBeaches } from '../services/api';
+import { getActiveAttrs, emojiCielo } from '../utils/beachHelpers';
+import BottomNavBar from '../components/BottomNavBar';
 import { useHistory } from 'react-router-dom';
-import './Home.css';
+import './PlayasList.css';
 
-const Home: React.FC = () => {
+const PlayasList: React.FC = () => {
   const [playas, setPlayas] = useState<Playa[] | null>(null);
+  const [weatherMap, setWeatherMap] = useState<Map<string, FeaturedBeach>>(new Map());
   const [filtro, setFiltro] = useState('');
   const [orden, setOrden] = useState<'az' | 'za'>('az');
   const [error, setError] = useState<string | null>(null);
@@ -22,6 +24,15 @@ const Home: React.FC = () => {
     })
       .then(setPlayas)
       .catch((err: Error) => setError(err.message));
+
+    // Fetch weather data in parallel (non-blocking — if it fails, list still works)
+    getFeaturedBeaches()
+      .then((res) => {
+        const map = new Map<string, FeaturedBeach>();
+        for (const b of res.resumenTodas) map.set(b.codigo, b);
+        setWeatherMap(map);
+      })
+      .catch(() => { /* no-op: weather is optional enrichment */ });
   }, []);
 
   const toggleOrden = useCallback(() => {
@@ -45,7 +56,7 @@ const Home: React.FC = () => {
     <IonPage className="home-page">
       {/* Sticky header */}
       <div className="home-sticky-header">
-        <h1 className="home-sticky-title">Playas de Cantabria</h1>
+        <h1 className="home-sticky-title">Todas las playas</h1>
       </div>
 
       <IonContent fullscreen>
@@ -105,7 +116,10 @@ const Home: React.FC = () => {
         {/* Beach list */}
         {playas && filtradas.length > 0 && (
           <div className="beach-list">
-            {filtradas.map((playa) => (
+            {filtradas.map((playa) => {
+              const weather = weatherMap.get(playa.codigo);
+              const skyEmoji = weather ? emojiCielo(weather.descripcionClima) : '\u{1F3D6}';
+              return (
               <div
                 key={playa.codigo}
                 className="beach-card"
@@ -121,11 +135,26 @@ const Home: React.FC = () => {
                 }}
               >
                 <div className="beach-card-icon" aria-hidden="true">
-                  {'\u{1F3D6}'}
+                  {skyEmoji}
+                  {weather?.temperatura != null && (
+                    <span className="beach-card-temp">{Math.round(weather.temperatura)}{'°'}</span>
+                  )}
                 </div>
                 <div className="beach-card-info">
                   <p className="beach-card-name">{playa.nombre}</p>
                   <p className="beach-card-municipio">{playa.municipio}</p>
+                  {(() => {
+                    const attrs = getActiveAttrs(playa.atributos).slice(0, 4);
+                    return attrs.length > 0 ? (
+                      <div className="beach-card-attrs">
+                        {attrs.map((a) => (
+                          <span key={a.key} className="beach-attr-mini" title={a.label}>
+                            {a.emoji}
+                          </span>
+                        ))}
+                      </div>
+                    ) : null;
+                  })()}
                 </div>
                 {playa.idCruzRoja !== 0 && playa.idCruzRoja !== undefined && (
                   <div className="beach-card-badges">
@@ -137,7 +166,8 @@ const Home: React.FC = () => {
                 )}
                 <span className="beach-card-arrow" aria-hidden="true">&#8250;</span>
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
@@ -151,10 +181,10 @@ const Home: React.FC = () => {
           </div>
         )}
 
-        <ViewToggleFab isMapView={false} onClick={() => history.push('/mapa')} />
+        <BottomNavBar currentTab="lista" />
       </IonContent>
     </IonPage>
   );
 };
 
-export default Home;
+export default PlayasList;

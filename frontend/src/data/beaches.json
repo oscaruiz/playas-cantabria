@@ -5,7 +5,19 @@
     "codigo": "3908503",
     "lat": 43.43553526584305,
     "lon": -4.0427976710155225,
-    "idCruzRoja": 373
+    "idCruzRoja": 373,
+    "atributos": {
+      "accesoBanista": true,
+      "accesible": true,
+      "mascotas": false,
+      "duchas": true,
+      "aseos": true,
+      "parking": true,
+      "chiringuito": true,
+      "socorrismo": true,
+      "nudista": false,
+      "surf": false
+    }
   },
   {
     "nombre": "Luaña-Cobreces",
@@ -13,7 +25,19 @@
     "codigo": "3900101",
     "lat": 43.394411412417575,
     "lon": -4.220509796726789,
-    "idCruzRoja": 482
+    "idCruzRoja": 482,
+    "atributos": {
+      "accesoBanista": true,
+      "accesible": false,
+      "mascotas": false,
+      "duchas": false,
+      "aseos": false,
+      "parking": true,
+      "chiringuito": false,
+      "socorrismo": true,
+      "nudista": false,
+      "surf": true
+    }
   },
   {
     "nombre": "La Arena",
@@ -21,7 +45,19 @@
     "codigo": "3900602",
     "lat": 43.50376068544449,
     "lon": -3.577431874716216,
-    "idCruzRoja": 0
+    "idCruzRoja": 0,
+    "atributos": {
+      "accesoBanista": true,
+      "accesible": false,
+      "mascotas": false,
+      "duchas": false,
+      "aseos": false,
+      "parking": true,
+      "chiringuito": false,
+      "socorrismo": false,
+      "nudista": false,
+      "surf": false
+    }
   },
   {
     "nombre": "Cuberris",
@@ -29,7 +65,19 @@
     "codigo": "3901102",
     "lat": 43.497207094319876,
     "lon": -3.6144803196250317,
-    "idCruzRoja": 1014
+    "idCruzRoja": 1014,
+    "atributos": {
+      "accesoBanista": true,
+      "accesible": false,
+      "mascotas": false,
+      "duchas": false,
+      "aseos": false,
+      "parking": true,
+      "chiringuito": false,
+      "socorrismo": true,
+      "nudista": false,
+      "surf": true
+    }
   },
   {
     "nombre": "Oriñon",
@@ -37,55 +85,139 @@
     "codigo": "3902002",
     "lat": 43.39937929830378,
     "lon": -3.3210950057077557,
-    "idCruzRoja": 0
+    "idCruzRoja": 0,
+    "atributos": {
+      "accesoBanista": true,
+      "accesible": false,
+      "mascotas": false,
+      "duchas": true,
+      "aseos": false,
+      "parking": true,
+      "chiringuito": false,
+      "socorrismo": false,
+      "nudista": false,
+      "surf": false
+    }
   },
   {
     "nombre": "Ostende",
     "municipio": "Castro Urdiales",
     "codigo": "3902004",
     "lat": 43.386556240404815,
-    "lon": -3.2255850223022766, 
-    "idCruzRoja": 0
+    "lon": -3.2255850223022766,
+    "idCruzRoja": 0,
+    "atributos": {
+      "accesoBanista": true,
+      "accesible": true,
+      "mascotas": false,
+      "duchas": true,
+      "aseos": true,
+      "parking": true,
+      "chiringuito": true,
+      "socorrismo": false,
+      "nudista": false,
+      "surf": false
+    }
   },
   {
     "nombre": "Comillas",
     "municipio": "Comillas",
     "codigo": "3902401",
-    "lat": 43.38789810194597,
-    "lon": -3.226869746814603,
-    "idCruzRoja": 37
+    "lat": 43.3908333333,
+    "lon": -4.2861111111,
+    "idCruzRoja": 37,
+    "atributos": {
+      "accesoBanista": true,
+      "accesible": true,
+      "mascotas": false,
+      "duchas": true,
+      "aseos": true,
+      "parking": true,
+      "chiringuito": true,
+      "socorrismo": true,
+      "nudista": false,
+      "surf": false
+    }
   },
   {
-    "nombre": "La Salvé ",
+    "nombre": "La Salve",
     "municipio": "Laredo",
     "codigo": "3903502",
     "lat": 43.41904926443771,
     "lon": -3.437040159832106,
-    "idCruzRoja": 328
+    "idCruzRoja": 328,
+    "atributos": {
+      "accesoBanista": true,
+      "accesible": true,
+      "mascotas": false,
+      "duchas": true,
+      "aseos": true,
+      "parking": true,
+      "chiringuito": true,
+      "socorrismo": true,
+      "nudista": false,
+      "surf": false
+    }
   },
   {
-    "nombre": "Cuchia - Marzan",
+    "nombre": "Cuchia-Marzan",
     "municipio": "Miengo",
     "codigo": "3904401",
     "lat": 43.43595619518627,
     "lon": -4.0308170936788255,
-    "idCruzRoja": 0
+    "idCruzRoja": 0,
+    "atributos": {
+      "accesoBanista": true,
+      "accesible": false,
+      "mascotas": false,
+      "duchas": false,
+      "aseos": false,
+      "parking": true,
+      "chiringuito": false,
+      "socorrismo": false,
+      "nudista": false,
+      "surf": true
+    }
   },
   {
-    "nombre": "Mogro - Usil",
+    "nombre": "Mogro-Usil",
     "municipio": "Miengo",
     "codigo": "3904405",
     "lat": 43.4391698944411,
     "lon": -3.9726999236382476,
-    "idCruzRoja": 373
+    "idCruzRoja": 373,
+    "atributos": {
+      "accesoBanista": true,
+      "accesible": false,
+      "mascotas": false,
+      "duchas": true,
+      "aseos": false,
+      "parking": true,
+      "chiringuito": false,
+      "socorrismo": true,
+      "nudista": false,
+      "surf": false
+    }
   },
   {
-    "nombre": "Ris - Noja",
+    "nombre": "Ris",
     "municipio": "Noja",
     "codigo": "3904701",
     "lat": 43.4914462044969,
     "lon": -3.5289174541786283,
-    "idCruzRoja": 1233
+    "idCruzRoja": 1233,
+    "atributos": {
+      "accesoBanista": true,
+      "accesible": true,
+      "mascotas": false,
+      "duchas": true,
+      "aseos": true,
+      "parking": true,
+      "chiringuito": true,
+      "socorrismo": true,
+      "nudista": false,
+      "surf": false
+    }
   },
   {
     "nombre": "Valdearenas",
@@ -93,7 +225,19 @@
     "codigo": "3905201",
     "lat": 43.449335352132174,
     "lon": -3.9692452714848985,
-    "idCruzRoja": 30
+    "idCruzRoja": 30,
+    "atributos": {
+      "accesoBanista": true,
+      "accesible": false,
+      "mascotas": false,
+      "duchas": true,
+      "aseos": false,
+      "parking": true,
+      "chiringuito": false,
+      "socorrismo": true,
+      "nudista": true,
+      "surf": true
+    }
   },
   {
     "nombre": "Somo",
@@ -101,7 +245,19 @@
     "codigo": "3906102",
     "lat": 43.45839029165217,
     "lon": -3.735182762115226,
-    "idCruzRoja": 369
+    "idCruzRoja": 369,
+    "atributos": {
+      "accesoBanista": true,
+      "accesible": true,
+      "mascotas": false,
+      "duchas": true,
+      "aseos": true,
+      "parking": true,
+      "chiringuito": true,
+      "socorrismo": true,
+      "nudista": false,
+      "surf": true
+    }
   },
   {
     "nombre": "San Juan de la Canal",
@@ -109,7 +265,19 @@
     "codigo": "3907302",
     "lat": 43.47398663727131,
     "lon": -3.8934552387426336,
-    "idCruzRoja": 35
+    "idCruzRoja": 35,
+    "atributos": {
+      "accesoBanista": true,
+      "accesible": true,
+      "mascotas": false,
+      "duchas": true,
+      "aseos": true,
+      "parking": true,
+      "chiringuito": true,
+      "socorrismo": true,
+      "nudista": false,
+      "surf": false
+    }
   },
   {
     "nombre": "Sardinero",
@@ -117,7 +285,19 @@
     "codigo": "3907506",
     "lat": 43.47711066141211,
     "lon": -3.7870797897346318,
-    "idCruzRoja": 278
+    "idCruzRoja": 278,
+    "atributos": {
+      "accesoBanista": true,
+      "accesible": true,
+      "mascotas": false,
+      "duchas": true,
+      "aseos": true,
+      "parking": true,
+      "chiringuito": true,
+      "socorrismo": true,
+      "nudista": false,
+      "surf": false
+    }
   },
   {
     "nombre": "La Magdalena",
@@ -125,15 +305,39 @@
     "codigo": "3907511",
     "lat": 43.46697927750584,
     "lon": -3.7766047718502676,
-    "idCruzRoja": 283
+    "idCruzRoja": 283,
+    "atributos": {
+      "accesoBanista": true,
+      "accesible": true,
+      "mascotas": false,
+      "duchas": true,
+      "aseos": true,
+      "parking": true,
+      "chiringuito": false,
+      "socorrismo": true,
+      "nudista": false,
+      "surf": false
+    }
   },
   {
-    "nombre": "San Martín - Virgen Del Mar",
-    "municipio": "Santander",
+    "nombre": "San Martín",
+    "municipio": "Santoña",
     "codigo": "3907902",
     "lat": 43.47683316210268,
     "lon": -3.8765310105943294,
-    "idCruzRoja": 1033
+    "idCruzRoja": 1033,
+    "atributos": {
+      "accesoBanista": true,
+      "accesible": false,
+      "mascotas": false,
+      "duchas": true,
+      "aseos": false,
+      "parking": true,
+      "chiringuito": false,
+      "socorrismo": true,
+      "nudista": false,
+      "surf": false
+    }
   },
   {
     "nombre": "El Sable de Merón",
@@ -141,7 +345,19 @@
     "codigo": "3908004",
     "lat": 43.390554164871766,
     "lon": -4.37798552043929,
-    "idCruzRoja": 1127
+    "idCruzRoja": 1127,
+    "atributos": {
+      "accesoBanista": true,
+      "accesible": false,
+      "mascotas": true,
+      "duchas": true,
+      "aseos": false,
+      "parking": true,
+      "chiringuito": false,
+      "socorrismo": true,
+      "nudista": false,
+      "surf": true
+    }
   },
   {
     "nombre": "Oyambre",
@@ -149,14 +365,38 @@
     "codigo": "3909101",
     "lat": 43.390715750738,
     "lon": -4.330638101332154,
-    "idCruzRoja": 1120
+    "idCruzRoja": 1120,
+    "atributos": {
+      "accesoBanista": true,
+      "accesible": false,
+      "mascotas": false,
+      "duchas": false,
+      "aseos": false,
+      "parking": true,
+      "chiringuito": false,
+      "socorrismo": true,
+      "nudista": true,
+      "surf": true
+    }
   },
   {
-    "nombre": "Amió",
+    "nombre": "Amio",
     "municipio": "Val de San Vicente",
     "codigo": "3909504",
     "lat": 43.394724003892236,
     "lon": -4.483401034277786,
-    "idCruzRoja": 0
+    "idCruzRoja": 0,
+    "atributos": {
+      "accesoBanista": true,
+      "accesible": false,
+      "mascotas": true,
+      "duchas": false,
+      "aseos": false,
+      "parking": true,
+      "chiringuito": false,
+      "socorrismo": false,
+      "nudista": false,
+      "surf": false
+    }
   }
 ]

@@ -1,21 +1,6 @@
 /* =============================================
-   Home – Beach List Page Styles
-   Coastal, fresh design with soft colors
+   PlayasList – Beach List Page Styles
    ============================================= */
-
-/* --- Color tokens (shared with detail page) --- */
-:root {
-  --playa-sand: #faf6f1;
-  --playa-ocean: #0a7ea4;
-  --playa-ocean-light: #e8f4f8;
-  --playa-ocean-dark: #065a75;
-  --playa-foam: #ffffff;
-  --playa-text: #1e293b;
-  --playa-text-muted: #64748b;
-  --playa-border: #e2e8f0;
-  --playa-card-bg: rgba(255, 255, 255, 0.92);
-  --playa-card-radius: 18px;
-}
 
 /* --- Page --- */
 .home-page ion-content {
@@ -184,11 +169,20 @@
   border-radius: 14px;
   background: var(--playa-ocean-light);
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   font-size: 1.3rem;
   color: var(--playa-ocean);
+  gap: 0;
+}
+
+.beach-card-temp {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--playa-text);
+  line-height: 1;
 }
 
 .beach-card-info {
@@ -242,13 +236,23 @@
   flex-shrink: 0;
 }
 
+.beach-card-attrs {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.beach-attr-mini {
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
 .beach-card-arrow {
   color: var(--playa-text-muted);
   font-size: 1.1rem;
   flex-shrink: 0;
   opacity: 0.5;
 }
-
 
 /* --- Loading state --- */
 .home-loading {
@@ -297,16 +301,6 @@
 
 /* --- Dark mode --- */
 @media (prefers-color-scheme: dark) {
-  :root {
-    --playa-sand: #0f172a;
-    --playa-card-bg: rgba(30, 41, 59, 0.95);
-    --playa-foam: #1e293b;
-    --playa-text: #e2e8f0;
-    --playa-text-muted: #94a3b8;
-    --playa-border: #334155;
-    --playa-ocean-light: rgba(14, 116, 144, 0.2);
-  }
-
   .home-hero {
     background: linear-gradient(135deg, #0c4a6e 0%, #0f172a 100%);
   }
@@ -347,7 +341,6 @@
   .home-sticky-header {
     background: #0c4a6e;
   }
-
 }
 
 /* Reset some global Ionic styles we no longer need on this page */

@@ -75,6 +75,22 @@
 
   /* Background override */
   --ion-background-color: #faf6f1;
+
+  /* Playa design tokens (shared across all pages) */
+  --playa-sand: #faf6f1;
+  --playa-ocean: #0a7ea4;
+  --playa-ocean-light: #e8f4f8;
+  --playa-ocean-dark: #065a75;
+  --playa-sky: #87ceeb;
+  --playa-foam: #ffffff;
+  --playa-text: #1e293b;
+  --playa-text-muted: #64748b;
+  --playa-border: #e2e8f0;
+  --playa-card-bg: rgba(255, 255, 255, 0.92);
+  --playa-card-radius: 18px;
+  --playa-flag-green: #22c55e;
+  --playa-flag-yellow: #eab308;
+  --playa-flag-red: #ef4444;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -143,6 +159,17 @@
     --ion-color-light-tint: #353e4f;
 
     --ion-background-color: #0f172a;
+
+    /* Playa dark mode overrides */
+    --playa-sand: #0f172a;
+    --playa-ocean: #0c4a6e;
+    --playa-ocean-light: #1e3a5f;
+    --playa-ocean-dark: #082f49;
+    --playa-foam: #1e293b;
+    --playa-text: #e2e8f0;
+    --playa-text-muted: #94a3b8;
+    --playa-border: #334155;
+    --playa-card-bg: rgba(30, 41, 59, 0.92);
   }
 
   /* iOS Dark Theme */

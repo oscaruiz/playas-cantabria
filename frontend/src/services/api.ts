@@ -46,13 +46,28 @@ export async function getPlayas(options: GetPlayasOptions = {}): Promise<Playa[]
 // ------------------------------
 // Modelos base
 // ------------------------------
+export interface PlayaAtributos {
+  [key: string]: boolean | undefined;
+  accesoBanista?: boolean;
+  accesible?: boolean;
+  mascotas?: boolean;
+  duchas?: boolean;
+  aseos?: boolean;
+  parking?: boolean;
+  chiringuito?: boolean;
+  socorrismo?: boolean;
+  nudista?: boolean;
+  surf?: boolean;
+}
+
 export interface Playa {
   nombre: string;
   municipio: string;
   codigo: string;
   lat: number;
   lon: number;
-  idCruzRoja?: number; // Algunos no lo tienen
+  idCruzRoja?: number;
+  atributos?: PlayaAtributos;
 }
 
 // ------------------------------
@@ -170,6 +185,7 @@ export interface PlayaDetalle {
   codigo: string;
   lat?: number;
   lon?: number;
+  atributos?: PlayaAtributos;
 
   // Datos meteorológicos estandarizados
   clima?: DatosClima;
@@ -185,5 +201,37 @@ export async function getDetallePlaya(codigo: string): Promise<PlayaDetalle> {
   const res = await fetch(buildApiUrl(`/api/beaches/${codigo}/details`));
 
   if (!res.ok) throw new Error('No se pudo cargar el detalle de la playa');
+  return res.json();
+}
+
+// ------------------------------
+// Playas destacadas (featured)
+// ------------------------------
+export interface FeaturedBeach {
+  nombre: string;
+  municipio: string;
+  codigo: string;
+  lat: number;
+  lon: number;
+  temperatura: number | null;
+  descripcionClima: string | null;
+  iconoClima: string | null;
+  vientoMs: number | null;
+  bandera: 'Verde' | 'Amarilla' | 'Roja' | null;
+  puntuacion: number;
+  razonRanking: string;
+  atributos: Record<string, boolean> | null;
+}
+
+export interface FeaturedBeachesResponse {
+  timestamp: number;
+  playas: FeaturedBeach[];
+  revisar: FeaturedBeach[];
+  resumenTodas: FeaturedBeach[];
+}
+
+export async function getFeaturedBeaches(): Promise<FeaturedBeachesResponse> {
+  const res = await fetch(buildApiUrl('/api/beaches/featured'));
+  if (!res.ok) throw new Error('No se pudieron cargar las playas destacadas');
   return res.json();
 }

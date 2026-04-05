@@ -1,5 +1,5 @@
 import { BeachDetails } from '../../domain/use-cases/GetBeachDetails';
-import { Beach } from '../../domain/entities/Beach';
+import { Beach, BeachAttributes } from '../../domain/entities/Beach';
 import { FlagStatus } from '../../domain/entities/Flag';
 import { Weather } from '../../domain/entities/Weather';
 
@@ -54,6 +54,7 @@ export type LegacyDetailsDTO = {
   codigo: string;
   lat: number;
   lon: number;
+  atributos: BeachAttributes | null;
   clima: ClimaDTO | null;
   cruzRoja: CruzRojaDTO | null;
   prediccionCompleta: PrediccionCompletaDTO | null;
@@ -72,7 +73,14 @@ export class LegacyDetailsMapper {
   }
 
   private static mapBeach(b: Beach) {
-    return { nombre: b.name, municipio: b.municipality, codigo: b.aemetCode, lat: b.latitude, lon: b.longitude };
+    return {
+      nombre: b.name,
+      municipio: b.municipality,
+      codigo: b.aemetCode,
+      lat: b.latitude,
+      lon: b.longitude,
+      atributos: b.attributes ?? null,
+    };
   }
 
   private static mapClima(w: Weather): ClimaDTO {

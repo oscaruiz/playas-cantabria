@@ -54,4 +54,5 @@ export const CacheKeys = {
   weatherByCoords: (lat: number, lon: number, provider: string) =>
     `weather:${provider}:${lat.toFixed(4)},${lon.toFixed(4)}`,
   flagByRedCrossId: (id: number) => `flag:cr:${id}`,
+  featuredBeaches: 'featured:beaches',
 };

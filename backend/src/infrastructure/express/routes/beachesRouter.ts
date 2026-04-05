@@ -1,13 +1,16 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { GetAllBeaches } from '../../../domain/use-cases/GetAllBeaches';
 import { GetBeachById } from '../../../domain/use-cases/GetBeachById';
+import { GetFeaturedBeaches } from '../../../domain/use-cases/GetFeaturedBeaches';
 import { LegacyDetailsAssembler } from '../../../application/services/LegacyDetailsAssembler';
 import { BeachMapper } from '../../../application/mappers/BeachMapper';
+import { FeaturedBeachMapper } from '../../../application/mappers/FeaturedBeachMapper';
 import { BeachIdSchema } from '../../../application/validation/params';
 
 export interface BeachesRoutesDeps {
   getAllBeaches: GetAllBeaches;
   getBeachById: GetBeachById;
+  getFeaturedBeaches?: GetFeaturedBeaches;
   legacyDetailsAssembler?: LegacyDetailsAssembler;
 }
 
@@ -19,6 +22,20 @@ export function createBeachesRouter(deps: BeachesRoutesDeps): Router {
     try {
       const items = await deps.getAllBeaches.execute();
       const dto = BeachMapper.toDTOList(items);
+      res.json(dto);
+    } catch (e) {
+      next(e);
+    }
+  });
+
+  // GET /api/beaches/featured — MUST be before /:id to avoid route collision
+  router.get('/featured', async (_req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!deps.getFeaturedBeaches) {
+        return res.status(500).json({ error: 'Featured beaches not configured' });
+      }
+      const { mejores, revisar, resumenTodas } = await deps.getFeaturedBeaches.execute(5);
+      const dto = FeaturedBeachMapper.toDTO(mejores, revisar, resumenTodas, Date.now());
       res.json(dto);
     } catch (e) {
       next(e);

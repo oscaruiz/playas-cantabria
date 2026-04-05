@@ -6,7 +6,8 @@ import {
 } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
 import { Route } from 'react-router-dom';
-import Home from './pages/Home';
+import HomePage from './pages/HomePage';
+import PlayasList from './pages/PlayasList';
 import PlayaDetallePage from './pages/PlayaDetalle';
 import MapaPage from './pages/MapaPage';
 
@@ -27,7 +28,8 @@ const App: React.FC = () => (
   <IonApp>
     <IonReactRouter>
       <IonRouterOutlet>
-        <Route exact path="/" component={Home} />
+        <Route exact path="/" component={HomePage} />
+        <Route exact path="/playas" component={PlayasList} />
         <Route exact path="/playas/:codigo" component={PlayaDetallePage} />
         <Route path="/mapa" component={MapaPage} exact />
       </IonRouterOutlet>

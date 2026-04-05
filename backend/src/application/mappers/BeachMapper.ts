@@ -13,6 +13,7 @@ export class BeachMapper {
       lat: beach.latitude,
       lon: beach.longitude,
       idCruzRoja: beach.redCrossId ?? 0,
+      ...(beach.attributes ? { atributos: beach.attributes } : {}),
     };
   }
 

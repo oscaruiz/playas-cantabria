@@ -4,6 +4,19 @@ import { Beach } from '../../domain/entities/Beach';
 import { BeachRepository } from '../../domain/ports/BeachRepository';
 import { InMemoryCache, CacheKeys } from '../cache/InMemoryCache';
 
+type RawBeachAttributes = {
+  accesoBanista?: boolean;
+  accesible?: boolean;
+  mascotas?: boolean;
+  duchas?: boolean;
+  aseos?: boolean;
+  parking?: boolean;
+  chiringuito?: boolean;
+  socorrismo?: boolean;
+  nudista?: boolean;
+  surf?: boolean;
+};
+
 type RawBeach = {
   nombre: string;
   municipio: string;
@@ -11,6 +24,7 @@ type RawBeach = {
   lat: number;
   lon: number;
   idCruzRoja: number;
+  atributos?: RawBeachAttributes;
 };
 
 export class JsonBeachRepository implements BeachRepository {
@@ -52,7 +66,8 @@ export class JsonBeachRepository implements BeachRepository {
       aemetCode: r.codigo,
       latitude: r.lat,
       longitude: r.lon,
-      redCrossId: r.idCruzRoja || 0
+      redCrossId: r.idCruzRoja || 0,
+      attributes: r.atributos ?? undefined,
     };
   }
 }

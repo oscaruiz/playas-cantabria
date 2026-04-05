@@ -397,6 +397,38 @@
   background: rgba(255, 255, 255, 0.35);
 }
 
+/* --- Beach attributes chips --- */
+.attr-card {
+  padding-bottom: 16px;
+}
+
+.attr-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 16px;
+}
+
+.attr-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--playa-ocean-light);
+  color: var(--playa-text);
+  font-size: 0.78rem;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 12px;
+  white-space: nowrap;
+}
+
+@media (prefers-color-scheme: dark) {
+  .attr-chip {
+    background: rgba(14, 116, 144, 0.2);
+    color: var(--playa-text);
+  }
+}
+
 /* Source label at bottom */
 
 .source-label {

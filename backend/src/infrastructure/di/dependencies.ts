@@ -8,6 +8,7 @@ import { GetAllBeaches } from '../../domain/use-cases/GetAllBeaches';
 import { GetBeachById } from '../../domain/use-cases/GetBeachById';
 import { GetBeachDetails } from '../../domain/use-cases/GetBeachDetails';
 import { LegacyDetailsAssembler } from '../../application/services/LegacyDetailsAssembler';
+import { GetFeaturedBeaches } from '../../domain/use-cases/GetFeaturedBeaches';
 import { AemetBeachForecastProvider } from '../providers/AemetBeachForecastProvider';
 import { AemetBeachWebScraper } from '../providers/AemetBeachWebScraper';
 
@@ -55,6 +56,17 @@ export function configureDependencies(container: DIContainer, overrides: { cache
       c.get('openWeatherProvider'),
       c.get('redCrossFlagProvider'),
       null // tides provider - not implemented yet
+    )
+  );
+
+  container.register('getFeaturedBeaches', (c) =>
+    new GetFeaturedBeaches(
+      c.get('beachRepository'),
+      c.get('aemetWeatherProvider'),
+      c.get('openWeatherProvider'),
+      c.get('redCrossFlagProvider'),
+      c.get('aemetBeachForecastProvider'),
+      c.get('cache'),
     )
   );
 

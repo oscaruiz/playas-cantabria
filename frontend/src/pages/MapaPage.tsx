@@ -1,10 +1,5 @@
 import {
   IonPage,
-  IonHeader,
-  IonToolbar,
-  IonTitle,
-  IonButtons,
-  IonBackButton,
   IonContent,
   useIonViewDidEnter,
   useIonViewWillLeave,
@@ -14,7 +9,7 @@ import L, { Map as LeafletMap, DivIcon } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useEffect, useRef, useState } from 'react';
 import { Playa, getPlayas } from '../services/api';
-import ViewToggleFab from '../components/ViewToggleFab';
+import BottomNavBar from '../components/BottomNavBar';
 import { useHistory } from 'react-router-dom';
 import './MapaPage.css';
 
@@ -96,14 +91,9 @@ const MapaPage: React.FC = () => {
 
   return (
     <IonPage className="mapa-page">
-      <IonHeader>
-        <IonToolbar>
-          <IonButtons slot="start">
-            <IonBackButton defaultHref="/" />
-          </IonButtons>
-          <IonTitle>Mapa de Playas</IonTitle>
-        </IonToolbar>
-      </IonHeader>
+      <div className="mapa-sticky-header">
+        <h1 className="mapa-sticky-title">Playas de Cantabria</h1>
+      </div>
 
       <IonContent className="mapa-content">
         <div id="mapa-container">
@@ -173,7 +163,7 @@ const MapaPage: React.FC = () => {
             )}
           </MapContainer>
         </div>
-        <ViewToggleFab isMapView={true} onClick={() => history.push('/')} />
+        <BottomNavBar currentTab="mapa" />
       </IonContent>
     </IonPage>
   );
