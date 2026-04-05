@@ -6,12 +6,15 @@ import {
   IonButtons,
   IonBackButton,
   IonContent,
+  useIonViewDidEnter,
+  useIonViewWillLeave,
 } from '@ionic/react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L, { Map as LeafletMap, DivIcon } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useEffect, useRef, useState } from 'react';
 import { Playa, getPlayas } from '../services/api';
+import ViewToggleFab from '../components/ViewToggleFab';
 import { useHistory } from 'react-router-dom';
 import './MapaPage.css';
 
@@ -79,18 +82,20 @@ const MapaPage: React.FC = () => {
     }
   }, []);
 
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (mapRef.current) {
-        mapRef.current.invalidateSize();
-        console.log('🗺️ Mapa redimensionado con invalidateSize');
-      }
-    }, 300);
-    return () => clearTimeout(timeout);
-  }, []);
+  useIonViewWillLeave(() => {
+    if (mapRef.current) {
+      mapRef.current.closePopup();
+    }
+  });
+
+  useIonViewDidEnter(() => {
+    if (mapRef.current) {
+      mapRef.current.invalidateSize();
+    }
+  });
 
   return (
-    <IonPage>
+    <IonPage className="mapa-page">
       <IonHeader>
         <IonToolbar>
           <IonButtons slot="start">
@@ -168,6 +173,7 @@ const MapaPage: React.FC = () => {
             )}
           </MapContainer>
         </div>
+        <ViewToggleFab isMapView={true} onClick={() => history.push('/')} />
       </IonContent>
     </IonPage>
   );

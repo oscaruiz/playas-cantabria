@@ -1,3 +1,12 @@
+.mapa-page ion-toolbar {
+  --background: var(--playa-ocean);
+  --color: #ffffff;
+}
+
+.mapa-page ion-back-button {
+  --color: #ffffff;
+}
+
 .mapa-content {
   --padding-top: 0;
   --padding-bottom: 0;

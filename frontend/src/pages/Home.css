@@ -249,42 +249,6 @@
   opacity: 0.5;
 }
 
-/* --- Map button (prominent, fixed bottom-right) --- */
-.map-button-container {
-  position: fixed;
-  bottom: 24px;
-  right: 16px;
-  z-index: 50;
-}
-
-.map-button-prominent {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--playa-ocean);
-  color: #ffffff;
-  border: none;
-  border-radius: 18px;
-  padding: 14px 22px;
-  font-size: 1rem;
-  font-weight: 600;
-  font-family: 'Poppins', sans-serif;
-  cursor: pointer;
-  box-shadow: 0 6px 24px rgba(10, 126, 164, 0.4);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-  -webkit-tap-highlight-color: transparent;
-  min-height: 52px;
-}
-
-.map-button-prominent ion-icon {
-  font-size: 1.3rem;
-}
-
-.map-button-prominent:active {
-  transform: scale(0.95);
-  box-shadow: 0 3px 12px rgba(10, 126, 164, 0.3);
-  background: var(--playa-ocean-dark);
-}
 
 /* --- Loading state --- */
 .home-loading {
@@ -384,15 +348,6 @@
     background: #0c4a6e;
   }
 
-  .map-button-prominent {
-    background: #38bdf8;
-    color: #0f172a;
-    box-shadow: 0 6px 24px rgba(56, 189, 248, 0.3);
-  }
-
-  .map-button-prominent:active {
-    background: #0ea5e9;
-  }
 }
 
 /* Reset some global Ionic styles we no longer need on this page */

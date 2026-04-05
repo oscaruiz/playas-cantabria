@@ -3,10 +3,9 @@ import {
   IonPage,
   IonContent,
   IonSpinner,
-  IonIcon,
 } from '@ionic/react';
-import { mapOutline } from 'ionicons/icons';
 import { Playa, getPlayas } from '../services/api';
+import ViewToggleFab from '../components/ViewToggleFab';
 import { useHistory } from 'react-router-dom';
 import './Home.css';
 
@@ -151,17 +150,7 @@ const Home: React.FC = () => {
           </div>
         )}
 
-        {/* Map button */}
-        <div className="map-button-container" slot="fixed">
-          <button
-            className="map-button-prominent"
-            onClick={() => history.push('/mapa')}
-            aria-label="Ver mapa de playas"
-          >
-            <IonIcon icon={mapOutline} />
-            <span>Mapa</span>
-          </button>
-        </div>
+        <ViewToggleFab isMapView={false} onClick={() => history.push('/mapa')} />
       </IonContent>
     </IonPage>
   );

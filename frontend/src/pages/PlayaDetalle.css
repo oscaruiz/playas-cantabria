@@ -376,27 +376,28 @@
   cursor: default;
 }
 
-/* Source label at bottom */
-/* --- Directions Button --- */
-.directions-button {
-  display: block;
-  text-align: center;
-  padding: 14px 16px;
-  margin: 12px 0;
-  border-radius: 14px;
-  background: var(--playa-ocean);
+/* --- Directions link (hero) --- */
+.hero-directions-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 16px;
+  margin-bottom: 12px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.2);
   color: #ffffff;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   font-weight: 600;
   font-family: inherit;
   text-decoration: none;
-  box-shadow: 0 2px 8px rgba(10, 126, 164, 0.3);
   transition: background 0.2s;
 }
 
-.directions-button:active {
-  background: #0a6d8e;
+.hero-directions-link:active {
+  background: rgba(255, 255, 255, 0.35);
 }
+
+/* Source label at bottom */
 
 .source-label {
   text-align: center;

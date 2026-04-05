@@ -624,6 +624,17 @@ const PlayaDetallePage: React.FC = () => {
               <h1 className="hero-beach-name">{datos.nombre}</h1>
               <p className="hero-municipio">{datos.municipio}</p>
 
+              {datos.lat != null && datos.lon != null && (
+                <a
+                  className="hero-directions-link"
+                  href={`https://www.google.com/maps/dir/?api=1&destination=${datos.lat},${datos.lon}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {'\uD83D\uDCCD'} C&oacute;mo llegar
+                </a>
+              )}
+
               <FlagBanner cruzRoja={datos.cruzRoja} />
             </div>
 
@@ -677,17 +688,6 @@ const PlayaDetallePage: React.FC = () => {
               )}
 
               {datos.cruzRoja != null && <CruzRojaCard cruzRoja={datos.cruzRoja} />}
-
-              {datos.lat != null && datos.lon != null && (
-                <a
-                  className="directions-button"
-                  href={`https://www.google.com/maps/dir/?api=1&destination=${datos.lat},${datos.lon}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {'\uD83D\uDCCD'} C&oacute;mo llegar
-                </a>
-              )}
 
               {pred && (
                 <MetadataFooter
