@@ -54,8 +54,9 @@
     "eslint-plugin-react": "^7.32.2"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
+    "sync-beaches": "cp ../backend/data/beaches.json src/data/beaches.json",
+    "start": "npm run sync-beaches && react-scripts start",
+    "build": "npm run sync-beaches && react-scripts build",
     "test": "react-scripts test --transformIgnorePatterns 'node_modules/(?!(@ionic/react|@ionic/react-router|@ionic/core|@stencil/core|ionicons)/)'",
     "eject": "react-scripts eject",
     "lint": "eslint --ext .ts,.tsx src"

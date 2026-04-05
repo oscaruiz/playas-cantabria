@@ -10,14 +10,29 @@ import BottomNavBar from '../components/BottomNavBar';
 import { useHistory } from 'react-router-dom';
 import './PlayasList.css';
 
+type OrdenMode = 'az' | 'cerca';
+
+function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
 const PlayasList: React.FC = () => {
   const [playas, setPlayas] = useState<Playa[] | null>(null);
   const [weatherMap, setWeatherMap] = useState<Map<string, FeaturedBeach>>(new Map());
   const [filtro, setFiltro] = useState('');
-  const [orden, setOrden] = useState<'az' | 'za'>('az');
+  const [orden, setOrden] = useState<OrdenMode>('cerca');
   const [error, setError] = useState<string | null>(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeIdx, setActiveIdx] = useState(-1);
+  const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const blurTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const history = useHistory();
 
@@ -28,7 +43,6 @@ const PlayasList: React.FC = () => {
       .then(setPlayas)
       .catch((err: Error) => setError(err.message));
 
-    // Fetch weather data in parallel (non-blocking — if it fails, list still works)
     getFeaturedBeaches()
       .then((res) => {
         const map = new Map<string, FeaturedBeach>();
@@ -36,11 +50,16 @@ const PlayasList: React.FC = () => {
         setWeatherMap(map);
       })
       .catch(() => { /* no-op: weather is optional enrichment */ });
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => setUserLocation([pos.coords.latitude, pos.coords.longitude]),
+        (err) => { console.warn('Geolocation unavailable', err); },
+      );
+    }
   }, []);
 
-  const toggleOrden = useCallback(() => {
-    setOrden((prev) => (prev === 'az' ? 'za' : 'az'));
-  }, []);
+  // No toggle needed — two separate buttons
 
   const suggestions = useMemo(() => {
     if (!playas || filtro.length < 2) return [];
@@ -80,11 +99,14 @@ const PlayasList: React.FC = () => {
       (p) =>
         p.nombre.toLowerCase().includes(f) || p.municipio.toLowerCase().includes(f)
     );
-    return result.sort((a, b) => {
-      const comp = a.nombre.localeCompare(b.nombre);
-      return orden === 'az' ? comp : -comp;
-    });
-  }, [playas, filtro, orden]);
+    if (orden === 'cerca' && userLocation) {
+      const [uLat, uLon] = userLocation;
+      return result.sort((a, b) =>
+        haversineKm(uLat, uLon, a.lat, a.lon) - haversineKm(uLat, uLon, b.lat, b.lon)
+      );
+    }
+    return result.sort((a, b) => a.nombre.localeCompare(b.nombre));
+  }, [playas, filtro, orden, userLocation]);
 
   return (
     <IonPage className="home-page">
@@ -127,12 +149,22 @@ const PlayasList: React.FC = () => {
               aria-autocomplete="list"
             />
             <button
-              className="sort-button"
-              onClick={toggleOrden}
-              title={orden === 'az' ? 'Ordenar Z-A' : 'Ordenar A-Z'}
-              aria-label={orden === 'az' ? 'Ordenar Z-A' : 'Ordenar A-Z'}
+              className={`sort-button${orden === 'cerca' ? ' sort-button--active' : ''}`}
+              onClick={() => setOrden('cerca')}
+              title={'Ordenar por cercan\u00EDa'}
+              aria-label={'Ordenar por cercan\u00EDa'}
+              aria-pressed={orden === 'cerca'}
             >
-              {orden === 'az' ? 'AZ' : 'ZA'}
+              {'\u{1F4CD}'}
+            </button>
+            <button
+              className={`sort-button${orden === 'az' ? ' sort-button--active' : ''}`}
+              onClick={() => setOrden('az')}
+              title="Ordenar A-Z"
+              aria-label="Ordenar A-Z"
+              aria-pressed={orden === 'az'}
+            >
+              AZ
             </button>
           </div>
           {showSuggestions && suggestions.length > 0 && (
@@ -185,6 +217,9 @@ const PlayasList: React.FC = () => {
             {filtradas.map((playa) => {
               const weather = weatherMap.get(playa.codigo);
               const skyEmoji = weather ? emojiCielo(weather.descripcionClima) : '\u{1F3D6}';
+              const distKm = userLocation
+                ? haversineKm(userLocation[0], userLocation[1], playa.lat, playa.lon)
+                : null;
               return (
               <div
                 key={playa.codigo}
@@ -208,7 +243,12 @@ const PlayasList: React.FC = () => {
                 </div>
                 <div className="beach-card-info">
                   <p className="beach-card-name">{playa.nombre}</p>
-                  <p className="beach-card-municipio">{playa.municipio}</p>
+                  <p className="beach-card-municipio">
+                    {playa.municipio}
+                    {distKm != null && (
+                      <span className="beach-card-dist"> &middot; a {Math.round(distKm)} km</span>
+                    )}
+                  </p>
                   {(() => {
                     const attrs = getActiveAttrs(playa.atributos).slice(0, 4);
                     return attrs.length > 0 ? (

@@ -121,9 +121,13 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-.sort-button:active {
+.sort-button--active {
   background: var(--playa-ocean);
   color: #ffffff;
+}
+
+.sort-button:active {
+  opacity: 0.8;
 }
 
 /* --- Autocomplete suggestions --- */
@@ -289,6 +293,11 @@
   border-radius: 50%;
   background: #dc2626;
   flex-shrink: 0;
+}
+
+.beach-card-dist {
+  color: var(--playa-ocean);
+  font-weight: 600;
 }
 
 .beach-card-attrs {

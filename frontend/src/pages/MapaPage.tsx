@@ -185,11 +185,28 @@ const MapaPage: React.FC = () => {
                         <strong>Municipio:</strong> {playa.municipio}
                       </p>
                       {weather && (
-                        <p style={{ margin: '0 0 4px' }}>
-                          {emojiCielo(weather.descripcionClima)}{' '}
-                          {weather.temperatura != null ? `${Math.round(weather.temperatura)}\u00B0` : ''}{' '}
-                          {weather.razonRanking}
-                        </p>
+                        <>
+                          <p style={{ margin: '0 0 4px' }}>
+                            {emojiCielo(weather.descripcionClima)}{' '}
+                            {weather.temperatura != null ? `${Math.round(weather.temperatura)}\u00B0` : ''}{' '}
+                            {weather.razonRanking}
+                          </p>
+                          {weather.bandera === 'Roja' && (
+                            <p style={{ margin: '0 0 4px', color: '#dc2626', fontWeight: 600, fontSize: '13px' }}>
+                              {'\u26A0\uFE0F'} Bandera roja
+                            </p>
+                          )}
+                          {weather.bandera === 'Amarilla' && (
+                            <p style={{ margin: '0 0 4px', color: '#ca8a04', fontWeight: 600, fontSize: '13px' }}>
+                              {'\u26A0\uFE0F'} Bandera amarilla
+                            </p>
+                          )}
+                          {weather.vientoMs != null && weather.vientoMs > 8 && (
+                            <p style={{ margin: '0 0 4px', color: '#dc2626', fontWeight: 600, fontSize: '13px' }}>
+                              {'\u{1F4A8}'} Viento fuerte ({Math.round(weather.vientoMs * 3.6)} km/h)
+                            </p>
+                          )}
+                        </>
                       )}
                       <p style={{ margin: '0 0 6px' }}>
                         {isVigilada

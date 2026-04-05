@@ -257,7 +257,7 @@ const HomePage: React.FC = () => {
           {!loading && !featuredError && sortedFeatured.length > 0 && (
             <section className="hp-section">
               <h2 className="hp-section-title">
-                <span aria-hidden="true">{'\u{1F525}'}</span> Mejores playas ahora
+                <span aria-hidden="true">{'\u{1F525}'}</span> Mejores playas cerca
               </h2>
               <div className="hp-featured-scroll">
                 {sortedFeatured.map((beach) => (
@@ -276,7 +276,7 @@ const HomePage: React.FC = () => {
           {!loading && !featuredError && featured && sortedFeatured.length === 0 && (
             <section className="hp-section">
               <h2 className="hp-section-title">
-                <span aria-hidden="true">{'\u{1F525}'}</span> Mejores playas ahora
+                <span aria-hidden="true">{'\u{1F525}'}</span> Mejores playas cerca
               </h2>
               <div className="hp-empty-msg">
                 <p>Hoy no hay playas destacadas &mdash; consulta el listado completo</p>
