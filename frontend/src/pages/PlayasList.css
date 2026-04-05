@@ -102,6 +102,24 @@
   color: var(--playa-text-muted);
 }
 
+.search-clear-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: #e53e3e;
+  font-size: 1.3rem;
+  font-weight: 700;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  flex-shrink: 0;
+  padding: 0;
+  line-height: 1;
+  -webkit-tap-highlight-color: transparent;
+}
+
 .sort-button {
   display: flex;
   align-items: center;

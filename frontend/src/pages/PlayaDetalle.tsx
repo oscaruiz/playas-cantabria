@@ -124,12 +124,6 @@ function uvColorClass(uv: number): string {
   return 'uv-very-high';
 }
 
-function aemetIconUrl(iconoCielo: number | null): string | null {
-  return iconoCielo != null
-    ? `https://www.aemet.es/imagenes/png/estado_cielo/${iconoCielo}.png`
-    : null;
-}
-
 // ---- Day Selector (pill tabs) ----
 
 const DaySelector: React.FC<{
@@ -154,27 +148,16 @@ const DaySelector: React.FC<{
 // ---- Forecast Hero (big icon + temp + badges) ----
 
 const ForecastHero: React.FC<{ dia: DiaPrediccionDTO }> = ({ dia }) => {
-  const [imgError, setImgError] = useState(false);
-  const iconCode = dia.tarde.iconoCielo ?? dia.manana.iconoCielo;
-  const iconUrl = aemetIconUrl(iconCode);
   const skyText = capitalizar(dia.tarde.cielo ?? dia.manana.cielo ?? '');
   const viento = capitalizar(dia.tarde.viento ?? dia.manana.viento ?? '');
   const oleaje = capitalizar(dia.tarde.oleaje ?? dia.manana.oleaje ?? '');
+  const skyEmoji = emojiCielo(skyText || null);
 
   return (
     <div className="detail-card forecast-hero">
       <div className="forecast-hero-main">
         <div className="forecast-hero-icon-wrap">
-          {iconUrl && !imgError ? (
-            <img
-              className="forecast-hero-icon"
-              src={iconUrl}
-              alt={skyText}
-              onError={() => setImgError(true)}
-            />
-          ) : (
-            <span className="forecast-hero-icon-fallback">{'\u26C5'}</span>
-          )}
+          <span className="forecast-hero-icon-emoji">{skyEmoji}</span>
         </div>
         <div className="forecast-hero-text">
           {dia.temperaturaMaxima != null && (

@@ -148,6 +148,20 @@ const PlayasList: React.FC = () => {
               aria-expanded={showSuggestions && suggestions.length > 0}
               aria-autocomplete="list"
             />
+            {filtro.length > 0 && (
+              <button
+                className="search-clear-btn"
+                onClick={() => {
+                  setFiltro('');
+                  setShowSuggestions(false);
+                  setActiveIdx(-1);
+                }}
+                aria-label="Borrar búsqueda"
+                type="button"
+              >
+                &times;
+              </button>
+            )}
             <button
               className={`sort-button${orden === 'cerca' ? ' sort-button--active' : ''}`}
               onClick={() => setOrden('cerca')}
