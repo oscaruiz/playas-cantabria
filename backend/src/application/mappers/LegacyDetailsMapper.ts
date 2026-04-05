@@ -55,6 +55,7 @@ export type LegacyDetailsDTO = {
   lat: number;
   lon: number;
   atributos: BeachAttributes | null;
+  temperaturaActual: number | null;
   clima: ClimaDTO | null;
   cruzRoja: CruzRojaDTO | null;
   prediccionCompleta: PrediccionCompletaDTO | null;
@@ -66,6 +67,7 @@ export class LegacyDetailsMapper {
 
     return {
       ...this.mapBeach(beach),
+      temperaturaActual: weather?.temperatureC ?? null,
       clima: weather ? this.mapClima(weather) : null,
       cruzRoja: flag ? this.mapCruzRoja(flag) : null,
       prediccionCompleta: null,

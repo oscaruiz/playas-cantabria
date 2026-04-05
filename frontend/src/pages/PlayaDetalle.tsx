@@ -36,14 +36,62 @@ function cruzRojaField(value?: string): string {
   return value;
 }
 
-const DAY_TITLES = ['Hoy', 'Ma\u00f1ana', 'Pasado ma\u00f1ana'];
+const DIAS_SEMANA = ['domingo', 'lunes', 'martes', 'mi\u00e9rcoles', 'jueves', 'viernes', 's\u00e1bado'];
+const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 
-function daySubtitle(offset: number): string {
-  const d = new Date();
-  d.setDate(d.getDate() + offset);
-  const dias = ['domingo', 'lunes', 'martes', 'mi\u00e9rcoles', 'jueves', 'viernes', 's\u00e1bado'];
-  const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
-  return `${capitalizar(dias[d.getDay()])} ${d.getDate()} de ${meses[d.getMonth()]}`;
+/**
+ * Extract day-of-month from fecha string.
+ * Handles both "domingo 05" (AEMET HTML scraper) and "2026-04-06" (ISO) formats.
+ */
+function parseDayOfMonth(fecha: string): number {
+  if (!fecha) return -1;
+  // ISO format: "2026-04-06"
+  if (/^\d{4}-\d{2}-\d{2}/.test(fecha)) {
+    return new Date(fecha + 'T12:00:00').getDate();
+  }
+  // AEMET format: "domingo 05"
+  const match = fecha.match(/(\d+)/);
+  return match ? parseInt(match[1], 10) : -1;
+}
+
+function dayTitle(fecha: string): string {
+  const dayNum = parseDayOfMonth(fecha);
+  if (dayNum < 0) return fecha || '?';
+
+  const now = new Date();
+  const hoy = now.getDate();
+  const manana = new Date(now);
+  manana.setDate(hoy + 1);
+  const pasado = new Date(now);
+  pasado.setDate(hoy + 2);
+
+  if (dayNum === hoy) return 'Hoy';
+  if (dayNum === manana.getDate()) return 'Ma\u00F1ana';
+  if (dayNum === pasado.getDate()) return 'Pasado ma\u00F1ana';
+
+  // Fecha fuera del rango — extraer nombre del día del string o calcular
+  const nombreDia = fecha.split(/\s/)[0];
+  return capitalizar(nombreDia) || fecha;
+}
+
+function daySubtitle(fecha: string): string {
+  const dayNum = parseDayOfMonth(fecha);
+  if (dayNum < 0) return '';
+
+  // If AEMET format like "domingo 05" — use name from string + day number + current month
+  const nombreDia = fecha.split(/\s/)[0];
+  if (nombreDia && /^[a-z\u00e1-\u00fa]/i.test(nombreDia)) {
+    const now = new Date();
+    return `${capitalizar(nombreDia)} ${dayNum} de ${MESES[now.getMonth()]}`;
+  }
+
+  // ISO fallback
+  const d = new Date(fecha + 'T12:00:00');
+  return `${capitalizar(DIAS_SEMANA[d.getDay()])} ${d.getDate()} de ${MESES[d.getMonth()]}`;
+}
+
+function isToday(fecha: string): boolean {
+  return parseDayOfMonth(fecha) === new Date().getDate();
 }
 
 function hasHalfDayData(h: HalfDayDTO): boolean {
@@ -127,19 +175,19 @@ function uvColorClass(uv: number): string {
 // ---- Day Selector (pill tabs) ----
 
 const DaySelector: React.FC<{
-  count: number;
+  fechas: string[];
   selectedDay: number;
   onSelect: (i: number) => void;
-}> = ({ count, selectedDay, onSelect }) => (
+}> = ({ fechas, selectedDay, onSelect }) => (
   <div className="day-selector">
-    {Array.from({ length: count }, (_, i) => (
+    {fechas.map((fecha, i) => (
       <button
-        key={i}
+        key={fecha}
         className={`day-pill${i === selectedDay ? ' active' : ''}`}
         onClick={() => onSelect(i)}
       >
-        <span className="day-pill-title">{DAY_TITLES[i] ?? `D\u00eda ${i + 1}`}</span>
-        <span className="day-pill-date">{daySubtitle(i)}</span>
+        <span className="day-pill-title">{dayTitle(fecha)}</span>
+        <span className="day-pill-date">{daySubtitle(fecha)}</span>
       </button>
     ))}
   </div>
@@ -147,11 +195,14 @@ const DaySelector: React.FC<{
 
 // ---- Forecast Hero (big icon + temp + badges) ----
 
-const ForecastHero: React.FC<{ dia: DiaPrediccionDTO }> = ({ dia }) => {
+const ForecastHero: React.FC<{ dia: DiaPrediccionDTO; climaActual?: number | null }> = ({ dia, climaActual }) => {
   const skyText = capitalizar(dia.tarde.cielo ?? dia.manana.cielo ?? '');
   const viento = capitalizar(dia.tarde.viento ?? dia.manana.viento ?? '');
   const oleaje = capitalizar(dia.tarde.oleaje ?? dia.manana.oleaje ?? '');
   const skyEmoji = emojiCielo(skyText || null);
+
+  const tempPrincipal = climaActual ?? dia.temperaturaMaxima;
+  const showMax = climaActual != null && dia.temperaturaMaxima != null;
 
   return (
     <div className="detail-card forecast-hero">
@@ -160,8 +211,11 @@ const ForecastHero: React.FC<{ dia: DiaPrediccionDTO }> = ({ dia }) => {
           <span className="forecast-hero-icon-emoji">{skyEmoji}</span>
         </div>
         <div className="forecast-hero-text">
-          {dia.temperaturaMaxima != null && (
-            <div className="forecast-hero-temp">{dia.temperaturaMaxima}&deg;</div>
+          {tempPrincipal != null && (
+            <div className="forecast-hero-temp">{Math.round(tempPrincipal)}&deg;</div>
+          )}
+          {showMax && (
+            <div className="forecast-hero-max">{'M\u00E1x.'} {dia.temperaturaMaxima}&deg;</div>
           )}
           {skyText && <div className="forecast-hero-sky">{skyText}</div>}
         </div>
@@ -637,11 +691,14 @@ const PlayaDetallePage: React.FC = () => {
               {pred && pred.dias.length > 0 ? (
                 <>
                   <DaySelector
-                    count={pred.dias.length}
+                    fechas={pred.dias.map((d) => d.fecha)}
                     selectedDay={safeDayIndex}
                     onSelect={setSelectedDay}
                   />
-                  <ForecastHero dia={pred.dias[safeDayIndex]} />
+                  <ForecastHero
+                    dia={pred.dias[safeDayIndex]}
+                    climaActual={isToday(pred.dias[safeDayIndex].fecha) ? datos.temperaturaActual : undefined}
+                  />
                   <HalfDayDetail
                     manana={pred.dias[safeDayIndex].manana}
                     tarde={pred.dias[safeDayIndex].tarde}

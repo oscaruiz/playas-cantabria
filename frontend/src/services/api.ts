@@ -186,6 +186,7 @@ export interface PlayaDetalle {
   lat?: number;
   lon?: number;
   atributos?: PlayaAtributos;
+  temperaturaActual?: number | null;
 
   // Datos meteorológicos estandarizados
   clima?: DatosClima;
