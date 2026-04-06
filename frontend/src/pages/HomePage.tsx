@@ -249,7 +249,7 @@ const HomePage: React.FC = () => {
           {loading && (
             <div className="hp-loading">
               <IonSpinner name="crescent" />
-              <span>Cargando condiciones...</span>
+              <span>Buscando las mejores playas cerca de ti...</span>
             </div>
           )}
 
