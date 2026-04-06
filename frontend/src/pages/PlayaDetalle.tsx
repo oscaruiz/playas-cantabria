@@ -195,6 +195,70 @@ const DaySelector: React.FC<{
 
 // ---- Forecast Hero (big icon + temp + badges) ----
 
+/** Map wind description text to a speed level 0–4 for animation. */
+function windSpeedLevel(text: string): number {
+  const t = text.toLowerCase();
+  if (/calma|en calma/.test(t)) return 0;
+  if (/flojo|d[eé]bil|ligero|suave/.test(t)) return 1;
+  if (/moderado|variable/.test(t)) return 2;
+  if (/fresco/.test(t)) return 3;
+  if (/fuerte|muy fuerte|intenso/.test(t)) return 4;
+  return 1; // default: light animation
+}
+
+/** CSS animation duration (seconds) per wind level. Level 0 = paused. */
+const WIND_DURATIONS = [0, 4, 2, 1, 0.5];
+
+const WindTurbine: React.FC<{ level: number; label: string }> = ({ level, label }) => {
+  const duration = WIND_DURATIONS[level] ?? 2;
+  const paused = level === 0;
+
+  return (
+    <div className="wind-turbine-wrap">
+      <div className="wind-turbine-icon">
+        <svg viewBox="0 0 40 44" className="wind-turbine-svg">
+          {/* Pole */}
+          <line x1="20" y1="18" x2="20" y2="43" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          {/* Hub */}
+          <circle cx="20" cy="18" r="2" fill="currentColor" />
+          {/* Blades */}
+          <g
+            className="wind-turbine-blades"
+            style={{
+              transformOrigin: '20px 18px',
+              animationDuration: `${duration}s`,
+              animationPlayState: paused ? 'paused' : 'running',
+            }}
+          >
+            <path d="M20,18 L18.5,3 Q20,1 21.5,3 Z" fill="currentColor" opacity="0.85" />
+            <path d="M20,18 L31,25.5 Q31.5,23 29.5,22 Z" fill="currentColor" opacity="0.85" />
+            <path d="M20,18 L9,25.5 Q8.5,23 10.5,22 Z" fill="currentColor" opacity="0.85" />
+          </g>
+        </svg>
+      </div>
+      <span className="forecast-indicator-title">Viento</span>
+      <span className="forecast-indicator-label">{label}</span>
+    </div>
+  );
+};
+
+const WavesIndicator: React.FC<{ label: string }> = ({ label }) => (
+  <div className="waves-indicator-wrap">
+    <div className="waves-indicator-icon">
+      <svg viewBox="0 0 40 28" className="waves-indicator-svg">
+        <g className="waves-anim">
+          <path d="M-10,14 Q-5,8 0,14 Q5,20 10,14 Q15,8 20,14 Q25,20 30,14 Q35,8 40,14 Q45,20 50,14"
+            fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+          <path d="M-10,22 Q-5,16 0,22 Q5,28 10,22 Q15,16 20,22 Q25,28 30,22 Q35,16 40,22 Q45,28 50,22"
+            fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" opacity="0.5" />
+        </g>
+      </svg>
+    </div>
+    <span className="forecast-indicator-title">Oleaje</span>
+    <span className="forecast-indicator-label">{label}</span>
+  </div>
+);
+
 const ForecastHero: React.FC<{ dia: DiaPrediccionDTO; climaActual?: number | null }> = ({ dia, climaActual }) => {
   const skyText = capitalizar(dia.tarde.cielo ?? dia.manana.cielo ?? '');
   const viento = capitalizar(dia.tarde.viento ?? dia.manana.viento ?? '');
@@ -203,37 +267,27 @@ const ForecastHero: React.FC<{ dia: DiaPrediccionDTO; climaActual?: number | nul
 
   const tempPrincipal = climaActual ?? dia.temperaturaMaxima;
   const showMax = climaActual != null && dia.temperaturaMaxima != null;
+  const wLevel = viento ? windSpeedLevel(viento) : 1;
 
   return (
     <div className="detail-card forecast-hero">
       <div className="forecast-hero-main">
-        <div className="forecast-hero-icon-wrap">
+        <div className="forecast-hero-col">
           <span className="forecast-hero-icon-emoji">{skyEmoji}</span>
-        </div>
-        <div className="forecast-hero-text">
           {tempPrincipal != null && (
-            <div className="forecast-hero-temp">{Math.round(tempPrincipal)}&deg;</div>
+            <span className="forecast-hero-temp">{Math.round(tempPrincipal)}&deg;</span>
           )}
           {showMax && (
-            <div className="forecast-hero-max">{'M\u00E1x.'} {dia.temperaturaMaxima}&deg;</div>
+            <span className="forecast-hero-max">{'M\u00E1x.'} {dia.temperaturaMaxima}&deg;</span>
           )}
-          {skyText && <div className="forecast-hero-sky">{skyText}</div>}
+          {skyText && <span className="forecast-hero-sky">{skyText}</span>}
         </div>
+        {viento && <WindTurbine level={wLevel} label={viento} />}
+        {oleaje && <WavesIndicator label={oleaje} />}
       </div>
       <div className="forecast-hero-badges">
         {dia.temperaturaAgua != null && (
-          <span className="forecast-badge badge-water">{'\u{1F4A7}'} {dia.temperaturaAgua}&deg;C</span>
-        )}
-        {viento && (
-          <span className="forecast-badge badge-wind">{'\u{1F4A8}'} {viento}</span>
-        )}
-        {oleaje && (
-          <span className="forecast-badge badge-waves">{'\u{1F30A}'} {oleaje}</span>
-        )}
-        {dia.indiceUV != null && (
-          <span className={`forecast-badge badge-uv ${uvColorClass(dia.indiceUV)}`}>
-            {'\u2600'} UV {dia.indiceUV}
-          </span>
+          <span className="forecast-badge badge-water">{'\u{1F4A7}'} Agua {dia.temperaturaAgua}&deg;C</span>
         )}
       </div>
     </div>

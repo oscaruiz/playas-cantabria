@@ -187,6 +187,9 @@
   padding: 8px 16px 32px;
   position: relative;
   z-index: 1;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* --- Section cards --- */
@@ -742,11 +745,15 @@
 
 .forecast-hero-main {
   display: flex;
-  align-items: center;
-  gap: 16px;
+  align-items: flex-start;
+  justify-content: space-around;
 }
 
-.forecast-hero-icon-wrap {
+.forecast-hero-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
   flex-shrink: 0;
 }
 
@@ -754,36 +761,32 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 80px;
-  height: 80px;
-  font-size: 3.5rem;
-  font-size: 3rem;
+  width: 48px;
+  height: 48px;
+  font-size: 2.2rem;
   opacity: 0.6;
 }
 
-.forecast-hero-text {
-  flex: 1;
-  min-width: 0;
-}
-
 .forecast-hero-temp {
-  font-size: 3rem;
+  font-size: 1.4rem;
   font-weight: 700;
   line-height: 1;
   color: var(--playa-text);
 }
 
 .forecast-hero-max {
-  font-size: 0.8rem;
+  font-size: 0.65rem;
   font-weight: 500;
   color: var(--playa-text-muted);
-  margin-top: 2px;
 }
 
 .forecast-hero-sky {
-  font-size: 0.95rem;
+  font-size: 0.7rem;
+  font-weight: 600;
   color: var(--playa-text-muted);
-  margin-top: 4px;
+  text-align: center;
+  max-width: 80px;
+  word-wrap: break-word;
 }
 
 .forecast-hero-badges {
@@ -791,6 +794,7 @@
   flex-wrap: wrap;
   gap: 6px;
   margin-top: 14px;
+  justify-content: center;
 }
 
 .forecast-badge {
@@ -821,6 +825,113 @@
 
 .badge-uv {
   /* colors set by uv-* classes */
+}
+
+/* --- Forecast Indicators (wind turbine + waves) --- */
+.forecast-indicator-title {
+  font-size: 0.6rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  opacity: 0.8;
+}
+
+.forecast-indicator-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.2;
+  max-width: 70px;
+  word-wrap: break-word;
+}
+
+/* Wind turbine */
+@keyframes spin-blades {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.wind-turbine-wrap {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  color: var(--playa-ocean);
+  opacity: 0.6;
+}
+
+.wind-turbine-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+}
+
+.wind-turbine-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.wind-turbine-blades {
+  animation: spin-blades 2s linear infinite;
+}
+
+/* Waves indicator */
+@keyframes wave-drift {
+  from { transform: translateX(0); }
+  to { transform: translateX(-20px); }
+}
+
+.waves-indicator-wrap {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  color: #0369a1;
+  opacity: 0.6;
+}
+
+.waves-indicator-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  overflow: hidden;
+}
+
+.waves-indicator-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.waves-anim {
+  animation: wave-drift 1.8s ease-in-out infinite alternate;
+}
+
+/* Responsive: smaller indicators on narrow screens */
+@media (max-width: 370px) {
+  .forecast-hero-icon-emoji,
+  .wind-turbine-icon,
+  .waves-indicator-icon {
+    width: 36px;
+    height: 36px;
+  }
+  .forecast-hero-icon-emoji {
+    font-size: 1.8rem;
+  }
+  .forecast-hero-temp {
+    font-size: 1.2rem;
+  }
+  .forecast-indicator-label {
+    font-size: 0.6rem;
+    max-width: 56px;
+  }
 }
 
 /* --- Half-day Detail (morning / afternoon blocks) --- */
