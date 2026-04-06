@@ -263,8 +263,14 @@ export function buildRankingReason(
 
   if (weather?.temperatureC != null) parts.push(`${Math.round(weather.temperatureC)}\u00B0`);
 
-  if (subScores.viento >= 12) parts.push('sin viento');
-  else if (subScores.viento >= 8) parts.push('brisa suave');
+  const windMs = weather?.windSpeedMs;
+  if (windMs != null) {
+    if (windMs < 3) parts.push('sin viento');
+    else if (windMs < 6) parts.push('brisa suave');
+    else if (windMs < 10) parts.push('viento moderado');
+    else if (windMs < 15) parts.push('viento fresco');
+    else parts.push('viento fuerte');
+  }
 
   if (flag?.color === 'green') parts.push('bandera verde');
   else if (flag?.color === 'yellow') parts.push('precauci\u00F3n');
@@ -296,6 +302,34 @@ export function buildCautionReason(
   if (parts.length === 0) parts.push('condiciones poco favorables');
 
   // Capitalize first part
+  parts[0] = parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
+  return parts.join(', ');
+}
+
+// ---------------------------------------------------------------------------
+// Downgrade factors (human-readable, for medium/bad beaches on the map)
+// ---------------------------------------------------------------------------
+
+export function buildDowngradeFactors(
+  subScores: SubScores,
+  flag: FlagStatus | null,
+): string | null {
+  const parts: string[] = [];
+
+  if (subScores.cielo <= 5) parts.push('lluvia');
+  else if (subScores.cielo <= 10) parts.push('cielo nublado');
+
+  if (subScores.temperatura <= 8) parts.push('temperatura fresca');
+
+  if (!flag || !flag.color) parts.push('sin cobertura Cruz Roja');
+  else if (flag.color === 'yellow') parts.push('bandera amarilla');
+  else if (flag.color === 'red') parts.push('bandera roja');
+
+  if (subScores.viento <= 5) parts.push('viento fuerte');
+  if (subScores.oleaje <= 3) parts.push('oleaje fuerte');
+  if (subScores.uv <= 1) parts.push('UV muy alto');
+
+  if (parts.length === 0) return null;
   parts[0] = parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
   return parts.join(', ');
 }

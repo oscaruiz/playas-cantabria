@@ -13,6 +13,7 @@ export interface FeaturedBeachDTO {
   bandera: 'Verde' | 'Amarilla' | 'Roja' | null;
   puntuacion: number;
   razonRanking: string;
+  motivoBaja: string | null;
   atributos: BeachAttributesDTO | null;
 }
 

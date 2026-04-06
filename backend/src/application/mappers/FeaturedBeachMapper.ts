@@ -9,6 +9,7 @@ export interface FeaturedBeachResult {
   flag: FlagStatus | null;
   score: number;
   reason: string;
+  downgradeReason: string | null;
 }
 
 const FLAG_COLOR_ES: Record<string, 'Verde' | 'Amarilla' | 'Roja'> = {
@@ -46,6 +47,7 @@ export class FeaturedBeachMapper {
       bandera: r.flag?.color ? (FLAG_COLOR_ES[r.flag.color] ?? null) : null,
       puntuacion: r.score,
       razonRanking: r.reason,
+      motivoBaja: r.downgradeReason ?? null,
       atributos: r.beach.attributes ?? null,
     };
   }

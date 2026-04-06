@@ -239,6 +239,7 @@ export interface FeaturedBeach {
   bandera: 'Verde' | 'Amarilla' | 'Roja' | null;
   puntuacion: number;
   razonRanking: string;
+  motivoBaja: string | null;
   atributos: Record<string, boolean> | null;
 }
 

@@ -12,6 +12,7 @@ import {
   computeBeachScore,
   buildRankingReason,
   buildCautionReason,
+  buildDowngradeFactors,
   buildExclusionReason,
   isExcluded,
 } from './BeachScorer';
@@ -65,7 +66,7 @@ export class GetFeaturedBeaches {
       // Excluded beaches go directly to caution with specific reason
       if (isExcluded(weather, flag, enrichment)) {
         const reason = buildExclusionReason(weather, flag, enrichment);
-        const entry = { beach, weather, flag, score: 0, reason };
+        const entry = { beach, weather, flag, score: 0, reason, downgradeReason: reason };
         caution.push(entry);
         all.push(entry);
         continue;
@@ -78,14 +79,16 @@ export class GetFeaturedBeaches {
         beach.attributes,
       );
 
+      const downgradeReason = buildDowngradeFactors(subScores, flag);
+
       if (score >= MIN_SCORE) {
         const reason = buildRankingReason(subScores, weather, flag);
-        const entry = { beach, weather, flag, score, reason };
+        const entry = { beach, weather, flag, score, reason, downgradeReason };
         good.push(entry);
         all.push(entry);
       } else {
         const reason = buildCautionReason(subScores, weather, flag);
-        const entry = { beach, weather, flag, score, reason };
+        const entry = { beach, weather, flag, score, reason, downgradeReason };
         caution.push(entry);
         all.push(entry);
       }
