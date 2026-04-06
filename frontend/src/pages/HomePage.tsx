@@ -369,8 +369,8 @@ const HomePage: React.FC = () => {
           </section>
         </div>
 
-        <BottomNavBar />
       </IonContent>
+      <BottomNavBar />
     </IonPage>
   );
 };

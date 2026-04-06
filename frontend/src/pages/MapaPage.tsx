@@ -241,8 +241,8 @@ const MapaPage: React.FC = () => {
             )}
           </MapContainer>
         </div>
-        <BottomNavBar />
       </IonContent>
+      <BottomNavBar />
     </IonPage>
   );
 };

@@ -757,8 +757,8 @@ const PlayaDetallePage: React.FC = () => {
             </div>
           </>
         )}
-        <BottomNavBar />
       </IonContent>
+      <BottomNavBar />
     </IonPage>
   );
 };

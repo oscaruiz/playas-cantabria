@@ -76,8 +76,8 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   display: flex;
   align-items: center;
-  padding: 6px 8px 6px 14px;
-  gap: 8px;
+  padding: 6px 6px 6px 12px;
+  gap: 4px;
   border: 1px solid var(--playa-border);
 }
 
@@ -89,13 +89,14 @@
 
 .search-bar-inner input {
   flex: 1;
+  min-width: 0;
   border: none;
   outline: none;
   background: transparent;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: var(--playa-text);
   font-family: 'Poppins', sans-serif;
-  padding: 10px 0;
+  padding: 8px 0;
 }
 
 .search-bar-inner input::placeholder {
@@ -109,10 +110,10 @@
   background: transparent;
   border: none;
   color: #e53e3e;
-  font-size: 1.3rem;
+  font-size: 1.1rem;
   font-weight: 700;
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   cursor: pointer;
   flex-shrink: 0;
   padding: 0;
@@ -127,10 +128,10 @@
   background: var(--playa-ocean-light);
   color: var(--playa-ocean);
   border: none;
-  border-radius: 10px;
-  width: 38px;
-  height: 38px;
-  font-size: 0.85rem;
+  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  font-size: 0.78rem;
   font-weight: 700;
   cursor: pointer;
   flex-shrink: 0;

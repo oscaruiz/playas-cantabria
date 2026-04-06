@@ -301,8 +301,8 @@ const PlayasList: React.FC = () => {
           </div>
         )}
 
-        <BottomNavBar />
       </IonContent>
+      <BottomNavBar />
     </IonPage>
   );
 };
