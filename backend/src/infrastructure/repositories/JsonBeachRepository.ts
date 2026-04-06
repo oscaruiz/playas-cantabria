@@ -25,6 +25,15 @@ type RawBeach = {
   lon: number;
   idCruzRoja: number;
   atributos?: RawBeachAttributes;
+  longitud?: number;
+  anchura?: number;
+  tipoPlaya?: string;
+  arena?: string;
+  acceso?: string[];
+  parkingDescripcion?: string;
+  bus?: string;
+  hospitalDistancia?: number;
+  submarinismo?: boolean;
 };
 
 export class JsonBeachRepository implements BeachRepository {
@@ -69,6 +78,15 @@ export class JsonBeachRepository implements BeachRepository {
       longitude: r.lon,
       redCrossId: r.idCruzRoja || 0,
       attributes: r.atributos ?? undefined,
+      lengthM: r.longitud,
+      widthM: r.anchura,
+      beachType: r.tipoPlaya,
+      sandType: r.arena,
+      access: r.acceso,
+      parkingDescription: r.parkingDescripcion,
+      busInfo: r.bus,
+      hospitalDistanceKm: r.hospitalDistancia,
+      diving: r.submarinismo,
     };
   }
 }

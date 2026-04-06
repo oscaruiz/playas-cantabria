@@ -55,6 +55,15 @@ export type LegacyDetailsDTO = {
   lat: number;
   lon: number;
   atributos: BeachAttributes | null;
+  longitud: number | null;
+  anchura: number | null;
+  tipoPlaya: string | null;
+  arena: string | null;
+  acceso: string[] | null;
+  parkingDescripcion: string | null;
+  bus: string | null;
+  hospitalDistancia: number | null;
+  submarinismo: boolean | null;
   temperaturaActual: number | null;
   clima: ClimaDTO | null;
   cruzRoja: CruzRojaDTO | null;
@@ -82,6 +91,15 @@ export class LegacyDetailsMapper {
       lat: b.latitude,
       lon: b.longitude,
       atributos: b.attributes ?? null,
+      longitud: b.lengthM ?? null,
+      anchura: b.widthM ?? null,
+      tipoPlaya: b.beachType ?? null,
+      arena: b.sandType ?? null,
+      acceso: b.access ?? null,
+      parkingDescripcion: b.parkingDescription ?? null,
+      bus: b.busInfo ?? null,
+      hospitalDistancia: b.hospitalDistanceKm ?? null,
+      submarinismo: b.diving ?? null,
     };
   }
 

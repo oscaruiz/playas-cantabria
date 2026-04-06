@@ -45,6 +45,7 @@ export const ATTR_CONFIG: Record<string, { emoji: string; label: string }> = {
   socorrismo:    { emoji: '\u{1F6DF}', label: 'Socorrismo' },
   nudista:       { emoji: '\u{1F3D6}\uFE0F', label: 'Nudista' },
   accesoBanista: { emoji: '\u{1F3CA}', label: 'Acceso ba\u00F1o' },
+  submarinismo: { emoji: '\u{1F93F}', label: 'Submarinismo' },
 };
 
 /** Returns active attribute entries from a beach's atributos object */

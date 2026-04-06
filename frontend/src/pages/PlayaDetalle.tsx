@@ -579,6 +579,75 @@ const WeatherCard: React.FC<WeatherCardProps> = ({
   );
 };
 
+// ---- Beach Info Section (enriched data) ----
+
+const BeachInfoSection: React.FC<{ datos: PlayaDetalleData }> = ({ datos }) => {
+  const hasAny = datos.longitud || datos.anchura || datos.tipoPlaya || datos.arena
+    || (datos.acceso && datos.acceso.length > 0) || datos.parkingDescripcion || datos.bus || datos.hospitalDistancia != null;
+  if (!hasAny) return null;
+
+  return (
+    <div className="detail-card beach-info-card">
+      <div className="card-header" role="heading" aria-level={3}>
+        <span className="card-header-icon" aria-hidden="true">{'\u{1F3D6}\uFE0F'}</span>
+        <span className="card-header-text">{'Informaci\u00F3n de la playa'}</span>
+      </div>
+      <div className="beach-info-grid">
+        {(datos.longitud || datos.anchura) && (
+          <div className="beach-info-row">
+            <span className="beach-info-label">{'\u{1F4CF}'} Dimensiones</span>
+            <span className="beach-info-value">
+              {datos.longitud ? `${datos.longitud} m` : '\u2014'}
+              {' \u00D7 '}
+              {datos.anchura ? `${datos.anchura} m` : '\u2014'}
+            </span>
+          </div>
+        )}
+        {datos.tipoPlaya && (
+          <div className="beach-info-row">
+            <span className="beach-info-label">{'\u{1F3D6}\uFE0F'} Tipo</span>
+            <span className="beach-info-value">{datos.tipoPlaya}</span>
+          </div>
+        )}
+        {datos.arena && (
+          <div className="beach-info-row">
+            <span className="beach-info-label">{'\u{1F3DD}\uFE0F'} Arena</span>
+            <span className="beach-info-value">{datos.arena}</span>
+          </div>
+        )}
+        {datos.acceso && datos.acceso.length > 0 && (
+          <div className="beach-info-row">
+            <span className="beach-info-label">{'\u{1F6B6}'} Acceso</span>
+            <span className="beach-info-value beach-info-chips">
+              {datos.acceso.map((a) => (
+                <span key={a} className="beach-info-chip">{a}</span>
+              ))}
+            </span>
+          </div>
+        )}
+        {datos.parkingDescripcion && (
+          <div className="beach-info-row">
+            <span className="beach-info-label">{'\u{1F17F}\uFE0F'} Parking</span>
+            <span className="beach-info-value">{datos.parkingDescripcion}</span>
+          </div>
+        )}
+        {datos.bus && (
+          <div className="beach-info-row">
+            <span className="beach-info-label">{'\u{1F68C}'} Bus</span>
+            <span className="beach-info-value">{datos.bus}</span>
+          </div>
+        )}
+        {datos.hospitalDistancia != null && (
+          <div className="beach-info-row">
+            <span className="beach-info-label">{'\u{1F3E5}'} Hospital</span>
+            <span className="beach-info-value">a {datos.hospitalDistancia} km</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 // ---- Beach Attributes Section ----
 
 const BeachAttributesSection: React.FC<{ atributos: PlayaDetalleData['atributos'] }> = ({ atributos }) => {
@@ -794,7 +863,12 @@ const PlayaDetallePage: React.FC = () => {
 
               {datos.cruzRoja != null && <CruzRojaCard cruzRoja={datos.cruzRoja} />}
 
-              {datos.atributos && <BeachAttributesSection atributos={datos.atributos} />}
+              <BeachInfoSection datos={datos} />
+              {datos.atributos && (
+                <BeachAttributesSection
+                  atributos={{ ...datos.atributos, ...(datos.submarinismo ? { submarinismo: true } : {}) }}
+                />
+              )}
 
               {pred && (
                 <MetadataFooter

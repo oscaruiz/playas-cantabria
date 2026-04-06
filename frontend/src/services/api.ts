@@ -68,6 +68,15 @@ export interface Playa {
   lon: number;
   idCruzRoja?: number;
   atributos?: PlayaAtributos;
+  longitud?: number;
+  anchura?: number;
+  tipoPlaya?: string;
+  arena?: string;
+  acceso?: string[];
+  parkingDescripcion?: string;
+  bus?: string;
+  hospitalDistancia?: number;
+  submarinismo?: boolean;
 }
 
 // ------------------------------
@@ -186,6 +195,15 @@ export interface PlayaDetalle {
   lat?: number;
   lon?: number;
   atributos?: PlayaAtributos;
+  longitud?: number | null;
+  anchura?: number | null;
+  tipoPlaya?: string | null;
+  arena?: string | null;
+  acceso?: string[] | null;
+  parkingDescripcion?: string | null;
+  bus?: string | null;
+  hospitalDistancia?: number | null;
+  submarinismo?: boolean | null;
   temperaturaActual?: number | null;
 
   // Datos meteorológicos estandarizados

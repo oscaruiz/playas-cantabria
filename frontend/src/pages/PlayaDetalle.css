@@ -400,6 +400,61 @@
   background: rgba(255, 255, 255, 0.35);
 }
 
+/* --- Beach info grid (enriched data) --- */
+.beach-info-card {
+  padding-bottom: 12px;
+}
+
+.beach-info-grid {
+  padding: 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.beach-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.beach-info-label {
+  font-size: 0.82rem;
+  color: var(--playa-text-muted);
+  flex-shrink: 0;
+}
+
+.beach-info-value {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--playa-text);
+  text-align: right;
+}
+
+.beach-info-chips {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.beach-info-chip {
+  background: var(--playa-ocean-light);
+  color: var(--playa-text);
+  font-size: 0.72rem;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+
+@media (prefers-color-scheme: dark) {
+  .beach-info-chip {
+    background: rgba(14, 116, 144, 0.2);
+  }
+}
+
 /* --- Beach attributes chips --- */
 .attr-card {
   padding-bottom: 16px;

@@ -11,13 +11,22 @@
       "accesible": true,
       "mascotas": false,
       "duchas": true,
-      "aseos": true,
+      "aseos": false,
       "parking": true,
       "chiringuito": true,
       "socorrismo": true,
       "nudista": false,
       "surf": false
-    }
+    },
+    "longitud": 1000,
+    "anchura": 60,
+    "tipoPlaya": "Urbana",
+    "arena": "Arena dorada",
+    "acceso": ["A pie", "En coche"],
+    "parkingDescripcion": "Más de 100 plazas",
+    "bus": "Interurbano",
+    "hospitalDistancia": 10,
+    "submarinismo": false
   },
   {
     "nombre": "Luaña-Cobreces",
@@ -30,14 +39,23 @@
       "accesoBanista": true,
       "accesible": false,
       "mascotas": false,
-      "duchas": false,
+      "duchas": true,
       "aseos": false,
       "parking": true,
-      "chiringuito": false,
+      "chiringuito": true,
       "socorrismo": true,
       "nudista": false,
       "surf": true
-    }
+    },
+    "longitud": 400,
+    "anchura": 70,
+    "tipoPlaya": "Semiurbana",
+    "arena": "Arena dorada",
+    "acceso": ["En coche"],
+    "parkingDescripcion": "Más de 100 plazas",
+    "bus": "Interurbano",
+    "hospitalDistancia": 30,
+    "submarinismo": false
   },
   {
     "nombre": "La Arena",
@@ -50,14 +68,23 @@
       "accesoBanista": true,
       "accesible": false,
       "mascotas": false,
-      "duchas": false,
+      "duchas": true,
       "aseos": false,
       "parking": true,
-      "chiringuito": false,
+      "chiringuito": true,
       "socorrismo": false,
       "nudista": false,
       "surf": false
-    }
+    },
+    "longitud": 100,
+    "anchura": 40,
+    "tipoPlaya": "Semiurbana",
+    "arena": "Arena dorada",
+    "acceso": ["A pie", "En coche"],
+    "parkingDescripcion": "Menos de 50 plazas",
+    "bus": "Interurbano",
+    "hospitalDistancia": 30,
+    "submarinismo": false
   },
   {
     "nombre": "Cuberris",
@@ -70,14 +97,23 @@
       "accesoBanista": true,
       "accesible": false,
       "mascotas": false,
-      "duchas": false,
-      "aseos": false,
+      "duchas": true,
+      "aseos": true,
       "parking": true,
-      "chiringuito": false,
+      "chiringuito": true,
       "socorrismo": true,
       "nudista": false,
       "surf": true
-    }
+    },
+    "longitud": 250,
+    "anchura": 150,
+    "tipoPlaya": "Semiurbana",
+    "arena": "Arena dorada",
+    "acceso": ["En coche"],
+    "parkingDescripcion": "Más de 100 plazas",
+    "bus": "Interurbano",
+    "hospitalDistancia": 30,
+    "submarinismo": false
   },
   {
     "nombre": "Oriñon",
@@ -91,13 +127,22 @@
       "accesible": false,
       "mascotas": false,
       "duchas": true,
-      "aseos": false,
+      "aseos": true,
       "parking": true,
       "chiringuito": false,
       "socorrismo": false,
       "nudista": false,
       "surf": false
-    }
+    },
+    "longitud": 1100,
+    "anchura": 100,
+    "tipoPlaya": "Urbana",
+    "arena": "Arena dorada",
+    "acceso": ["A pie"],
+    "parkingDescripcion": "Entre 50 y 100 plazas",
+    "bus": "Interurbano",
+    "hospitalDistancia": 20,
+    "submarinismo": false
   },
   {
     "nombre": "Ostende",
@@ -117,7 +162,16 @@
       "socorrismo": false,
       "nudista": false,
       "surf": false
-    }
+    },
+    "longitud": 800,
+    "anchura": 50,
+    "tipoPlaya": "Urbana",
+    "arena": "Arena oscura",
+    "acceso": ["A pie", "En coche"],
+    "parkingDescripcion": "Más de 100 plazas",
+    "bus": "Interurbano",
+    "hospitalDistancia": 25,
+    "submarinismo": false
   },
   {
     "nombre": "Comillas",
@@ -137,7 +191,16 @@
       "socorrismo": true,
       "nudista": false,
       "surf": false
-    }
+    },
+    "longitud": 900,
+    "anchura": 40,
+    "tipoPlaya": "Urbana",
+    "arena": "Arena dorada",
+    "acceso": ["A pie", "En coche"],
+    "parkingDescripcion": "Más de 100 plazas",
+    "bus": "Interurbano",
+    "hospitalDistancia": 30,
+    "submarinismo": false
   },
   {
     "nombre": "La Salve",
@@ -157,7 +220,16 @@
       "socorrismo": true,
       "nudista": false,
       "surf": false
-    }
+    },
+    "longitud": 4250,
+    "anchura": 120,
+    "tipoPlaya": "Urbana",
+    "arena": "Arena dorada",
+    "acceso": ["A pie", "En coche"],
+    "parkingDescripcion": "Más de 100 plazas",
+    "bus": "Interurbano (Santander-Laredo)",
+    "hospitalDistancia": 1,
+    "submarinismo": false
   },
   {
     "nombre": "Cuchia-Marzan",
@@ -170,14 +242,23 @@
       "accesoBanista": true,
       "accesible": false,
       "mascotas": false,
-      "duchas": false,
+      "duchas": true,
       "aseos": false,
       "parking": true,
-      "chiringuito": false,
+      "chiringuito": true,
       "socorrismo": false,
       "nudista": false,
       "surf": true
-    }
+    },
+    "longitud": 300,
+    "anchura": 40,
+    "tipoPlaya": "Dunas",
+    "arena": "Arena dorada",
+    "acceso": ["En coche"],
+    "parkingDescripcion": "Más de 100 plazas",
+    "bus": "Interurbano",
+    "hospitalDistancia": 20,
+    "submarinismo": false
   },
   {
     "nombre": "Mogro-Usil",
@@ -191,13 +272,22 @@
       "accesible": false,
       "mascotas": false,
       "duchas": true,
-      "aseos": false,
+      "aseos": true,
       "parking": true,
-      "chiringuito": false,
+      "chiringuito": true,
       "socorrismo": true,
       "nudista": false,
       "surf": false
-    }
+    },
+    "longitud": 400,
+    "anchura": 15,
+    "tipoPlaya": "Urbana",
+    "arena": "Arena dorada",
+    "acceso": ["En coche"],
+    "parkingDescripcion": "Más de 100 plazas",
+    "bus": "Interurbano",
+    "hospitalDistancia": 30,
+    "submarinismo": false
   },
   {
     "nombre": "Ris",
@@ -217,7 +307,16 @@
       "socorrismo": true,
       "nudista": false,
       "surf": false
-    }
+    },
+    "longitud": 2200,
+    "anchura": 100,
+    "tipoPlaya": "Urbana",
+    "arena": "Arena dorada",
+    "acceso": ["A pie", "En coche"],
+    "parkingDescripcion": "Más de 100 plazas",
+    "bus": "Interurbano",
+    "hospitalDistancia": 20,
+    "submarinismo": false
   },
   {
     "nombre": "Valdearenas",
@@ -233,11 +332,20 @@
       "duchas": true,
       "aseos": false,
       "parking": true,
-      "chiringuito": false,
+      "chiringuito": true,
       "socorrismo": true,
       "nudista": true,
       "surf": true
-    }
+    },
+    "longitud": 2800,
+    "anchura": 50,
+    "tipoPlaya": "Dunas",
+    "arena": "Arena dorada",
+    "acceso": ["En coche"],
+    "parkingDescripcion": "Más de 100 plazas",
+    "bus": "Interurbano",
+    "hospitalDistancia": 20,
+    "submarinismo": false
   },
   {
     "nombre": "Somo",
@@ -257,7 +365,16 @@
       "socorrismo": true,
       "nudista": false,
       "surf": true
-    }
+    },
+    "longitud": 2000,
+    "anchura": 80,
+    "tipoPlaya": "Semiurbana",
+    "arena": "Arena dorada",
+    "acceso": ["A pie", "En coche", "En barco"],
+    "parkingDescripcion": "Más de 100 plazas",
+    "bus": "Interurbano (Santander-Somo)",
+    "hospitalDistancia": 20,
+    "submarinismo": false
   },
   {
     "nombre": "San Juan de la Canal",
@@ -277,7 +394,16 @@
       "socorrismo": true,
       "nudista": false,
       "surf": false
-    }
+    },
+    "longitud": 200,
+    "anchura": 50,
+    "tipoPlaya": "Urbana",
+    "arena": "Arena dorada",
+    "acceso": ["A pie", "En coche"],
+    "parkingDescripcion": "Menos de 50 plazas",
+    "bus": "Interurbano (Santander-Soto de la Marina)",
+    "hospitalDistancia": 15,
+    "submarinismo": false
   },
   {
     "nombre": "Sardinero",
@@ -297,7 +423,16 @@
       "socorrismo": true,
       "nudista": false,
       "surf": false
-    }
+    },
+    "longitud": 400,
+    "anchura": 80,
+    "tipoPlaya": "Urbana",
+    "arena": "Arena dorada",
+    "acceso": ["A pie", "En coche"],
+    "parkingDescripcion": "Entre 50 y 100 plazas",
+    "bus": "Urbano",
+    "hospitalDistancia": 5,
+    "submarinismo": false
   },
   {
     "nombre": "La Magdalena",
@@ -313,11 +448,20 @@
       "duchas": true,
       "aseos": true,
       "parking": true,
-      "chiringuito": false,
+      "chiringuito": true,
       "socorrismo": true,
       "nudista": false,
       "surf": false
-    }
+    },
+    "longitud": 900,
+    "anchura": 30,
+    "tipoPlaya": "Urbana",
+    "arena": "Arena dorada",
+    "acceso": ["A pie", "En coche"],
+    "parkingDescripcion": "Menos de 50 plazas",
+    "bus": "Urbano",
+    "hospitalDistancia": 5,
+    "submarinismo": false
   },
   {
     "nombre": "San Martín",
@@ -331,13 +475,22 @@
       "accesible": false,
       "mascotas": false,
       "duchas": true,
-      "aseos": false,
+      "aseos": true,
       "parking": true,
-      "chiringuito": false,
+      "chiringuito": true,
       "socorrismo": true,
       "nudista": false,
       "surf": false
-    }
+    },
+    "longitud": 1000,
+    "anchura": 10,
+    "tipoPlaya": "Urbana",
+    "arena": "Arena dorada y bolos",
+    "acceso": ["A pie", "En coche"],
+    "parkingDescripcion": "Entre 50 y 100 plazas",
+    "bus": "Interurbano (Santander-Santoña)",
+    "hospitalDistancia": 15,
+    "submarinismo": false
   },
   {
     "nombre": "El Sable de Merón",
@@ -351,13 +504,22 @@
       "accesible": false,
       "mascotas": true,
       "duchas": true,
-      "aseos": false,
+      "aseos": true,
       "parking": true,
-      "chiringuito": false,
+      "chiringuito": true,
       "socorrismo": true,
       "nudista": false,
       "surf": true
-    }
+    },
+    "longitud": 3000,
+    "anchura": 40,
+    "tipoPlaya": "Semiurbana",
+    "arena": "Arena blanca",
+    "acceso": ["En coche"],
+    "parkingDescripcion": "Más de 100 plazas",
+    "bus": "Interurbano (Santander-San Vicente de la Barquera)",
+    "hospitalDistancia": 35,
+    "submarinismo": false
   },
   {
     "nombre": "Oyambre",
@@ -370,14 +532,23 @@
       "accesoBanista": true,
       "accesible": false,
       "mascotas": false,
-      "duchas": false,
-      "aseos": false,
+      "duchas": true,
+      "aseos": true,
       "parking": true,
-      "chiringuito": false,
+      "chiringuito": true,
       "socorrismo": true,
       "nudista": true,
       "surf": true
-    }
+    },
+    "longitud": 1800,
+    "anchura": 40,
+    "tipoPlaya": "Montaña",
+    "arena": "Arena dorada",
+    "acceso": ["En coche"],
+    "parkingDescripcion": "Menos de 50 plazas",
+    "bus": "Interurbano",
+    "hospitalDistancia": 25,
+    "submarinismo": false
   },
   {
     "nombre": "Amio",
@@ -390,13 +561,22 @@
       "accesoBanista": true,
       "accesible": false,
       "mascotas": true,
-      "duchas": false,
+      "duchas": true,
       "aseos": false,
       "parking": true,
       "chiringuito": false,
       "socorrismo": false,
       "nudista": false,
       "surf": false
-    }
+    },
+    "longitud": 600,
+    "anchura": 50,
+    "tipoPlaya": "Acantilados",
+    "arena": "Arena dorada y grava",
+    "acceso": ["A pie", "En coche"],
+    "parkingDescripcion": "Más de 100 plazas",
+    "bus": "Interurbano",
+    "hospitalDistancia": 40,
+    "submarinismo": false
   }
 ]

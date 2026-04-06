@@ -37,6 +37,15 @@ export interface BeachDTO {
   lon: number;
   idCruzRoja: number;
   atributos?: BeachAttributesDTO;
+  longitud?: number;
+  anchura?: number;
+  tipoPlaya?: string;
+  arena?: string;
+  acceso?: string[];
+  parkingDescripcion?: string;
+  bus?: string;
+  hospitalDistancia?: number;
+  submarinismo?: boolean;
   clima?: WeatherDTO;
   bandera?: string;
 }

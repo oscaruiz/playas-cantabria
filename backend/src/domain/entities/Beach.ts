@@ -22,4 +22,13 @@ export interface Beach {
   /** Red Cross beach id; 0 or undefined means “no Red Cross record”. */
   redCrossId?: number;
   attributes?: BeachAttributes;
+  lengthM?: number;
+  widthM?: number;
+  beachType?: string;
+  sandType?: string;
+  access?: string[];
+  parkingDescription?: string;
+  busInfo?: string;
+  hospitalDistanceKm?: number;
+  diving?: boolean;
 }
