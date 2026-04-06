@@ -47,6 +47,7 @@ yarn-error.log*
 /frontend/android
 /frontend/.firebase
 /frontend/.vscode
+/frontend/.vscode/
 
 # --- Backend ---
 /backend/node_modules
@@ -72,6 +73,7 @@ yarn-error.log*
 *.bak
 .vscode/
 backend/.env.example
+backend/config/.env.tmp
 
 # Claude Code
 .claude/

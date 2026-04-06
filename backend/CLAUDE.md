@@ -102,7 +102,6 @@ Two-step response: first returns a data URL, then you download the actual JSON.
 - `lat`, `lon`: coordinates verified against AEMET.
 - `idCruzRoja`: Red Cross scraper ID (0 = no coverage).
 
-`data/playasCantabria.json` — identical copy, keep in sync.
 
 ## Encoding and scraping
 
