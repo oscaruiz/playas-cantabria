@@ -43,7 +43,7 @@ export class GetBeachDetails {
     }
 
     const [weather, flag, tideInfo] = await Promise.all([
-      this.getWeatherHedged(beach.latitude, beach.longitude, 300),
+      this.getWeatherConsistent(beach.latitude, beach.longitude),
       this.getFlagSafe(beach.redCrossId),
       this.getTidesSafe(beach.latitude, beach.longitude),
     ]);
@@ -51,61 +51,20 @@ export class GetBeachDetails {
     return { beach, weather, flag, tides: tideInfo };
   }
 
-  private async getWeatherHedged(lat: number, lon: number, hedgeDelayMs: number): Promise<Weather | null> {
-    // Start AEMET immediately
-    const aemetPromise = this.aemet.getCurrentByCoords(lat, lon);
-
-    // Controlled OW start
-    let owStarted = false;
-    let startOW: () => void = () => {};
-    const owPromise: Promise<Weather> = new Promise((resolve, reject) => {
-      startOW = () => {
-        if (owStarted) return;
-        owStarted = true;
-        this.openWeather.getCurrentByCoords(lat, lon).then(resolve).catch(reject);
-      };
-      // Hedge: start OW after delay in case AEMET is slow
-      setTimeout(() => startOW(), hedgeDelayMs);
-    });
-
-    // If AEMET fails fast, trigger OW immediately
-    aemetPromise.catch(() => startOW());
-
-    // Return first successful result; null if both fail
-    const result = await new Promise<Weather | null>((resolve) => {
-      let settled = false;
-
-      aemetPromise
-        .then((w) => {
-          if (!settled) {
-            settled = true;
-            resolve(w);
-          }
-        })
-        .catch(() => {
-          // no-op, handled by allSettled below
-        });
-
-      owPromise
-        .then((w) => {
-          if (!settled) {
-            settled = true;
-            resolve(w);
-          }
-        })
-        .catch(() => {
-          // no-op, handled by allSettled below
-        });
-
-      Promise.allSettled([aemetPromise, owPromise]).then((results) => {
-        if (!settled && results.every((r) => r.status === 'rejected')) {
-          settled = true;
-          resolve(null);
-        }
-      });
-    });
-
-    return result;
+  /**
+   * OpenWeather first (reliable, consistent with featured endpoint).
+   * AEMET as fallback only if OpenWeather fails.
+   */
+  private async getWeatherConsistent(lat: number, lon: number): Promise<Weather | null> {
+    try {
+      return await this.openWeather.getCurrentByCoords(lat, lon);
+    } catch {
+      try {
+        return await this.aemet.getCurrentByCoords(lat, lon);
+      } catch {
+        return null;
+      }
+    }
   }
 
   private async getFlagSafe(redCrossId?: number): Promise<FlagStatus | null> {

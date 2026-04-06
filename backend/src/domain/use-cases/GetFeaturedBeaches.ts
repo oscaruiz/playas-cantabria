@@ -122,20 +122,19 @@ export class GetFeaturedBeaches {
   }
 
   /**
-   * Race AEMET vs OpenWeather — simpler than the hedged version in GetBeachDetails.
-   * Both providers cache individually, so concurrent calls for 20 beaches are cheap.
+   * OpenWeather first (reliable, consistent across beaches).
+   * AEMET as fallback only if OpenWeather fails.
    */
   private async getWeatherRace(lat: number, lon: number): Promise<Weather | null> {
-    const results = await Promise.allSettled([
-      this.aemet.getCurrentByCoords(lat, lon),
-      this.openWeather.getCurrentByCoords(lat, lon),
-    ]);
-
-    // Return first fulfilled result (prefer AEMET if both succeed)
-    for (const r of results) {
-      if (r.status === 'fulfilled') return r.value;
+    try {
+      return await this.openWeather.getCurrentByCoords(lat, lon);
+    } catch {
+      try {
+        return await this.aemet.getCurrentByCoords(lat, lon);
+      } catch {
+        return null;
+      }
     }
-    return null;
   }
 
   private async getFlagSafe(redCrossId?: number): Promise<FlagStatus | null> {
