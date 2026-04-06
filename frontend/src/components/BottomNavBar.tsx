@@ -29,7 +29,7 @@ const BottomNavBar: React.FC = () => {
       </button>
       <button
         className={`bottom-nav-tab${currentTab === 'lista' ? ' active' : ''}`}
-        onClick={() => { if (currentTab !== 'lista') history.push('/playas'); }}
+        onClick={() => { if (pathname !== '/playas') history.push('/playas'); }}
         aria-current={currentTab === 'lista' ? 'page' : undefined}
         aria-label="Playas"
       >
