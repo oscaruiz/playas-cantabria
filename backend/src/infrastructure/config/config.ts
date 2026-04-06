@@ -67,7 +67,7 @@ const ConfigSchema = z.object({
   corsOrigin: z.string().default('*'),
   aemetApiKey: z.string().min(1).optional(),
   openWeatherApiKey: z.string().min(1).optional(),
-  cacheTtlSeconds: z.coerce.number().int().positive().default(300),
+  cacheTtlSeconds: z.coerce.number().int().positive().default(1800),
 });
 
 export type AppConfig = z.infer<typeof ConfigSchema>;

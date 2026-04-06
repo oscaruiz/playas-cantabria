@@ -4,15 +4,15 @@ import https from 'https';
 
 const httpAgent = new httpModule.Agent({
   keepAlive: true,
-  maxSockets: 50,
-  maxFreeSockets: 20,
+  maxSockets: 200,
+  maxFreeSockets: 50,
   timeout: 10000
 });
 
 const httpsAgent = new https.Agent({
   keepAlive: true,
-  maxSockets: 50,
-  maxFreeSockets: 20,
+  maxSockets: 200,
+  maxFreeSockets: 50,
   timeout: 10000
 });
 

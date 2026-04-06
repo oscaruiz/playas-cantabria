@@ -39,6 +39,16 @@ export function buildExpressApp({ cache }: BuildDeps = {}): Express {
   app.use(corsMiddleware());
   app.use(express.json());
 
+  // Request timeout: 15s max to prevent zombie requests
+  app.use((_req, res, next) => {
+    res.setTimeout(15000, () => {
+      if (!res.headersSent) {
+        res.status(504).json({ error: 'Request timeout' });
+      }
+    });
+    next();
+  });
+
   // 🏗️ DEPENDENCY INJECTION CONTAINER
   const container = new DIContainer();
   configureDependencies(container, { cache });

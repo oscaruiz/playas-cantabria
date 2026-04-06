@@ -1,4 +1,4 @@
-import fs from 'fs';
+import fs from 'fs/promises';
 import path from 'path';
 import { Beach } from '../../domain/entities/Beach';
 import { BeachRepository } from '../../domain/ports/BeachRepository';
@@ -40,7 +40,8 @@ export class JsonBeachRepository implements BeachRepository {
     if (cached) return cached;
 
     if (!this.loaded) {
-      const raw = JSON.parse(fs.readFileSync(this.dataPath, 'utf-8')) as RawBeach[];
+      const content = await fs.readFile(this.dataPath, 'utf-8');
+      const raw = JSON.parse(content) as RawBeach[];
       this.loaded = raw.map((b) => this.mapToEntity(b));
     }
     this.cache.set(CacheKeys.beachesAll, this.loaded, 60 * 60 * 24 * 365);

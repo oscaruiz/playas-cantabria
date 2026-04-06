@@ -19,7 +19,7 @@ export class RedCrossFlagProvider implements FlagProvider {
   async getFlagByRedCrossId(redCrossId: number): Promise<FlagStatus | null> {
     if (!redCrossId || redCrossId <= 0) return null;
 
-    const ttl = Config.cacheTtlSeconds();
+    const ttl = 86400; // 24h — flags rarely change, reduce scraping load
     const key = CacheKeys.flagByRedCrossId(redCrossId);
 
     return this.cache.getOrSet(key, ttl, async () => {
