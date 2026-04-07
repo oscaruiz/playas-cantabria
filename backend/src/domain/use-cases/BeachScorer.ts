@@ -10,6 +10,9 @@ export interface ForecastEnrichment {
   waves: string | null;
   uvIndex: number | null;
   warningLevel: number | null;
+  temperatureC?: number | null;
+  summary?: string | null;
+  wind?: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -254,22 +257,36 @@ export function buildRankingReason(
   subScores: SubScores,
   weather: Weather | null,
   flag: FlagStatus | null,
+  enrichment?: ForecastEnrichment | null,
 ): string {
   const parts: string[] = [];
 
-  if (subScores.cielo >= 20) parts.push('Sol');
-  else if (subScores.cielo >= 15) parts.push('Parcialmente soleado');
-  else if (subScores.cielo >= 10) parts.push('Nublado');
+  if (enrichment?.summary) {
+    const s = enrichment.summary.toLowerCase();
+    if (/(despejado|soleado)/.test(s)) parts.push('Sol');
+    else if (/(poco\s*nuboso|intervalos|parcial|claro)/.test(s)) parts.push('Parcialmente soleado');
+    else if (/(nuboso|nublado|cubierto)/.test(s)) parts.push('Nublado');
+    else parts.push(enrichment.summary);
+  } else {
+    if (subScores.cielo >= 20) parts.push('Sol');
+    else if (subScores.cielo >= 15) parts.push('Parcialmente soleado');
+    else if (subScores.cielo >= 10) parts.push('Nublado');
+  }
 
-  if (weather?.temperatureC != null) parts.push(`${Math.round(weather.temperatureC)}\u00B0`);
+  const temp = enrichment?.temperatureC ?? weather?.temperatureC;
+  if (temp != null) parts.push(`${Math.round(temp)}\u00B0`);
 
-  const windMs = weather?.windSpeedMs;
-  if (windMs != null) {
-    if (windMs < 3) parts.push('sin viento');
-    else if (windMs < 6) parts.push('brisa suave');
-    else if (windMs < 10) parts.push('viento moderado');
-    else if (windMs < 15) parts.push('viento fresco');
-    else parts.push('viento fuerte');
+  if (enrichment?.wind) {
+    parts.push(enrichment.wind.toLowerCase());
+  } else {
+    const windMs = weather?.windSpeedMs;
+    if (windMs != null) {
+      if (windMs < 3) parts.push('sin viento');
+      else if (windMs < 6) parts.push('brisa suave');
+      else if (windMs < 10) parts.push('viento moderado');
+      else if (windMs < 15) parts.push('viento fresco');
+      else parts.push('viento fuerte');
+    }
   }
 
   if (flag?.color === 'green') parts.push('bandera verde');
@@ -286,6 +303,7 @@ export function buildCautionReason(
   subScores: SubScores,
   weather: Weather | null,
   flag: FlagStatus | null,
+  _enrichment?: ForecastEnrichment | null,
 ): string {
   const parts: string[] = [];
 

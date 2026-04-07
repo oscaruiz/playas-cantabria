@@ -1,6 +1,7 @@
 import { Beach } from '../../domain/entities/Beach';
 import { Weather } from '../../domain/entities/Weather';
 import { FlagStatus } from '../../domain/entities/Flag';
+import { ForecastEnrichment } from '../../domain/use-cases/BeachScorer';
 import { FeaturedBeachDTO, FeaturedBeachesResponseDTO } from '../dtos/FeaturedBeachDTO';
 
 export interface FeaturedBeachResult {
@@ -10,6 +11,7 @@ export interface FeaturedBeachResult {
   score: number;
   reason: string;
   downgradeReason: string | null;
+  enrichment: ForecastEnrichment | null;
 }
 
 const FLAG_COLOR_ES: Record<string, 'Verde' | 'Amarilla' | 'Roja'> = {
@@ -40,8 +42,8 @@ export class FeaturedBeachMapper {
       codigo: r.beach.aemetCode,
       lat: r.beach.latitude,
       lon: r.beach.longitude,
-      temperatura: r.weather?.temperatureC ?? null,
-      descripcionClima: r.weather?.description ?? null,
+      temperatura: r.enrichment?.temperatureC ?? r.weather?.temperatureC ?? null,
+      descripcionClima: r.enrichment?.summary ?? r.weather?.description ?? null,
       iconoClima: r.weather?.icon ?? null,
       vientoMs: r.weather?.windSpeedMs ?? null,
       bandera: r.flag?.color ? (FLAG_COLOR_ES[r.flag.color] ?? null) : null,

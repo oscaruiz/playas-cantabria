@@ -66,7 +66,7 @@ export class GetFeaturedBeaches {
       // Excluded beaches go directly to caution with specific reason
       if (isExcluded(weather, flag, enrichment)) {
         const reason = buildExclusionReason(weather, flag, enrichment);
-        const entry = { beach, weather, flag, score: 0, reason, downgradeReason: reason };
+        const entry = { beach, weather, flag, score: 0, reason, downgradeReason: reason, enrichment };
         caution.push(entry);
         all.push(entry);
         continue;
@@ -82,13 +82,13 @@ export class GetFeaturedBeaches {
       const downgradeReason = buildDowngradeFactors(subScores, flag);
 
       if (score >= MIN_SCORE) {
-        const reason = buildRankingReason(subScores, weather, flag);
-        const entry = { beach, weather, flag, score, reason, downgradeReason };
+        const reason = buildRankingReason(subScores, weather, flag, enrichment);
+        const entry = { beach, weather, flag, score, reason, downgradeReason, enrichment };
         good.push(entry);
         all.push(entry);
       } else {
-        const reason = buildCautionReason(subScores, weather, flag);
-        const entry = { beach, weather, flag, score, reason, downgradeReason };
+        const reason = buildCautionReason(subScores, weather, flag, enrichment);
+        const entry = { beach, weather, flag, score, reason, downgradeReason, enrichment };
         caution.push(entry);
         all.push(entry);
       }
@@ -157,6 +157,9 @@ export class GetFeaturedBeaches {
         waves: today.waves || null,
         uvIndex: today.uvIndex ?? null,
         warningLevel: null, // AemetBeachForecastProvider doesn't provide warnings
+        temperatureC: today.temperature ?? null,
+        summary: today.summary || null,
+        wind: today.wind || null,
       };
     } catch {
       return null;
