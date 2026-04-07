@@ -341,14 +341,6 @@ export class LegacyDetailsAssembler {
       }
     }
 
-    // When the AEMET scraper provides forecast data, temperaturaActual (from
-    // OpenWeather) can exceed temperaturaMaxima (from AEMET) because they are
-    // different sources.  The scraper doesn't supply a real "current" reading,
-    // so drop the inconsistent value and let the frontend fall back to
-    // dia.temperaturaMaxima.
-    if (base.prediccionCompleta && base.prediccionCompleta.dias.length > 0) {
-      base.temperaturaActual = null;
-    }
 
     return base;
   }

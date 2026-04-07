@@ -267,7 +267,7 @@ const ForecastHero: React.FC<{ dia: DiaPrediccionDTO; climaActual?: number | nul
   const skyEmoji = emojiCielo(skyText || null);
 
   const tempPrincipal = climaActual ?? dia.temperaturaMaxima;
-  const showMax = climaActual != null && dia.temperaturaMaxima != null;
+  const showMax = climaActual != null && dia.temperaturaMaxima != null && climaActual <= dia.temperaturaMaxima;
   const wLevel = viento ? windSpeedLevel(viento) : 1;
 
   return (

@@ -42,7 +42,7 @@ export class FeaturedBeachMapper {
       codigo: r.beach.aemetCode,
       lat: r.beach.latitude,
       lon: r.beach.longitude,
-      temperatura: r.enrichment?.temperatureC ?? r.weather?.temperatureC ?? null,
+      temperatura: r.weather?.temperatureC ?? r.enrichment?.temperatureC ?? null,
       descripcionClima: r.enrichment?.summary ?? r.weather?.description ?? null,
       iconoClima: r.weather?.icon ?? null,
       vientoMs: r.weather?.windSpeedMs ?? null,

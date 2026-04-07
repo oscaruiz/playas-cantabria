@@ -273,7 +273,7 @@ export function buildRankingReason(
     else if (subScores.cielo >= 10) parts.push('Nublado');
   }
 
-  const temp = enrichment?.temperatureC ?? weather?.temperatureC;
+  const temp = weather?.temperatureC ?? enrichment?.temperatureC;
   if (temp != null) parts.push(`${Math.round(temp)}\u00B0`);
 
   if (enrichment?.wind) {
