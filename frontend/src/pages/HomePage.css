@@ -5,6 +5,7 @@
 /* --- Page --- */
 .hp-page ion-content {
   --background: var(--playa-sand);
+  --padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
 }
 
 /* --- Hero --- */
@@ -67,7 +68,7 @@
 
 /* --- Body content --- */
 .hp-body {
-  padding: 0 16px 100px;
+  padding: 0 16px 16px;
   margin-top: -6px;
   position: relative;
   z-index: 1;

@@ -24,6 +24,7 @@
 /* --- Page background --- */
 .playa-detalle-page ion-content {
   --background: var(--playa-sand);
+  --padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
 }
 
 .playa-detalle-page ion-toolbar {

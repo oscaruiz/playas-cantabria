@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { IonPage, IonContent, IonSpinner } from '@ionic/react';
+import { IonPage, IonContent, IonFooter, IonSpinner } from '@ionic/react';
 import { useHistory } from 'react-router-dom';
 import {
   Playa,
@@ -370,7 +370,7 @@ const HomePage: React.FC = () => {
         </div>
 
       </IonContent>
-      <BottomNavBar />
+      <IonFooter className="ion-no-border"><BottomNavBar /></IonFooter>
     </IonPage>
   );
 };

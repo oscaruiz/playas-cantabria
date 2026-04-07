@@ -5,6 +5,7 @@
 /* --- Page --- */
 .home-page ion-content {
   --background: var(--playa-sand);
+  --padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
 }
 
 .home-page ion-toolbar.home-toolbar {
@@ -212,7 +213,7 @@
 
 /* --- Beach list --- */
 .beach-list {
-  padding: 0 16px 100px;
+  padding: 0 16px 16px;
   display: flex;
   flex-direction: column;
   gap: 10px;

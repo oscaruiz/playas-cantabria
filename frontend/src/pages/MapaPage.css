@@ -21,12 +21,12 @@
 /* --- Content --- */
 .mapa-content {
   --padding-top: 0;
-  --padding-bottom: 0;
+  --padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
   height: 100%;
 }
 
 #mapa-container {
-  height: calc(100% - 56px);
+  height: 100%;
   width: 100%;
   position: relative;
   padding-top: calc(env(safe-area-inset-top, 0px) + 52px);

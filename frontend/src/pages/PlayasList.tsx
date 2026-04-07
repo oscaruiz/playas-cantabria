@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react'
 import {
   IonPage,
   IonContent,
+  IonFooter,
   IonSpinner,
 } from '@ionic/react';
 import { Playa, FeaturedBeach, getPlayas, getFeaturedBeaches } from '../services/api';
@@ -302,7 +303,7 @@ const PlayasList: React.FC = () => {
         )}
 
       </IonContent>
-      <BottomNavBar />
+      <IonFooter className="ion-no-border"><BottomNavBar /></IonFooter>
     </IonPage>
   );
 };

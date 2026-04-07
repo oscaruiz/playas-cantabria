@@ -1,6 +1,7 @@
 import {
   IonPage,
   IonContent,
+  IonFooter,
   useIonViewDidEnter,
   useIonViewWillLeave,
 } from '@ionic/react';
@@ -255,7 +256,7 @@ const MapaPage: React.FC = () => {
           </MapContainer>
         </div>
       </IonContent>
-      <BottomNavBar />
+      <IonFooter className="ion-no-border"><BottomNavBar /></IonFooter>
     </IonPage>
   );
 };

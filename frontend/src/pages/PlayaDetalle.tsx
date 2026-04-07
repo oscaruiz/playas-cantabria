@@ -7,6 +7,7 @@ import {
   IonBackButton,
   IonTitle,
   IonContent,
+  IonFooter,
   IonSpinner,
 } from '@ionic/react';
 import { useParams } from 'react-router-dom';
@@ -886,7 +887,7 @@ const PlayaDetallePage: React.FC = () => {
           </>
         )}
       </IonContent>
-      <BottomNavBar />
+      <IonFooter className="ion-no-border"><BottomNavBar /></IonFooter>
     </IonPage>
   );
 };

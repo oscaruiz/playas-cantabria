@@ -2,6 +2,13 @@
    Coastal / Beach theme for Playas de Cantabria
    ============================================= */
 
+/* --- Mobile viewport fix (dynamic address bar) --- */
+html, body {
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
+
 /** Ionic CSS Variables **/
 :root {
   /* Ocean blue primary */
