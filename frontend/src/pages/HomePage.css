@@ -337,6 +337,42 @@
   flex-shrink: 0;
 }
 
+/* --- Nearest skeleton --- */
+@keyframes hp-skel-pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.15; }
+}
+
+.hp-nearest-skeleton {
+  pointer-events: none;
+}
+
+.hp-skel-circle {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--playa-text-muted);
+  animation: hp-skel-pulse 1.2s ease-in-out infinite;
+}
+
+.hp-skel-line {
+  border-radius: 4px;
+  background: var(--playa-text-muted);
+  animation: hp-skel-pulse 1.2s ease-in-out infinite;
+}
+
+.hp-skel-line--name {
+  width: 60%;
+  height: 14px;
+  margin-bottom: 6px;
+}
+
+.hp-skel-line--sub {
+  width: 40%;
+  height: 11px;
+  animation-delay: 0.15s;
+}
+
 /* --- Caution cards --- */
 .hp-caution-list {
   display: flex;

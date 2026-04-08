@@ -184,6 +184,7 @@ const HomePage: React.FC = () => {
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [locationDenied, setLocationDenied] = useState(false);
   const [locationBlocked, setLocationBlocked] = useState(false);
+  const [locationLoading, setLocationLoading] = useState(!!navigator.geolocation);
   const history = useHistory();
 
   useEffect(() => {
@@ -211,9 +212,10 @@ const HomePage: React.FC = () => {
     // Geolocation (same pattern as MapaPage)
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        (pos) => { if (mounted) setUserLocation([pos.coords.latitude, pos.coords.longitude]); },
+        (pos) => { if (mounted) { setUserLocation([pos.coords.latitude, pos.coords.longitude]); setLocationLoading(false); } },
         (err) => {
           if (!mounted) return;
+          setLocationLoading(false);
           setLocationDenied(true);
           if (err.code === 1) setLocationBlocked(true);
         },
@@ -226,9 +228,11 @@ const HomePage: React.FC = () => {
   const retryLocation = () => {
     setLocationDenied(false);
     setLocationBlocked(false);
+    setLocationLoading(true);
     navigator.geolocation.getCurrentPosition(
-      (pos) => setUserLocation([pos.coords.latitude, pos.coords.longitude]),
+      (pos) => { setUserLocation([pos.coords.latitude, pos.coords.longitude]); setLocationLoading(false); },
       (err) => {
+        setLocationLoading(false);
         setLocationDenied(true);
         if (err.code === 1) setLocationBlocked(true); // PERMISSION_DENIED
       },
@@ -336,19 +340,33 @@ const HomePage: React.FC = () => {
           )}
 
           {/* Nearest beaches section */}
-          {!loading && nearestBeaches.length > 0 && (
+          {!loading && !locationDenied && (locationLoading || nearestBeaches.length > 0) && (
             <section className="hp-section">
               <h2 className="hp-section-title">
                 <span aria-hidden="true">{'\u{1F4CD}'}</span> Playas m&aacute;s cerca de ti
               </h2>
               <div className="hp-nearest-list">
-                {nearestBeaches.map((beach) => (
-                  <NearestCard
-                    key={beach.codigo}
-                    beach={beach}
-                    onClick={() => history.push(`/playas/${beach.codigo}`)}
-                  />
-                ))}
+                {locationLoading ? (
+                  <>
+                    {[0, 1, 2].map((i) => (
+                      <div key={i} className="hp-nearest-card hp-nearest-skeleton" aria-hidden="true">
+                        <span className="hp-nearest-icon hp-skel-circle" />
+                        <div className="hp-nearest-info">
+                          <div className="hp-skel-line hp-skel-line--name" />
+                          <div className="hp-skel-line hp-skel-line--sub" />
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                ) : (
+                  nearestBeaches.map((beach) => (
+                    <NearestCard
+                      key={beach.codigo}
+                      beach={beach}
+                      onClick={() => history.push(`/playas/${beach.codigo}`)}
+                    />
+                  ))
+                )}
               </div>
             </section>
           )}
