@@ -187,6 +187,8 @@ const HomePage: React.FC = () => {
   const [featuredError, setFeaturedError] = useState(false);
   const [loading, setLoading] = useState(true);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
+  const [locationDenied, setLocationDenied] = useState(false);
+  const [locationBlocked, setLocationBlocked] = useState(false);
   const history = useHistory();
 
   useEffect(() => {
@@ -215,12 +217,28 @@ const HomePage: React.FC = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => { if (mounted) setUserLocation([pos.coords.latitude, pos.coords.longitude]); },
-        () => { /* permission denied or unavailable — no-op */ },
+        (err) => {
+          if (!mounted) return;
+          setLocationDenied(true);
+          if (err.code === 1) setLocationBlocked(true);
+        },
       );
     }
 
     return () => { mounted = false; };
   }, []);
+
+  const retryLocation = () => {
+    setLocationDenied(false);
+    setLocationBlocked(false);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => setUserLocation([pos.coords.latitude, pos.coords.longitude]),
+      (err) => {
+        setLocationDenied(true);
+        if (err.code === 1) setLocationBlocked(true); // PERMISSION_DENIED
+      },
+    );
+  };
 
   const cautionBeaches = featured?.revisar ?? [];
 
@@ -288,6 +306,33 @@ const HomePage: React.FC = () => {
               <IonSpinner name="crescent" />
               <span>Buscando las mejores playas cerca de ti...</span>
             </div>
+          )}
+
+          {/* Location banner */}
+          {!loading && !userLocation && locationDenied && (
+            locationBlocked ? (
+              <div className="hp-location-banner hp-location-banner--blocked">
+                <span className="hp-location-icon" aria-hidden="true">{'\u{1F4CD}'}</span>
+                <div className="hp-location-text">
+                  <p className="hp-location-title">Localizaci&oacute;n bloqueada</p>
+                  <p className="hp-location-sub">Para activarla, ve a los ajustes de tu navegador</p>
+                </div>
+              </div>
+            ) : (
+              <div
+                className="hp-location-banner"
+                onClick={retryLocation}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); retryLocation(); } }}
+              >
+                <span className="hp-location-icon" aria-hidden="true">{'\u{1F4CD}'}</span>
+                <div className="hp-location-text">
+                  <p className="hp-location-title">Localizaci&oacute;n no disponible</p>
+                  <p className="hp-location-sub">Toca para activar y ver playas cerca de ti</p>
+                </div>
+              </div>
+            )
           )}
 
           {/* Nearest beaches section */}

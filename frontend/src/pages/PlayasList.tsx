@@ -29,7 +29,7 @@ const PlayasList: React.FC = () => {
   const [playas, setPlayas] = useState<Playa[] | null>(null);
   const [weatherMap, setWeatherMap] = useState<Map<string, FeaturedBeach>>(new Map());
   const [filtro, setFiltro] = useState('');
-  const [orden, setOrden] = useState<OrdenMode>('cerca');
+  const [orden, setOrden] = useState<OrdenMode>('az');
   const [error, setError] = useState<string | null>(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeIdx, setActiveIdx] = useState(-1);
@@ -113,7 +113,7 @@ const PlayasList: React.FC = () => {
     <IonPage className="home-page">
       {/* Sticky header */}
       <div className="home-sticky-header">
-        <h1 className="home-sticky-title">Todas las playas</h1>
+        <h1 className="home-sticky-title">Playas de Cantabria</h1>
       </div>
 
       <IonContent fullscreen>
@@ -163,15 +163,17 @@ const PlayasList: React.FC = () => {
                 &times;
               </button>
             )}
-            <button
-              className={`sort-button${orden === 'cerca' ? ' sort-button--active' : ''}`}
-              onClick={() => setOrden('cerca')}
-              title={'Ordenar por cercan\u00EDa'}
-              aria-label={'Ordenar por cercan\u00EDa'}
-              aria-pressed={orden === 'cerca'}
-            >
-              {'\u{1F4CD}'}
-            </button>
+            {userLocation && (
+              <button
+                className={`sort-button${orden === 'cerca' ? ' sort-button--active' : ''}`}
+                onClick={() => setOrden('cerca')}
+                title={'Ordenar por cercan\u00EDa'}
+                aria-label={'Ordenar por cercan\u00EDa'}
+                aria-pressed={orden === 'cerca'}
+              >
+                {'\u{1F4CD}'}
+              </button>
+            )}
             <button
               className={`sort-button${orden === 'az' ? ' sort-button--active' : ''}`}
               onClick={() => setOrden('az')}

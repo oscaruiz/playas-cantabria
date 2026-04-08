@@ -223,6 +223,57 @@
   font-size: 0.8rem;
 }
 
+/* --- Location banner --- */
+.hp-location-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--playa-card-bg);
+  border: 1px dashed var(--playa-primary, #0a7ea4);
+  border-radius: var(--playa-card-radius);
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  cursor: pointer;
+  transition: transform 0.12s;
+}
+
+.hp-location-banner:active {
+  transform: scale(0.98);
+}
+
+.hp-location-banner--blocked {
+  cursor: default;
+  border-color: var(--playa-text-muted);
+  opacity: 0.75;
+}
+
+.hp-location-banner--blocked:active {
+  transform: none;
+}
+
+.hp-location-icon {
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+
+.hp-location-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.hp-location-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--playa-text);
+  margin: 0;
+}
+
+.hp-location-sub {
+  font-size: 0.75rem;
+  color: var(--playa-primary, #0a7ea4);
+  margin: 2px 0 0;
+}
+
 /* --- Nearest cards --- */
 .hp-nearest-list {
   display: flex;
