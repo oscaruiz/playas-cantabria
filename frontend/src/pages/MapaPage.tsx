@@ -12,7 +12,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Playa, FeaturedBeach, getPlayas, getFeaturedBeaches } from '../services/api';
 import { emojiCielo } from '../utils/beachHelpers';
 import BottomNavBar from '../components/BottomNavBar';
-import { useHistory } from 'react-router-dom';
+import { useHistory, useLocation } from 'react-router-dom';
 import './MapaPage.css';
 
 // ---- Marker helpers ----
@@ -69,7 +69,9 @@ const MapaPage: React.FC = () => {
   const [weatherMap, setWeatherMap] = useState<Map<string, FeaturedBeach>>(new Map());
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const mapRef = useRef<LeafletMap | null>(null);
+  const markersRef = useRef<Map<string, L.Marker>>(new Map());
   const history = useHistory();
+  const location = useLocation();
 
   const userIcon = useMemo(() => new L.DivIcon({
     html: `<div style="
@@ -134,6 +136,21 @@ const MapaPage: React.FC = () => {
     return bestCode;
   }, [weatherMap]);
 
+  // Fly to beach from query params (?lat=...&lon=...&codigo=...)
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const lat = parseFloat(params.get('lat') || '');
+    const lon = parseFloat(params.get('lon') || '');
+    const codigo = params.get('codigo');
+    if (!isNaN(lat) && !isNaN(lon) && mapRef.current) {
+      mapRef.current.flyTo([lat, lon], 14, { duration: 0.8 });
+      if (codigo) {
+        const marker = markersRef.current.get(codigo);
+        if (marker) setTimeout(() => marker.openPopup(), 900);
+      }
+    }
+  }, [location.search, playas]);
+
   useIonViewWillLeave(() => {
     if (mapRef.current) mapRef.current.closePopup();
   });
@@ -177,6 +194,7 @@ const MapaPage: React.FC = () => {
                   key={playa.codigo}
                   position={[playa.lat!, playa.lon!]}
                   icon={icon}
+                  ref={(ref) => { if (ref) markersRef.current.set(playa.codigo, ref); }}
                 >
                   <Popup>
                     <div style={{ minWidth: '180px' }}>

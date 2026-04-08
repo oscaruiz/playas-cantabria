@@ -791,14 +791,22 @@ const PlayaDetallePage: React.FC = () => {
             {/* HERO SECTION */}
             <div className="hero-section">
               {datos.lat != null && datos.lon != null && (
-                <a
-                  className="hero-directions-link"
-                  href={`https://www.google.com/maps/dir/?api=1&destination=${datos.lat},${datos.lon}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {'\uD83D\uDCCD'} C&oacute;mo llegar
-                </a>
+                <div className="hero-links">
+                  <a
+                    className="hero-directions-link"
+                    href={`https://www.google.com/maps/dir/?api=1&destination=${datos.lat},${datos.lon}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {'\uD83E\uDDED'} C&oacute;mo llegar
+                  </a>
+                  <button
+                    className="hero-directions-link"
+                    onClick={() => history.push(`/mapa?lat=${datos.lat}&lon=${datos.lon}&codigo=${datos.codigo}`)}
+                  >
+                    {'\uD83D\uDDFA\uFE0F'} Ver en el mapa
+                  </button>
+                </div>
               )}
 
               <FlagBanner cruzRoja={datos.cruzRoja} />
