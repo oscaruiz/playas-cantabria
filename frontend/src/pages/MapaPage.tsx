@@ -144,8 +144,9 @@ const MapaPage: React.FC = () => {
 
   return (
     <IonPage className="mapa-page">
-      <div className="mapa-sticky-header">
+      <div className="mapa-sticky-header" onClick={() => window.location.reload()} style={{ cursor: 'pointer' }}>
         <h1 className="mapa-sticky-title">Playas de Cantabria</h1>
+        <p className="mapa-sticky-subtitle">Explora las playas en el mapa</p>
       </div>
 
       <IonContent className="mapa-content">

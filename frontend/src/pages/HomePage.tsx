@@ -67,18 +67,13 @@ const NearestCard: React.FC<{
   </div>
 );
 
-const HeroSection: React.FC<{
+const HeroBody: React.FC<{
   featuredCount: number;
   avgTemp: number | null;
   totalBeaches: number;
   updatedAt: string;
 }> = ({ featuredCount, avgTemp, totalBeaches, updatedAt }) => (
   <div className="hp-hero">
-    <div className="hp-hero-spacer" />
-    <h1 className="hp-hero-title">Playas de Cantabria</h1>
-    <p className="hp-hero-subtitle">
-      {'Descubre las mejores playas de Cantabria'}
-    </p>
     <div className="hp-hero-badges">
       {avgTemp != null && (
         <span className="hp-badge">
@@ -291,8 +286,13 @@ const HomePage: React.FC = () => {
 
   return (
     <IonPage className="hp-page">
+      <div className="hp-sticky-header" onClick={() => window.location.reload()} style={{ cursor: 'pointer' }}>
+        <h1 className="hp-sticky-title">Playas de Cantabria</h1>
+        <p className="hp-sticky-subtitle">Descubre las mejores playas de Cantabria</p>
+      </div>
+
       <IonContent fullscreen>
-        <HeroSection
+        <HeroBody
           featuredCount={featured?.playas.length ?? 0}
           avgTemp={avgTemp}
           totalBeaches={totalBeaches}

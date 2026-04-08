@@ -8,16 +8,41 @@
   --padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
 }
 
-/* --- Hero --- */
+/* --- Sticky header --- */
+.hp-sticky-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: linear-gradient(135deg, var(--playa-ocean) 0%, var(--playa-ocean-dark) 100%);
+  padding: 16px 20px 18px;
+  padding-top: calc(env(safe-area-inset-top, 0px) + 16px);
+}
+
+.hp-sticky-title {
+  font-family: 'Pacifico', cursive;
+  font-size: 1.6rem;
+  margin: 0 0 4px;
+  line-height: 1.2;
+  color: #ffffff;
+}
+
+.hp-sticky-subtitle {
+  font-size: 0.82rem;
+  opacity: 0.85;
+  margin: 0;
+  font-weight: 400;
+  color: #ffffff;
+}
+
+/* --- Hero (scrollable, below sticky header) --- */
 .hp-hero {
   background: linear-gradient(135deg, var(--playa-ocean) 0%, var(--playa-ocean-dark) 100%);
   color: #ffffff;
-  padding: 0 20px 40px;
+  padding: 12px 20px 40px;
+  padding-top: calc(env(safe-area-inset-top, 0px) + 80px + 12px);
   position: relative;
-}
-
-.hp-hero-spacer {
-  height: calc(env(safe-area-inset-top, 0px) + 24px);
 }
 
 .hp-hero::after {
@@ -29,21 +54,6 @@
   height: 28px;
   background: var(--playa-sand);
   border-radius: 24px 24px 0 0;
-}
-
-.hp-hero-title {
-  font-family: 'Pacifico', cursive;
-  font-size: 1.8rem;
-  margin: 0 0 6px;
-  line-height: 1.2;
-}
-
-.hp-hero-subtitle {
-  font-size: 0.9rem;
-  opacity: 0.85;
-  margin: 0 0 18px;
-  font-weight: 400;
-  max-width: 280px;
 }
 
 /* --- Hero badges --- */
@@ -489,6 +499,10 @@
 
 /* --- Dark mode --- */
 @media (prefers-color-scheme: dark) {
+  .hp-sticky-header {
+    background: #0c4a6e;
+  }
+
   .hp-hero {
     background: linear-gradient(135deg, #0c4a6e 0%, #0f172a 100%);
   }

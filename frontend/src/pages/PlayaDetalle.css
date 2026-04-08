@@ -27,13 +27,54 @@
   --padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
 }
 
-.playa-detalle-page ion-toolbar {
-  --background: var(--playa-ocean);
-  --color: #ffffff;
+/* --- Sticky header (consistent with HomePage / MapaPage) --- */
+.pd-sticky-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: linear-gradient(135deg, var(--playa-ocean) 0%, var(--playa-ocean-dark) 100%);
+  padding: 16px 20px 18px;
+  padding-top: calc(env(safe-area-inset-top, 0px) + 16px);
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
-.playa-detalle-page ion-back-button {
-  --color: #ffffff;
+.pd-back-btn {
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 2rem;
+  line-height: 1;
+  padding: 0 4px;
+  cursor: pointer;
+  flex-shrink: 0;
+  opacity: 0.9;
+}
+
+.pd-back-btn:active {
+  opacity: 0.6;
+}
+
+.pd-sticky-title {
+  font-family: 'Pacifico', cursive;
+  font-size: 1.6rem;
+  margin: 0 0 2px;
+  line-height: 1.2;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pd-sticky-subtitle {
+  font-size: 0.82rem;
+  opacity: 0.85;
+  margin: 0;
+  font-weight: 400;
+  color: #ffffff;
 }
 
 /* --- Hero section: flag + key weather --- */
@@ -41,6 +82,7 @@
   background: linear-gradient(135deg, var(--playa-ocean) 0%, var(--playa-ocean-dark) 100%);
   color: #ffffff;
   padding: 20px 20px 28px;
+  padding-top: calc(env(safe-area-inset-top, 0px) + 80px + 20px);
   position: relative;
   overflow: hidden;
 }
@@ -504,7 +546,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding-top: 4rem;
+  padding-top: calc(env(safe-area-inset-top, 0px) + 80px + 3rem);
   gap: 12px;
   color: var(--playa-ocean);
 }
@@ -1262,6 +1304,10 @@
     --playa-text-muted: #94a3b8;
     --playa-border: #334155;
     --playa-ocean-light: rgba(14, 116, 144, 0.2);
+  }
+
+  .pd-sticky-header {
+    background: linear-gradient(135deg, #0c4a6e 0%, #0f172a 100%);
   }
 
   .hero-section {

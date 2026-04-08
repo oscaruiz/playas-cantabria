@@ -249,3 +249,13 @@ html, body {
     --ion-card-background: #1e293b;
   }
 }
+
+/* --- Smooth page content transition --- */
+ion-page.ion-page {
+  animation: pageContentFadeIn 0.2s ease-out;
+}
+
+@keyframes pageContentFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

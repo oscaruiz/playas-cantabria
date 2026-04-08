@@ -1,16 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import {
   IonPage,
-  IonHeader,
-  IonToolbar,
-  IonButtons,
-  IonBackButton,
-  IonTitle,
   IonContent,
   IonFooter,
   IonSpinner,
 } from '@ionic/react';
-import { useParams } from 'react-router-dom';
+import { useHistory, useParams } from 'react-router-dom';
 import {
   getDetallePlaya,
   PlayaDetalle as PlayaDetalleData,
@@ -750,6 +745,7 @@ const CruzRojaCard: React.FC<{ cruzRoja?: PlayaDetalleData['cruzRoja'] }> = ({ c
 
 const PlayaDetallePage: React.FC = () => {
   const { codigo } = useParams<{ codigo: string }>();
+  const history = useHistory();
   const [datos, setDatos] = useState<PlayaDetalleData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -766,14 +762,15 @@ const PlayaDetallePage: React.FC = () => {
 
   return (
     <IonPage className="playa-detalle-page">
-      <IonHeader>
-        <IonToolbar>
-          <IonButtons slot="start">
-            <IonBackButton defaultHref="/" text="" />
-          </IonButtons>
-          <IonTitle>{datos?.nombre || 'Detalle'}</IonTitle>
-        </IonToolbar>
-      </IonHeader>
+      <div className="pd-sticky-header">
+        <button className="pd-back-btn" onClick={() => history.goBack()} aria-label="Volver">
+          <span aria-hidden="true">&#8249;</span>
+        </button>
+        <div>
+          <h1 className="pd-sticky-title">{datos?.nombre || 'Detalle'}</h1>
+          <p className="pd-sticky-subtitle">{datos?.municipio || ''}</p>
+        </div>
+      </div>
 
       <IonContent>
         {error && (
@@ -793,9 +790,6 @@ const PlayaDetallePage: React.FC = () => {
           <>
             {/* HERO SECTION */}
             <div className="hero-section">
-              <h1 className="hero-beach-name">{datos.nombre}</h1>
-              <p className="hero-municipio">{datos.municipio}</p>
-
               {datos.lat != null && datos.lon != null && (
                 <a
                   className="hero-directions-link"

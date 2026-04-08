@@ -27,7 +27,7 @@ setupIonicReact();
 const App: React.FC = () => (
   <IonApp>
     <IonReactRouter>
-      <IonRouterOutlet>
+      <IonRouterOutlet animated={false}>
         <Route exact path="/" component={HomePage} />
         <Route exact path="/playas" component={PlayasList} />
         <Route exact path="/playas/:codigo" component={PlayaDetallePage} />

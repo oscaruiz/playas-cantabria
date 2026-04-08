@@ -112,17 +112,15 @@ const PlayasList: React.FC = () => {
   return (
     <IonPage className="home-page">
       {/* Sticky header */}
-      <div className="home-sticky-header">
+      <div className="home-sticky-header" onClick={() => window.location.reload()} style={{ cursor: 'pointer' }}>
         <h1 className="home-sticky-title">Playas de Cantabria</h1>
+        <p className="home-sticky-subtitle">Consulta el estado de las playas</p>
       </div>
 
       <IonContent fullscreen>
-        {/* Hero header */}
+        {/* Hero header spacer */}
         <div className="home-hero">
           <div className="home-hero-spacer" />
-          <p className="home-hero-subtitle">
-            Consulta el estado de las playas antes de ir
-          </p>
         </div>
 
         {/* Search bar */}
