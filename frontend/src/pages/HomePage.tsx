@@ -39,13 +39,33 @@ function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): nu
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-/** Bonus de proximidad: 0-25 pts extra (0km=+25, >=80km=+0) */
-function proximityBonus(distKm: number): number {
-  if (distKm >= 80) return 0;
-  return Math.round(25 * (1 - distKm / 80));
-}
-
 // ---- Sub-components ----
+
+const NearestCard: React.FC<{
+  beach: Playa & { distKm: number };
+  onClick: () => void;
+}> = ({ beach, onClick }) => (
+  <div
+    className="hp-nearest-card"
+    onClick={onClick}
+    role="link"
+    tabIndex={0}
+    aria-label={`Ver detalle de ${beach.nombre}`}
+    onKeyDown={(e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        onClick();
+      }
+    }}
+  >
+    <span className="hp-nearest-icon" aria-hidden="true">{'\u{1F4CD}'}</span>
+    <div className="hp-nearest-info">
+      <p className="hp-nearest-name">{beach.nombre}</p>
+      <p className="hp-nearest-sub">{beach.municipio} &middot; a {Math.round(beach.distKm)} km</p>
+    </div>
+    <span className="hp-nearest-arrow" aria-hidden="true">&#8250;</span>
+  </div>
+);
 
 const HeroSection: React.FC<{
   featuredCount: number;
@@ -113,7 +133,7 @@ const FeaturedCard: React.FC<{
           {flagClass && flagClass !== 'unknown' && (
             <span className={`hp-flag-dot hp-flag-${flagClass}`} aria-label={`Bandera ${beach.bandera}`} />
           )}
-          <span className="hp-featured-reason">{beach.razonRanking}</span>
+          <span className="hp-featured-reason">{beach.razonRanking.replace(/(?<!viento )\b(flojo|fuerte)\b/i, 'viento $1')}</span>
           {distKm != null && (
             <span className="hp-featured-dist">{'a '}{Math.round(distKm)}{' km'}</span>
           )}
@@ -204,19 +224,26 @@ const HomePage: React.FC = () => {
 
   const cautionBeaches = featured?.revisar ?? [];
 
-  // Re-sort featured by score + proximity bonus when user location is available
+  // Recommended: all green beaches (>= 60) from resumenTodas, sorted by proximity
   const sortedFeatured = useMemo(() => {
     if (!featured) return [];
-    if (!userLocation) return featured.playas;
+    const pool = featured.resumenTodas.filter((b) => b.puntuacion >= 60);
+    if (!userLocation) return pool.sort((a, b) => b.puntuacion - a.puntuacion).slice(0, 5);
 
     const [uLat, uLon] = userLocation;
-    return [...featured.playas].sort((a, b) => {
-      const distA = haversineKm(uLat, uLon, a.lat, a.lon);
-      const distB = haversineKm(uLat, uLon, b.lat, b.lon);
-      const scoreA = a.puntuacion + proximityBonus(distA);
-      const scoreB = b.puntuacion + proximityBonus(distB);
-      return scoreB - scoreA || a.nombre.localeCompare(b.nombre);
-    });
+    return pool
+      .sort((a, b) => {
+        const diffScore = Math.abs(a.puntuacion - b.puntuacion);
+        // Close in score (< 6 pts) → prioritize proximity
+        if (diffScore < 6) {
+          const distA = haversineKm(uLat, uLon, a.lat, a.lon);
+          const distB = haversineKm(uLat, uLon, b.lat, b.lon);
+          return distA - distB || a.nombre.localeCompare(b.nombre);
+        }
+        // Big score gap → higher score first
+        return b.puntuacion - a.puntuacion;
+      })
+      .slice(0, 5);
   }, [featured, userLocation]);
 
   // Distance map for display
@@ -224,11 +251,21 @@ const HomePage: React.FC = () => {
     if (!userLocation || !featured) return new Map<string, number>();
     const [uLat, uLon] = userLocation;
     const map = new Map<string, number>();
-    for (const b of featured.playas) {
+    for (const b of featured.resumenTodas) {
       map.set(b.codigo, haversineKm(uLat, uLon, b.lat, b.lon));
     }
     return map;
   }, [featured, userLocation]);
+
+  // 3 nearest beaches from all beaches (not just featured)
+  const nearestBeaches = useMemo(() => {
+    if (!allPlayas || !userLocation) return [];
+    const [uLat, uLon] = userLocation;
+    return [...allPlayas]
+      .map((p) => ({ ...p, distKm: haversineKm(uLat, uLon, p.lat, p.lon) }))
+      .sort((a, b) => a.distKm - b.distKm)
+      .slice(0, 3);
+  }, [allPlayas, userLocation]);
 
   const avgTemp = featured ? averageTemp(featured.playas) : null;
   const totalBeaches = allPlayas?.length ?? 0;
@@ -253,11 +290,29 @@ const HomePage: React.FC = () => {
             </div>
           )}
 
+          {/* Nearest beaches section */}
+          {!loading && nearestBeaches.length > 0 && (
+            <section className="hp-section">
+              <h2 className="hp-section-title">
+                <span aria-hidden="true">{'\u{1F4CD}'}</span> Playas m&aacute;s cerca de ti
+              </h2>
+              <div className="hp-nearest-list">
+                {nearestBeaches.map((beach) => (
+                  <NearestCard
+                    key={beach.codigo}
+                    beach={beach}
+                    onClick={() => history.push(`/playas/${beach.codigo}`)}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
+
           {/* Featured section */}
           {!loading && !featuredError && sortedFeatured.length > 0 && (
             <section className="hp-section">
               <h2 className="hp-section-title">
-                <span aria-hidden="true">{'\u{1F525}'}</span> Mejores playas cerca
+                <span aria-hidden="true">{'\u{1F525}'}</span> Playas recomendadas
               </h2>
               <div className="hp-featured-scroll">
                 {sortedFeatured.map((beach) => (
@@ -276,7 +331,7 @@ const HomePage: React.FC = () => {
           {!loading && !featuredError && featured && sortedFeatured.length === 0 && (
             <section className="hp-section">
               <h2 className="hp-section-title">
-                <span aria-hidden="true">{'\u{1F525}'}</span> Mejores playas cerca
+                <span aria-hidden="true">{'\u{1F525}'}</span> Playas recomendadas
               </h2>
               <div className="hp-empty-msg">
                 <p>Hoy no hay playas destacadas &mdash; consulta el listado completo</p>

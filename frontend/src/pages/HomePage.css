@@ -223,6 +223,59 @@
   font-size: 0.8rem;
 }
 
+/* --- Nearest cards --- */
+.hp-nearest-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hp-nearest-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--playa-card-bg);
+  border-radius: var(--playa-card-radius);
+  border: 1px solid var(--playa-border);
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: transform 0.12s;
+}
+
+.hp-nearest-card:active {
+  transform: scale(0.98);
+}
+
+.hp-nearest-icon {
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+
+.hp-nearest-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.hp-nearest-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--playa-text);
+  margin: 0;
+}
+
+.hp-nearest-sub {
+  font-size: 0.75rem;
+  color: var(--playa-text-muted);
+  margin: 2px 0 0;
+}
+
+.hp-nearest-arrow {
+  color: var(--playa-text-muted);
+  font-size: 1.1rem;
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+
 /* --- Caution cards --- */
 .hp-caution-list {
   display: flex;
