@@ -42,7 +42,7 @@ function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): nu
 // ---- Sub-components ----
 
 const NearestCard: React.FC<{
-  beach: Playa & { distKm: number };
+  beach: { nombre: string; municipio: string; distKm: number };
   onClick: () => void;
 }> = ({ beach, onClick }) => (
   <div
@@ -270,15 +270,15 @@ const HomePage: React.FC = () => {
     return map;
   }, [featured, userLocation]);
 
-  // 3 nearest beaches from all beaches (not just featured)
+  // 3 nearest beaches — uses featured data (faster than waiting for getPlayas)
   const nearestBeaches = useMemo(() => {
-    if (!allPlayas || !userLocation) return [];
+    if (!featured || !userLocation) return [];
     const [uLat, uLon] = userLocation;
-    return [...allPlayas]
-      .map((p) => ({ ...p, distKm: haversineKm(uLat, uLon, p.lat, p.lon) }))
+    return [...featured.resumenTodas]
+      .map((b) => ({ ...b, distKm: haversineKm(uLat, uLon, b.lat, b.lon) }))
       .sort((a, b) => a.distKm - b.distKm)
       .slice(0, 3);
-  }, [allPlayas, userLocation]);
+  }, [featured, userLocation]);
 
   const avgTemp = featured ? averageTemp(featured.playas) : null;
   const totalBeaches = allPlayas?.length ?? 0;
