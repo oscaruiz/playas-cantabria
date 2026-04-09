@@ -7,6 +7,7 @@ import {
 } from '@ionic/react';
 import { Playa, FeaturedBeach, getPlayas, getFeaturedBeaches } from '../services/api';
 import { getActiveAttrs, emojiCielo } from '../utils/beachHelpers';
+import { useUserLocation } from '../hooks/useUserLocation';
 import BottomNavBar from '../components/BottomNavBar';
 import { useHistory } from 'react-router-dom';
 import './PlayasList.css';
@@ -33,7 +34,7 @@ const PlayasList: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeIdx, setActiveIdx] = useState(-1);
-  const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
+  const { userLocation } = useUserLocation();
   const blurTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const history = useHistory();
 
@@ -51,13 +52,6 @@ const PlayasList: React.FC = () => {
         setWeatherMap(map);
       })
       .catch(() => { /* no-op: weather is optional enrichment */ });
-
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => setUserLocation([pos.coords.latitude, pos.coords.longitude]),
-        (err) => { console.warn('Geolocation unavailable', err); },
-      );
-    }
   }, []);
 
   // No toggle needed — two separate buttons

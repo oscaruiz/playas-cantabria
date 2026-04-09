@@ -9,6 +9,7 @@ import {
   getFeaturedBeaches,
 } from '../services/api';
 import { emojiCielo, flagColorClass, getActiveAttrs } from '../utils/beachHelpers';
+import { useUserLocation } from '../hooks/useUserLocation';
 import BottomNavBar from '../components/BottomNavBar';
 import './HomePage.css';
 
@@ -181,10 +182,7 @@ const HomePage: React.FC = () => {
   const [allPlayas, setAllPlayas] = useState<Playa[] | null>(null);
   const [featuredError, setFeaturedError] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
-  const [locationDenied, setLocationDenied] = useState(false);
-  const [locationBlocked, setLocationBlocked] = useState(false);
-  const [locationLoading, setLocationLoading] = useState(!!navigator.geolocation);
+  const { userLocation, locationLoading, locationDenied, locationBlocked, retryLocation } = useUserLocation();
   const history = useHistory();
 
   useEffect(() => {
@@ -209,35 +207,8 @@ const HomePage: React.FC = () => {
       setLoading(false);
     });
 
-    // Geolocation (same pattern as MapaPage)
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => { if (mounted) { setUserLocation([pos.coords.latitude, pos.coords.longitude]); setLocationLoading(false); } },
-        (err) => {
-          if (!mounted) return;
-          setLocationLoading(false);
-          setLocationDenied(true);
-          if (err.code === 1) setLocationBlocked(true);
-        },
-      );
-    }
-
     return () => { mounted = false; };
   }, []);
-
-  const retryLocation = () => {
-    setLocationDenied(false);
-    setLocationBlocked(false);
-    setLocationLoading(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => { setUserLocation([pos.coords.latitude, pos.coords.longitude]); setLocationLoading(false); },
-      (err) => {
-        setLocationLoading(false);
-        setLocationDenied(true);
-        if (err.code === 1) setLocationBlocked(true); // PERMISSION_DENIED
-      },
-    );
-  };
 
   const cautionBeaches = featured?.revisar ?? [];
 

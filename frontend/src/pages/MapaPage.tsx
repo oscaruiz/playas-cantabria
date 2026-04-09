@@ -11,6 +11,7 @@ import 'leaflet/dist/leaflet.css';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Playa, FeaturedBeach, getPlayas, getFeaturedBeaches } from '../services/api';
 import { emojiCielo } from '../utils/beachHelpers';
+import { useUserLocation } from '../hooks/useUserLocation';
 import BottomNavBar from '../components/BottomNavBar';
 import { useHistory, useLocation } from 'react-router-dom';
 import './MapaPage.css';
@@ -67,7 +68,7 @@ function getFallbackIcon(numero: number): DivIcon {
 const MapaPage: React.FC = () => {
   const [playas, setPlayas] = useState<Playa[]>([]);
   const [weatherMap, setWeatherMap] = useState<Map<string, FeaturedBeach>>(new Map());
-  const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
+  const { userLocation } = useUserLocation();
   const mapRef = useRef<LeafletMap | null>(null);
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
   const history = useHistory();
@@ -114,13 +115,6 @@ const MapaPage: React.FC = () => {
         setWeatherMap(map);
       })
       .catch(() => { /* fallback: numbered markers */ });
-
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => setUserLocation([pos.coords.latitude, pos.coords.longitude]),
-        (err) => { console.warn('Geolocation unavailable', err); },
-      );
-    }
   }, []);
 
   // Best beach = highest score
