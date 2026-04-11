@@ -77,3 +77,4 @@ backend/config/.env.tmp
 
 # Claude Code
 .claude/
+.agents/
