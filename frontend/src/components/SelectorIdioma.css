@@ -1,0 +1,48 @@
+/* --- Selector de idioma (píldora ES/EN en cabeceras) --- */
+
+.selector-idioma {
+  position: absolute;
+  right: 16px;
+  top: calc(env(safe-area-inset-top, 0px) + 18px);
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  font-family: 'Poppins', sans-serif;
+}
+
+.selector-idioma-btn {
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 4px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.selector-idioma-btn.active {
+  background: #ffffff;
+  color: var(--playa-ocean, #0a7ea4);
+}
+
+.selector-idioma-btn:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 1px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .selector-idioma {
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  .selector-idioma-btn.active {
+    background: #e2e8f0;
+    color: #0c4a6e;
+  }
+}

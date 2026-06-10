@@ -14,3 +14,10 @@ window.matchMedia = window.matchMedia || function() {
       removeListener: function() {}
   };
 };
+
+// jsdom expone navigator.language = 'en-US'; fijamos español para que los
+// tests que aserten texto en español no dependan de la detección de idioma.
+// (Los tests de i18n hacen localStorage.clear() cuando necesitan probarla.)
+beforeEach(() => {
+  localStorage.setItem('app_idioma', 'es');
+});

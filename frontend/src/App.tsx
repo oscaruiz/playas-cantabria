@@ -10,6 +10,7 @@ import HomePage from './pages/HomePage';
 import PlayasList from './pages/PlayasList';
 import PlayaDetallePage from './pages/PlayaDetalle';
 import MapaPage from './pages/MapaPage';
+import { IdiomaProvider } from './i18n/IdiomaContext';
 
 /* Ionic core styles */
 import '@ionic/react/css/core.css';
@@ -26,14 +27,16 @@ setupIonicReact();
 
 const App: React.FC = () => (
   <IonApp>
-    <IonReactRouter>
-      <IonRouterOutlet animated={false}>
-        <Route exact path="/" component={HomePage} />
-        <Route exact path="/playas" component={PlayasList} />
-        <Route exact path="/playas/:codigo" component={PlayaDetallePage} />
-        <Route path="/mapa" component={MapaPage} exact />
-      </IonRouterOutlet>
-    </IonReactRouter>
+    <IdiomaProvider>
+      <IonReactRouter>
+        <IonRouterOutlet animated={false}>
+          <Route exact path="/" component={HomePage} />
+          <Route exact path="/playas" component={PlayasList} />
+          <Route exact path="/playas/:codigo" component={PlayaDetallePage} />
+          <Route path="/mapa" component={MapaPage} exact />
+        </IonRouterOutlet>
+      </IonReactRouter>
+    </IdiomaProvider>
   </IonApp>
 );
 

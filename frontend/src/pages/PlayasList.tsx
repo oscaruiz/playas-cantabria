@@ -8,7 +8,9 @@ import {
 import { Playa, FeaturedBeach, getPlayas, getFeaturedBeaches } from '../services/api';
 import { getActiveAttrs, emojiCielo } from '../utils/beachHelpers';
 import { useUserLocation } from '../hooks/useUserLocation';
+import { useIdioma } from '../i18n/IdiomaContext';
 import BottomNavBar from '../components/BottomNavBar';
+import SelectorIdioma from '../components/SelectorIdioma';
 import { useHistory } from 'react-router-dom';
 import './PlayasList.css';
 
@@ -31,7 +33,8 @@ const PlayasList: React.FC = () => {
   const [weatherMap, setWeatherMap] = useState<Map<string, FeaturedBeach>>(new Map());
   const [filtro, setFiltro] = useState('');
   const [orden, setOrden] = useState<OrdenMode>('az');
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState(false);
+  const { t, tPlural } = useIdioma();
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeIdx, setActiveIdx] = useState(-1);
   const { userLocation } = useUserLocation();
@@ -43,7 +46,7 @@ const PlayasList: React.FC = () => {
       onBackendData: (data) => setPlayas(data),
     })
       .then(setPlayas)
-      .catch((err: Error) => setError(err.message));
+      .catch(() => setError(true));
 
     getFeaturedBeaches()
       .then((res) => {
@@ -107,8 +110,9 @@ const PlayasList: React.FC = () => {
     <IonPage className="home-page">
       {/* Sticky header */}
       <div className="home-sticky-header" onClick={() => window.location.reload()} style={{ cursor: 'pointer' }}>
-        <h1 className="home-sticky-title">Playas de Cantabria</h1>
-        <p className="home-sticky-subtitle">Consulta el estado de las playas</p>
+        <h1 className="home-sticky-title">{t('app.titulo')}</h1>
+        <p className="home-sticky-subtitle">{t('lista.subtitulo')}</p>
+        <SelectorIdioma />
       </div>
 
       <IonContent fullscreen>
@@ -134,8 +138,8 @@ const PlayasList: React.FC = () => {
                 blurTimeout.current = setTimeout(() => setShowSuggestions(false), 150);
               }}
               onKeyDown={handleSearchKeyDown}
-              placeholder="Buscar playa o municipio..."
-              aria-label="Buscar playa o municipio"
+              placeholder={t('lista.placeholder')}
+              aria-label={t('lista.buscarAria')}
               autoComplete="off"
               role="combobox"
               aria-expanded={showSuggestions && suggestions.length > 0}
@@ -149,7 +153,7 @@ const PlayasList: React.FC = () => {
                   setShowSuggestions(false);
                   setActiveIdx(-1);
                 }}
-                aria-label="Borrar búsqueda"
+                aria-label={t('lista.borrarBusqueda')}
                 type="button"
               >
                 &times;
@@ -159,8 +163,8 @@ const PlayasList: React.FC = () => {
               <button
                 className={`sort-button${orden === 'cerca' ? ' sort-button--active' : ''}`}
                 onClick={() => setOrden('cerca')}
-                title={'Ordenar por cercan\u00EDa'}
-                aria-label={'Ordenar por cercan\u00EDa'}
+                title={t('lista.ordenarCercania')}
+                aria-label={t('lista.ordenarCercania')}
                 aria-pressed={orden === 'cerca'}
               >
                 {'\u{1F4CD}'}
@@ -169,8 +173,8 @@ const PlayasList: React.FC = () => {
             <button
               className={`sort-button${orden === 'az' ? ' sort-button--active' : ''}`}
               onClick={() => setOrden('az')}
-              title="Ordenar A-Z"
-              aria-label="Ordenar A-Z"
+              title={t('lista.ordenarAZ')}
+              aria-label={t('lista.ordenarAZ')}
               aria-pressed={orden === 'az'}
             >
               AZ
@@ -200,7 +204,7 @@ const PlayasList: React.FC = () => {
         {/* Error state */}
         {error && (
           <div className="home-error">
-            <p style={{ margin: 0 }}>{error}</p>
+            <p style={{ margin: 0 }}>{t('lista.errorCarga')}</p>
           </div>
         )}
 
@@ -208,15 +212,15 @@ const PlayasList: React.FC = () => {
         {!playas && !error && (
           <div className="home-loading">
             <IonSpinner name="crescent" />
-            <span className="home-loading-text">Cargando playas...</span>
+            <span className="home-loading-text">{t('lista.cargando')}</span>
           </div>
         )}
 
         {/* Beach count */}
         {playas && (
           <div className="beach-count">
-            {filtradas.length} {filtradas.length === 1 ? 'playa' : 'playas'}
-            {filtro && ` para "${filtro}"`}
+            {tPlural('lista.contador', filtradas.length)}
+            {filtro && ` ${t('lista.paraFiltro', { filtro })}`}
           </div>
         )}
 
@@ -236,7 +240,7 @@ const PlayasList: React.FC = () => {
                 onClick={() => history.push(`/playas/${playa.codigo}`)}
                 role="link"
                 tabIndex={0}
-                aria-label={`Ver detalle de ${playa.nombre}, ${playa.municipio}`}
+                aria-label={t('comun.verDetalleDe', { nombre: `${playa.nombre}, ${playa.municipio}` })}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
@@ -273,9 +277,9 @@ const PlayasList: React.FC = () => {
                 </div>
                 {playa.idCruzRoja !== 0 && playa.idCruzRoja !== undefined && (
                   <div className="beach-card-badges">
-                    <span className="badge-vigilada" aria-label="Playa vigilada por Cruz Roja">
+                    <span className="badge-vigilada" aria-label={t('lista.vigiladaAria')}>
                       <span className="badge-vigilada-dot" aria-hidden="true" />
-                      Cruz Roja
+                      {t('comun.cruzRoja')}
                     </span>
                   </div>
                 )}
@@ -291,7 +295,7 @@ const PlayasList: React.FC = () => {
           <div className="home-empty">
             <div className="home-empty-icon" aria-hidden="true">{'\u{1F3D6}'}</div>
             <p className="home-empty-text">
-              No se encontraron playas para &quot;{filtro}&quot;
+              {t('lista.noEncontradas', { filtro })}
             </p>
           </div>
         )}

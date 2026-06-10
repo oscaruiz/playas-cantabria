@@ -11,8 +11,11 @@ import 'leaflet/dist/leaflet.css';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Playa, FeaturedBeach, getPlayas, getFeaturedBeaches } from '../services/api';
 import { emojiCielo } from '../utils/beachHelpers';
+import { useIdioma } from '../i18n/IdiomaContext';
+import { traducirTextoApi, claveNivelVientoMs } from '../i18n/apiText';
 import { useUserLocation } from '../hooks/useUserLocation';
 import BottomNavBar from '../components/BottomNavBar';
+import SelectorIdioma from '../components/SelectorIdioma';
 import { useHistory, useLocation } from 'react-router-dom';
 import './MapaPage.css';
 
@@ -73,6 +76,7 @@ const MapaPage: React.FC = () => {
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
   const history = useHistory();
   const location = useLocation();
+  const { t, idioma } = useIdioma();
 
   const userIcon = useMemo(() => new L.DivIcon({
     html: `<div style="
@@ -156,8 +160,9 @@ const MapaPage: React.FC = () => {
   return (
     <IonPage className="mapa-page">
       <div className="mapa-sticky-header" onClick={() => window.location.reload()} style={{ cursor: 'pointer' }}>
-        <h1 className="mapa-sticky-title">Playas de Cantabria</h1>
-        <p className="mapa-sticky-subtitle">Explora las playas en el mapa</p>
+        <h1 className="mapa-sticky-title">{t('app.titulo')}</h1>
+        <p className="mapa-sticky-subtitle">{t('mapa.subtitulo')}</p>
+        <SelectorIdioma />
       </div>
 
       <IonContent className="mapa-content">
@@ -196,7 +201,7 @@ const MapaPage: React.FC = () => {
                         {'\u{1F3D6}'} {playa.nombre}
                       </h3>
                       <p style={{ margin: '0 0 4px' }}>
-                        <strong>Municipio:</strong> {playa.municipio}
+                        <strong>{t('mapa.municipio')}</strong> {playa.municipio}
                       </p>
                       {weather && (() => {
                         const status = markerStatus(weather.puntuacion);
@@ -205,31 +210,31 @@ const MapaPage: React.FC = () => {
                             <p style={{ margin: '0 0 4px' }}>
                               {emojiCielo(weather.descripcionClima)}{' '}
                               {weather.temperatura != null ? `${Math.round(weather.temperatura)}\u00B0` : ''}{' '}
-                              {weather.descripcionClima}{weather.vientoMs != null ? `, ${weather.vientoMs < 3 ? 'sin viento' : weather.vientoMs < 6 ? 'brisa suave' : weather.vientoMs < 10 ? 'viento moderado' : 'viento fuerte'}` : ''}
+                              {traducirTextoApi(weather.descripcionClima, idioma)}{weather.vientoMs != null ? `, ${t(claveNivelVientoMs(weather.vientoMs))}` : ''}
                             </p>
                             {status === 'good' && (
                               <p style={{ margin: '0 0 4px', color: '#16a34a', fontSize: '12px' }}>
-                                {'\u2705'} {weather.razonRanking}
+                                {'\u2705'} {traducirTextoApi(weather.razonRanking, idioma)}
                               </p>
                             )}
                             {status === 'medium' && weather.motivoBaja && (
                               <p style={{ margin: '0 0 4px', color: '#b45309', fontSize: '12px' }}>
-                                {'\u26A0\uFE0F'} {weather.motivoBaja}
+                                {'\u26A0\uFE0F'} {traducirTextoApi(weather.motivoBaja, idioma)}
                               </p>
                             )}
                             {status === 'bad' && weather.motivoBaja && (
                               <p style={{ margin: '0 0 4px', color: '#dc2626', fontSize: '12px' }}>
-                                {'\u26D4'} {weather.motivoBaja}
+                                {'\u26D4'} {traducirTextoApi(weather.motivoBaja, idioma)}
                               </p>
                             )}
                             {weather.bandera === 'Roja' && (
                               <p style={{ margin: '0 0 4px', color: '#dc2626', fontWeight: 600, fontSize: '13px' }}>
-                                {'\u26A0\uFE0F'} Bandera roja
+                                {'\u26A0\uFE0F'} {t('mapa.banderaRoja')}
                               </p>
                             )}
                             {weather.vientoMs != null && weather.vientoMs > 8 && (
                               <p style={{ margin: '0 0 4px', color: '#dc2626', fontWeight: 600, fontSize: '13px' }}>
-                                {'\u{1F4A8}'} Viento fuerte ({Math.round(weather.vientoMs * 3.6)} km/h)
+                                {'\u{1F4A8}'} {t('mapa.vientoFuerteKmh', { kmh: Math.round(weather.vientoMs * 3.6) })}
                               </p>
                             )}
                           </>
@@ -237,8 +242,8 @@ const MapaPage: React.FC = () => {
                       })()}
                       <p style={{ margin: '0 0 6px' }}>
                         {isVigilada
-                          ? '\u{1F6DF} Vigilada por Cruz Roja'
-                          : '\u{1F6AB} No hay info de Cruz Roja'}
+                          ? `\u{1F6DF} ${t('mapa.vigilada')}`
+                          : `\u{1F6AB} ${t('mapa.sinInfoCruzRoja')}`}
                       </p>
                       <button
                         onClick={() => history.push(`/playas/${playa.codigo}`)}
@@ -253,7 +258,7 @@ const MapaPage: React.FC = () => {
                           width: '100%',
                         }}
                       >
-                        Ver detalles
+                        {t('mapa.verDetalles')}
                       </button>
                     </div>
                   </Popup>
@@ -263,7 +268,7 @@ const MapaPage: React.FC = () => {
 
             {userLocation && (
               <Marker position={userLocation} icon={userIcon}>
-                <Popup>{'\u{1F4CD}'} Tu ubicaci{'ó'}n actual</Popup>
+                <Popup>{'\u{1F4CD}'} {t('mapa.tuUbicacion')}</Popup>
               </Marker>
             )}
           </MapContainer>

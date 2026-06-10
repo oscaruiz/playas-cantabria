@@ -11,15 +11,18 @@ import {
 import { emojiCielo, flagColorClass, getActiveAttrs } from '../utils/beachHelpers';
 import { useUserLocation } from '../hooks/useUserLocation';
 import BottomNavBar from '../components/BottomNavBar';
+import SelectorIdioma from '../components/SelectorIdioma';
+import { useIdioma, TraducirFn } from '../i18n/IdiomaContext';
+import { traducirTextoApi } from '../i18n/apiText';
 import './HomePage.css';
 
 // ---- Helpers ----
 
-function formatTimeAgo(timestamp: number): string {
+function formatTimeAgo(timestamp: number, t: TraducirFn): string {
   const diff = Math.floor((Date.now() - timestamp) / 60000);
-  if (diff < 1) return 'ahora mismo';
-  if (diff < 60) return `hace ${diff} min`;
-  return `hace ${Math.floor(diff / 60)}h`;
+  if (diff < 1) return t('tiempo.ahoraMismo');
+  if (diff < 60) return t('tiempo.haceMin', { n: diff });
+  return t('tiempo.haceHoras', { n: Math.floor(diff / 60) });
 }
 
 function averageTemp(playas: FeaturedBeach[]): number | null {
@@ -45,44 +48,49 @@ function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): nu
 const NearestCard: React.FC<{
   beach: { nombre: string; municipio: string; distKm: number };
   onClick: () => void;
-}> = ({ beach, onClick }) => (
-  <div
-    className="hp-nearest-card"
-    onClick={onClick}
-    role="link"
-    tabIndex={0}
-    aria-label={`Ver detalle de ${beach.nombre}`}
-    onKeyDown={(e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        onClick();
-      }
-    }}
-  >
-    <span className="hp-nearest-icon" aria-hidden="true">{'\u{1F4CD}'}</span>
-    <div className="hp-nearest-info">
-      <p className="hp-nearest-name">{beach.nombre}</p>
-      <p className="hp-nearest-sub">{beach.municipio} &middot; a {Math.round(beach.distKm)} km</p>
+}> = ({ beach, onClick }) => {
+  const { t } = useIdioma();
+  return (
+    <div
+      className="hp-nearest-card"
+      onClick={onClick}
+      role="link"
+      tabIndex={0}
+      aria-label={t('comun.verDetalleDe', { nombre: beach.nombre })}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+    >
+      <span className="hp-nearest-icon" aria-hidden="true">{'\u{1F4CD}'}</span>
+      <div className="hp-nearest-info">
+        <p className="hp-nearest-name">{beach.nombre}</p>
+        <p className="hp-nearest-sub">{beach.municipio} &middot; {t('comun.aKm', { km: Math.round(beach.distKm) })}</p>
+      </div>
+      <span className="hp-nearest-arrow" aria-hidden="true">&#8250;</span>
     </div>
-    <span className="hp-nearest-arrow" aria-hidden="true">&#8250;</span>
-  </div>
-);
+  );
+};
 
 const HeroBody: React.FC<{
   featuredCount: number;
   avgTemp: number | null;
   totalBeaches: number;
   updatedAt: string;
-}> = ({ featuredCount, avgTemp, totalBeaches, updatedAt }) => (
+}> = ({ featuredCount, avgTemp, totalBeaches, updatedAt }) => {
+  const { t, tPlural } = useIdioma();
+  return (
   <div className="hp-hero">
     <div className="hp-hero-badges">
       {avgTemp != null && (
         <span className="hp-badge">
-          <span aria-hidden="true">{'\u{1F321}\uFE0F'}</span> {avgTemp}{'°'} media
+          <span aria-hidden="true">{'\u{1F321}\uFE0F'}</span> {t('home.mediaTemp', { temp: avgTemp })}
         </span>
       )}
       <span className="hp-badge">
-        <span aria-hidden="true">{'\u{1F3D6}'}</span> {totalBeaches} playas
+        <span aria-hidden="true">{'\u{1F3D6}'}</span> {tPlural('home.playasBadge', totalBeaches)}
       </span>
       {featuredCount > 0 && (
         <span className="hp-badge">
@@ -91,16 +99,21 @@ const HeroBody: React.FC<{
       )}
     </div>
   </div>
-);
+  );
+};
 
 const FeaturedCard: React.FC<{
   beach: FeaturedBeach;
   distKm: number | null;
   onClick: () => void;
 }> = ({ beach, distKm, onClick }) => {
+  const { t, idioma } = useIdioma();
   const emoji = emojiCielo(beach.descripcionClima);
   const flagClass = beach.bandera ? flagColorClass(beach.bandera) : null;
   const attrs = getActiveAttrs(beach.atributos).slice(0, 3);
+  // El regex antepone "viento" a "flojo/fuerte" — opera sobre el español
+  // crudo del API, SIEMPRE antes de traducir
+  const razon = beach.razonRanking.replace(/(?<!viento )\b(flojo|fuerte)\b/i, 'viento $1');
 
   return (
     <div
@@ -108,7 +121,7 @@ const FeaturedCard: React.FC<{
       onClick={onClick}
       role="link"
       tabIndex={0}
-      aria-label={`Ver detalle de ${beach.nombre}`}
+      aria-label={t('comun.verDetalleDe', { nombre: beach.nombre })}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
@@ -127,11 +140,11 @@ const FeaturedCard: React.FC<{
         <p className="hp-featured-municipio">{beach.municipio}</p>
         <div className="hp-featured-meta">
           {flagClass && flagClass !== 'unknown' && (
-            <span className={`hp-flag-dot hp-flag-${flagClass}`} aria-label={`Bandera ${beach.bandera}`} />
+            <span className={`hp-flag-dot hp-flag-${flagClass}`} aria-label={t('home.banderaAria', { bandera: traducirTextoApi(beach.bandera, idioma) })} />
           )}
-          <span className="hp-featured-reason">{beach.razonRanking.replace(/(?<!viento )\b(flojo|fuerte)\b/i, 'viento $1')}</span>
+          <span className="hp-featured-reason">{traducirTextoApi(razon, idioma)}</span>
           {distKm != null && (
-            <span className="hp-featured-dist">{'a '}{Math.round(distKm)}{' km'}</span>
+            <span className="hp-featured-dist">{t('comun.aKm', { km: Math.round(distKm) })}</span>
           )}
         </div>
         {attrs.length > 0 && (
@@ -152,28 +165,31 @@ const FeaturedCard: React.FC<{
 const CautionCard: React.FC<{
   beach: FeaturedBeach;
   onClick: () => void;
-}> = ({ beach, onClick }) => (
-  <div
-    className="hp-caution-card"
-    onClick={onClick}
-    role="link"
-    tabIndex={0}
-    aria-label={`Ver detalle de ${beach.nombre}`}
-    onKeyDown={(e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        onClick();
-      }
-    }}
-  >
-    <span className="hp-caution-icon" aria-hidden="true">{'\u26A0\uFE0F'}</span>
-    <div className="hp-caution-info">
-      <p className="hp-caution-name">{beach.nombre}</p>
-      <p className="hp-caution-sub">{beach.municipio} &middot; {beach.razonRanking}</p>
+}> = ({ beach, onClick }) => {
+  const { t, idioma } = useIdioma();
+  return (
+    <div
+      className="hp-caution-card"
+      onClick={onClick}
+      role="link"
+      tabIndex={0}
+      aria-label={t('comun.verDetalleDe', { nombre: beach.nombre })}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+    >
+      <span className="hp-caution-icon" aria-hidden="true">{'\u26A0\uFE0F'}</span>
+      <div className="hp-caution-info">
+        <p className="hp-caution-name">{beach.nombre}</p>
+        <p className="hp-caution-sub">{beach.municipio} &middot; {traducirTextoApi(beach.razonRanking, idioma)}</p>
+      </div>
+      <span className="hp-caution-arrow" aria-hidden="true">&#8250;</span>
     </div>
-    <span className="hp-caution-arrow" aria-hidden="true">&#8250;</span>
-  </div>
-);
+  );
+};
 
 // ---- Main component ----
 
@@ -184,6 +200,7 @@ const HomePage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const { userLocation, locationLoading, locationDenied, locationBlocked, retryLocation } = useUserLocation();
   const history = useHistory();
+  const { t, tPlural } = useIdioma();
 
   useEffect(() => {
     let mounted = true;
@@ -257,13 +274,14 @@ const HomePage: React.FC = () => {
 
   const avgTemp = featured ? averageTemp(featured.playas) : null;
   const totalBeaches = allPlayas?.length ?? 0;
-  const updatedAt = featured ? formatTimeAgo(featured.timestamp) : '';
+  const updatedAt = featured ? formatTimeAgo(featured.timestamp, t) : '';
 
   return (
     <IonPage className="hp-page">
       <div className="hp-sticky-header" onClick={() => window.location.reload()} style={{ cursor: 'pointer' }}>
-        <h1 className="hp-sticky-title">Playas de Cantabria</h1>
-        <p className="hp-sticky-subtitle">Descubre las mejores playas de Cantabria</p>
+        <h1 className="hp-sticky-title">{t('app.titulo')}</h1>
+        <p className="hp-sticky-subtitle">{t('home.subtitulo')}</p>
+        <SelectorIdioma />
       </div>
 
       <IonContent fullscreen>
@@ -279,7 +297,7 @@ const HomePage: React.FC = () => {
           {loading && (
             <div className="hp-loading">
               <IonSpinner name="crescent" />
-              <span>Buscando las mejores playas cerca de ti...</span>
+              <span>{t('home.buscando')}</span>
             </div>
           )}
 
@@ -289,8 +307,8 @@ const HomePage: React.FC = () => {
               <div className="hp-location-banner hp-location-banner--blocked">
                 <span className="hp-location-icon" aria-hidden="true">{'\u{1F4CD}'}</span>
                 <div className="hp-location-text">
-                  <p className="hp-location-title">Localizaci&oacute;n bloqueada</p>
-                  <p className="hp-location-sub">Para activarla, ve a los ajustes de tu navegador</p>
+                  <p className="hp-location-title">{t('home.locBloqueadaTitulo')}</p>
+                  <p className="hp-location-sub">{t('home.locBloqueadaSub')}</p>
                 </div>
               </div>
             ) : (
@@ -303,8 +321,8 @@ const HomePage: React.FC = () => {
               >
                 <span className="hp-location-icon" aria-hidden="true">{'\u{1F4CD}'}</span>
                 <div className="hp-location-text">
-                  <p className="hp-location-title">Localizaci&oacute;n no disponible</p>
-                  <p className="hp-location-sub">Toca para activar y ver playas cerca de ti</p>
+                  <p className="hp-location-title">{t('home.locNoDisponibleTitulo')}</p>
+                  <p className="hp-location-sub">{t('home.locNoDisponibleSub')}</p>
                 </div>
               </div>
             )
@@ -314,7 +332,7 @@ const HomePage: React.FC = () => {
           {!loading && !locationDenied && (locationLoading || nearestBeaches.length > 0) && (
             <section className="hp-section">
               <h2 className="hp-section-title">
-                <span aria-hidden="true">{'\u{1F4CD}'}</span> Playas m&aacute;s cerca de ti
+                <span aria-hidden="true">{'\u{1F4CD}'}</span> {t('home.cercaDeTi')}
               </h2>
               <div className="hp-nearest-list">
                 {locationLoading ? (
@@ -346,7 +364,7 @@ const HomePage: React.FC = () => {
           {!loading && !featuredError && sortedFeatured.length > 0 && (
             <section className="hp-section">
               <h2 className="hp-section-title">
-                <span aria-hidden="true">{'\u{1F525}'}</span> Playas recomendadas
+                <span aria-hidden="true">{'\u{1F525}'}</span> {t('home.recomendadas')}
               </h2>
               <div className="hp-featured-scroll">
                 {sortedFeatured.map((beach) => (
@@ -365,10 +383,10 @@ const HomePage: React.FC = () => {
           {!loading && !featuredError && featured && sortedFeatured.length === 0 && (
             <section className="hp-section">
               <h2 className="hp-section-title">
-                <span aria-hidden="true">{'\u{1F525}'}</span> Playas recomendadas
+                <span aria-hidden="true">{'\u{1F525}'}</span> {t('home.recomendadas')}
               </h2>
               <div className="hp-empty-msg">
-                <p>Hoy no hay playas destacadas &mdash; consulta el listado completo</p>
+                <p>{t('home.sinDestacadas')}</p>
               </div>
             </section>
           )}
@@ -377,7 +395,7 @@ const HomePage: React.FC = () => {
           {!loading && featuredError && (
             <section className="hp-section">
               <div className="hp-error-msg">
-                <p>No se pudieron cargar las condiciones actuales</p>
+                <p>{t('home.errorCondiciones')}</p>
                 <button
                   className="hp-retry-btn"
                   onClick={() => {
@@ -389,7 +407,7 @@ const HomePage: React.FC = () => {
                       .finally(() => setLoading(false));
                   }}
                 >
-                  Reintentar
+                  {t('home.reintentar')}
                 </button>
               </div>
             </section>
@@ -399,7 +417,7 @@ const HomePage: React.FC = () => {
           {!loading && cautionBeaches.length > 0 && (
             <section className="hp-section">
               <h2 className="hp-section-title">
-                <span aria-hidden="true">{'\u26A0\uFE0F'}</span> Mejor revisar antes de ir
+                <span aria-hidden="true">{'\u26A0\uFE0F'}</span> {t('home.revisarAntes')}
               </h2>
               <div className="hp-caution-list">
                 {cautionBeaches.map((beach) => (
@@ -421,7 +439,7 @@ const HomePage: React.FC = () => {
                 onClick={() => history.push('/playas')}
                 role="link"
                 tabIndex={0}
-                aria-label="Ver todas las playas"
+                aria-label={t('home.verTodas')}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
@@ -431,8 +449,8 @@ const HomePage: React.FC = () => {
               >
                 <span className="hp-nav-icon" aria-hidden="true">{'\u{1F4CB}'}</span>
                 <div>
-                  <p className="hp-nav-title">Ver todas las playas</p>
-                  <p className="hp-nav-sub">{totalBeaches} playas disponibles</p>
+                  <p className="hp-nav-title">{t('home.verTodas')}</p>
+                  <p className="hp-nav-sub">{tPlural('home.playasDisponibles', totalBeaches)}</p>
                 </div>
               </div>
               <div
@@ -440,7 +458,7 @@ const HomePage: React.FC = () => {
                 onClick={() => history.push('/mapa')}
                 role="link"
                 tabIndex={0}
-                aria-label="Explorar en el mapa"
+                aria-label={t('home.explorarMapa')}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
@@ -450,8 +468,8 @@ const HomePage: React.FC = () => {
               >
                 <span className="hp-nav-icon" aria-hidden="true">{'\u{1F5FA}\uFE0F'}</span>
                 <div>
-                  <p className="hp-nav-title">Explorar en el mapa</p>
-                  <p className="hp-nav-sub">Localiza playas cerca de ti</p>
+                  <p className="hp-nav-title">{t('home.explorarMapa')}</p>
+                  <p className="hp-nav-sub">{t('home.localizaCerca')}</p>
                 </div>
               </div>
             </div>

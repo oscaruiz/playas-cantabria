@@ -57,9 +57,15 @@
     "sync-beaches": "cp ../backend/data/beaches.json src/data/beaches.json",
     "start": "npm run sync-beaches && react-scripts start",
     "build": "npm run sync-beaches && react-scripts build",
-    "test": "react-scripts test --transformIgnorePatterns 'node_modules/(?!(@ionic/react|@ionic/react-router|@ionic/core|@stencil/core|ionicons)/)'",
+    "test": "react-scripts test",
     "eject": "react-scripts eject",
     "lint": "eslint --ext .ts,.tsx src"
+  },
+  "jest": {
+    "transformIgnorePatterns": [
+      "[/\\\\]node_modules[/\\\\](?!(@ionic/react|@ionic/react-router|@ionic/core|@stencil/core|ionicons|react-leaflet|@react-leaflet/core)[/\\\\]).+\\.(js|jsx|mjs|cjs|ts|tsx)$",
+      "^.+\\.module\\.(css|sass|scss)$"
+    ]
   },
   "browserslist": [
     "Chrome >=79",

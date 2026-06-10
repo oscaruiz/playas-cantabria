@@ -15,14 +15,6 @@ export function flagColorClass(bandera?: string): string {
   return 'unknown';
 }
 
-export function flagDisplayText(bandera?: string): string {
-  const b = bandera?.toLowerCase() || '';
-  if (b.includes('roja')) return 'Bandera Roja';
-  if (b.includes('amarilla')) return 'Bandera Amarilla';
-  if (b.includes('verde')) return 'Bandera Verde';
-  return 'Sin datos';
-}
-
 export function isFlagAvailable(cruzRoja?: { bandera?: string }): boolean {
   if (!cruzRoja) return false;
   const b = cruzRoja.bandera?.toLowerCase() || '';
