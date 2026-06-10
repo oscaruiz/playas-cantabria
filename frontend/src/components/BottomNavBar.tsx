@@ -17,34 +17,36 @@ const BottomNavBar: React.FC = () => {
   const currentTab = deriveTab(pathname);
 
   return (
-    <nav className="bottom-nav-bar" aria-label={'Navegaci\u00F3n principal'}>
-      <button
-        className={`bottom-nav-tab${currentTab === 'home' ? ' active' : ''}`}
-        onClick={() => { if (currentTab !== 'home') history.push('/'); }}
-        aria-current={currentTab === 'home' ? 'page' : undefined}
-        aria-label="Inicio"
-      >
-        <IonIcon icon={homeOutline} />
-        <span>Inicio</span>
-      </button>
-      <button
-        className={`bottom-nav-tab${currentTab === 'lista' ? ' active' : ''}`}
-        onClick={() => { if (pathname !== '/playas') history.push('/playas'); }}
-        aria-current={currentTab === 'lista' ? 'page' : undefined}
-        aria-label="Playas"
-      >
-        <IonIcon icon={listOutline} />
-        <span>Playas</span>
-      </button>
-      <button
-        className={`bottom-nav-tab${currentTab === 'mapa' ? ' active' : ''}`}
-        onClick={() => { if (currentTab !== 'mapa') history.push('/mapa'); }}
-        aria-current={currentTab === 'mapa' ? 'page' : undefined}
-        aria-label="Mapa"
-      >
-        <IonIcon icon={mapOutline} />
-        <span>Mapa</span>
-      </button>
+    <nav className="bottom-nav-bar" aria-label={'Navegación principal'}>
+      <div className="bottom-nav-inner">
+        <button
+          className={`bottom-nav-tab${currentTab === 'home' ? ' active' : ''}`}
+          onClick={() => { if (currentTab !== 'home') history.push('/'); }}
+          aria-current={currentTab === 'home' ? 'page' : undefined}
+          aria-label="Inicio"
+        >
+          <IonIcon icon={homeOutline} />
+          <span>Inicio</span>
+        </button>
+        <button
+          className={`bottom-nav-tab${currentTab === 'lista' ? ' active' : ''}`}
+          onClick={() => { if (pathname !== '/playas') history.push('/playas'); }}
+          aria-current={currentTab === 'lista' ? 'page' : undefined}
+          aria-label="Playas"
+        >
+          <IonIcon icon={listOutline} />
+          <span>Playas</span>
+        </button>
+        <button
+          className={`bottom-nav-tab${currentTab === 'mapa' ? ' active' : ''}`}
+          onClick={() => { if (currentTab !== 'mapa') history.push('/mapa'); }}
+          aria-current={currentTab === 'mapa' ? 'page' : undefined}
+          aria-label="Mapa"
+        >
+          <IonIcon icon={mapOutline} />
+          <span>Mapa</span>
+        </button>
+      </div>
     </nav>
   );
 };
