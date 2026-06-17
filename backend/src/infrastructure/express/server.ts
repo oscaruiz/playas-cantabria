@@ -17,6 +17,8 @@ import { WeatherProvider } from '../../domain/ports/WeatherProvider';
 
 import { createBeachesRouter } from './routes/beachesRouter';
 import { createDebugRouter } from './routes/debugRouter';
+import { createDiagRouter } from './routes/diagRouter';
+import { RedCrossFlagProvider } from '../providers/RedCrossFlagProvider';
 import { DEBUG_WEATHER } from '../utils/debug';
 
 export interface BuildDeps {
@@ -67,6 +69,14 @@ export function buildExpressApp({ cache }: BuildDeps = {}): Express {
       getBeachById,
       getFeaturedBeaches,
       legacyDetailsAssembler,
+    })
+  );
+
+  // Diagnostics routes (ALWAYS on) — para depurar producción (Cruz Roja, commit vivo)
+  app.use(
+    '/api/_diag',
+    createDiagRouter({
+      flagProvider: container.get<RedCrossFlagProvider>('redCrossFlagProvider'),
     })
   );
 

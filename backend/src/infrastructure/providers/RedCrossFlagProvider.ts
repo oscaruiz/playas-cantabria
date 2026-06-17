@@ -99,6 +99,66 @@ export class RedCrossFlagProvider implements FlagProvider {
   }
 
   /**
+   * Diagnóstico (no cacheado, no lanza): hace UNA petición a cruzroja.es y
+   * devuelve el estado HTTP/tiempo/error reales. Sirve para ver desde el servidor
+   * (Render) por qué falla en producción (403/bloqueo vs 503 vs timeout vs 200).
+   */
+  async probe(redCrossId: number): Promise<{
+    httpStatus: number | null;
+    ok: boolean;
+    elapsedMs: number;
+    foundColor: string | null;
+    bytes: number | null;
+    server: string | null;
+    errorName: string | null;
+    errorMessage: string | null;
+  }> {
+    const start = Date.now();
+    try {
+      const resp = await http.post(
+        `${this.base}/fichaPlaya.do`,
+        new URLSearchParams({ id: String(redCrossId), action: '', aplicacion: 'consultaPlayas' }).toString(),
+        {
+          headers: {
+            ...BROWSER_HEADERS,
+            'Content-Type': 'application/x-www-form-urlencoded',
+            Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            Origin: 'https://www.cruzroja.es',
+            Referer: `${this.base}/listaPlayas.do`
+          },
+          timeout: 13000,
+          validateStatus: () => true,
+          transformResponse: (d) => d
+        }
+      );
+      const html = typeof resp.data === 'string' ? resp.data : String(resp.data ?? '');
+      const $ = load(html);
+      const alt = $('#listaFicha img[alt]').attr('alt')?.trim();
+      return {
+        httpStatus: resp.status,
+        ok: resp.status >= 200 && resp.status < 300,
+        elapsedMs: Date.now() - start,
+        foundColor: alt ? this.detectColorFromAlt(alt) ?? null : null,
+        bytes: html.length,
+        server: (resp.headers?.['server'] as string) ?? null,
+        errorName: null,
+        errorMessage: null
+      };
+    } catch (err: any) {
+      return {
+        httpStatus: null,
+        ok: false,
+        elapsedMs: Date.now() - start,
+        foundColor: null,
+        bytes: null,
+        server: null,
+        errorName: err?.code || err?.name || 'Error',
+        errorMessage: err?.message || String(err)
+      };
+    }
+  }
+
+  /**
    * Detects flag color strictly from the alt text.
    * Returns undefined when not detectable.
    */
