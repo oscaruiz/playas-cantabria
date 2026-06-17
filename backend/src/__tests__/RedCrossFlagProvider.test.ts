@@ -46,12 +46,31 @@ describe('RedCrossFlagProvider', () => {
     expect(status?.schedule).toBe('11:30 - 19:30');
   });
 
-  it('devuelve null si la petición falla (p. ej. 403/bloqueo)', async () => {
-    vi.spyOn(http, 'post').mockRejectedValue(new Error('Request failed with status code 403'));
+  it('reintenta una vez ante fallo transitorio (503/timeout) y devuelve la bandera', async () => {
+    const spy = vi
+      .spyOn(http, 'post')
+      .mockRejectedValueOnce(new Error('Request failed with status code 503'))
+      .mockResolvedValueOnce({ data: FICHA_HTML } as any);
     const provider = new RedCrossFlagProvider(new InMemoryCache());
 
     const status = await provider.getFlagByRedCrossId(1127);
 
-    expect(status).toBeNull();
+    expect(spy).toHaveBeenCalledTimes(2);
+    expect(status?.color).toBe('green');
+  });
+
+  it('devuelve null si todos los intentos fallan (no cachea el fallo)', async () => {
+    const spy = vi.spyOn(http, 'post').mockRejectedValue(new Error('Request failed with status code 403'));
+    const cache = new InMemoryCache();
+    const provider = new RedCrossFlagProvider(cache);
+
+    const first = await provider.getFlagByRedCrossId(1127);
+    expect(first).toBeNull();
+
+    // Segunda llamada: si el fallo se hubiera cacheado, no reintentaría. Como NO
+    // se cachea, vuelve a intentar (2 intentos por llamada → 4 en total).
+    spy.mockResolvedValue({ data: FICHA_HTML } as any);
+    const second = await provider.getFlagByRedCrossId(1127);
+    expect(second?.color).toBe('green');
   });
 });
