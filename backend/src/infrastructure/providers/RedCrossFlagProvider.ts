@@ -1,5 +1,5 @@
 import { load } from 'cheerio';
-import { http } from '../http/axiosClient';
+import { http, BROWSER_HEADERS } from '../http/axiosClient';
 import { InMemoryCache, CacheKeys } from '../cache/InMemoryCache';
 import { FlagProvider } from '../../domain/ports/FlagProvider';
 import { FlagStatus, FlagColor } from '../../domain/entities/Flag';
@@ -32,7 +32,15 @@ export class RedCrossFlagProvider implements FlagProvider {
             aplicacion: 'consultaPlayas'
           }).toString(),
           {
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            // Cabeceras de navegador: cruzroja.es bloquea el UA por defecto desde
+            // IPs de datacenter (Render) → la peticion fallaba solo en produccion.
+            headers: {
+              ...BROWSER_HEADERS,
+              'Content-Type': 'application/x-www-form-urlencoded',
+              Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+              Origin: 'https://www.cruzroja.es',
+              Referer: `${this.base}/listaPlayas.do`
+            },
             timeout: 10000
           }
         );

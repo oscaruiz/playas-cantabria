@@ -1,6 +1,6 @@
 import * as cheerio from 'cheerio';
 import iconv from 'iconv-lite';
-import { http } from '../http/axiosClient';
+import { http, BROWSER_HEADERS } from '../http/axiosClient';
 import { InMemoryCache } from '../cache/InMemoryCache';
 import { debugLog } from '../utils/debug';
 import type {
@@ -15,10 +15,8 @@ import type {
 // ---------------------------------------------------------------------------
 
 const SCRAPER_HEADERS = {
-  'User-Agent':
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  ...BROWSER_HEADERS,
   Accept: 'application/xml, text/xml, text/html;q=0.9, */*;q=0.8',
-  'Accept-Language': 'es-ES,es;q=0.9',
 };
 
 const XML_TIMEOUT = 7000;

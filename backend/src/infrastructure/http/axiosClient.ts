@@ -17,6 +17,17 @@ const httpsAgent = new https.Agent({
 });
 
 /**
+ * Cabeceras de navegador (UA + idioma) para scraping de webs que filtran bots.
+ * Necesario en producción: webs como cruzroja.es o aemet.es rechazan el UA por
+ * defecto desde IPs de datacenter. Cada llamante añade su propio `Accept`.
+ */
+export const BROWSER_HEADERS = {
+  'User-Agent':
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  'Accept-Language': 'es-ES,es;q=0.9',
+} as const;
+
+/**
  * Shared Axios instance with sensible defaults + keep-alive.
  * Providers can override timeouts per request.
  */
