@@ -1,5 +1,13 @@
 import { load } from 'cheerio';
+import type { Agent } from 'http';
 import { http, BROWSER_HEADERS } from '../http/axiosClient';
+
+// https-proxy-agent expone sus tipos vía "exports" map, incompatible con el
+// moduleResolution:node de este tsconfig. Se carga por require (any) + shim de tipos.
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { HttpsProxyAgent } = require('https-proxy-agent') as {
+  HttpsProxyAgent: new (url: string) => Agent;
+};
 import { InMemoryCache, CacheKeys } from '../cache/InMemoryCache';
 import { FlagProvider } from '../../domain/ports/FlagProvider';
 import { FlagStatus, FlagColor } from '../../domain/entities/Flag';
@@ -14,7 +22,41 @@ import { Config } from '../config/config';
 export class RedCrossFlagProvider implements FlagProvider {
   private readonly base = 'https://www.cruzroja.es/appjv/consPlayas';
 
+  // cruzroja.es (WAF F5) devuelve 403 a cualquier IP de datacenter (Render US y EU).
+  // Para sortearlo se enruta SOLO esta petición por un proxy residencial / scraping-API
+  // si se define SCRAPER_PROXY_URL (p. ej. http://user:pass@host:puerto). Sin la env,
+  // va directo (y en prod seguirá dando 403, degradando a null sin romper nada).
+  private readonly proxyAgent = process.env.SCRAPER_PROXY_URL
+    ? new HttpsProxyAgent(process.env.SCRAPER_PROXY_URL)
+    : undefined;
+
   constructor(private readonly cache: InMemoryCache) {}
+
+  /** Config común del POST a Cruz Roja (cabeceras + proxy opcional). */
+  private postOptions(timeout: number, raw = false) {
+    return {
+      headers: {
+        ...BROWSER_HEADERS,
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        Origin: 'https://www.cruzroja.es',
+        Referer: `${this.base}/listaPlayas.do`
+      },
+      timeout,
+      // Cuando hay proxy: usar su agente y desactivar el manejo de proxy de axios.
+      // rejectUnauthorized:false tolera scraping-APIs que hacen MITM de TLS.
+      ...(this.proxyAgent ? { httpsAgent: this.proxyAgent, proxy: false as const } : {}),
+      ...(raw ? { validateStatus: () => true, transformResponse: (d: unknown) => d } : {})
+    };
+  }
+
+  private flagBody(redCrossId: number): string {
+    return new URLSearchParams({
+      id: String(redCrossId),
+      action: '',
+      aplicacion: 'consultaPlayas'
+    }).toString();
+  }
 
   async getFlagByRedCrossId(redCrossId: number): Promise<FlagStatus | null> {
     if (!redCrossId || redCrossId <= 0) return null;
@@ -52,23 +94,8 @@ export class RedCrossFlagProvider implements FlagProvider {
   private async fetchFlag(redCrossId: number): Promise<FlagStatus> {
     const resp = await http.post(
       `${this.base}/fichaPlaya.do`,
-      new URLSearchParams({
-        id: String(redCrossId),
-        action: '',
-        aplicacion: 'consultaPlayas'
-      }).toString(),
-      {
-        // Cabeceras de navegador (cruzroja.es filtra el UA por defecto) + timeout
-        // amplio: su WAF responde en 10-12s y a veces da 503.
-        headers: {
-          ...BROWSER_HEADERS,
-          'Content-Type': 'application/x-www-form-urlencoded',
-          Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-          Origin: 'https://www.cruzroja.es',
-          Referer: `${this.base}/listaPlayas.do`
-        },
-        timeout: 15000
-      }
+      this.flagBody(redCrossId),
+      this.postOptions(12000)
     );
 
     const $ = load(resp.data as string);
@@ -117,19 +144,8 @@ export class RedCrossFlagProvider implements FlagProvider {
     try {
       const resp = await http.post(
         `${this.base}/fichaPlaya.do`,
-        new URLSearchParams({ id: String(redCrossId), action: '', aplicacion: 'consultaPlayas' }).toString(),
-        {
-          headers: {
-            ...BROWSER_HEADERS,
-            'Content-Type': 'application/x-www-form-urlencoded',
-            Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-            Origin: 'https://www.cruzroja.es',
-            Referer: `${this.base}/listaPlayas.do`
-          },
-          timeout: 13000,
-          validateStatus: () => true,
-          transformResponse: (d) => d
-        }
+        this.flagBody(redCrossId),
+        this.postOptions(13000, true)
       );
       const html = typeof resp.data === 'string' ? resp.data : String(resp.data ?? '');
       const $ = load(html);

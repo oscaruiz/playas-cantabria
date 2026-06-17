@@ -17,6 +17,7 @@ export function createDiagRouter(deps: DiagRoutesDeps): Router {
     res.json({
       commit: process.env.RENDER_GIT_COMMIT ?? null,
       node: process.version,
+      proxy: process.env.SCRAPER_PROXY_URL ? 'configurado' : null,
       now: new Date().toISOString()
     });
   });
