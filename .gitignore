@@ -1,103 +1,50 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# dependencies
-/node_modules
-/.pnp
+# Dependencies
+node_modules/
+.pnp
 .pnp.js
 
-# testing
-/coverage
-
-# production
-/build
-
-# misc
-.DS_Store
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-/.nx
-/.nx/cache
-/.vscode/*
-!/.vscode/extensions.json
-.idea
-
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Optional eslint cache
-.eslintcache
-
-# --- Frontend ---
-/frontend/node_modules
-/frontend/.env
-/frontend/.env.*.local
-/frontend/build
-/frontend/dist
-/frontend/.next
-/frontend/.nuxt
-/frontend/.cache
-/frontend/.eslintcache
-/frontend/coverage
-/frontend/.turbo
-/frontend/.vite
-/frontend/.parcel-cache
+# Build output
+build/
+dist/
 /frontend/android
 /frontend/.firebase
-/frontend/.vscode
-/frontend/.vscode/
 
-# --- Backend ---
-/backend/node_modules
-/backend/functions
-/backend/.env
-/backend/.env.*.local
-/backend/dist
-/backend/build
-/backend/.coverage
-/backend/.nyc_output
-/backend/.eslintcache
-/backend/.cache
-/backend/.venv
-/backend/venv
-/backend/__pycache__
-/backend/.mypy_cache
-/backend/.pytest_cache
-/backend/.turbo
-/backend/.turbo
-/node_modules
-/dist
+# Compiled Firebase Functions
+backend/functions/
+
+# Caches & coverage
+.cache/
+.eslintcache
+.turbo/
+.vite/
+coverage/
+.nyc_output/
+
+# Environment files (never commit secrets)
 .env
-*.bak
-.vscode/
+.env.local
+.env.*.local
 backend/.env.example
 backend/config/.env.tmp
 
-# Claude Code
+# Editors & OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+
+# Logs & backups
+*.log
+*.bak
+
+# Claude Code / agent tooling
 .claude/
 .agents/
-frontend/.playwright-mcp/console-2026-06-10T10-02-05-772Z.log
-frontend/.playwright-mcp/console-2026-06-10T12-25-08-884Z.log
-frontend/.playwright-mcp/page-2026-06-10T10-02-06-676Z.yml
-frontend/.playwright-mcp/page-2026-06-10T10-02-36-686Z.yml
-frontend/.playwright-mcp/page-2026-06-10T12-15-22-032Z.yml
-frontend/.playwright-mcp/page-2026-06-10T12-25-09-748Z.yml
-frontend/.playwright-mcp/page-2026-06-10T12-25-30-677Z.yml
-frontend/.playwright-mcp/console-2026-06-10T14-51-51-210Z.log
-frontend/.playwright-mcp/console-2026-06-10T14-53-50-894Z.log
-frontend/.playwright-mcp/console-2026-06-10T14-54-22-515Z.log
-frontend/.playwright-mcp/console-2026-06-10T14-55-19-571Z.log
-frontend/.playwright-mcp/console-2026-06-10T14-55-57-764Z.log
-frontend/.playwright-mcp/console-2026-06-10T14-57-40-078Z.log
-frontend/.playwright-mcp/console-2026-06-10T15-03-33-435Z.log
-frontend/.playwright-mcp/page-2026-06-10T14-51-52-415Z.yml
-frontend/.playwright-mcp/page-2026-06-10T14-53-14-260Z.yml
-frontend/.playwright-mcp/page-2026-06-10T14-53-39-276Z.yml
-frontend/.playwright-mcp/page-2026-06-10T14-53-51-704Z.yml
-frontend/.playwright-mcp/page-2026-06-10T14-54-22-678Z.yml
-frontend/.playwright-mcp/page-2026-06-10T14-55-20-364Z.yml
-frontend/.playwright-mcp/page-2026-06-10T14-55-58-044Z.yml
-frontend/.playwright-mcp/page-2026-06-10T14-56-51-415Z.yml
-frontend/.playwright-mcp/page-2026-06-10T14-57-40-530Z.yml
+skills-lock.json
+
+# Local scratch & test artifacts (Playwright runs, planning notes, screenshots)
+.playwright-mcp/
+plans/
+/*.png
