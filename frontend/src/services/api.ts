@@ -186,6 +186,18 @@ export interface PrediccionCompletaDTO {
 }
 
 // ------------------------------
+// Tiempo real "ahora" (observación, con prioridad sobre la previsión)
+// ------------------------------
+export interface TiempoActual {
+  cielo: string | null;
+  icono: number | null;
+  temperatura: number | null;
+  precipitacionMm: number | null;
+  fuente: string;
+  timestamp: string;
+}
+
+// ------------------------------
 // Detalle de Playa
 // ------------------------------
 export interface PlayaDetalle {
@@ -205,6 +217,9 @@ export interface PlayaDetalle {
   hospitalDistancia?: number | null;
   submarinismo?: boolean | null;
   temperaturaActual?: number | null;
+
+  // Observación en tiempo real para HOY (cielo/temp/lluvia reales)
+  tiempoActual?: TiempoActual | null;
 
   // Datos meteorológicos estandarizados
   clima?: DatosClima;

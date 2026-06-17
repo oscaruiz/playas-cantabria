@@ -1109,6 +1109,23 @@
   flex-shrink: 0;
 }
 
+/* --- Previsión meteorológica AEMET (agrupa MAÑANA/TARDE + stats) --- */
+.prevision-aemet-body {
+  padding: 0 14px 14px;
+}
+
+.prevision-aemet-body .halfday-detail {
+  margin-bottom: 0;
+}
+
+/* Stats del día embebidas dentro de la tarjeta de previsión: sin card propia,
+   separadas de los bloques MAÑANA/TARDE por una línea sutil. */
+.daily-stats-embedded {
+  margin-top: 14px;
+  padding: 14px 4px 0;
+  border-top: 1px solid var(--playa-border);
+}
+
 /* --- Daily Stats Card --- */
 .daily-stats-card {
   padding: 0;

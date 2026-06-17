@@ -122,6 +122,7 @@ export const en = {
   'detalle.mareas': 'Tides',
   'detalle.expandir': 'Expand',
   'detalle.contraer': 'Collapse',
+  'detalle.previsionAemet': 'AEMET weather forecast',
   'detalle.infoPlaya': 'Beach information',
   'detalle.dimensiones': 'Dimensions',
   'detalle.tipo': 'Type',

@@ -124,6 +124,7 @@ export const es = {
   'detalle.mareas': 'Mareas',
   'detalle.expandir': 'Expandir',
   'detalle.contraer': 'Contraer',
+  'detalle.previsionAemet': 'Previsión meteorológica AEMET',
   'detalle.infoPlaya': 'Información de la playa',
   'detalle.dimensiones': 'Dimensiones',
   'detalle.tipo': 'Tipo',

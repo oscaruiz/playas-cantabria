@@ -267,11 +267,17 @@ const WavesIndicator: React.FC<{ label: string }> = ({ label }) => {
   );
 };
 
-const ForecastHero: React.FC<{ dia: DiaPrediccionDTO; climaActual?: number | null }> = ({ dia, climaActual }) => {
+const ForecastHero: React.FC<{
+  dia: DiaPrediccionDTO;
+  climaActual?: number | null;
+  tiempoActual?: PlayaDetalleData['tiempoActual'];
+}> = ({ dia, climaActual, tiempoActual }) => {
   const { t, idioma } = useIdioma();
   // skyText/viento/oleaje son el español crudo del API: emojiCielo y
-  // windSpeedLevel hacen regex sobre él — traducir solo al mostrar
-  const skyText = capitalizar(dia.tarde.cielo ?? dia.manana.cielo ?? '');
+  // windSpeedLevel hacen regex sobre él — traducir solo al mostrar.
+  // Para HOY priorizamos la observación real ("ahora") sobre la previsión de
+  // la tarde; así el titular deja de contradecir al desglose mañana/tarde.
+  const skyText = capitalizar(tiempoActual?.cielo ?? dia.tarde.cielo ?? dia.manana.cielo ?? '');
   const viento = capitalizar(dia.tarde.viento ?? dia.manana.viento ?? '');
   const oleaje = capitalizar(dia.tarde.oleaje ?? dia.manana.oleaje ?? '');
   const skyEmoji = emojiCielo(skyText || null);
@@ -351,14 +357,15 @@ const HalfDayDetail: React.FC<{
 
 // ---- Daily Stats (sensation, UV badge, warning) ----
 
-const DailyStats: React.FC<{ dia: DiaPrediccionDTO }> = ({ dia }) => {
+const DailyStats: React.FC<{ dia: DiaPrediccionDTO; embedded?: boolean }> = ({ dia, embedded }) => {
   const { t, idioma } = useIdioma();
   const hasAny = dia.sensacionTermica || dia.indiceUV != null || (dia.aviso && dia.aviso.descripcion);
   if (!hasAny) return null;
 
-  return (
-    <div className="detail-card daily-stats-card">
-      <div className="daily-stats-body">
+  // `embedded`: se renderiza dentro de la tarjeta "Previsión meteorológica AEMET",
+  // por lo que omite su propio envoltorio `.detail-card` (evita card dentro de card).
+  const body = (
+    <div className={`daily-stats-body${embedded ? ' daily-stats-embedded' : ''}`}>
         {dia.sensacionTermica && (
           <div className="daily-stat-row">
             <span className="daily-stat-icon">{'\u{1F525}'}</span>
@@ -388,8 +395,10 @@ const DailyStats: React.FC<{ dia: DiaPrediccionDTO }> = ({ dia }) => {
           </div>
         )}
       </div>
-    </div>
   );
+
+  if (embedded) return body;
+  return <div className="detail-card daily-stats-card">{body}</div>;
 };
 
 // ---- Tides Section (selected day only, sorted by time) ----
@@ -852,12 +861,21 @@ const PlayaDetallePage: React.FC = () => {
                   <ForecastHero
                     dia={pred.dias[safeDayIndex]}
                     climaActual={isToday(pred.dias[safeDayIndex].fecha) ? datos.temperaturaActual : undefined}
+                    tiempoActual={isToday(pred.dias[safeDayIndex].fecha) ? datos.tiempoActual : undefined}
                   />
-                  <HalfDayDetail
-                    manana={pred.dias[safeDayIndex].manana}
-                    tarde={pred.dias[safeDayIndex].tarde}
-                  />
-                  <DailyStats dia={pred.dias[safeDayIndex]} />
+                  <div className="detail-card prevision-aemet-card">
+                    <div className="card-header" role="heading" aria-level={3}>
+                      <span className="card-header-icon" aria-hidden="true">{'\u{1F326}️'}</span>
+                      <span className="card-header-text">{t('detalle.previsionAemet')}</span>
+                    </div>
+                    <div className="prevision-aemet-body">
+                      <HalfDayDetail
+                        manana={pred.dias[safeDayIndex].manana}
+                        tarde={pred.dias[safeDayIndex].tarde}
+                      />
+                      <DailyStats dia={pred.dias[safeDayIndex]} embedded />
+                    </div>
+                  </div>
                   {pred.mareas?.[safeDayIndex] && (
                     <TidesSection
                       marea={pred.mareas[safeDayIndex]}
