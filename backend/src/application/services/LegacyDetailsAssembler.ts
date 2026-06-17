@@ -193,6 +193,23 @@ export class LegacyDetailsAssembler {
     const details = await this.getDetails.execute(beachId);
     let base = LegacyDetailsMapper.toDTO(details);
 
+    // Step 1.5: "Ahora" en tiempo real para HOY (observación, no previsión).
+    // El cielo debe venir de OpenWeather current (real); `details.weather` puede
+    // ser AEMET-observación, cuya descripción de cielo es sintética (temp/humedad).
+    // La llamada está cacheada (misma clave que el hedge) → sin coste extra.
+    try {
+      const now = await this.openWeather.getCurrentByCoords(
+        details.beach.latitude,
+        details.beach.longitude,
+      );
+      base.tiempoActual = LegacyDetailsMapper.mapTiempoActual(now);
+    } catch {
+      base.tiempoActual =
+        details.weather && details.weather.source === 'OpenWeather'
+          ? LegacyDetailsMapper.mapTiempoActual(details.weather)
+          : null;
+    }
+
     // Step 2: Try scraper (Layer 1 — richest source)
     let forecast: BeachFullForecast | null = null;
     try {

@@ -43,7 +43,16 @@ export class FeaturedBeachMapper {
       lat: r.beach.latitude,
       lon: r.beach.longitude,
       temperatura: r.weather?.temperatureC ?? r.enrichment?.temperatureC ?? null,
-      descripcionClima: r.enrichment?.summary ?? r.weather?.description ?? null,
+      // Preferir la observación real (OpenWeather current) sobre la previsión
+      // AEMET, para que el texto coincida con icono/temperatura (también
+      // observación) y con el `tiempoActual` del detalle. La descripción de la
+      // observación AEMET es sintética (temp/humedad), por eso solo se confía en
+      // OpenWeather; si no, se cae a la previsión.
+      descripcionClima:
+        (r.weather?.source === 'OpenWeather' ? r.weather.description : null) ??
+        r.enrichment?.summary ??
+        r.weather?.description ??
+        null,
       iconoClima: r.weather?.icon ?? null,
       vientoMs: r.weather?.windSpeedMs ?? null,
       bandera: r.flag?.color ? (FLAG_COLOR_ES[r.flag.color] ?? null) : null,

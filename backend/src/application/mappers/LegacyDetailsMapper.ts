@@ -21,6 +21,20 @@ export type ClimaDTO = {
   manana: ClimaDiaDTO | null;
 };
 
+/**
+ * Observación en tiempo real ("ahora") para HOY. Separada de `clima`/`prediccionCompleta`
+ * (que son PREVISIÓN AEMET): este bloque refleja el estado real actual del cielo,
+ * temperatura y precipitación, con prioridad sobre la previsión en la tarjeta resumen.
+ */
+export type TiempoActualDTO = {
+  cielo: string | null;
+  icono: number | null;
+  temperatura: number | null;
+  precipitacionMm: number | null;
+  fuente: 'OpenWeather' | 'AEMET';
+  timestamp: string;
+};
+
 type CruzRojaDTO = {
   bandera: 'Verde' | 'Amarilla' | 'Roja' | 'Negra' | 'Desconocida';
   coberturaDesde?: string | null;
@@ -65,6 +79,7 @@ export type LegacyDetailsDTO = {
   hospitalDistancia: number | null;
   submarinismo: boolean | null;
   temperaturaActual: number | null;
+  tiempoActual: TiempoActualDTO | null;
   clima: ClimaDTO | null;
   cruzRoja: CruzRojaDTO | null;
   prediccionCompleta: PrediccionCompletaDTO | null;
@@ -77,9 +92,22 @@ export class LegacyDetailsMapper {
     return {
       ...this.mapBeach(beach),
       temperaturaActual: weather?.temperatureC ?? null,
+      tiempoActual: null, // poblado por LegacyDetailsAssembler desde OpenWeather current
       clima: weather ? this.mapClima(weather) : null,
       cruzRoja: flag ? this.mapCruzRoja(flag) : null,
       prediccionCompleta: null,
+    };
+  }
+
+  /** Mapea una observación actual (OpenWeather current) al bloque "tiempo real" de HOY. */
+  static mapTiempoActual(w: Weather): TiempoActualDTO {
+    return {
+      cielo: w.description ?? null,
+      icono: this.iconToLegacy(w.source, w.icon),
+      temperatura: w.temperatureC ?? null,
+      precipitacionMm: w.precipitationMm ?? null,
+      fuente: w.source,
+      timestamp: new Date(w.timestamp).toISOString(),
     };
   }
 

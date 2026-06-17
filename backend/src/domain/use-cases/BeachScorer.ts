@@ -62,6 +62,23 @@ function skyScoreFromDescription(desc: string): number {
   return 8;
 }
 
+/**
+ * Mapea una descripción de cielo (es) a una palabra corta para la "razón" del
+ * ranking. Cubre los términos de AEMET (previsión) y de OpenWeather (observación,
+ * p. ej. "cielo claro", "algo de nubes", "muy nuboso"). Devuelve null si no
+ * reconoce el término (el llamante usará el texto crudo).
+ */
+function skyWordFromDescription(desc: string): string | null {
+  const s = desc.toLowerCase();
+  if (/(despejado|soleado|cielo claro)/.test(s)) return 'Sol';
+  if (/(poco\s*nuboso|intervalos|parcial|algo de nubes|claro)/.test(s)) return 'Parcialmente soleado';
+  if (/(muy nuboso|nuboso|nublado|cubierto|nubes)/.test(s)) return 'Nublado';
+  if (/(lluvia|chubasc|llovizna)/.test(s)) return 'Lluvia';
+  if (/(tormenta|eléctrica|rayos)/.test(s)) return 'Tormenta';
+  if (/(niebla|bruma|neblina)/.test(s)) return 'Niebla';
+  return null;
+}
+
 export function computeSkyScore(weather: Weather | null): number {
   if (!weather) return 8;
   if (weather.icon && ICON_SKY_SCORE[weather.icon] !== undefined) {
@@ -261,16 +278,22 @@ export function buildRankingReason(
 ): string {
   const parts: string[] = [];
 
-  if (enrichment?.summary) {
-    const s = enrichment.summary.toLowerCase();
-    if (/(despejado|soleado)/.test(s)) parts.push('Sol');
-    else if (/(poco\s*nuboso|intervalos|parcial|claro)/.test(s)) parts.push('Parcialmente soleado');
-    else if (/(nuboso|nublado|cubierto)/.test(s)) parts.push('Nublado');
-    else parts.push(enrichment.summary);
-  } else {
-    if (subScores.cielo >= 20) parts.push('Sol');
-    else if (subScores.cielo >= 15) parts.push('Parcialmente soleado');
-    else if (subScores.cielo >= 10) parts.push('Nublado');
+  // Preferir la observación real (OpenWeather current) sobre la previsión AEMET,
+  // para que la "razón" coincida con el cielo de ahora (y con el detalle).
+  const skyDesc =
+    (weather?.source === 'OpenWeather' ? weather.description : null) ?? enrichment?.summary ?? null;
+  const skyWord = skyDesc ? skyWordFromDescription(skyDesc) : null;
+  if (skyWord) {
+    parts.push(skyWord);
+  } else if (subScores.cielo >= 20) {
+    parts.push('Sol');
+  } else if (subScores.cielo >= 15) {
+    parts.push('Parcialmente soleado');
+  } else if (subScores.cielo >= 10) {
+    parts.push('Nublado');
+  } else if (skyDesc) {
+    // Texto no reconocido y cielo malo (lluvia/tormenta): mostrar el texto crudo.
+    parts.push(skyDesc.charAt(0).toUpperCase() + skyDesc.slice(1));
   }
 
   const temp = weather?.temperatureC ?? enrichment?.temperatureC;

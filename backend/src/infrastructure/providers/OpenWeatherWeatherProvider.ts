@@ -31,12 +31,15 @@ export class OpenWeatherWeatherProvider implements WeatherProvider {
 
         const d = resp.data;
         const w0 = Array.isArray(d.weather) ? d.weather[0] ?? {} : {};
+        // Real precipitation volume (mm) reported by the current-weather endpoint.
+        const precipMm = d.rain?.['1h'] ?? d.rain?.['3h'] ?? d.snow?.['1h'] ?? null;
         const weather: Weather = {
           source: 'OpenWeather',
           timestamp: typeof d.dt === 'number' ? d.dt * 1000 : Date.now(),
           temperatureC: d.main?.temp ?? null,
           description: w0.description ?? null,
           icon: w0.icon ?? null,
+          precipitationMm: typeof precipMm === 'number' ? precipMm : null,
           windSpeedMs: d.wind?.speed ?? null,
           windDirectionDeg: d.wind?.deg ?? null,
           humidityPct: d.main?.humidity ?? null,

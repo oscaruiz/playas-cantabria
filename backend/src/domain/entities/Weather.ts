@@ -10,6 +10,10 @@ export interface Weather {
   description: string | null;
   icon: string | null;
 
+  /** Observed precipitation in the last hour (mm). Only set by real-time
+   *  current-weather sources (e.g. OpenWeather `rain.1h`). Optional/nullable. */
+  precipitationMm?: number | null;
+
   windSpeedMs: number | null;
   windDirectionDeg: number | null;
 
