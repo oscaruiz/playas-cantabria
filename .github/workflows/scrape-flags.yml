@@ -1,0 +1,49 @@
+name: Scrape Cruz Roja flags
+
+# Scrapea las banderas de Cruz Roja desde el runner de GitHub (IP no-Render) y
+# commitea backend/data/flags.json, que el backend sirve como fuente primaria.
+# (En Render el scrape en vivo da 403 por el WAF F5; esto lo desacopla.)
+
+on:
+  schedule:
+    - cron: '0 7,13 * * *' # 07:00 y 13:00 UTC (~09:00 y 15:00 en Madrid)
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: scrape-flags
+  cancel-in-progress: false
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - run: npm ci
+
+      - name: Scrape flags
+        run: npm run scrape:flags
+
+      - name: Commit flags.json if changed
+        run: |
+          if [[ -n "$(git status --porcelain data/flags.json)" ]]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add data/flags.json
+            git commit -m "chore(flags): actualizar banderas Cruz Roja [skip ci]"
+            git push
+          else
+            echo "Sin cambios en flags.json"
+          fi

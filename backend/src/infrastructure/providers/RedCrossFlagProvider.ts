@@ -1,3 +1,5 @@
+import fs from 'fs/promises';
+import path from 'path';
 import { load } from 'cheerio';
 import type { Agent } from 'http';
 import { http, BROWSER_HEADERS } from '../http/axiosClient';
@@ -30,7 +32,44 @@ export class RedCrossFlagProvider implements FlagProvider {
     ? new HttpsProxyAgent(process.env.SCRAPER_PROXY_URL)
     : undefined;
 
-  constructor(private readonly cache: InMemoryCache) {}
+  // Banderas pre-scrapeadas (por la GitHub Action / script local desde IP no
+  // bloqueada) y commiteadas en data/flags.json. Es la fuente PRIMARIA en prod,
+  // donde el scrape en vivo da 403. Si una playa no está en el fichero, se cae al
+  // scrape en vivo (que funciona en local).
+  private fileFlags: Map<number, FlagStatus> | null = null;
+
+  constructor(
+    private readonly cache: InMemoryCache,
+    private readonly flagsFile = 'data/flags.json'
+  ) {}
+
+  private async loadFileFlags(): Promise<Map<number, FlagStatus>> {
+    if (this.fileFlags) return this.fileFlags;
+    const map = new Map<number, FlagStatus>();
+    try {
+      const raw = JSON.parse(
+        await fs.readFile(path.resolve(process.cwd(), this.flagsFile), 'utf-8')
+      ) as {
+        generatedAt?: string;
+        flags: Record<string, { color: string | null; message: string | null; coverageFrom: string | null; coverageTo: string | null; schedule: string | null }>;
+      };
+      const ts = raw.generatedAt ? Date.parse(raw.generatedAt) || Date.now() : Date.now();
+      for (const [id, f] of Object.entries(raw.flags ?? {})) {
+        map.set(Number(id), {
+          color: (f.color as FlagColor) ?? undefined,
+          message: f.message ?? undefined,
+          timestamp: ts,
+          coverageFrom: f.coverageFrom ?? null,
+          coverageTo: f.coverageTo ?? null,
+          schedule: f.schedule ?? null
+        });
+      }
+    } catch {
+      // sin fichero → mapa vacío → se usará el scrape en vivo
+    }
+    this.fileFlags = map;
+    return map;
+  }
 
   /** Config común del POST a Cruz Roja (cabeceras + proxy opcional). */
   private postOptions(timeout: number, raw = false) {
@@ -60,6 +99,10 @@ export class RedCrossFlagProvider implements FlagProvider {
 
   async getFlagByRedCrossId(redCrossId: number): Promise<FlagStatus | null> {
     if (!redCrossId || redCrossId <= 0) return null;
+
+    // Fuente primaria: banderas pre-scrapeadas (data/flags.json).
+    const fromFile = (await this.loadFileFlags()).get(redCrossId);
+    if (fromFile) return fromFile;
 
     const ttl = 86400; // 24h — flags rarely change, reduce scraping load
     const key = CacheKeys.flagByRedCrossId(redCrossId);
