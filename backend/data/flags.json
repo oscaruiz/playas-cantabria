@@ -1,58 +1,58 @@
 {
-  "generatedAt": "2026-06-17T15:58:19.914Z",
+  "generatedAt": "2026-06-18T08:37:09.906Z",
   "flags": {
     "30": {
-      "color": "red",
-      "message": "Roja",
+      "color": null,
+      "message": "No hay información",
       "coverageFrom": "12-06-2026",
       "coverageTo": "15-09-2026",
       "schedule": "11:30 - 19:30"
     },
     "35": {
-      "color": "green",
-      "message": "Verde",
+      "color": null,
+      "message": "No hay información",
       "coverageFrom": "12-06-2026",
       "coverageTo": "15-09-2026",
       "schedule": "11:30 - 19:30"
     },
     "37": {
-      "color": "green",
-      "message": "Verde",
+      "color": null,
+      "message": "No hay información",
       "coverageFrom": "12-06-2026",
       "coverageTo": "15-09-2026",
       "schedule": "11:30 - 19:30"
     },
     "278": {
-      "color": "green",
-      "message": "Verde",
+      "color": null,
+      "message": "No hay información",
       "coverageFrom": "12-06-2026",
       "coverageTo": "15-09-2026",
       "schedule": "11:30 - 19:30"
     },
     "283": {
-      "color": "green",
-      "message": "Verde",
+      "color": null,
+      "message": "No hay información",
       "coverageFrom": "12-06-2026",
       "coverageTo": "15-09-2026",
       "schedule": "11:30 - 19:30"
     },
     "328": {
-      "color": "green",
-      "message": "Verde",
+      "color": null,
+      "message": "No hay información",
       "coverageFrom": "12-06-2026",
       "coverageTo": "15-09-2026",
       "schedule": "11:30 - 19:30"
     },
     "369": {
-      "color": "green",
-      "message": "Verde",
+      "color": null,
+      "message": "No hay información",
       "coverageFrom": "12-06-2026",
       "coverageTo": "15-09-2026",
       "schedule": "11:30 - 19:30"
     },
     "373": {
-      "color": "green",
-      "message": "Verde",
+      "color": null,
+      "message": "No hay información",
       "coverageFrom": "12-06-2026",
       "coverageTo": "15-09-2026",
       "schedule": "11:30 - 19:30"
@@ -65,8 +65,8 @@
       "schedule": "11:30 - 19:30"
     },
     "1014": {
-      "color": "yellow",
-      "message": "Amarilla",
+      "color": null,
+      "message": "No hay información",
       "coverageFrom": "12-06-2025",
       "coverageTo": "15-09-2026",
       "schedule": "11:30 - 19:30"
@@ -86,15 +86,15 @@
       "schedule": "11:30 - 19:30"
     },
     "1127": {
-      "color": "green",
-      "message": "Verde",
+      "color": null,
+      "message": "No hay información",
       "coverageFrom": "12-06-2026",
       "coverageTo": "15-09-2026",
       "schedule": "11:30 - 19:30"
     },
     "1233": {
-      "color": "green",
-      "message": "Verde",
+      "color": null,
+      "message": "No hay información",
       "coverageFrom": "12-06-2026",
       "coverageTo": "15-09-2026",
       "schedule": "11:30 - 19:30"
