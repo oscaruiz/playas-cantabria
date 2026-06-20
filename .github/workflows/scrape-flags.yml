@@ -6,7 +6,7 @@ name: Scrape Cruz Roja flags
 
 on:
   schedule:
-    - cron: '0 7,13 * * *' # 07:00 y 13:00 UTC (~09:00 y 15:00 en Madrid)
+    - cron: '0 7-17/2 * * *' # cada 2h, 07:00–17:00 UTC (~09:00–19:00 en Madrid)
   workflow_dispatch: {}
 
 permissions:
