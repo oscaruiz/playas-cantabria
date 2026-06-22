@@ -89,6 +89,7 @@ export const en = {
   'bandera.amarilla': 'Yellow Flag',
   'bandera.verde': 'Green Flag',
   'bandera.sinDatos': 'No data',
+  'bandera.fueraDeHorario': 'Outside hours',
 
   // ---- Fechas relativas ----
   'fecha.hoy': 'Today',

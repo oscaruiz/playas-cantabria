@@ -19,14 +19,14 @@ import './PlayaDetalle.css';
 import {
   limpiarTexto,
   flagColorClass,
-  isFlagAvailable,
+  estadoBandera,
   capitalizar,
   emojiCielo,
   getActiveAttrs,
 } from '../utils/beachHelpers';
 import { useIdioma, Idioma, TraducirFn } from '../i18n/IdiomaContext';
 import { ClaveTexto } from '../i18n/es';
-import { traducirTextoApi, claveBandera } from '../i18n/apiText';
+import { traducirTextoApi, claveEstadoBandera } from '../i18n/apiText';
 import { nombreDia, traducirNombreDiaApi, formatearFechaCorta } from '../i18n/fechas';
 
 // ---- Helpers ----
@@ -101,11 +101,13 @@ function hasHalfDayData(h: HalfDayDTO): boolean {
 
 const FlagBanner: React.FC<{ cruzRoja?: PlayaDetalleData['cruzRoja'] }> = ({ cruzRoja }) => {
   const { t } = useIdioma();
-  if (!isFlagAvailable(cruzRoja)) {
+  const estado = estadoBandera(cruzRoja);
+  // 'sinDatos' (dentro de horario aún sin captura, transitorio): no mostramos banner.
+  if (estado === 'sinDatos') {
     return null;
   }
 
-  const colorClass = flagColorClass(cruzRoja!.bandera);
+  const colorClass = flagColorClass(cruzRoja!.bandera); // 'unknown' si fuera de horario
 
   return (
     <div className="flag-banner">
@@ -114,7 +116,7 @@ const FlagBanner: React.FC<{ cruzRoja?: PlayaDetalleData['cruzRoja'] }> = ({ cru
       </div>
       <div className="flag-info">
         <div className="flag-label">{t('detalle.estadoBano')}</div>
-        <div className="flag-value">{t(claveBandera(cruzRoja!.bandera))}</div>
+        <div className="flag-value">{t(claveEstadoBandera(estado, cruzRoja!.bandera))}</div>
         {cruzRoja!.horario && (
           <div className="flag-horario">{t('detalle.vigilancia', { horario: cruzRoja!.horario })}</div>
         )}
@@ -705,25 +707,28 @@ const BeachAttributesSection: React.FC<{ atributos: PlayaDetalleData['atributos'
   );
 };
 
-// ---- Cruz Roja Card (unchanged) ----
+// ---- Cruz Roja Card ----
 
 const CruzRojaCard: React.FC<{ cruzRoja?: PlayaDetalleData['cruzRoja'] }> = ({ cruzRoja }) => {
   const { t, idioma } = useIdioma();
-  const hasData = isFlagAvailable(cruzRoja);
+  const estado = estadoBandera(cruzRoja);
+  const hasData = estado === 'color';
+  // Tambi\u00E9n se puede desplegar fuera de horario para ver cobertura/horario.
+  const expandable = estado !== 'sinDatos';
   const [expanded, setExpanded] = useState(hasData);
 
   return (
     <div className="detail-card">
       <div
-        className={`card-header${!hasData ? ' card-header-disabled' : ''}`}
-        onClick={hasData ? () => setExpanded((v) => !v) : undefined}
-        role={hasData ? 'button' : undefined}
-        tabIndex={hasData ? 0 : undefined}
-        aria-expanded={hasData ? expanded : undefined}
-        aria-controls={hasData ? 'cruzroja-content' : undefined}
-        aria-label={hasData ? `${expanded ? t('detalle.contraer') : t('detalle.expandir')} ${t('comun.cruzRoja')}` : undefined}
-        aria-disabled={!hasData ? true : undefined}
-        onKeyDown={hasData ? (e) => {
+        className={`card-header${!expandable ? ' card-header-disabled' : ''}`}
+        onClick={expandable ? () => setExpanded((v) => !v) : undefined}
+        role={expandable ? 'button' : undefined}
+        tabIndex={expandable ? 0 : undefined}
+        aria-expanded={expandable ? expanded : undefined}
+        aria-controls={expandable ? 'cruzroja-content' : undefined}
+        aria-label={expandable ? `${expanded ? t('detalle.contraer') : t('detalle.expandir')} ${t('comun.cruzRoja')}` : undefined}
+        aria-disabled={!expandable ? true : undefined}
+        onKeyDown={expandable ? (e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
             setExpanded((v) => !v);
@@ -733,9 +738,15 @@ const CruzRojaCard: React.FC<{ cruzRoja?: PlayaDetalleData['cruzRoja'] }> = ({ c
         <div className={`card-header-icon ${hasData ? 'cruz-roja' : 'cruz-roja-neutral'}`} aria-hidden="true">{'\u271A'}</div>
         <div>
           <div className="card-header-title">{t('comun.cruzRoja')}</div>
-          <div className="card-header-subtitle">{hasData ? t('cruzroja.vigilanciaCobertura') : t('cruzroja.sinInfo')}</div>
+          <div className="card-header-subtitle">
+            {hasData
+              ? t('cruzroja.vigilanciaCobertura')
+              : estado === 'fueraDeHorario'
+                ? t('bandera.fueraDeHorario')
+                : t('cruzroja.sinInfo')}
+          </div>
         </div>
-        {hasData && <span className={`card-header-chevron ${expanded ? 'open' : ''}`} aria-hidden="true">&#9662;</span>}
+        {expandable && <span className={`card-header-chevron ${expanded ? 'open' : ''}`} aria-hidden="true">&#9662;</span>}
       </div>
 
       {expanded && (
@@ -745,7 +756,11 @@ const CruzRojaCard: React.FC<{ cruzRoja?: PlayaDetalleData['cruzRoja'] }> = ({ c
               <div aria-hidden="true" className={`info-row-icon ${hasData ? '' : 'neutral'}`}>{'\u{1F6A9}'}</div>
               <span className="info-row-label">{t('cruzroja.banderaActual')}</span>
               <span className={`info-row-value ${!hasData ? 'muted' : ''}`}>
-                {hasData ? traducirTextoApi(cruzRoja!.bandera, idioma) : t('comun.noDisponible')}
+                {hasData
+                  ? traducirTextoApi(cruzRoja!.bandera, idioma)
+                  : estado === 'fueraDeHorario'
+                    ? t('bandera.fueraDeHorario')
+                    : t('comun.noDisponible')}
               </span>
             </div>
             <div className="info-row">

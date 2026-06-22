@@ -1,5 +1,6 @@
 import type { Idioma } from './IdiomaContext';
 import type { ClaveTexto } from './es';
+import type { EstadoBandera } from '../utils/beachHelpers';
 
 /**
  * Traducción es→en de los textos que llegan del backend (AEMET,
@@ -217,6 +218,16 @@ export function claveBandera(bandera?: string): ClaveTexto {
   if (b.includes('roja')) return 'bandera.roja';
   if (b.includes('amarilla')) return 'bandera.amarilla';
   if (b.includes('verde')) return 'bandera.verde';
+  return 'bandera.sinDatos';
+}
+
+/**
+ * Clave de diccionario según el estado de la bandera: color real, "fuera de
+ * horario" (sin bandera fuera de la vigilancia) o "sin datos".
+ */
+export function claveEstadoBandera(estado: EstadoBandera, bandera?: string): ClaveTexto {
+  if (estado === 'color') return claveBandera(bandera);
+  if (estado === 'fueraDeHorario') return 'bandera.fueraDeHorario';
   return 'bandera.sinDatos';
 }
 

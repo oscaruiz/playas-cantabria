@@ -91,6 +91,7 @@ export const es = {
   'bandera.amarilla': 'Bandera Amarilla',
   'bandera.verde': 'Bandera Verde',
   'bandera.sinDatos': 'Sin datos',
+  'bandera.fueraDeHorario': 'Fuera de horario',
 
   // ---- Fechas relativas ----
   'fecha.hoy': 'Hoy',

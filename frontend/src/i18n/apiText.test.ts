@@ -1,4 +1,4 @@
-import { traducirTextoApi, claveBandera, claveNivelVientoMs } from './apiText';
+import { traducirTextoApi, claveBandera, claveEstadoBandera, claveNivelVientoMs } from './apiText';
 import { traducirNombreDiaApi, formatearFechaCorta } from './fechas';
 
 describe('traducirTextoApi', () => {
@@ -36,6 +36,15 @@ describe('claveBandera', () => {
     expect(claveBandera('Amarilla')).toBe('bandera.amarilla');
     expect(claveBandera('Verde')).toBe('bandera.verde');
     expect(claveBandera(undefined)).toBe('bandera.sinDatos');
+  });
+});
+
+describe('claveEstadoBandera', () => {
+  it('mapea el estado a la clave correcta', () => {
+    expect(claveEstadoBandera('color', 'Verde')).toBe('bandera.verde');
+    expect(claveEstadoBandera('color', 'Roja')).toBe('bandera.roja');
+    expect(claveEstadoBandera('fueraDeHorario')).toBe('bandera.fueraDeHorario');
+    expect(claveEstadoBandera('sinDatos')).toBe('bandera.sinDatos');
   });
 });
 
