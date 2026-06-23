@@ -7,10 +7,12 @@ name: Scrape Cruz Roja flags
 on:
   schedule:
     # Cruz Roja solo iza bandera en horario de vigilancia (11:30–19:30 Madrid, a
-    # diario). Scrapear antes de las 11:30 captura "No hay información" y mostraría
-    # "Desconocida". Disparamos cada 2h a :35 (menos cola que en :00) cubriendo el
-    # horario: 08:35,10:35,12:35,14:35,16:35 UTC = 10:35,12:35,14:35,16:35,18:35 Madrid.
-    - cron: '35 8-16/2 * * *'
+    # diario). Scrapear antes de las 11:30 captura "No hay información" para todas;
+    # por eso el primer disparo debe caer DESPUÉS del izado en ambas estaciones DST.
+    # Cada 2h a :35 (menos cola que en :00): 10:35,12:35,14:35,16:35 UTC =
+    # 12:35,14:35,16:35,18:35 Madrid (verano) / 11:35,13:35,15:35,17:35 (invierno).
+    # (Además, scrape-flags.ts no sobrescribe flags.json si 0 banderas con color.)
+    - cron: '35 10-16/2 * * *'
   workflow_dispatch: {}
 
 permissions:

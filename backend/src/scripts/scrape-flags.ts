@@ -102,12 +102,28 @@ async function main() {
     }
   }
 
-  console.log(`\nResumen: ${ok}/${ids.length} con bandera | estados:`, statusCount);
+  const colored = Object.values(flags).filter((f) => f.color).length;
+  console.log(
+    `\nResumen: ${ok}/${ids.length} con ficha | ${colored} con bandera izada | estados:`,
+    statusCount
+  );
 
   if (ok === 0) {
     console.error(
-      `\n❌ 0 banderas obtenidas (${blocked} con 403). El entorno parece BLOQUEADO por el WAF.\n` +
+      `\n❌ 0 fichas obtenidas (${blocked} con 403). El entorno parece BLOQUEADO por el WAF.\n` +
         `   No se sobrescribe flags.json. Prueba a ejecutar este script desde una IP residencial española.`
+    );
+    process.exit(1);
+  }
+
+  // Si ninguna playa tiene color (todas "No hay información"), el scrape se ejecutó
+  // ANTES del izado (11:30 Madrid) o la web aún no lo refleja. Escribir esto pisaría
+  // el último flags.json bueno con "todo Desconocida" y dejaría la app sin banderas.
+  if (colored === 0) {
+    console.error(
+      `\n⚠️  0 banderas con color (todas "No hay información"). Probablemente el scrape\n` +
+        `   corrió ANTES del izado (11:30 Madrid) o la web no lo refleja todavía.\n` +
+        `   No se sobrescribe flags.json para conservar el último estado bueno.`
     );
     process.exit(1);
   }

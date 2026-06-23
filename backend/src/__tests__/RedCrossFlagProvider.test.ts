@@ -98,4 +98,45 @@ describe('RedCrossFlagProvider — fuente primaria por fichero (flags.json)', ()
     expect(status?.schedule).toBe('11:30 - 19:30');
     expect(spy).not.toHaveBeenCalled(); // no scrape en vivo
   });
+
+  it('una entrada del fichero SIN color NO tapa el scrape en vivo (cron antes del izado)', async () => {
+    // Simula el bug: el cron scrapeó antes de las 11:30 y guardó "No hay información".
+    const dir = mkdtempSync(join(tmpdir(), 'flags-'));
+    const file = join(dir, 'flags.json');
+    writeFileSync(
+      file,
+      JSON.stringify({
+        generatedAt: '2026-06-23T09:56:18.548Z',
+        flags: { '555': { color: null, message: 'No hay información', coverageFrom: '12-06-2026', coverageTo: '15-09-2026', schedule: '11:30 - 19:30' } }
+      })
+    );
+    const spy = vi.spyOn(http, 'post').mockResolvedValue({ data: FICHA_HTML } as any);
+    const provider = new RedCrossFlagProvider(new InMemoryCache(), file);
+
+    const status = await provider.getFlagByRedCrossId(555);
+
+    expect(spy).toHaveBeenCalledTimes(1); // intenta el live al no haber color en fichero
+    expect(status?.color).toBe('green'); // usa la bandera real izada del scrape
+  });
+
+  it('si el live falla y el fichero no tiene color, devuelve el fichero como último recurso', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'flags-'));
+    const file = join(dir, 'flags.json');
+    writeFileSync(
+      file,
+      JSON.stringify({
+        generatedAt: '2026-06-23T09:56:18.548Z',
+        flags: { '555': { color: null, message: 'No hay información', coverageFrom: '12-06-2026', coverageTo: '15-09-2026', schedule: '11:30 - 19:30' } }
+      })
+    );
+    vi.spyOn(http, 'post').mockRejectedValue(new Error('Request failed with status code 403'));
+    const provider = new RedCrossFlagProvider(new InMemoryCache(), file);
+
+    const status = await provider.getFlagByRedCrossId(555);
+
+    expect(status).not.toBeNull();
+    expect(status?.color).toBeUndefined();
+    expect(status?.coverageFrom).toBe('12-06-2026'); // conserva la cobertura del fichero
+    expect(status?.schedule).toBe('11:30 - 19:30');
+  });
 });

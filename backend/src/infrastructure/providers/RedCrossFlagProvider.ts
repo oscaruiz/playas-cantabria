@@ -100,10 +100,24 @@ export class RedCrossFlagProvider implements FlagProvider {
   async getFlagByRedCrossId(redCrossId: number): Promise<FlagStatus | null> {
     if (!redCrossId || redCrossId <= 0) return null;
 
-    // Fuente primaria: banderas pre-scrapeadas (data/flags.json).
+    // Fuente primaria: banderas pre-scrapeadas (data/flags.json), pero SOLO si la
+    // entrada trae color real. Una entrada sin color (p.ej. el cron scrapeó antes
+    // del izado de las 11:30 y guardó "No hay información") NO debe tapar el scrape
+    // en vivo, que en prod normalmente sí devuelve la bandera ya izada.
     const fromFile = (await this.loadFileFlags()).get(redCrossId);
-    if (fromFile) return fromFile;
+    if (fromFile?.color) return fromFile;
 
+    // Scrape en vivo (cacheado). Si trae color real, es la verdad más fresca.
+    const live = await this.fetchLiveCached(redCrossId);
+    if (live?.color) return live;
+
+    // Sin color por ninguna vía: el fichero (con su cobertura/horario) es mejor que
+    // nada; si tampoco hay fichero, lo que diera el live; y si no, null.
+    return fromFile ?? live ?? null;
+  }
+
+  /** Scrape en vivo con cache 24h y reintento. Nunca lanza: devuelve null si falla. */
+  private async fetchLiveCached(redCrossId: number): Promise<FlagStatus | null> {
     const ttl = 86400; // 24h — flags rarely change, reduce scraping load
     const key = CacheKeys.flagByRedCrossId(redCrossId);
 
