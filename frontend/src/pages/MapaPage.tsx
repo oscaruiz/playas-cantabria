@@ -10,9 +10,9 @@ import L, { Map as LeafletMap, DivIcon } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Playa, FeaturedBeach, getPlayas, getFeaturedBeaches } from '../services/api';
-import { emojiCielo } from '../utils/beachHelpers';
+import { emojiCielo, flagColorClass } from '../utils/beachHelpers';
 import { useIdioma } from '../i18n/IdiomaContext';
-import { traducirTextoApi, claveNivelVientoMs } from '../i18n/apiText';
+import { traducirTextoApi, claveNivelVientoMs, claveBandera } from '../i18n/apiText';
 import { useUserLocation } from '../hooks/useUserLocation';
 import BottomNavBar from '../components/BottomNavBar';
 import SelectorIdioma from '../components/SelectorIdioma';
@@ -38,6 +38,7 @@ function getBeachIcon(weather: FeaturedBeach, isBest: boolean): DivIcon {
   const sky = emojiCielo(weather.descripcionClima);
   const temp = weather.temperatura != null ? `${Math.round(weather.temperatura)}\u00B0` : '';
   const badge = secondaryBadge(weather);
+  const flag = weather.bandera ? flagColorClass(weather.bandera) : '';
   const highlight = isBest;
   const sizeClass = highlight ? ' beach-marker--highlight' : '';
   const bestClass = isBest ? ' beach-marker--best' : '';
@@ -46,6 +47,7 @@ function getBeachIcon(weather: FeaturedBeach, isBest: boolean): DivIcon {
   const html = `<div class="beach-marker beach-marker--${status}${sizeClass}${bestClass}">
     <span class="beach-marker__sky">${sky}</span>
     <span class="beach-marker__temp">${temp}</span>
+    ${flag && flag !== 'unknown' ? `<span class="beach-marker__flag beach-marker__flag--${flag}"></span>` : ''}
     ${badge ? `<span class="beach-marker__badge">${badge}</span>` : ''}
   </div>`;
 
@@ -227,9 +229,12 @@ const MapaPage: React.FC = () => {
                                 {'\u26D4'} {traducirTextoApi(weather.motivoBaja, idioma)}
                               </p>
                             )}
-                            {weather.bandera === 'Roja' && (
-                              <p style={{ margin: '0 0 4px', color: '#dc2626', fontWeight: 600, fontSize: '13px' }}>
-                                {'\u26A0\uFE0F'} {t('mapa.banderaRoja')}
+                            {weather.bandera && (
+                              <p style={{ margin: '0 0 4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <span className={`mapa-flag-dot mapa-flag-dot--${flagColorClass(weather.bandera)}`} />
+                                <span style={{ fontWeight: 600, fontSize: '13px' }}>
+                                  {t(claveBandera(weather.bandera))}
+                                </span>
                               </p>
                             )}
                             {weather.vientoMs != null && weather.vientoMs > 8 && (
