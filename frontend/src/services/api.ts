@@ -188,6 +188,28 @@ export interface PrediccionCompletaDTO {
 // ------------------------------
 // Tiempo real "ahora" (observación, con prioridad sobre la previsión)
 // ------------------------------
+/**
+ * Señal agregada "¿está lloviendo ahora?" (multi-fuente en backend:
+ * OpenWeather + pluviómetro AEMET + Open-Meteo). Campo aditivo.
+ */
+/** Lluvia PREVISTA (próximas ~6h Open-Meteo ∪ texto AEMET restante de hoy). */
+export interface LluviaPrevista {
+  /** ISO del primer tramo con precipitación; null si la señal es solo textual (AEMET). */
+  desdeIso: string | null;
+  mm: number | null;
+  fuentes: string[];
+}
+
+export interface LluviaActual {
+  estado: 'lloviendo' | 'sin_lluvia' | 'desconocido';
+  mm: number | null;
+  /** true = solo el pluviómetro AEMET disparó la señal (llovió en la última hora). */
+  ultimaHora: boolean;
+  fuentes: string[];
+  timestamp: string;
+  prevista?: LluviaPrevista | null;
+}
+
 export interface TiempoActual {
   cielo: string | null;
   icono: number | null;
@@ -195,6 +217,7 @@ export interface TiempoActual {
   precipitacionMm: number | null;
   fuente: string;
   timestamp: string;
+  lluvia?: LluviaActual | null;
 }
 
 // ------------------------------

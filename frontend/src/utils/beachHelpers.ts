@@ -135,6 +135,55 @@ export function getActiveAttrs(atributos?: Record<string, boolean | undefined> |
     .map(([key]) => ({ key, ...ATTR_CONFIG[key] }));
 }
 
+/**
+ * ¿Hay lluvia activa ahora? Prioridad: señal estructurada del backend
+ * (`lluvia.estado`, multi-fuente) → mm observados → regex sobre el texto
+ * del cielo (fallback para backends antiguos sin el campo).
+ */
+export function esLluviaActiva(
+  tiempoActual?: {
+    cielo?: string | null;
+    precipitacionMm?: number | null;
+    lluvia?: { estado: string } | null;
+  } | null
+): boolean {
+  if (!tiempoActual) return false;
+  if (tiempoActual.lluvia?.estado === 'lloviendo') return true;
+  if (tiempoActual.lluvia?.estado === 'sin_lluvia') return false;
+  if ((tiempoActual.precipitacionMm ?? 0) > 0) return true;
+  const c = (tiempoActual.cielo ?? '').toLowerCase();
+  return /lluvia|llovizna|chubasc|tormenta/.test(c);
+}
+
+/** Hora "HH:MM" en Europe/Madrid a partir de un ISO; null si no parsea. */
+export function horaLocalMadrid(iso: string | null | undefined): string | null {
+  if (!iso) return null;
+  const fecha = new Date(iso);
+  if (Number.isNaN(fecha.getTime())) return null;
+  return new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Europe/Madrid',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(fecha);
+}
+
+/**
+ * Lluvia PREVISTA a mostrar. Devuelve null si ya está lloviendo (el badge de
+ * lluvia activa tiene prioridad — nunca dos badges a la vez) o si no hay señal.
+ */
+export function lluviaPrevista(
+  tiempoActual?: {
+    cielo?: string | null;
+    precipitacionMm?: number | null;
+    lluvia?: { estado: string; prevista?: { desdeIso: string | null; mm: number | null; fuentes: string[] } | null } | null;
+  } | null
+): { desdeIso: string | null; mm: number | null; fuentes: string[] } | null {
+  if (!tiempoActual) return null;
+  if (esLluviaActiva(tiempoActual)) return null;
+  return tiempoActual.lluvia?.prevista ?? null;
+}
+
 export function emojiCielo(cielo: string | null): string {
   if (!cielo) return '\u26C5';
   const c = cielo.toLowerCase();

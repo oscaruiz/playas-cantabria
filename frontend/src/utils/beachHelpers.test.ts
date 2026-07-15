@@ -1,4 +1,4 @@
-import { dentroDeHorario, estadoBandera } from './beachHelpers';
+import { dentroDeHorario, estadoBandera, esLluviaActiva, horaLocalMadrid, lluviaPrevista } from './beachHelpers';
 
 // Durante la temporada de baño, Madrid es CEST (UTC+2): UTC + 2h = hora Madrid.
 const cruzRoja = {
@@ -53,5 +53,75 @@ describe('estadoBandera', () => {
 
   it("'sinDatos' cuando no se conoce el horario", () => {
     expect(estadoBandera({ bandera: 'Desconocida' })).toBe('sinDatos');
+  });
+});
+
+describe('esLluviaActiva', () => {
+  it('true con la señal estructurada del backend (multi-fuente)', () => {
+    expect(
+      esLluviaActiva({ cielo: 'muy nuboso', precipitacionMm: null, lluvia: { estado: 'lloviendo' } })
+    ).toBe(true);
+  });
+
+  it('la señal estructurada "sin_lluvia" es autoritativa (ignora el regex del cielo)', () => {
+    // El nowcast agrega ya todas las fuentes; si dice seco, no contradecirlo.
+    expect(
+      esLluviaActiva({ cielo: 'muy nuboso', precipitacionMm: 0, lluvia: { estado: 'sin_lluvia' } })
+    ).toBe(false);
+  });
+
+  it('fallback por mm observados cuando no hay señal estructurada', () => {
+    expect(esLluviaActiva({ cielo: 'muy nuboso', precipitacionMm: 0.3 })).toBe(true);
+    expect(esLluviaActiva({ cielo: 'muy nuboso', precipitacionMm: 0 })).toBe(false);
+  });
+
+  it('fallback por regex sobre el texto del cielo (backends antiguos)', () => {
+    expect(esLluviaActiva({ cielo: 'lluvia ligera', precipitacionMm: null })).toBe(true);
+    expect(esLluviaActiva({ cielo: 'chubascos tormentosos', precipitacionMm: null })).toBe(true);
+    expect(esLluviaActiva({ cielo: 'despejado', precipitacionMm: null })).toBe(false);
+  });
+
+  it('con estado desconocido cae a los fallbacks', () => {
+    expect(
+      esLluviaActiva({ cielo: 'llovizna', precipitacionMm: null, lluvia: { estado: 'desconocido' } })
+    ).toBe(true);
+  });
+
+  it('false sin datos', () => {
+    expect(esLluviaActiva(null)).toBe(false);
+    expect(esLluviaActiva(undefined)).toBe(false);
+  });
+});
+
+describe('horaLocalMadrid', () => {
+  it('convierte un ISO UTC a HH:MM de Madrid (CEST en verano)', () => {
+    expect(horaLocalMadrid('2026-07-15T14:30:00Z')).toBe('16:30');
+  });
+
+  it('null con entradas inválidas o vacías', () => {
+    expect(horaLocalMadrid('no-es-fecha')).toBeNull();
+    expect(horaLocalMadrid(null)).toBeNull();
+    expect(horaLocalMadrid(undefined)).toBeNull();
+  });
+});
+
+describe('lluviaPrevista', () => {
+  const prevista = { desdeIso: '2026-07-15T16:30:00Z', mm: 0.6, fuentes: ['OpenMeteo'] };
+
+  it('devuelve la previsión cuando no llueve todavía', () => {
+    expect(
+      lluviaPrevista({ cielo: 'muy nuboso', precipitacionMm: 0, lluvia: { estado: 'sin_lluvia', prevista } })
+    ).toEqual(prevista);
+  });
+
+  it('null si ya está lloviendo (el badge de lluvia activa tiene prioridad)', () => {
+    expect(
+      lluviaPrevista({ cielo: 'lluvia ligera', precipitacionMm: 0.3, lluvia: { estado: 'lloviendo', prevista } })
+    ).toBeNull();
+  });
+
+  it('null sin señal de previsión o sin datos', () => {
+    expect(lluviaPrevista({ cielo: 'despejado', precipitacionMm: 0, lluvia: { estado: 'sin_lluvia' } })).toBeNull();
+    expect(lluviaPrevista(null)).toBeNull();
   });
 });
