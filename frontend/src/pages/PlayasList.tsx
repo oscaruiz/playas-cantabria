@@ -4,7 +4,9 @@ import {
   IonContent,
   IonFooter,
   IonSpinner,
+  IonIcon,
 } from '@ionic/react';
+import { searchOutline, locateOutline } from 'ionicons/icons';
 import { Playa, FeaturedBeach, getPlayas, getFeaturedBeaches } from '../services/api';
 import { getActiveAttrs, emojiCielo } from '../utils/beachHelpers';
 import { useUserLocation } from '../hooks/useUserLocation';
@@ -124,7 +126,7 @@ const PlayasList: React.FC = () => {
         {/* Search bar */}
         <div className="search-bar-container">
           <div className="search-bar-inner">
-            <span className="search-icon" aria-hidden="true">&#x1F50D;</span>
+            <IonIcon className="search-icon" icon={searchOutline} aria-hidden="true" />
             <input
               type="text"
               value={filtro}
@@ -167,7 +169,7 @@ const PlayasList: React.FC = () => {
                 aria-label={t('lista.ordenarCercania')}
                 aria-pressed={orden === 'cerca'}
               >
-                {'\u{1F4CD}'}
+                <IonIcon icon={locateOutline} aria-hidden="true" />
               </button>
             )}
             <button
@@ -229,7 +231,7 @@ const PlayasList: React.FC = () => {
           <div className="beach-list">
             {filtradas.map((playa) => {
               const weather = weatherMap.get(playa.codigo);
-              const skyEmoji = weather ? emojiCielo(weather.descripcionClima) : '\u{1F3D6}';
+              const skyEmoji = weather ? emojiCielo(weather.descripcionClima) : null;
               const distKm = userLocation
                 ? haversineKm(userLocation[0], userLocation[1], playa.lat, playa.lon)
                 : null;
@@ -249,7 +251,7 @@ const PlayasList: React.FC = () => {
                 }}
               >
                 <div className="beach-card-icon" aria-hidden="true">
-                  {skyEmoji}
+                  {skyEmoji && <span className="beach-card-sky">{skyEmoji}</span>}
                   {weather?.temperatura != null && (
                     <span className="beach-card-temp">{Math.round(weather.temperatura)}{'°'}</span>
                   )}
@@ -267,9 +269,7 @@ const PlayasList: React.FC = () => {
                     return attrs.length > 0 ? (
                       <div className="beach-card-attrs">
                         {attrs.map((a) => (
-                          <span key={a.key} className="beach-attr-mini" title={a.label}>
-                            {a.emoji}
-                          </span>
+                          <IonIcon key={a.key} className="beach-attr-mini" icon={a.icon} title={a.label} aria-hidden="true" />
                         ))}
                       </div>
                     ) : null;
@@ -293,7 +293,6 @@ const PlayasList: React.FC = () => {
         {/* Empty state */}
         {playas && filtradas.length === 0 && (
           <div className="home-empty">
-            <div className="home-empty-icon" aria-hidden="true">{'\u{1F3D6}'}</div>
             <p className="home-empty-text">
               {t('lista.noEncontradas', { filtro })}
             </p>

@@ -1,16 +1,13 @@
 /* =============================================
    PlayasList – Beach List Page Styles
+   Sistema "carta náutica": lista abierta con
+   hairlines, sin cards ni gradientes.
    ============================================= */
 
 /* --- Page --- */
 .home-page ion-content {
   --background: var(--playa-sand);
   --padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
-}
-
-.home-page ion-toolbar.home-toolbar {
-  --background: var(--playa-ocean);
-  --color: #ffffff;
 }
 
 /* --- Sticky header --- */
@@ -20,13 +17,15 @@
   left: 0;
   right: 0;
   z-index: 100;
-  background: linear-gradient(135deg, var(--playa-ocean) 0%, var(--playa-ocean-dark) 100%);
-  padding: 16px 20px 18px;
+  background-image: var(--playa-chart-lines), var(--playa-header-grad);
+  background-size: 320px 96px, auto;
+  padding: 16px 20px 14px;
   padding-top: calc(env(safe-area-inset-top, 0px) + 16px);
 }
 
 .home-sticky-title {
   font-family: 'Pacifico', cursive;
+  font-weight: 400;
   font-size: 1.6rem;
   margin: 0 0 4px;
   line-height: 1.2;
@@ -34,60 +33,46 @@
 }
 
 .home-sticky-subtitle {
-  font-size: 0.82rem;
-  opacity: 0.85;
-  margin: 0;
-  font-weight: 400;
-  color: #ffffff;
-}
-
-/* --- Header hero area --- */
-.home-hero {
-  background: linear-gradient(135deg, var(--playa-ocean) 0%, var(--playa-ocean-dark) 100%);
-  color: #ffffff;
-  padding: 0 20px 36px;
-  position: relative;
-}
-
-.home-hero-spacer {
-  height: calc(env(safe-area-inset-top, 0px) + 80px);
-}
-
-.home-hero::after {
-  content: '';
-  position: absolute;
-  bottom: -1px;
-  left: 0;
-  right: 0;
-  height: 28px;
-  background: var(--playa-sand);
-  border-radius: 24px 24px 0 0;
-}
-
-.home-hero-subtitle {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   opacity: 0.8;
   margin: 0;
   font-weight: 400;
+  color: #ffffff;
+}
+
+/* --- Header hero area (banda bajo el header fijo) --- */
+.home-hero {
+  background-image: var(--playa-chart-lines), var(--playa-header-grad);
+  background-size: 320px 96px, auto;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+  padding-bottom: 34px;
+}
+
+.home-hero-spacer {
+  height: calc(env(safe-area-inset-top, 0px) + var(--playa-header-h));
 }
 
 /* --- Search & sort bar --- */
 .search-bar-container {
   padding: 0 16px;
-  margin-top: -8px;
+  margin: -26px auto 0;
+  max-width: 640px;
   position: relative;
   z-index: 2;
 }
 
 .search-bar-inner {
   background: var(--playa-foam);
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
   display: flex;
   align-items: center;
   padding: 6px 6px 6px 12px;
   gap: 4px;
   border: 1px solid var(--playa-border);
+}
+
+.search-bar-inner:focus-within {
+  border-color: var(--playa-ocean);
 }
 
 .search-bar-inner .search-icon {
@@ -118,7 +103,7 @@
   justify-content: center;
   background: transparent;
   border: none;
-  color: #e53e3e;
+  color: var(--playa-flag-red);
   font-size: 1.1rem;
   font-weight: 700;
   width: 28px;
@@ -134,10 +119,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--playa-ocean-light);
+  background: transparent;
   color: var(--playa-ocean);
-  border: none;
-  border-radius: 8px;
+  border: 1px solid var(--playa-border);
+  border-radius: var(--playa-radius-s);
   width: 32px;
   height: 32px;
   font-size: 0.78rem;
@@ -149,23 +134,43 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+.sort-button ion-icon {
+  font-size: 1rem;
+}
+
 .sort-button--active {
-  background: var(--playa-ocean);
-  color: #ffffff;
+  background: var(--ion-color-primary);
+  border-color: var(--ion-color-primary);
+  color: var(--ion-color-primary-contrast);
 }
 
 .sort-button:active {
   opacity: 0.8;
 }
 
-/* --- Autocomplete suggestions --- */
+@media (hover: hover) {
+  .sort-button:not(.sort-button--active):hover {
+    background: var(--playa-ocean-light);
+  }
+
+  .sort-button--active:hover {
+    background: var(--ion-color-primary-shade);
+    border-color: var(--ion-color-primary-shade);
+  }
+
+  .search-clear-btn:hover {
+    opacity: 0.7;
+  }
+}
+
+/* --- Autocomplete suggestions (flotante: única sombra permitida) --- */
 .search-suggestions {
   margin: 4px 0 0;
   padding: 4px 0;
   list-style: none;
   background: var(--playa-foam);
-  border-radius: 14px;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(12, 40, 50, 0.14);
   border: 1px solid var(--playa-border);
   max-height: 200px;
   overflow-y: auto;
@@ -196,76 +201,80 @@
   color: var(--playa-text-muted);
 }
 
-@media (prefers-color-scheme: dark) {
-  .search-suggestions {
-    background: var(--playa-foam);
-    border-color: var(--playa-border);
-    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
-  }
-
-  .search-suggestion-item:hover,
-  .search-suggestion-item--active {
-    background: rgba(14, 116, 144, 0.2);
-  }
-}
-
-/* --- Beach count --- */
+/* --- Beach count (kicker editorial) --- */
 .beach-count {
-  padding: 14px 20px 6px;
-  font-size: 0.75rem;
-  color: var(--playa-text-muted);
+  padding: 18px 20px 0;
+  max-width: 640px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.74rem;
+  color: var(--playa-text);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  font-weight: 600;
+  letter-spacing: 0.1em;
+  font-weight: 700;
 }
 
-/* --- Beach list --- */
+.beach-count::before {
+  content: '';
+  width: 4px;
+  height: 15px;
+  border-radius: 2px;
+  background: var(--playa-ocean);
+  flex-shrink: 0;
+}
+
+.beach-count::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--playa-border);
+}
+
+/* --- Beach list (filas abiertas) --- */
 .beach-list {
-  padding: 0 16px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  padding: 4px 16px 16px;
+  max-width: 640px;
+  margin: 0 auto;
 }
 
 .beach-card {
-  background: var(--playa-card-bg);
-  border-radius: var(--playa-card-radius);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  border: 1px solid var(--playa-border);
   display: flex;
   align-items: center;
-  padding: 16px;
+  padding: 14px 4px;
   gap: 14px;
+  border-bottom: 1px solid var(--playa-border);
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
   -webkit-tap-highlight-color: transparent;
 }
 
 .beach-card:active {
-  transform: scale(0.98);
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
+  opacity: 0.7;
+}
+
+@media (hover: hover) {
+  .beach-card:hover {
+    background: var(--playa-ocean-light);
+  }
 }
 
 .beach-card-icon {
   width: 46px;
-  height: 46px;
-  border-radius: 14px;
-  background: var(--playa-ocean-light);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   font-size: 1.3rem;
-  color: var(--playa-ocean);
-  gap: 0;
 }
 
 .beach-card-temp {
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   font-weight: 700;
   color: var(--playa-text);
-  line-height: 1;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
 }
 
 .beach-card-info {
@@ -299,40 +308,38 @@
 .badge-vigilada {
   display: flex;
   align-items: center;
-  gap: 4px;
-  background: #fef2f2;
-  color: #dc2626;
-  font-size: 0.65rem;
+  gap: 5px;
+  color: var(--playa-text-muted);
+  font-size: 0.62rem;
   font-weight: 600;
-  padding: 4px 8px;
-  border-radius: 8px;
   white-space: nowrap;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
 }
 
 .badge-vigilada-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #dc2626;
+  background: var(--playa-flag-red);
   flex-shrink: 0;
 }
 
 .beach-card-dist {
   color: var(--playa-ocean);
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
 .beach-card-attrs {
   display: flex;
-  gap: 4px;
-  margin-top: 4px;
+  gap: 7px;
+  margin-top: 5px;
 }
 
 .beach-attr-mini {
-  font-size: 0.75rem;
-  opacity: 0.7;
+  font-size: 0.9rem;
+  color: var(--playa-text-muted);
 }
 
 .beach-card-arrow {
@@ -360,74 +367,54 @@
 
 /* --- Error state --- */
 .home-error {
-  margin: 16px;
-  padding: 16px;
-  background: #fef2f2;
-  border-radius: 14px;
-  border: 1px solid #fecaca;
-  color: #991b1b;
+  margin: 20px auto;
+  max-width: 640px;
+  padding: 1.25rem 16px 1.25rem 14px;
+  border-left: 3px solid var(--playa-flag-red);
+  color: var(--playa-text);
   font-size: 0.9rem;
-  text-align: center;
 }
 
 /* --- Empty state --- */
 .home-empty {
-  text-align: center;
   padding: 3rem 2rem;
+  max-width: 640px;
+  margin: 0 auto;
   color: var(--playa-text-muted);
-}
-
-.home-empty-icon {
-  font-size: 2.5rem;
-  margin-bottom: 12px;
-  opacity: 0.5;
 }
 
 .home-empty-text {
   font-size: 0.9rem;
 }
 
-/* --- Dark mode --- */
-@media (prefers-color-scheme: dark) {
+/* --- Desktop layout (coherente con HomePage) --- */
+@media (min-width: 720px) {
+  /* Alinea el contenido del header/hero a sangre con el cuerpo limitado */
+  .home-sticky-header,
   .home-hero {
-    background: linear-gradient(135deg, #0c4a6e 0%, #0f172a 100%);
+    padding-left: max(20px, calc((100% - 1080px) / 2 + 20px));
+    padding-right: max(20px, calc((100% - 1080px) / 2 + 20px));
   }
 
-  .home-hero::after {
-    background: var(--playa-sand);
+  .home-sticky-header .selector-idioma {
+    right: max(16px, calc((100% - 1080px) / 2 + 16px));
+  }
+}
+
+@media (min-width: 900px) {
+  .search-bar-container,
+  .beach-count,
+  .beach-list,
+  .home-error,
+  .home-empty {
+    max-width: 1080px;
   }
 
-  .search-bar-inner {
-    background: var(--playa-foam);
-    border-color: var(--playa-border);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  }
-
-  .search-bar-inner input {
-    color: var(--playa-text);
-  }
-
-  .beach-card-icon {
-    background: rgba(14, 116, 144, 0.2);
-  }
-
-  .badge-vigilada {
-    background: rgba(239, 68, 68, 0.15);
-    color: #fca5a5;
-  }
-
-  .badge-vigilada-dot {
-    background: #fca5a5;
-  }
-
-  .home-error {
-    background: rgba(239, 68, 68, 0.15);
-    border-color: rgba(239, 68, 68, 0.3);
-    color: #fca5a5;
-  }
-
-  .home-sticky-header {
-    background: linear-gradient(135deg, #0c4a6e 0%, #0f172a 100%);
+  /* Evita filas estiradas de borde a borde en pantallas anchas */
+  .beach-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 32px;
   }
 }
 
