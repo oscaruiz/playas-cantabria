@@ -4,14 +4,15 @@ import {
   IonContent,
   IonFooter,
   IonSpinner,
+  IonIcon,
 } from '@ionic/react';
+import { chevronBackOutline, navigateOutline, mapOutline } from 'ionicons/icons';
 import { useHistory, useParams } from 'react-router-dom';
 import {
   getDetallePlaya,
   PlayaDetalle as PlayaDetalleData,
   DiaPrediccionDTO,
   HalfDayDTO,
-  PrediccionCompletaDTO,
 } from '../services/api';
 import BottomNavBar from '../components/BottomNavBar';
 import SelectorIdioma from '../components/SelectorIdioma';
@@ -111,49 +112,13 @@ const FlagBanner: React.FC<{ cruzRoja?: PlayaDetalleData['cruzRoja'] }> = ({ cru
 
   return (
     <div className="flag-banner">
-      <div className={`flag-indicator ${colorClass}`}>
-        <span className="flag-icon-inner" role="img" aria-label={t('detalle.banderaAria')}>&#9873;</span>
-      </div>
+      <span className={`flag-pennant ${colorClass}`} role="img" aria-label={t('detalle.banderaAria')} />
       <div className="flag-info">
         <div className="flag-label">{t('detalle.estadoBano')}</div>
         <div className="flag-value">{t(claveEstadoBandera(estado, cruzRoja!.bandera))}</div>
         {cruzRoja!.horario && (
           <div className="flag-horario">{t('detalle.vigilancia', { horario: cruzRoja!.horario })}</div>
         )}
-      </div>
-    </div>
-  );
-};
-
-const QuickStats: React.FC<{
-  clima: PlayaDetalleData['clima'];
-  prediccion?: PrediccionCompletaDTO;
-}> = ({ clima, prediccion }) => {
-  const { t, idioma } = useIdioma();
-  const day0 = prediccion?.dias[0];
-
-  const temp = day0?.temperaturaMaxima ?? clima?.hoy.temperature;
-  const agua = day0?.temperaturaAgua ?? clima?.hoy.waterTemperature;
-  const viento = day0?.tarde.viento ?? day0?.manana.viento ?? clima?.hoy.wind;
-
-  if (temp == null && agua == null && !viento) return null;
-
-  return (
-    <div className="quick-stats">
-      <div className="quick-stat">
-        <div className="quick-stat-icon" role="img" aria-label={t('detalle.temperatura')}>&#x1F321;&#xFE0F;</div>
-        <div className="quick-stat-value">{temp != null ? `${temp}\u00B0` : '--'}</div>
-        <div className="quick-stat-label">{t('detalle.temp')}</div>
-      </div>
-      <div className="quick-stat">
-        <div className="quick-stat-icon" role="img" aria-label={t('detalle.agua')}>&#x1F30A;</div>
-        <div className="quick-stat-value">{agua != null ? `${agua}\u00B0` : '--'}</div>
-        <div className="quick-stat-label">{t('detalle.agua')}</div>
-      </div>
-      <div className="quick-stat">
-        <div className="quick-stat-icon" role="img" aria-label={t('detalle.viento')}>&#x1F4A8;</div>
-        <div className="quick-stat-value">{viento ? traducirTextoApi(viento, idioma) : '--'}</div>
-        <div className="quick-stat-label">{t('detalle.viento')}</div>
       </div>
     </div>
   );
@@ -175,7 +140,7 @@ function uvColorClass(uv: number): string {
   return 'uv-very-high';
 }
 
-// ---- Day Selector (pill tabs) ----
+// ---- Day Selector (tabs editoriales con subrayado) ----
 
 const DaySelector: React.FC<{
   fechas: string[];
@@ -184,15 +149,17 @@ const DaySelector: React.FC<{
 }> = ({ fechas, selectedDay, onSelect }) => {
   const { t, idioma } = useIdioma();
   return (
-    <div className="day-selector">
+    <div className="day-selector" role="tablist">
       {fechas.map((fecha, i) => (
         <button
           key={fecha}
-          className={`day-pill${i === selectedDay ? ' active' : ''}`}
+          className={`day-tab${i === selectedDay ? ' active' : ''}`}
           onClick={() => onSelect(i)}
+          role="tab"
+          aria-selected={i === selectedDay}
         >
-          <span className="day-pill-title">{dayTitle(fecha, t, idioma)}</span>
-          <span className="day-pill-date">{daySubtitle(fecha, idioma)}</span>
+          <span className="day-tab-title">{dayTitle(fecha, t, idioma)}</span>
+          <span className="day-tab-date">{daySubtitle(fecha, idioma)}</span>
         </button>
       ))}
     </div>
@@ -289,7 +256,7 @@ const ForecastHero: React.FC<{
   const wLevel = viento ? windSpeedLevel(viento) : 1;
 
   return (
-    <div className="detail-card forecast-hero">
+    <div className="forecast-hero">
       <div className="forecast-hero-main">
         <div className="forecast-hero-col">
           <span className="forecast-hero-icon-emoji">{skyEmoji}</span>
@@ -300,14 +267,12 @@ const ForecastHero: React.FC<{
             <span className="forecast-hero-max">{t('detalle.max')} {dia.temperaturaMaxima}&deg;</span>
           )}
           {skyText && <span className="forecast-hero-sky">{traducirTextoApi(skyText, idioma)}</span>}
+          {dia.temperaturaAgua != null && (
+            <span className="forecast-hero-agua">{t('detalle.aguaGrados', { temp: dia.temperaturaAgua })}</span>
+          )}
         </div>
         {viento && <WindTurbine level={wLevel} label={traducirTextoApi(viento, idioma)} />}
         {oleaje && <WavesIndicator label={traducirTextoApi(oleaje, idioma)} />}
-      </div>
-      <div className="forecast-hero-badges">
-        {dia.temperaturaAgua != null && (
-          <span className="forecast-badge badge-water">{'\u{1F4A7}'} {t('detalle.aguaGrados', { temp: dia.temperaturaAgua })}</span>
-        )}
       </div>
     </div>
   );
@@ -324,24 +289,20 @@ const HalfDayDetail: React.FC<{
 
   const renderBlock = (data: HalfDayDTO, period: 'morning' | 'afternoon') => {
     const label = period === 'morning' ? t('detalle.periodoManana') : t('detalle.periodoTarde');
-    const emoji = period === 'morning' ? '\u2600\uFE0F' : '\u{1F305}';
     return (
       <div className={`halfday-block ${period}`}>
-        <div className="halfday-block-header">
-          <span className="halfday-block-emoji">{emoji}</span>
-          <span className="halfday-block-label">{label}</span>
-        </div>
+        <div className="halfday-block-label">{label}</div>
         <div className="halfday-block-rows">
           <div className="halfday-block-row">
-            <span className="halfday-block-row-icon">{emojiCielo(data.cielo)}</span>
+            <span className="halfday-block-row-icon" aria-hidden="true">{emojiCielo(data.cielo)}</span>
             <span>{traducirTextoApi(capitalizar(data.cielo), idioma) || '--'}</span>
           </div>
           <div className="halfday-block-row">
-            <span className="halfday-block-row-icon">{'\u{1F4A8}'}</span>
+            <span className="halfday-row-label">{t('detalle.viento')}</span>
             <span>{traducirTextoApi(capitalizar(data.viento), idioma) || '--'}</span>
           </div>
           <div className="halfday-block-row">
-            <span className="halfday-block-row-icon">{'\u{1F30A}'}</span>
+            <span className="halfday-row-label">{t('detalle.oleaje')}</span>
             <span>{traducirTextoApi(capitalizar(data.oleaje), idioma) || '--'}</span>
           </div>
         </div>
@@ -370,16 +331,15 @@ const DailyStats: React.FC<{ dia: DiaPrediccionDTO; embedded?: boolean }> = ({ d
     <div className={`daily-stats-body${embedded ? ' daily-stats-embedded' : ''}`}>
         {dia.sensacionTermica && (
           <div className="daily-stat-row">
-            <span className="daily-stat-icon">{'\u{1F525}'}</span>
             <span className="daily-stat-label">{t('detalle.sensacionTermica')}</span>
             <span className="daily-stat-value">{traducirTextoApi(capitalizar(dia.sensacionTermica), idioma)}</span>
           </div>
         )}
         {dia.indiceUV != null && (
           <div className="daily-stat-row">
-            <span className="daily-stat-icon">{'\u2600'}</span>
             <span className="daily-stat-label">{t('detalle.indiceUV')}</span>
-            <span className={`uv-badge ${uvColorClass(dia.indiceUV)}`}>
+            <span className={`daily-stat-value uv-value ${uvColorClass(dia.indiceUV)}`}>
+              <span className="uv-swatch" aria-hidden="true" />
               {dia.indiceUV}
               {dia.nivelUV && ` \u2014 ${traducirTextoApi(dia.nivelUV.replace(/^índice ultravioleta\s*/i, ''), idioma)}`}
             </span>
@@ -387,9 +347,6 @@ const DailyStats: React.FC<{ dia: DiaPrediccionDTO; embedded?: boolean }> = ({ d
         )}
         {dia.aviso && dia.aviso.descripcion && (
           <div className="daily-stat-row">
-            <span className="daily-stat-icon">
-              {dia.aviso.nivel != null && dia.aviso.nivel <= 3 ? '\u26A0\uFE0F' : '\u2705'}
-            </span>
             <span className="daily-stat-label">{t('detalle.avisoLitoral')}</span>
             <span className={`daily-stat-value ${avisoLevelClass(dia.aviso.nivel)}`}>
               {traducirTextoApi(capitalizar(dia.aviso.descripcion), idioma)}
@@ -400,7 +357,7 @@ const DailyStats: React.FC<{ dia: DiaPrediccionDTO; embedded?: boolean }> = ({ d
   );
 
   if (embedded) return body;
-  return <div className="detail-card daily-stats-card">{body}</div>;
+  return <div className="daily-stats-card">{body}</div>;
 };
 
 // ---- Tides Section (selected day only, sorted by time) ----
@@ -457,23 +414,18 @@ const TidesSection: React.FC<{
   const status = getTideStatus(entries, isToday);
 
   return (
-    <div className="detail-card tides-section">
-      <div className="tides-section-header">
-        <div className="card-header-icon tides">{'\u{1F30A}'}</div>
-        <div className="tides-section-header-text">
-          <div className="card-header-title">{t('detalle.mareas')}</div>
-          {status && (
-            <div className={`tide-status ${status.className}`}>
-              {status.className === 'tide-status-rising' ? '\u2197' : '\u2198'} {t(status.clave)}
-            </div>
-          )}
+    <section className="tides-section">
+      <h3 className="section-kicker">{t('detalle.mareas')}</h3>
+      {status && (
+        <div className={`tide-status ${status.className}`}>
+          {status.className === 'tide-status-rising' ? '\u2197' : '\u2198'} {t(status.clave)}
         </div>
-      </div>
+      )}
       <div className="tides-list">
         {entries.map((entry, i) => (
           <div className={`tide-entry ${entry.type}`} key={i}>
-            <span className={`tide-arrow ${entry.type === 'pleamar' ? 'up' : 'down'}`}>
-              {entry.type === 'pleamar' ? '\u2B06' : '\u2B07'}
+            <span className={`tide-arrow ${entry.type === 'pleamar' ? 'up' : 'down'}`} aria-hidden="true">
+              {entry.type === 'pleamar' ? '\u2191' : '\u2193'}
             </span>
             <span className="tide-label">{entry.type === 'pleamar' ? t('marea.pleamar') : t('marea.bajamar')}</span>
             <span className="tide-time-value">{entry.time}</span>
@@ -483,7 +435,7 @@ const TidesSection: React.FC<{
       {fuenteMareas && (
         <div className="tides-source">{fuenteMareas.replace(/^\*/, '')}</div>
       )}
-    </div>
+    </section>
   );
 };
 
@@ -509,7 +461,6 @@ const MetadataFooter: React.FC<{
 interface WeatherCardProps {
   title: string;
   subtitle?: string;
-  iconClass: string;
   clima: PlayaDetalleData['clima'];
   day: 'hoy' | 'manana';
   defaultExpanded?: boolean;
@@ -518,7 +469,6 @@ interface WeatherCardProps {
 const WeatherCard: React.FC<WeatherCardProps> = ({
   title,
   subtitle,
-  iconClass,
   clima,
   day,
   defaultExpanded = true,
@@ -531,7 +481,7 @@ const WeatherCard: React.FC<WeatherCardProps> = ({
   if (!data) return null;
 
   return (
-    <div className="detail-card">
+    <div className="detail-disclosure">
       <div
         className="card-header"
         onClick={() => setExpanded((v) => !v)}
@@ -547,9 +497,6 @@ const WeatherCard: React.FC<WeatherCardProps> = ({
           }
         }}
       >
-        <div className={`card-header-icon ${iconClass}`} aria-hidden="true">
-          {day === 'hoy' ? '\u2600' : '\u26C5'}
-        </div>
         <div>
           <div className="card-header-title">
             {title}
@@ -563,38 +510,34 @@ const WeatherCard: React.FC<WeatherCardProps> = ({
         <div className="card-body card-body-enter" id={contentId}>
           <div className="weather-rows">
             <div className="weather-row">
-              <div className="weather-row-icon" aria-hidden="true">{emojiCielo(data.summary)}</div>
-              <span className="weather-row-label">{t('detalle.cielo')}</span>
+              <span className="weather-row-label">
+                <span className="weather-row-icon" aria-hidden="true">{emojiCielo(data.summary)}</span>
+                {t('detalle.cielo')}
+              </span>
               <span className="weather-row-value">{traducirTextoApi(limpiarTexto(data.summary), idioma)}</span>
             </div>
             <div className="weather-row">
-              <div className="weather-row-icon" aria-hidden="true">{'\u{1F321}'}</div>
               <span className="weather-row-label">{t('detalle.temperatura')}</span>
               <span className="weather-row-value">{data.temperature} &#176;C</span>
             </div>
             <div className="weather-row">
-              <div className="weather-row-icon" aria-hidden="true">{'\u{1F30A}'}</div>
               <span className="weather-row-label">{t('detalle.agua')}</span>
               <span className="weather-row-value">{data.waterTemperature} &#176;C</span>
             </div>
             <div className="weather-row">
-              <div className="weather-row-icon" aria-hidden="true">{'\u{1F525}'}</div>
               <span className="weather-row-label">{t('detalle.sensacion')}</span>
               <span className="weather-row-value">{traducirTextoApi(limpiarTexto(data.sensation), idioma)}</span>
             </div>
             <div className="weather-row">
-              <div className="weather-row-icon" aria-hidden="true">{'\u{1F4A8}'}</div>
               <span className="weather-row-label">{t('detalle.viento')}</span>
               <span className="weather-row-value">{traducirTextoApi(limpiarTexto(data.wind), idioma)}</span>
             </div>
             <div className="weather-row">
-              <div className="weather-row-icon" aria-hidden="true">{'\u{1F30A}'}</div>
               <span className="weather-row-label">{t('detalle.oleaje')}</span>
               <span className="weather-row-value">{traducirTextoApi(limpiarTexto(data.waves), idioma)}</span>
             </div>
             {data.uvIndex !== undefined && (
               <div className="weather-row">
-                <div className="weather-row-icon" aria-hidden="true">{'\u2600'}</div>
                 <span className="weather-row-label">{t('detalle.indiceUV')}</span>
                 <span className="weather-row-value">{data.uvIndex}</span>
               </div>
@@ -615,15 +558,12 @@ const BeachInfoSection: React.FC<{ datos: PlayaDetalleData }> = ({ datos }) => {
   if (!hasAny) return null;
 
   return (
-    <div className="detail-card beach-info-card">
-      <div className="card-header" role="heading" aria-level={3}>
-        <span className="card-header-icon" aria-hidden="true">{'\u{1F3D6}\uFE0F'}</span>
-        <span className="card-header-text">{t('detalle.infoPlaya')}</span>
-      </div>
+    <section className="detail-section beach-info-section">
+      <h3 className="section-kicker">{t('detalle.infoPlaya')}</h3>
       <div className="beach-info-grid">
         {(datos.longitud || datos.anchura) && (
           <div className="beach-info-row">
-            <span className="beach-info-label">{'\u{1F4CF}'} {t('detalle.dimensiones')}</span>
+            <span className="beach-info-label">{t('detalle.dimensiones')}</span>
             <span className="beach-info-value">
               {datos.longitud ? `${datos.longitud} m` : '\u2014'}
               {' \u00D7 '}
@@ -633,46 +573,44 @@ const BeachInfoSection: React.FC<{ datos: PlayaDetalleData }> = ({ datos }) => {
         )}
         {datos.tipoPlaya && (
           <div className="beach-info-row">
-            <span className="beach-info-label">{'\u{1F3D6}\uFE0F'} {t('detalle.tipo')}</span>
+            <span className="beach-info-label">{t('detalle.tipo')}</span>
             <span className="beach-info-value">{traducirTextoApi(datos.tipoPlaya, idioma)}</span>
           </div>
         )}
         {datos.arena && (
           <div className="beach-info-row">
-            <span className="beach-info-label">{'\u{1F3DD}\uFE0F'} {t('detalle.arena')}</span>
+            <span className="beach-info-label">{t('detalle.arena')}</span>
             <span className="beach-info-value">{traducirTextoApi(datos.arena, idioma)}</span>
           </div>
         )}
         {datos.acceso && datos.acceso.length > 0 && (
           <div className="beach-info-row">
-            <span className="beach-info-label">{'\u{1F6B6}'} {t('detalle.acceso')}</span>
-            <span className="beach-info-value beach-info-chips">
-              {datos.acceso.map((a) => (
-                <span key={a} className="beach-info-chip">{traducirTextoApi(a, idioma)}</span>
-              ))}
+            <span className="beach-info-label">{t('detalle.acceso')}</span>
+            <span className="beach-info-value">
+              {datos.acceso.map((a) => traducirTextoApi(a, idioma)).join(' \u00B7 ')}
             </span>
           </div>
         )}
         {datos.parkingDescripcion && (
           <div className="beach-info-row">
-            <span className="beach-info-label">{'\u{1F17F}\uFE0F'} {t('detalle.parking')}</span>
+            <span className="beach-info-label">{t('detalle.parking')}</span>
             <span className="beach-info-value">{traducirTextoApi(datos.parkingDescripcion, idioma)}</span>
           </div>
         )}
         {datos.bus && (
           <div className="beach-info-row">
-            <span className="beach-info-label">{'\u{1F68C}'} {t('detalle.bus')}</span>
+            <span className="beach-info-label">{t('detalle.bus')}</span>
             <span className="beach-info-value">{traducirTextoApi(datos.bus, idioma)}</span>
           </div>
         )}
         {datos.hospitalDistancia != null && (
           <div className="beach-info-row">
-            <span className="beach-info-label">{'\u{1F3E5}'} {t('detalle.hospital')}</span>
+            <span className="beach-info-label">{t('detalle.hospital')}</span>
             <span className="beach-info-value">{t('comun.aKm', { km: datos.hospitalDistancia })}</span>
           </div>
         )}
       </div>
-    </div>
+    </section>
   );
 };
 
@@ -684,26 +622,19 @@ const BeachAttributesSection: React.FC<{ atributos: PlayaDetalleData['atributos'
   if (attrs.length === 0) return null;
 
   return (
-    <div className="detail-card attr-card">
-      <div
-        className="card-header"
-        role="heading"
-        aria-level={3}
-      >
-        <span className="card-header-icon" aria-hidden="true">{'\u2139\uFE0F'}</span>
-        <span className="card-header-text">{t('detalle.servicios')}</span>
-      </div>
-      <div className="attr-chips">
+    <section className="detail-section attr-section">
+      <h3 className="section-kicker">{t('detalle.servicios')}</h3>
+      <div className="attr-grid">
         {attrs.map((a) => {
           const label = t(`attr.${a.key}` as ClaveTexto);
           return (
-            <span key={a.key} className="attr-chip" aria-label={label}>
-              <span aria-hidden="true">{a.emoji}</span> {label}
+            <span key={a.key} className="attr-item">
+              <IonIcon icon={a.icon} aria-hidden="true" /> {label}
             </span>
           );
         })}
       </div>
-    </div>
+    </section>
   );
 };
 
@@ -718,7 +649,7 @@ const CruzRojaCard: React.FC<{ cruzRoja?: PlayaDetalleData['cruzRoja'] }> = ({ c
   const [expanded, setExpanded] = useState(hasData);
 
   return (
-    <div className="detail-card">
+    <div className="detail-disclosure">
       <div
         className={`card-header${!expandable ? ' card-header-disabled' : ''}`}
         onClick={expandable ? () => setExpanded((v) => !v) : undefined}
@@ -735,7 +666,6 @@ const CruzRojaCard: React.FC<{ cruzRoja?: PlayaDetalleData['cruzRoja'] }> = ({ c
           }
         } : undefined}
       >
-        <div className={`card-header-icon ${hasData ? 'cruz-roja' : 'cruz-roja-neutral'}`} aria-hidden="true">{'\u271A'}</div>
         <div>
           <div className="card-header-title">{t('comun.cruzRoja')}</div>
           <div className="card-header-subtitle">
@@ -753,7 +683,6 @@ const CruzRojaCard: React.FC<{ cruzRoja?: PlayaDetalleData['cruzRoja'] }> = ({ c
         <div className="card-body card-body-enter" id="cruzroja-content">
           <div className="info-rows">
             <div className="info-row">
-              <div aria-hidden="true" className={`info-row-icon ${hasData ? '' : 'neutral'}`}>{'\u{1F6A9}'}</div>
               <span className="info-row-label">{t('cruzroja.banderaActual')}</span>
               <span className={`info-row-value ${!hasData ? 'muted' : ''}`}>
                 {hasData
@@ -764,21 +693,18 @@ const CruzRojaCard: React.FC<{ cruzRoja?: PlayaDetalleData['cruzRoja'] }> = ({ c
               </span>
             </div>
             <div className="info-row">
-              <div aria-hidden="true" className={`info-row-icon ${hasData ? '' : 'neutral'}`}>{'\u{1F4C5}'}</div>
               <span className="info-row-label">{t('cruzroja.coberturaDesde')}</span>
               <span className={`info-row-value ${!cruzRoja?.coberturaDesde ? 'muted' : ''}`}>
                 {cruzRojaField(cruzRoja?.coberturaDesde, t)}
               </span>
             </div>
             <div className="info-row">
-              <div aria-hidden="true" className={`info-row-icon ${hasData ? '' : 'neutral'}`}>{'\u{1F4C5}'}</div>
               <span className="info-row-label">{t('cruzroja.coberturaHasta')}</span>
               <span className={`info-row-value ${!cruzRoja?.coberturaHasta ? 'muted' : ''}`}>
                 {cruzRojaField(cruzRoja?.coberturaHasta, t)}
               </span>
             </div>
             <div className="info-row">
-              <div aria-hidden="true" className={`info-row-icon ${hasData ? '' : 'neutral'}`}>{'\u{1F552}'}</div>
               <span className="info-row-label">{t('cruzroja.horario')}</span>
               <span className={`info-row-value ${!cruzRoja?.horario ? 'muted' : ''}`}>
                 {cruzRojaField(cruzRoja?.horario, t)}
@@ -815,7 +741,7 @@ const PlayaDetallePage: React.FC = () => {
     <IonPage className="playa-detalle-page">
       <div className="pd-sticky-header">
         <button className="pd-back-btn" onClick={() => history.goBack()} aria-label={t('detalle.volver')}>
-          <span aria-hidden="true">&#8249;</span>
+          <IonIcon icon={chevronBackOutline} aria-hidden="true" />
         </button>
         <div>
           <h1 className="pd-sticky-title">{datos?.nombre || t('detalle.titulo')}</h1>
@@ -850,13 +776,13 @@ const PlayaDetallePage: React.FC = () => {
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    {'\uD83E\uDDED'} {t('detalle.comoLlegar')}
+                    <IonIcon icon={navigateOutline} aria-hidden="true" /> {t('detalle.comoLlegar')}
                   </a>
                   <button
                     className="hero-directions-link"
                     onClick={() => history.push(`/mapa?lat=${datos.lat}&lon=${datos.lon}&codigo=${datos.codigo}`)}
                   >
-                    {'\uD83D\uDDFA\uFE0F'} {t('detalle.verEnMapa')}
+                    <IonIcon icon={mapOutline} aria-hidden="true" /> {t('detalle.verEnMapa')}
                   </button>
                 </div>
               )}
@@ -864,8 +790,9 @@ const PlayaDetallePage: React.FC = () => {
               <FlagBanner cruzRoja={datos.cruzRoja} />
             </div>
 
-            {/* DETAIL CARDS */}
+            {/* DETAIL CONTENT */}
             <div className="detail-content">
+              <div className="detail-col detail-col--forecast">
               {pred && pred.dias.length > 0 ? (
                 <>
                   <DaySelector
@@ -873,23 +800,17 @@ const PlayaDetallePage: React.FC = () => {
                     selectedDay={safeDayIndex}
                     onSelect={setSelectedDay}
                   />
-                  <ForecastHero
-                    dia={pred.dias[safeDayIndex]}
-                    climaActual={isToday(pred.dias[safeDayIndex].fecha) ? datos.temperaturaActual : undefined}
-                    tiempoActual={isToday(pred.dias[safeDayIndex].fecha) ? datos.tiempoActual : undefined}
-                  />
-                  <div className="detail-card prevision-aemet-card">
-                    <div className="card-header" role="heading" aria-level={3}>
-                      <span className="card-header-icon" aria-hidden="true">{'\u{1F326}️'}</span>
-                      <span className="card-header-text">{t('detalle.previsionAemet')}</span>
-                    </div>
-                    <div className="prevision-aemet-body">
-                      <HalfDayDetail
-                        manana={pred.dias[safeDayIndex].manana}
-                        tarde={pred.dias[safeDayIndex].tarde}
-                      />
-                      <DailyStats dia={pred.dias[safeDayIndex]} embedded />
-                    </div>
+                  <div className="detail-card prevision-panel">
+                    <ForecastHero
+                      dia={pred.dias[safeDayIndex]}
+                      climaActual={isToday(pred.dias[safeDayIndex].fecha) ? datos.temperaturaActual : undefined}
+                      tiempoActual={isToday(pred.dias[safeDayIndex].fecha) ? datos.tiempoActual : undefined}
+                    />
+                    <HalfDayDetail
+                      manana={pred.dias[safeDayIndex].manana}
+                      tarde={pred.dias[safeDayIndex].tarde}
+                    />
+                    <DailyStats dia={pred.dias[safeDayIndex]} embedded />
                   </div>
                   {pred.mareas?.[safeDayIndex] && (
                     <TidesSection
@@ -903,14 +824,12 @@ const PlayaDetallePage: React.FC = () => {
                 <>
                   <WeatherCard
                     title={t('fecha.hoy')}
-                    iconClass="weather"
                     clima={datos.clima}
                     day="hoy"
                     defaultExpanded={true}
                   />
                   <WeatherCard
                     title={t('fecha.manana')}
-                    iconClass="tomorrow"
                     clima={datos.clima}
                     day="manana"
                     defaultExpanded={false}
@@ -924,7 +843,9 @@ const PlayaDetallePage: React.FC = () => {
                   )}
                 </>
               )}
+              </div>
 
+              <div className="detail-col detail-col--info">
               {datos.cruzRoja != null && <CruzRojaCard cruzRoja={datos.cruzRoja} />}
 
               <BeachInfoSection datos={datos} />
@@ -933,6 +854,7 @@ const PlayaDetallePage: React.FC = () => {
                   atributos={{ ...datos.atributos, ...(datos.submarinismo ? { submarinismo: true } : {}) }}
                 />
               )}
+              </div>
 
               {pred && (
                 <MetadataFooter
