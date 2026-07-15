@@ -345,6 +345,28 @@
   margin-top: 4px;
 }
 
+/* Badge "Lloviendo ahora" (señal multi-fuente). Colores del theme →
+   se adapta solo a dark mode. */
+.forecast-hero-lluvia {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: var(--playa-ocean-light);
+  color: var(--playa-ocean);
+  border: 1px solid currentColor;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Variante "lluvia prevista" (aún no llueve): más suave, borde discontinuo. */
+.forecast-hero-lluvia-prevista {
+  background: transparent;
+  border-style: dashed;
+  font-weight: 500;
+}
+
 .forecast-hero-agua {
   font-size: 0.75rem;
   color: var(--playa-text-muted);

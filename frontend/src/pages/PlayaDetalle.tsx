@@ -23,6 +23,9 @@ import {
   estadoBandera,
   capitalizar,
   emojiCielo,
+  esLluviaActiva,
+  lluviaPrevista,
+  horaLocalMadrid,
   getActiveAttrs,
 } from '../utils/beachHelpers';
 import { useIdioma, Idioma, TraducirFn } from '../i18n/IdiomaContext';
@@ -255,16 +258,38 @@ const ForecastHero: React.FC<{
   const showMax = climaActual != null && dia.temperaturaMaxima != null && climaActual <= dia.temperaturaMaxima;
   const wLevel = viento ? windSpeedLevel(viento) : 1;
 
+  // Lluvia detectada AHORA (señal multi-fuente del backend). `tiempoActual`
+  // solo llega cuando el día seleccionado es HOY, así que el badge no se
+  // muestra en días futuros.
+  const lloviendo = esLluviaActiva(tiempoActual);
+  const mmLluvia = tiempoActual?.lluvia?.mm ?? tiempoActual?.precipitacionMm ?? null;
+  // Lluvia PREVISTA (próximas horas). Null si ya llueve: nunca dos badges.
+  const prevista = lluviaPrevista(tiempoActual);
+  const horaPrevista = horaLocalMadrid(prevista?.desdeIso);
+
   return (
     <div className="forecast-hero">
       <div className="forecast-hero-main">
         <div className="forecast-hero-col">
-          <span className="forecast-hero-icon-emoji">{skyEmoji}</span>
+          <span className="forecast-hero-icon-emoji">{lloviendo ? '\u{1F327}\uFE0F' : skyEmoji}</span>
           {tempPrincipal != null && (
             <span className="forecast-hero-temp">{Math.round(tempPrincipal)}&deg;</span>
           )}
           {showMax && (
             <span className="forecast-hero-max">{t('detalle.max')} {dia.temperaturaMaxima}&deg;</span>
+          )}
+          {lloviendo && (
+            <span className="forecast-hero-lluvia" role="status">
+              {tiempoActual?.lluvia?.ultimaHora ? t('detalle.lluviaUltimaHora') : t('detalle.lloviendoAhora')}
+              {mmLluvia != null && mmLluvia > 0 && ` · ${mmLluvia.toFixed(1)} mm`}
+            </span>
+          )}
+          {prevista && (
+            <span className="forecast-hero-lluvia forecast-hero-lluvia-prevista" role="status">
+              {horaPrevista
+                ? t('detalle.lluviaPrevistaHora', { hora: horaPrevista })
+                : t('detalle.lluviaPrevistaHoy')}
+            </span>
           )}
           {skyText && <span className="forecast-hero-sky">{traducirTextoApi(skyText, idioma)}</span>}
           {dia.temperaturaAgua != null && (
