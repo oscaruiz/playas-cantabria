@@ -831,6 +831,7 @@ const PlayaDetallePage: React.FC = () => {
                       climaActual={isToday(pred.dias[safeDayIndex].fecha) ? datos.temperaturaActual : undefined}
                       tiempoActual={isToday(pred.dias[safeDayIndex].fecha) ? datos.tiempoActual : undefined}
                     />
+                    <h3 className="section-kicker">{t('detalle.previsionAemet')}</h3>
                     <HalfDayDetail
                       manana={pred.dias[safeDayIndex].manana}
                       tarde={pred.dias[safeDayIndex].tarde}

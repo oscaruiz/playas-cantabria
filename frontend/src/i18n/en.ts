@@ -26,9 +26,9 @@ export const en = {
   'comun.cruzRoja': 'Red Cross',
 
   // ---- Tiempo relativo ----
-  'tiempo.ahoraMismo': 'just now',
-  'tiempo.haceMin': '{n} min ago',
-  'tiempo.haceHoras': '{n}h ago',
+  'tiempo.ahoraMismo': 'updated just now',
+  'tiempo.haceMin': 'updated {n} min ago',
+  'tiempo.haceHoras': 'updated {n}h ago',
 
   // ---- Home ----
   'home.subtitulo': 'Discover the best beaches in Cantabria',
@@ -126,6 +126,7 @@ export const en = {
   'detalle.lluviaUltimaHora': 'Rain in the last hour',
   'detalle.lluviaPrevistaHora': 'Rain expected around {hora}',
   'detalle.lluviaPrevistaHoy': 'Rain expected today',
+  'detalle.previsionAemet': 'Forecast (AEMET)',
   'detalle.periodoManana': 'Morning',
   'detalle.periodoTarde': 'Afternoon',
   'detalle.sensacionTermica': 'Feels like',

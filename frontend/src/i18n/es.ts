@@ -28,9 +28,9 @@ export const es = {
   'comun.cruzRoja': 'Cruz Roja',
 
   // ---- Tiempo relativo ----
-  'tiempo.ahoraMismo': 'ahora mismo',
-  'tiempo.haceMin': 'hace {n} min',
-  'tiempo.haceHoras': 'hace {n}h',
+  'tiempo.ahoraMismo': 'actualizado ahora mismo',
+  'tiempo.haceMin': 'actualizado hace {n} min',
+  'tiempo.haceHoras': 'actualizado hace {n}h',
 
   // ---- Home ----
   'home.subtitulo': 'Descubre las mejores playas de Cantabria',
@@ -128,6 +128,7 @@ export const es = {
   'detalle.lluviaUltimaHora': 'Lluvia en la última hora',
   'detalle.lluviaPrevistaHora': 'Lluvia prevista hacia las {hora}',
   'detalle.lluviaPrevistaHoy': 'Lluvia prevista hoy',
+  'detalle.previsionAemet': 'Previsión (AEMET)',
   'detalle.periodoManana': 'Mañana',
   'detalle.periodoTarde': 'Tarde',
   'detalle.sensacionTermica': 'Sensación térmica',
