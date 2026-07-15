@@ -300,8 +300,9 @@
 }
 
 .forecast-hero {
+  /* Sin border-bottom: el kicker "Previsión (AEMET)" que va justo debajo
+     ya aporta su propia línea (::after) — dos líneas juntas se veían rotas. */
   padding-bottom: 16px;
-  border-bottom: 1px solid var(--playa-border);
 }
 
 .forecast-hero-main {
