@@ -81,31 +81,43 @@ html, body {
   --ion-font-family: 'Poppins', sans-serif;
 
   /* Background override */
-  --ion-background-color: #faf6f1;
+  --ion-background-color: #f3f1ea;
 
-  /* Playa design tokens (shared across all pages) */
-  --playa-sand: #faf6f1;
+  /* Playa design tokens (shared across all pages)
+     Carta náutica: papel de carta, tinta azul-negra, atlántico
+     profundo plano y un acento cálido "óxido de boya". */
+  --playa-sand: #f3f1ea;
   --playa-ocean: #0a7ea4;
   --playa-ocean-light: #e8f4f8;
-  --playa-ocean-dark: #065a75;
-  --playa-sky: #87ceeb;
-  --playa-foam: #ffffff;
-  --playa-text: #1e293b;
-  --playa-text-muted: #64748b;
-  --playa-border: #e2e8f0;
-  --playa-card-bg: rgba(255, 255, 255, 0.92);
-  --playa-card-radius: 18px;
-  --playa-flag-green: #22c55e;
+  --playa-deep: #065a75;
+  --playa-ocean-dark: var(--playa-deep);
+  --playa-buoy: #b4531f;
+  /* Degradado de cabecera (azul océano original) */
+  --playa-header-grad: linear-gradient(135deg, #0a7ea4 0%, #065a75 100%);
+  --playa-foam: #fdfcf9;
+  --playa-text: #1b2a32;
+  --playa-text-muted: #51606c;
+  --playa-border: #ddd8cc;
+  --playa-rule: #b8b1a1;
+  --playa-card-bg: var(--playa-foam);
+  --playa-card-radius: 10px;
+  --playa-radius-s: 6px;
+  --playa-flag-green: #15803d;
   --playa-flag-yellow: #eab308;
-  --playa-flag-red: #ef4444;
+  --playa-flag-red: #c2362f;
+  --playa-focus: var(--playa-ocean);
+  --playa-header-h: 84px;
+
+  /* Curvas batimétricas para las cabeceras (blanco al 7%) */
+  --playa-chart-lines: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='96' viewBox='0 0 320 96'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='0.07' stroke-width='1'%3E%3Cpath d='M0 22 C60 10 120 36 180 24 240 12 290 32 320 20'/%3E%3Cpath d='M0 48 C70 34 130 60 200 48 260 38 300 56 320 46'/%3E%3Cpath d='M0 74 C60 62 140 86 210 72 270 62 300 80 320 70'/%3E%3C/g%3E%3C/svg%3E");
 }
 
 @media (prefers-color-scheme: dark) {
   body {
     --ion-color-primary: #38bdf8;
     --ion-color-primary-rgb: 56, 189, 248;
-    --ion-color-primary-contrast: #0f172a;
-    --ion-color-primary-contrast-rgb: 15, 23, 42;
+    --ion-color-primary-contrast: #0e171d;
+    --ion-color-primary-contrast-rgb: 14, 23, 29;
     --ion-color-primary-shade: #31a6da;
     --ion-color-primary-tint: #4cc4f9;
 
@@ -165,26 +177,33 @@ html, body {
     --ion-color-light-shade: #1a2434;
     --ion-color-light-tint: #353e4f;
 
-    --ion-background-color: #0f172a;
+    --ion-background-color: #0e171d;
 
-    /* Playa dark mode overrides */
-    --playa-sand: #0f172a;
-    --playa-ocean: #0c4a6e;
-    --playa-ocean-light: #1e3a5f;
-    --playa-ocean-dark: #082f49;
-    --playa-foam: #1e293b;
-    --playa-text: #e2e8f0;
-    --playa-text-muted: #94a3b8;
-    --playa-border: #334155;
-    --playa-card-bg: rgba(30, 41, 59, 0.92);
+    /* Playa dark mode overrides (noche atlántica) */
+    --playa-sand: #0e171d;
+    --playa-ocean: #38bdf8;
+    --playa-ocean-light: #1b3742;
+    --playa-deep: #0c4a6e;
+    --playa-ocean-dark: var(--playa-deep);
+    --playa-buoy: #e08a54;
+    --playa-header-grad: linear-gradient(135deg, #0c4a6e 0%, #0e171d 100%);
+    --playa-foam: #17232b;
+    --playa-text: #e8e3d9;
+    --playa-text-muted: #9aa6ad;
+    --playa-border: #2a3942;
+    --playa-rule: #3d4d56;
+    --playa-card-bg: var(--playa-foam);
+    --playa-flag-green: #34c26b;
+    --playa-flag-red: #e4584e;
+    --playa-focus: var(--playa-ocean);
   }
 
   /* iOS Dark Theme */
   .ios body {
-    --ion-background-color: #0f172a;
-    --ion-background-color-rgb: 15, 23, 42;
-    --ion-text-color: #e2e8f0;
-    --ion-text-color-rgb: 226, 232, 240;
+    --ion-background-color: #0e171d;
+    --ion-background-color-rgb: 14, 23, 29;
+    --ion-text-color: #e8e3d9;
+    --ion-text-color-rgb: 232, 227, 217;
 
     --ion-color-step-50: #131d32;
     --ion-color-step-100: #1a2744;
@@ -205,8 +224,8 @@ html, body {
     --ion-color-step-900: #d5dced;
     --ion-color-step-950: #e3e7f1;
 
-    --ion-item-background: #1e293b;
-    --ion-card-background: #1e293b;
+    --ion-item-background: #17232b;
+    --ion-card-background: #17232b;
   }
 
   .ios ion-modal {
@@ -217,11 +236,11 @@ html, body {
 
   /* Material Design Dark Theme */
   .md body {
-    --ion-background-color: #0f172a;
-    --ion-background-color-rgb: 15, 23, 42;
-    --ion-text-color: #e2e8f0;
-    --ion-text-color-rgb: 226, 232, 240;
-    --ion-border-color: #334155;
+    --ion-background-color: #0e171d;
+    --ion-background-color-rgb: 14, 23, 29;
+    --ion-text-color: #e8e3d9;
+    --ion-text-color-rgb: 232, 227, 217;
+    --ion-border-color: #2a3942;
 
     --ion-color-step-50: #131d32;
     --ion-color-step-100: #1e293b;
@@ -243,10 +262,10 @@ html, body {
     --ion-color-step-900: #dce8ef;
     --ion-color-step-950: #e8f0f3;
 
-    --ion-item-background: #1e293b;
-    --ion-toolbar-background: #1e293b;
-    --ion-tab-bar-background: #1e293b;
-    --ion-card-background: #1e293b;
+    --ion-item-background: #17232b;
+    --ion-toolbar-background: #17232b;
+    --ion-tab-bar-background: #17232b;
+    --ion-card-background: #17232b;
   }
 }
 
@@ -258,4 +277,61 @@ ion-page.ion-page {
 @keyframes pageContentFadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+/* --- Focus visible global (cubre role=link/button con tabIndex) --- */
+:where(a, button, input, select, textarea,
+       [role='button'], [role='link'], [tabindex]:not([tabindex='-1'])):focus-visible {
+  outline: 2px solid var(--playa-focus);
+  outline-offset: 2px;
+}
+
+/* Sobre las cabeceras azul profundo el ocean no contrasta */
+.hp-sticky-header :focus-visible,
+.home-sticky-header :focus-visible,
+.pd-sticky-header :focus-visible,
+.mapa-sticky-header :focus-visible,
+.hero-section :focus-visible,
+.hp-hero :focus-visible {
+  outline-color: #ffffff;
+}
+
+/* --- Reduced motion --- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* --- Kicker editorial de sección (compartido por todas las páginas) --- */
+.section-kicker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 12px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--playa-text);
+}
+
+/* Tick de acento: ancla visual de cada sección */
+.section-kicker::before {
+  content: '';
+  width: 4px;
+  height: 15px;
+  border-radius: 2px;
+  background: var(--playa-ocean);
+  flex-shrink: 0;
+}
+
+.section-kicker::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--playa-border);
 }

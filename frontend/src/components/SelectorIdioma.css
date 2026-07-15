@@ -7,8 +7,9 @@
   display: flex;
   gap: 2px;
   padding: 3px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: transparent;
   font-family: 'Poppins', sans-serif;
 }
 
@@ -20,7 +21,7 @@
   font-weight: 600;
   letter-spacing: 0.04em;
   padding: 4px 10px;
-  border-radius: 999px;
+  border-radius: 6px;
   cursor: pointer;
   transition: background 0.2s ease, color 0.2s ease;
   -webkit-tap-highlight-color: transparent;
@@ -28,7 +29,7 @@
 
 .selector-idioma-btn.active {
   background: #ffffff;
-  color: var(--playa-ocean, #0a7ea4);
+  color: var(--playa-deep);
 }
 
 .selector-idioma-btn:focus-visible {
@@ -36,13 +37,16 @@
   outline-offset: 1px;
 }
 
-@media (prefers-color-scheme: dark) {
-  .selector-idioma {
-    background: rgba(255, 255, 255, 0.12);
+@media (hover: hover) {
+  .selector-idioma-btn:not(.active):hover {
+    background: rgba(255, 255, 255, 0.14);
+    color: #ffffff;
   }
+}
 
+@media (prefers-color-scheme: dark) {
   .selector-idioma-btn.active {
-    background: #e2e8f0;
-    color: #0c4a6e;
+    background: #e8e3d9;
+    color: var(--playa-deep);
   }
 }

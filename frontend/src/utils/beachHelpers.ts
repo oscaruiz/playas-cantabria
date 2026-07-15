@@ -2,6 +2,19 @@
  * Shared beach helper functions used by HomePage, PlayaDetalle, and other pages.
  */
 
+import {
+  waterOutline,
+  maleFemaleOutline,
+  carOutline,
+  accessibilityOutline,
+  restaurantOutline,
+  pawOutline,
+  medkitOutline,
+  fishOutline,
+  walkOutline,
+  bodyOutline,
+} from 'ionicons/icons';
+
 export function limpiarTexto(texto: string | null | undefined): string {
   if (!texto) return '';
   return texto.replace(/\uFFFD/g, 'e');
@@ -96,22 +109,26 @@ export function capitalizar(s: string | null | undefined): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-export const ATTR_CONFIG: Record<string, { emoji: string; label: string }> = {
-  duchas:        { emoji: '\u{1F6BF}', label: 'Duchas' },
-  aseos:         { emoji: '\u{1F6BB}', label: 'Aseos' },
-  parking:       { emoji: '\u{1F17F}\uFE0F', label: 'Parking' },
-  accesible:     { emoji: '\u267F', label: 'Accesible' },
-  chiringuito:   { emoji: '\u{1F379}', label: 'Chiringuito' },
-  surf:          { emoji: '\u{1F3C4}', label: 'Surf' },
-  mascotas:      { emoji: '\u{1F415}', label: 'Mascotas' },
-  socorrismo:    { emoji: '\u{1F6DF}', label: 'Socorrismo' },
-  nudista:       { emoji: '\u{1F3D6}\uFE0F', label: 'Nudista' },
-  accesoBanista: { emoji: '\u{1F3CA}', label: 'Acceso ba\u00F1o' },
-  submarinismo: { emoji: '\u{1F93F}', label: 'Submarinismo' },
+/** Glifo de olas para "surf" (no existe en Ionicons) \u2014 mismo formato data-URI que ionicons */
+const olasIcon =
+  "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><path d='M48 192c48-44 112-44 160 0s112 44 160 0 88-38 96-42' fill='none' stroke='currentColor' stroke-width='32' stroke-linecap='round'/><path d='M48 320c48-44 112-44 160 0s112 44 160 0 88-38 96-42' fill='none' stroke='currentColor' stroke-width='32' stroke-linecap='round'/></svg>";
+
+export const ATTR_CONFIG: Record<string, { emoji: string; icon: string; label: string }> = {
+  duchas:        { emoji: '\u{1F6BF}', icon: waterOutline, label: 'Duchas' },
+  aseos:         { emoji: '\u{1F6BB}', icon: maleFemaleOutline, label: 'Aseos' },
+  parking:       { emoji: '\u{1F17F}\uFE0F', icon: carOutline, label: 'Parking' },
+  accesible:     { emoji: '\u267F', icon: accessibilityOutline, label: 'Accesible' },
+  chiringuito:   { emoji: '\u{1F379}', icon: restaurantOutline, label: 'Chiringuito' },
+  surf:          { emoji: '\u{1F3C4}', icon: olasIcon, label: 'Surf' },
+  mascotas:      { emoji: '\u{1F415}', icon: pawOutline, label: 'Mascotas' },
+  socorrismo:    { emoji: '\u{1F6DF}', icon: medkitOutline, label: 'Socorrismo' },
+  nudista:       { emoji: '\u{1F3D6}\uFE0F', icon: bodyOutline, label: 'Nudista' },
+  accesoBanista: { emoji: '\u{1F3CA}', icon: walkOutline, label: 'Acceso ba\u00F1o' },
+  submarinismo: { emoji: '\u{1F93F}', icon: fishOutline, label: 'Submarinismo' },
 };
 
 /** Returns active attribute entries from a beach's atributos object */
-export function getActiveAttrs(atributos?: Record<string, boolean | undefined> | null): Array<{ key: string; emoji: string; label: string }> {
+export function getActiveAttrs(atributos?: Record<string, boolean | undefined> | null): Array<{ key: string; emoji: string; icon: string; label: string }> {
   if (!atributos) return [];
   return Object.entries(atributos)
     .filter(([key, val]) => val === true && ATTR_CONFIG[key])
