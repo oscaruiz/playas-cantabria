@@ -2,6 +2,8 @@ import { BeachDetails } from '../../domain/use-cases/GetBeachDetails';
 import { Beach, BeachAttributes } from '../../domain/entities/Beach';
 import { FlagStatus } from '../../domain/entities/Flag';
 import { Weather } from '../../domain/entities/Weather';
+import { RainNowcast } from '../../domain/entities/RainNowcast';
+import { RainForecastSignal } from '../../domain/use-cases/RainForecast';
 
 export type ClimaDiaDTO = {
   summary: string | null;
@@ -26,6 +28,29 @@ export type ClimaDTO = {
  * (que son PREVISIÓN AEMET): este bloque refleja el estado real actual del cielo,
  * temperatura y precipitación, con prioridad sobre la previsión en la tarjeta resumen.
  */
+/**
+ * Señal agregada "¿está lloviendo ahora?" (multi-fuente: OpenWeather,
+ * pluviómetro AEMET, Open-Meteo). Campo aditivo dentro de `tiempoActual`.
+ */
+/** Lluvia PREVISTA (próximas ~6h Open-Meteo ∪ texto AEMET restante de hoy). */
+export type LluviaPrevistaDTO = {
+  /** ISO del primer tramo de 15 min con precipitación; null si la señal es solo textual (AEMET). */
+  desdeIso: string | null;
+  /** Máximo mm por tramo previsto. */
+  mm: number | null;
+  fuentes: string[];
+};
+
+export type LluviaDTO = {
+  estado: 'lloviendo' | 'sin_lluvia' | 'desconocido';
+  mm: number | null;
+  /** true = solo el pluviómetro AEMET disparó la señal (llovió en la última hora). */
+  ultimaHora: boolean;
+  fuentes: string[];
+  timestamp: string;
+  prevista?: LluviaPrevistaDTO | null;
+};
+
 export type TiempoActualDTO = {
   cielo: string | null;
   icono: number | null;
@@ -33,6 +58,7 @@ export type TiempoActualDTO = {
   precipitacionMm: number | null;
   fuente: 'OpenWeather' | 'AEMET';
   timestamp: string;
+  lluvia?: LluviaDTO | null;
 };
 
 type CruzRojaDTO = {
@@ -96,6 +122,28 @@ export class LegacyDetailsMapper {
       clima: weather ? this.mapClima(weather) : null,
       cruzRoja: flag ? this.mapCruzRoja(flag) : null,
       prediccionCompleta: null,
+    };
+  }
+
+  /** Mapea la señal agregada de lluvia al DTO (valores en español). */
+  static mapLluvia(r: RainNowcast): LluviaDTO {
+    const estado =
+      r.status === 'raining' ? 'lloviendo' : r.status === 'dry' ? 'sin_lluvia' : 'desconocido';
+    return {
+      estado,
+      mm: r.precipitationMm ?? null,
+      ultimaHora: r.lastHourOnly,
+      fuentes: r.sources.map((s) => s.source),
+      timestamp: new Date(r.timestamp).toISOString(),
+    };
+  }
+
+  /** Mapea la señal de lluvia prevista al DTO. */
+  static mapLluviaPrevista(s: RainForecastSignal): LluviaPrevistaDTO {
+    return {
+      desdeIso: s.firstAt != null ? new Date(s.firstAt).toISOString() : null,
+      mm: s.mmMax ?? null,
+      fuentes: s.sources,
     };
   }
 

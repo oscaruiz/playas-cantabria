@@ -4,11 +4,15 @@ import {
   LegacyDetailsMapper,
   ClimaDTO,
   ClimaDiaDTO,
+  LluviaDTO,
   PrediccionCompletaDTO,
 } from '../mappers/LegacyDetailsMapper';
 import { OpenWeatherWeatherProvider } from '../../infrastructure/providers/OpenWeatherWeatherProvider';
 import { AemetBeachForecastProvider } from '../../infrastructure/providers/AemetBeachForecastProvider';
 import { AemetBeachWebScraper } from '../../infrastructure/providers/AemetBeachWebScraper';
+import { GetRainNowcast } from '../../domain/use-cases/GetRainNowcast';
+import { buildRainForecastSignal, textosRestantesHoy } from '../../domain/use-cases/RainForecast';
+import type { RainNowcast } from '../../domain/entities/RainNowcast';
 import type { BeachFullForecast } from '../../domain/entities/BeachForecast';
 
 /**
@@ -24,6 +28,7 @@ export class LegacyDetailsAssembler {
     private readonly aemetScraper: AemetBeachWebScraper,
     private readonly aemetPlayas: AemetBeachForecastProvider,
     private readonly openWeather: OpenWeatherWeatherProvider,
+    private readonly rainNowcast: GetRainNowcast,
   ) {}
 
   // -----------------------------------------------------------------------
@@ -210,12 +215,58 @@ export class LegacyDetailsAssembler {
           : null;
     }
 
+    // Step 1.6: Señal agregada de lluvia (multi-fuente: OpenWeather + AEMET
+    // pluviómetro + Open-Meteo). Los modelos de un solo proveedor pierden
+    // llovizna costera hiperlocal; se cruza con más fuentes. Campo aditivo.
+    let rainSignal: RainNowcast | null = null;
+    try {
+      rainSignal = await this.rainNowcast.execute(
+        details.beach.latitude,
+        details.beach.longitude,
+      );
+      if (base.tiempoActual) {
+        base.tiempoActual = {
+          ...base.tiempoActual,
+          lluvia: LegacyDetailsMapper.mapLluvia(rainSignal),
+        };
+      }
+    } catch {
+      // sin señal de lluvia estructurada; el resto del endpoint no se ve afectado
+    }
+
     // Step 2: Try scraper (Layer 1 — richest source)
     let forecast: BeachFullForecast | null = null;
     try {
       forecast = await this.aemetScraper.getBeachForecast(details.beach.aemetCode);
     } catch {
       // scraper failed, forecast stays null
+    }
+
+    // Step 2.5: Lluvia PREVISTA — previsión numérica Open-Meteo (próximas 6h,
+    // viene en el nowcast del Step 1.6) ∪ texto AEMET del tramo restante de
+    // hoy (necesita el forecast del Step 2). Campo aditivo dentro de lluvia.
+    try {
+      const señal = buildRainForecastSignal(
+        rainSignal,
+        textosRestantesHoy(forecast?.days[0] ?? null),
+      );
+      if (señal?.expected && base.tiempoActual) {
+        // Si el nowcast cayó pero el texto AEMET avisa, sintetizar el
+        // contenedor `lluvia` para poder colgar la previsión.
+        const lluviaBase: LluviaDTO = base.tiempoActual.lluvia ?? {
+          estado: 'desconocido',
+          mm: null,
+          ultimaHora: false,
+          fuentes: [],
+          timestamp: new Date().toISOString(),
+        };
+        base.tiempoActual = {
+          ...base.tiempoActual,
+          lluvia: { ...lluviaBase, prevista: LegacyDetailsMapper.mapLluviaPrevista(señal) },
+        };
+      }
+    } catch {
+      // aditivo: nunca rompe el endpoint
     }
 
     // Step 3: Build clima (backward-compatible)

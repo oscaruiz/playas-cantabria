@@ -18,6 +18,7 @@ interface AemetObs {
   vv?: number;       // 👁️ Visibilidad (km) - NO es velocidad viento
   dv?: number;       // 🧭 Dirección viento (grados)
   vmax?: number;     // 💨 Velocidad máxima viento (m/s)
+  prec?: number;     // 🌧️ Precipitación última hora (mm)
   ubi?: string;      // 📍 Ubicación
 }
 
@@ -63,22 +64,7 @@ export class AemetWeatherProvider implements WeatherProvider {
     const cacheKey = CacheKeys.weatherByCoords(lat, lon, 'AEMET');
     return this.cache.getOrSet(cacheKey, cfg.cacheTtlSeconds, async () => {
       try {
-        const meta = await http.get('https://opendata.aemet.es/opendata/api/observacion/convencional/todas', {
-          params: { api_key: cfg.aemetApiKey },
-          timeout: 7000
-        });
-        debugLog('aemet.meta', meta.data);
-
-        const datosUrl: string | undefined = meta.data?.datos;
-        if (!datosUrl) {
-          this.lastRaw = meta.data;
-          throw new ProviderError('AEMET', 'Unexpected response: missing datos URL', 'BAD_PAYLOAD');
-        }
-
-        const obsResp = await http.get<AemetObs[]>(datosUrl, { timeout: 7000, responseType: 'json' });
-        const arr = Array.isArray(obsResp.data) ? obsResp.data : [];
-        this.lastRaw = arr;
-        debugLog('aemet.obs', arr.slice(0, 5));
+        const arr = await this.getObservacionesCached();
 
         if (arr.length === 0) {
           throw new ProviderError('AEMET', 'Empty observations payload', 'EMPTY');
@@ -98,19 +84,39 @@ export class AemetWeatherProvider implements WeatherProvider {
           throw new ProviderError('AEMET', 'No station with coordinates found', 'NO_STATION');
         }
 
-        const timestamp = best.fint ? parseAemetTime(best.fint) : Date.now();
-        const pressure = typeof best.pres_nmar === 'number' ? best.pres_nmar : best.pres;
+        // El payload trae varias filas por estación (últimas horas, distinto
+        // fint). Ordenar las de la estación elegida de más reciente a más
+        // antigua y tomar, por campo, el primer valor numérico disponible
+        // (la fila más reciente puede venir incompleta).
+        const rows = best.idema
+          ? arr
+              .filter((s) => s.idema === best!.idema)
+              .sort((a, b) => (b.fint ?? '').localeCompare(a.fint ?? ''))
+          : [best];
+        const latest = rows[0] ?? best;
+        const firstNumber = (pick: (o: AemetObs) => number | undefined): number | null => {
+          for (const r of rows) {
+            const v = pick(r);
+            if (typeof v === 'number') return v;
+          }
+          return null;
+        };
+
+        const timestamp = latest.fint ? parseAemetTime(latest.fint) : Date.now();
+        const pressure = firstNumber((o) => (typeof o.pres_nmar === 'number' ? o.pres_nmar : o.pres));
 
         const weather: Weather = {
           source: 'AEMET',
           timestamp,
-          temperatureC: typeof best.ta === 'number' ? best.ta : null,
-          description: this.generateAemetDescription(best),
-          icon: this.generateAemetIcon(best),
-          windSpeedMs: typeof best.vmax === 'number' ? best.vmax : null, // ✅ CORREGIDO: vmax es velocidad viento
-          windDirectionDeg: typeof best.dv === 'number' ? best.dv : null,
-          humidityPct: typeof best.hr === 'number' ? best.hr : null,
-          pressureHPa: typeof pressure === 'number' ? pressure : null
+          temperatureC: firstNumber((o) => o.ta),
+          description: this.generateAemetDescription(latest),
+          icon: this.generateAemetIcon(latest),
+          // prec: solo la fila más reciente (un acumulado antiguo daría falsos "lloviendo").
+          precipitationMm: typeof latest.prec === 'number' ? latest.prec : null,
+          windSpeedMs: firstNumber((o) => o.vmax), // ✅ CORREGIDO: vmax es velocidad viento
+          windDirectionDeg: firstNumber((o) => o.dv),
+          humidityPct: firstNumber((o) => o.hr),
+          pressureHPa: pressure
         };
 
         return weather;
@@ -118,6 +124,34 @@ export class AemetWeatherProvider implements WeatherProvider {
         const name = e?.code || e?.name;
         throw new ProviderError('AEMET', e?.message || 'AEMET request failed', name);
       }
+    });
+  }
+
+  /**
+   * Descarga (o recupera de caché) el payload completo de observaciones de
+   * toda España bajo una clave única: una sola descarga por TTL sirve a las
+   * ~20 playas (antes cada playa re-descargaba todo el payload).
+   */
+  private async getObservacionesCached(): Promise<AemetObs[]> {
+    const cfg = Config.get();
+    return this.cache.getOrSet('aemet:obs:todas', cfg.cacheTtlSeconds, async () => {
+      const meta = await http.get('https://opendata.aemet.es/opendata/api/observacion/convencional/todas', {
+        params: { api_key: cfg.aemetApiKey },
+        timeout: 7000
+      });
+      debugLog('aemet.meta', meta.data);
+
+      const datosUrl: string | undefined = meta.data?.datos;
+      if (!datosUrl) {
+        this.lastRaw = meta.data;
+        throw new ProviderError('AEMET', 'Unexpected response: missing datos URL', 'BAD_PAYLOAD');
+      }
+
+      const obsResp = await http.get<AemetObs[]>(datosUrl, { timeout: 7000, responseType: 'json' });
+      const arr = Array.isArray(obsResp.data) ? obsResp.data : [];
+      this.lastRaw = arr;
+      debugLog('aemet.obs', arr.slice(0, 5));
+      return arr;
     });
   }
 

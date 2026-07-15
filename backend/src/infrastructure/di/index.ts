@@ -30,11 +30,13 @@ export const SERVICES = {
   REDCROSS_FLAG_PROVIDER: 'redCrossFlagProvider',
   AEMET_BEACH_FORECAST_PROVIDER: 'aemetBeachForecastProvider',
   AEMET_BEACH_WEB_SCRAPER: 'aemetBeachWebScraper',
+  OPEN_METEO_PRECIPITATION_PROVIDER: 'openMeteoPrecipitationProvider',
 
   // Use Cases
   GET_ALL_BEACHES: 'getAllBeaches',
   GET_BEACH_BY_ID: 'getBeachById',
   GET_BEACH_DETAILS: 'getBeachDetails',
+  GET_RAIN_NOWCAST: 'getRainNowcast',
   
   // Application Services
   DETAILS_ASSEMBLER: 'detailsAssembler',

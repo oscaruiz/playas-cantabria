@@ -40,6 +40,7 @@ export class OpenWeatherWeatherProvider implements WeatherProvider {
           description: w0.description ?? null,
           icon: w0.icon ?? null,
           precipitationMm: typeof precipMm === 'number' ? precipMm : null,
+          conditionCode: typeof w0.id === 'number' ? w0.id : null,
           windSpeedMs: d.wind?.speed ?? null,
           windDirectionDeg: d.wind?.deg ?? null,
           humidityPct: d.main?.humidity ?? null,

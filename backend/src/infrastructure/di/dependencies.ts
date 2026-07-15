@@ -9,8 +9,10 @@ import { GetBeachById } from '../../domain/use-cases/GetBeachById';
 import { GetBeachDetails } from '../../domain/use-cases/GetBeachDetails';
 import { LegacyDetailsAssembler } from '../../application/services/LegacyDetailsAssembler';
 import { GetFeaturedBeaches } from '../../domain/use-cases/GetFeaturedBeaches';
+import { GetRainNowcast } from '../../domain/use-cases/GetRainNowcast';
 import { AemetBeachForecastProvider } from '../providers/AemetBeachForecastProvider';
 import { AemetBeachWebScraper } from '../providers/AemetBeachWebScraper';
+import { OpenMeteoPrecipitationProvider } from '../providers/OpenMeteoPrecipitationProvider';
 
 export function configureDependencies(container: DIContainer, overrides: { cache?: InMemoryCache } = {}): void {
   // Infrastructure Layer - Singletons
@@ -40,6 +42,10 @@ export function configureDependencies(container: DIContainer, overrides: { cache
     new AemetBeachWebScraper(c.get('cache'))
   );
 
+  container.registerSingleton('openMeteoPrecipitationProvider', (c) =>
+    new OpenMeteoPrecipitationProvider(c.get('cache'))
+  );
+
   // Domain Layer - Use Cases
   container.register('getAllBeaches', (c) => 
     new GetAllBeaches(c.get('beachRepository'))
@@ -59,6 +65,15 @@ export function configureDependencies(container: DIContainer, overrides: { cache
     )
   );
 
+  container.register('getRainNowcast', (c) =>
+    new GetRainNowcast(
+      c.get('openWeatherProvider'),
+      c.get('aemetWeatherProvider'),
+      c.get('openMeteoPrecipitationProvider'),
+      c.get('cache'),
+    )
+  );
+
   container.register('getFeaturedBeaches', (c) =>
     new GetFeaturedBeaches(
       c.get('beachRepository'),
@@ -67,6 +82,7 @@ export function configureDependencies(container: DIContainer, overrides: { cache
       c.get('redCrossFlagProvider'),
       c.get('aemetBeachForecastProvider'),
       c.get('cache'),
+      c.get('getRainNowcast'),
     )
   );
 
@@ -77,6 +93,7 @@ export function configureDependencies(container: DIContainer, overrides: { cache
       c.get('aemetBeachWebScraper'),
       c.get('aemetBeachForecastProvider'),
       c.get('openWeatherProvider'),
+      c.get('getRainNowcast'),
     )
   );
 }

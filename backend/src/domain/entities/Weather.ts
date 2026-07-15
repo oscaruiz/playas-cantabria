@@ -14,6 +14,10 @@ export interface Weather {
    *  current-weather sources (e.g. OpenWeather `rain.1h`). Optional/nullable. */
   precipitationMm?: number | null;
 
+  /** Provider condition code (OpenWeather `weather[0].id`): structured
+   *  alternative to `description` (2xx/3xx/5xx = precipitating). Optional. */
+  conditionCode?: number | null;
+
   windSpeedMs: number | null;
   windDirectionDeg: number | null;
 

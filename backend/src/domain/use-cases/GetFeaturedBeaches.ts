@@ -1,6 +1,9 @@
 import { Beach } from '../entities/Beach';
 import { Weather } from '../entities/Weather';
 import { FlagStatus } from '../entities/Flag';
+import { RainNowcast } from '../entities/RainNowcast';
+import { GetRainNowcast } from './GetRainNowcast';
+import { buildRainForecastSignal } from './RainForecast';
 import { BeachRepository } from '../ports/BeachRepository';
 import { WeatherProvider } from '../ports/WeatherProvider';
 import { FlagProvider } from '../ports/FlagProvider';
@@ -36,6 +39,7 @@ export class GetFeaturedBeaches {
     private readonly flags: FlagProvider,
     private readonly aemetForecast: AemetBeachForecastProvider,
     private readonly cache: InMemoryCache,
+    private readonly rainNowcast: GetRainNowcast,
   ) {}
 
   async execute(topN = 5): Promise<FeaturedBeachesFullResult> {
@@ -61,7 +65,7 @@ export class GetFeaturedBeaches {
 
     for (const result of settled) {
       if (result.status !== 'fulfilled') continue;
-      const { beach, weather, flag, enrichment } = result.value;
+      const { beach, weather, flag, enrichment, rain } = result.value;
 
       // Excluded beaches go directly to caution with specific reason
       if (isExcluded(weather, flag, enrichment)) {
@@ -72,22 +76,28 @@ export class GetFeaturedBeaches {
         continue;
       }
 
+      // Lluvia prevista: previsión numérica Open-Meteo (próximas 6h, viene
+      // en el nowcast) ∪ texto del día de AEMET ("Chubascos"...).
+      const rainForecast = buildRainForecastSignal(rain, [enrichment?.summary ?? null]);
+
       const { score, subScores } = computeBeachScore(
         weather,
         flag,
         enrichment,
         beach.attributes,
+        rain,
+        rainForecast,
       );
 
-      const downgradeReason = buildDowngradeFactors(subScores, flag);
+      const downgradeReason = buildDowngradeFactors(subScores, flag, rain, rainForecast);
 
       if (score >= MIN_SCORE) {
-        const reason = buildRankingReason(subScores, weather, flag, enrichment);
+        const reason = buildRankingReason(subScores, weather, flag, enrichment, rain, rainForecast);
         const entry = { beach, weather, flag, score, reason, downgradeReason, enrichment };
         good.push(entry);
         all.push(entry);
       } else {
-        const reason = buildCautionReason(subScores, weather, flag, enrichment);
+        const reason = buildCautionReason(subScores, weather, flag, enrichment, rain, rainForecast);
         const entry = { beach, weather, flag, score, reason, downgradeReason, enrichment };
         caution.push(entry);
         all.push(entry);
@@ -114,14 +124,24 @@ export class GetFeaturedBeaches {
     weather: Weather | null;
     flag: FlagStatus | null;
     enrichment: ForecastEnrichment | null;
+    rain: RainNowcast | null;
   }> {
-    const [weather, flag, enrichment] = await Promise.all([
+    const [weather, flag, enrichment, rain] = await Promise.all([
       this.getWeatherRace(beach.latitude, beach.longitude),
       this.getFlagSafe(beach.redCrossId),
       this.getForecastEnrichment(beach.aemetCode),
+      this.getRainSafe(beach.latitude, beach.longitude),
     ]);
 
-    return { beach, weather, flag, enrichment };
+    return { beach, weather, flag, enrichment, rain };
+  }
+
+  private async getRainSafe(lat: number, lon: number): Promise<RainNowcast | null> {
+    try {
+      return await this.rainNowcast.execute(lat, lon);
+    } catch {
+      return null;
+    }
   }
 
   /**

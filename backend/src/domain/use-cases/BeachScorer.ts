@@ -1,6 +1,36 @@
 import { Weather } from '../entities/Weather';
 import { FlagStatus, FlagColor } from '../entities/Flag';
 import { BeachAttributes } from '../entities/Beach';
+import { RainNowcast } from '../entities/RainNowcast';
+import { RainForecastSignal } from './RainForecast';
+
+/**
+ * Tope de puntuación cuando se detecta lluvia ahora: <60 para que la playa
+ * nunca sea "good" (verde) en mapa/Home, y ≥35 para que quede en el tramo
+ * amarillo (medium) y no caiga a rojo solo por la lluvia.
+ */
+export const RAIN_SCORE_CAP = 55;
+
+/**
+ * Tope cuando hay lluvia PREVISTA (próximas ~6h u hoy según AEMET) pero aún
+ * no llueve: también amarillo (<60), pero por encima del tope de lluvia
+ * activa → jerarquía lloviendo (55) < va a llover (59) < seco.
+ */
+export const RAIN_FORECAST_SCORE_CAP = 59;
+
+/** Fragmento humano para las razones cuando hay lluvia detectada. */
+function rainReasonFragment(rain: RainNowcast | null | undefined): string | null {
+  if (rain?.status !== 'raining') return null;
+  return rain.lastHourOnly ? 'lluvia en la última hora' : 'lloviendo ahora';
+}
+
+/** Fragmento humano cuando hay lluvia prevista (sin hora: debe ser traducible
+ *  por fragmento exacto en el cliente). */
+function rainForecastReasonFragment(
+  forecast: RainForecastSignal | null | undefined,
+): string | null {
+  return forecast?.expected ? 'lluvia prevista' : null;
+}
 
 /**
  * Minimal enrichment data used by the scorer.
@@ -241,6 +271,8 @@ export function computeBeachScore(
   flag: FlagStatus | null,
   enrichment: ForecastEnrichment | null,
   attributes?: BeachAttributes,
+  rain?: RainNowcast | null,
+  rainForecast?: RainForecastSignal | null,
 ): ScoringResult {
   const isSurf = attributes?.surf === true;
   const uvIndex = enrichment?.uvIndex ?? null;
@@ -255,13 +287,24 @@ export function computeBeachScore(
     datos: computeDataScore(weather, flag),
   };
 
-  const score = subScores.cielo
+  let score = subScores.cielo
     + subScores.temperatura
     + subScores.bandera
     + subScores.viento
     + subScores.oleaje
     + subScores.uv
     + subScores.datos;
+
+  // Lluvia PREVISTA (próximas horas): amarillo suave.
+  if (rainForecast?.expected) {
+    score = Math.min(score, RAIN_FORECAST_SCORE_CAP);
+  }
+
+  // Lluvia detectada ahora (señal multi-fuente): la playa nunca puede ser
+  // "buena", pase lo que pase con el resto de factores. Gana a la prevista.
+  if (rain?.status === 'raining') {
+    score = Math.min(score, RAIN_SCORE_CAP);
+  }
 
   return { score, subScores };
 }
@@ -275,15 +318,23 @@ export function buildRankingReason(
   weather: Weather | null,
   flag: FlagStatus | null,
   enrichment?: ForecastEnrichment | null,
+  rain?: RainNowcast | null,
+  rainForecast?: RainForecastSignal | null,
 ): string {
   const parts: string[] = [];
+
+  // La lluvia detectada ahora manda sobre la descripción del cielo (que
+  // puede seguir diciendo "nuboso" aunque esté lloviendo).
+  const rainPart = rainReasonFragment(rain);
 
   // Preferir la observación real (OpenWeather current) sobre la previsión AEMET,
   // para que la "razón" coincida con el cielo de ahora (y con el detalle).
   const skyDesc =
     (weather?.source === 'OpenWeather' ? weather.description : null) ?? enrichment?.summary ?? null;
   const skyWord = skyDesc ? skyWordFromDescription(skyDesc) : null;
-  if (skyWord) {
+  if (rainPart) {
+    parts.push(rainPart.charAt(0).toUpperCase() + rainPart.slice(1));
+  } else if (skyWord) {
     parts.push(skyWord);
   } else if (subScores.cielo >= 20) {
     parts.push('Sol');
@@ -315,6 +366,12 @@ export function buildRankingReason(
   if (flag?.color === 'green') parts.push('bandera verde');
   else if (flag?.color === 'yellow') parts.push('precauci\u00F3n');
 
+  // Lluvia prevista: solo si NO llueve ya y el cielo no dice ya lluvia/tormenta.
+  const forecastPart = rainPart ? null : rainForecastReasonFragment(rainForecast);
+  if (forecastPart && skyWord !== 'Lluvia' && skyWord !== 'Tormenta') {
+    parts.push(forecastPart);
+  }
+
   return parts.join(', ') || 'Condiciones aceptables';
 }
 
@@ -327,6 +384,8 @@ export function buildCautionReason(
   weather: Weather | null,
   flag: FlagStatus | null,
   _enrichment?: ForecastEnrichment | null,
+  rain?: RainNowcast | null,
+  rainForecast?: RainForecastSignal | null,
 ): string {
   const parts: string[] = [];
 
@@ -334,9 +393,14 @@ export function buildCautionReason(
   else if (flag?.color === 'black') parts.push('ba\u00F1o prohibido');
   else if (flag?.color === 'yellow') parts.push('bandera amarilla');
 
+  const rainPart = rainReasonFragment(rain);
+  if (rainPart) parts.push(rainPart);
+  const forecastPart = rainPart ? null : rainForecastReasonFragment(rainForecast);
+  if (forecastPart) parts.push(forecastPart);
+
   if (subScores.viento <= 3) parts.push('viento fuerte');
   if (subScores.oleaje <= 2) parts.push('oleaje fuerte');
-  if (subScores.cielo <= 3) parts.push('lluvia o tormenta');
+  if (subScores.cielo <= 3 && !rainPart && !forecastPart) parts.push('lluvia o tormenta');
   if (subScores.uv <= 1 && subScores.uv !== 3) parts.push('UV muy alto');
   if (subScores.temperatura <= 3) parts.push('temperatura baja');
 
@@ -354,10 +418,16 @@ export function buildCautionReason(
 export function buildDowngradeFactors(
   subScores: SubScores,
   flag: FlagStatus | null,
+  rain?: RainNowcast | null,
+  rainForecast?: RainForecastSignal | null,
 ): string | null {
   const parts: string[] = [];
 
-  if (subScores.cielo <= 5) parts.push('lluvia');
+  const rainPart = rainReasonFragment(rain);
+  const forecastPart = rainPart ? null : rainForecastReasonFragment(rainForecast);
+  if (rainPart) parts.push(rainPart);
+  else if (forecastPart) parts.push(forecastPart);
+  else if (subScores.cielo <= 5) parts.push('lluvia');
   else if (subScores.cielo <= 10) parts.push('cielo nublado');
 
   if (subScores.temperatura <= 8) parts.push('temperatura fresca');

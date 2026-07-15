@@ -9,11 +9,17 @@ import {
   computeDataScore,
   computeBeachScore,
   buildRankingReason,
+  buildCautionReason,
+  buildDowngradeFactors,
   isExcluded,
   ForecastEnrichment,
+  RAIN_SCORE_CAP,
+  RAIN_FORECAST_SCORE_CAP,
 } from '../domain/use-cases/BeachScorer';
 import { Weather } from '../domain/entities/Weather';
 import { FlagStatus } from '../domain/entities/Flag';
+import { RainNowcast } from '../domain/entities/RainNowcast';
+import { RainForecastSignal } from '../domain/use-cases/RainForecast';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -47,6 +53,27 @@ function makeEnrichment(overrides: Partial<ForecastEnrichment> = {}): ForecastEn
     waves: null,
     uvIndex: null,
     warningLevel: null,
+    ...overrides,
+  };
+}
+
+function makeRain(overrides: Partial<RainNowcast> = {}): RainNowcast {
+  return {
+    status: 'raining',
+    precipitationMm: 0.4,
+    lastHourOnly: false,
+    sources: [],
+    timestamp: Date.now(),
+    ...overrides,
+  };
+}
+
+function makeForecastSignal(overrides: Partial<RainForecastSignal> = {}): RainForecastSignal {
+  return {
+    expected: true,
+    firstAt: Date.now() + 3600_000,
+    mmMax: 0.5,
+    sources: ['OpenMeteo'],
     ...overrides,
   };
 }
@@ -364,5 +391,160 @@ describe('buildRankingReason', () => {
     const { subScores } = computeBeachScore(weather, flag, null);
     const reason = buildRankingReason(subScores, weather, flag);
     expect(reason).toContain('precauci\u00F3n');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Lluvia detectada ahora (RainNowcast) → tope amarillo + razones
+// ---------------------------------------------------------------------------
+
+describe('computeBeachScore con lluvia detectada (RainNowcast)', () => {
+  const perfect = () => ({
+    weather: makeWeather({ icon: '01d', temperatureC: 25, windSpeedMs: 2 }),
+    flag: makeFlag({ color: 'green' }),
+    enrichment: makeEnrichment({ waves: 'débil', uvIndex: 4 }),
+  });
+
+  it('capa la puntuación a RAIN_SCORE_CAP (tramo amarillo: <60 y ≥35)', () => {
+    const { weather, flag, enrichment } = perfect();
+    const sinLluvia = computeBeachScore(weather, flag, enrichment);
+    const conLluvia = computeBeachScore(weather, flag, enrichment, undefined, makeRain());
+
+    expect(sinLluvia.score).toBeGreaterThan(60);
+    expect(conLluvia.score).toBe(RAIN_SCORE_CAP);
+    expect(conLluvia.score).toBeLessThan(60);
+    expect(conLluvia.score).toBeGreaterThanOrEqual(35);
+  });
+
+  it('no toca la puntuación si la señal es dry/unknown o no llega (regresión)', () => {
+    const { weather, flag, enrichment } = perfect();
+    const base = computeBeachScore(weather, flag, enrichment);
+
+    expect(computeBeachScore(weather, flag, enrichment, undefined, makeRain({ status: 'dry' })).score).toBe(base.score);
+    expect(computeBeachScore(weather, flag, enrichment, undefined, makeRain({ status: 'unknown' })).score).toBe(base.score);
+    expect(computeBeachScore(weather, flag, enrichment, undefined, null).score).toBe(base.score);
+  });
+
+  it('no sube puntuaciones que ya estaban por debajo del tope', () => {
+    const badWeather = makeWeather({ icon: '10d', temperatureC: 12, windSpeedMs: 14 });
+    const sin = computeBeachScore(badWeather, null, null);
+    const con = computeBeachScore(badWeather, null, null, undefined, makeRain());
+    expect(con.score).toBe(sin.score);
+  });
+});
+
+describe('razones con lluvia detectada', () => {
+  it('buildRankingReason antepone "Lloviendo ahora" aunque el cielo diga nuboso', () => {
+    const weather = makeWeather({ description: 'muy nuboso', icon: '04d' });
+    const { subScores } = computeBeachScore(weather, null, null);
+    const reason = buildRankingReason(subScores, weather, null, null, makeRain());
+    expect(reason).toMatch(/^Lloviendo ahora/);
+  });
+
+  it('buildRankingReason distingue la señal retardada del pluviómetro', () => {
+    const weather = makeWeather({ description: 'muy nuboso', icon: '04d' });
+    const { subScores } = computeBeachScore(weather, null, null);
+    const reason = buildRankingReason(subScores, weather, null, null, makeRain({ lastHourOnly: true }));
+    expect(reason).toMatch(/^Lluvia en la última hora/);
+  });
+
+  it('buildDowngradeFactors menciona la lluvia sin duplicar el factor de cielo', () => {
+    const weather = makeWeather({ description: 'muy nuboso', icon: '04d', temperatureC: 25 });
+    const { subScores } = computeBeachScore(weather, makeFlag({ color: 'green' }), null);
+    const factors = buildDowngradeFactors(subScores, makeFlag({ color: 'green' }), makeRain());
+    expect(factors).toMatch(/^Lloviendo ahora/);
+    expect(factors).not.toContain('cielo nublado');
+  });
+
+  it('buildCautionReason incluye la lluvia y no duplica "lluvia o tormenta"', () => {
+    const weather = makeWeather({ icon: '10d', temperatureC: 12 });
+    const { subScores } = computeBeachScore(weather, null, null);
+    const reason = buildCautionReason(subScores, weather, null, null, makeRain());
+    expect(reason.toLowerCase()).toContain('lloviendo ahora');
+    expect(reason).not.toContain('lluvia o tormenta');
+  });
+
+  it('las razones no cambian sin señal de lluvia (regresión)', () => {
+    const weather = makeWeather({ icon: '01d', temperatureC: 22, windSpeedMs: 2 });
+    const { subScores } = computeBeachScore(weather, makeFlag({ color: 'green' }), null);
+    const reason = buildRankingReason(subScores, weather, makeFlag({ color: 'green' }));
+    expect(reason).toContain('Sol');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Lluvia PREVISTA (RainForecastSignal) → tope amarillo suave 59 + razones
+// ---------------------------------------------------------------------------
+
+describe('computeBeachScore con lluvia prevista', () => {
+  const perfect = () => ({
+    weather: makeWeather({ icon: '01d', temperatureC: 25, windSpeedMs: 2 }),
+    flag: makeFlag({ color: 'green' }),
+    enrichment: makeEnrichment({ waves: 'débil', uvIndex: 4 }),
+  });
+
+  it('capa a RAIN_FORECAST_SCORE_CAP (59): amarillo suave, por encima del 55 de lluvia activa', () => {
+    const { weather, flag, enrichment } = perfect();
+    const r = computeBeachScore(weather, flag, enrichment, undefined, null, makeForecastSignal());
+    expect(r.score).toBe(RAIN_FORECAST_SCORE_CAP);
+    expect(r.score).toBeLessThan(60);
+    expect(r.score).toBeGreaterThan(RAIN_SCORE_CAP);
+  });
+
+  it('la lluvia ACTIVA gana a la prevista (55 < 59)', () => {
+    const { weather, flag, enrichment } = perfect();
+    const r = computeBeachScore(weather, flag, enrichment, undefined, makeRain(), makeForecastSignal());
+    expect(r.score).toBe(RAIN_SCORE_CAP);
+  });
+
+  it('sin señal o con expected=false no cambia nada (regresión)', () => {
+    const { weather, flag, enrichment } = perfect();
+    const base = computeBeachScore(weather, flag, enrichment);
+    expect(
+      computeBeachScore(weather, flag, enrichment, undefined, null, makeForecastSignal({ expected: false })).score
+    ).toBe(base.score);
+    expect(computeBeachScore(weather, flag, enrichment, undefined, null, null).score).toBe(base.score);
+  });
+});
+
+describe('razones con lluvia prevista', () => {
+  it('buildRankingReason añade "lluvia prevista" manteniendo el cielo al frente', () => {
+    const weather = makeWeather({ icon: '01d', description: 'cielo claro', temperatureC: 25, windSpeedMs: 2 });
+    const { subScores } = computeBeachScore(weather, makeFlag({ color: 'green' }), null);
+    const reason = buildRankingReason(subScores, weather, makeFlag({ color: 'green' }), null, null, makeForecastSignal());
+    expect(reason).toMatch(/^Sol/);
+    expect(reason).toContain('lluvia prevista');
+  });
+
+  it('la lluvia ACTIVA suprime el fragmento de prevista (nunca ambos)', () => {
+    const weather = makeWeather({ description: 'muy nuboso', icon: '04d' });
+    const { subScores } = computeBeachScore(weather, null, null);
+    const reason = buildRankingReason(subScores, weather, null, null, makeRain(), makeForecastSignal());
+    expect(reason).toMatch(/^Lloviendo ahora/);
+    expect(reason).not.toContain('lluvia prevista');
+  });
+
+  it('si el cielo ya dice Lluvia, no duplica con "lluvia prevista"', () => {
+    const weather = makeWeather({ description: 'lluvia ligera', icon: null });
+    const { subScores } = computeBeachScore(weather, null, null);
+    const reason = buildRankingReason(subScores, weather, null, null, null, makeForecastSignal());
+    expect(reason).toMatch(/^Lluvia/);
+    expect(reason).not.toContain('lluvia prevista');
+  });
+
+  it('buildDowngradeFactors antepone "Lluvia prevista" sin duplicar el factor de cielo', () => {
+    const weather = makeWeather({ description: 'muy nuboso', icon: '04d', temperatureC: 25 });
+    const { subScores } = computeBeachScore(weather, makeFlag({ color: 'green' }), null);
+    const factors = buildDowngradeFactors(subScores, makeFlag({ color: 'green' }), null, makeForecastSignal());
+    expect(factors).toMatch(/^Lluvia prevista/);
+    expect(factors).not.toContain('cielo nublado');
+  });
+
+  it('buildCautionReason incluye "lluvia prevista" y no duplica "lluvia o tormenta"', () => {
+    const weather = makeWeather({ icon: '10d', temperatureC: 12 });
+    const { subScores } = computeBeachScore(weather, null, null);
+    const reason = buildCautionReason(subScores, weather, null, null, null, makeForecastSignal());
+    expect(reason.toLowerCase()).toContain('lluvia prevista');
+    expect(reason).not.toContain('lluvia o tormenta');
   });
 });
