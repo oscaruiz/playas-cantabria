@@ -28,8 +28,8 @@ function markerStatus(score: number): 'good' | 'medium' | 'bad' {
 }
 
 function secondaryBadge(weather: FeaturedBeach): string {
-  if (weather.bandera === 'Roja') return '\u26A0\uFE0F';
-  if (weather.vientoMs != null && weather.vientoMs > 8) return '\u{1F4A8}';
+  if (weather.bandera === 'Roja') return '!';
+  if (weather.vientoMs != null && weather.vientoMs > 8) return '!';
   return '';
 }
 
@@ -47,7 +47,7 @@ function getBeachIcon(weather: FeaturedBeach, isBest: boolean): DivIcon {
   const html = `<div class="beach-marker beach-marker--${status}${sizeClass}${bestClass}">
     <span class="beach-marker__sky">${sky}</span>
     <span class="beach-marker__temp">${temp}</span>
-    ${flag && flag !== 'unknown' ? `<span class="beach-marker__flag beach-marker__flag--${flag}"></span>` : ''}
+    ${flag && flag !== 'unknown' ? `<span class="mapa-pennant mapa-pennant--${flag} beach-marker__pennant"></span>` : ''}
     ${badge ? `<span class="beach-marker__badge">${badge}</span>` : ''}
   </div>`;
 
@@ -61,7 +61,7 @@ function getBeachIcon(weather: FeaturedBeach, isBest: boolean): DivIcon {
 
 function getFallbackIcon(numero: number): DivIcon {
   return new L.DivIcon({
-    html: `<div style="background-color:#3880ff;color:white;font-weight:bold;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;">${numero}</div>`,
+    html: `<div class="fallback-marker">${numero}</div>`,
     className: '',
     iconSize: [32, 32],
     iconAnchor: [16, 32],
@@ -81,21 +81,10 @@ const MapaPage: React.FC = () => {
   const { t, idioma } = useIdioma();
 
   const userIcon = useMemo(() => new L.DivIcon({
-    html: `<div style="
-      background-color:#3880ff;
-      color:white;
-      font-weight:bold;
-      border-radius:50%;
-      width:40px;
-      height:40px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:18px;
-    ">\u{1F4CD}</div>`,
+    html: '<div class="user-marker"><span class="user-marker-dot"></span></div>',
     className: '',
-    iconSize: [40, 40],
-    iconAnchor: [20, 40],
+    iconSize: [22, 22],
+    iconAnchor: [11, 11],
   }), []);
 
   useEffect(() => {
@@ -198,70 +187,55 @@ const MapaPage: React.FC = () => {
                   ref={(ref) => { if (ref) markersRef.current.set(playa.codigo, ref); }}
                 >
                   <Popup>
-                    <div style={{ minWidth: '180px' }}>
-                      <h3 style={{ margin: '0 0 6px', fontSize: '16px' }}>
-                        {'\u{1F3D6}'} {playa.nombre}
-                      </h3>
-                      <p style={{ margin: '0 0 4px' }}>
+                    <div className="mapa-popup">
+                      <h3 className="mapa-popup-title">{playa.nombre}</h3>
+                      <p className="mapa-popup-row">
                         <strong>{t('mapa.municipio')}</strong> {playa.municipio}
                       </p>
                       {weather && (() => {
                         const status = markerStatus(weather.puntuacion);
                         return (
                           <>
-                            <p style={{ margin: '0 0 4px' }}>
+                            <p className="mapa-popup-row">
                               {emojiCielo(weather.descripcionClima)}{' '}
                               {weather.temperatura != null ? `${Math.round(weather.temperatura)}\u00B0` : ''}{' '}
                               {traducirTextoApi(weather.descripcionClima, idioma)}{weather.vientoMs != null ? `, ${t(claveNivelVientoMs(weather.vientoMs))}` : ''}
                             </p>
                             {status === 'good' && (
-                              <p style={{ margin: '0 0 4px', color: '#16a34a', fontSize: '12px' }}>
-                                {'\u2705'} {traducirTextoApi(weather.razonRanking, idioma)}
+                              <p className="mapa-popup-status mapa-popup-status--good">
+                                {traducirTextoApi(weather.razonRanking, idioma)}
                               </p>
                             )}
                             {status === 'medium' && weather.motivoBaja && (
-                              <p style={{ margin: '0 0 4px', color: '#b45309', fontSize: '12px' }}>
-                                {'\u26A0\uFE0F'} {traducirTextoApi(weather.motivoBaja, idioma)}
+                              <p className="mapa-popup-status mapa-popup-status--medium">
+                                {traducirTextoApi(weather.motivoBaja, idioma)}
                               </p>
                             )}
                             {status === 'bad' && weather.motivoBaja && (
-                              <p style={{ margin: '0 0 4px', color: '#dc2626', fontSize: '12px' }}>
-                                {'\u26D4'} {traducirTextoApi(weather.motivoBaja, idioma)}
+                              <p className="mapa-popup-status mapa-popup-status--bad">
+                                {traducirTextoApi(weather.motivoBaja, idioma)}
                               </p>
                             )}
                             {weather.bandera && (
-                              <p style={{ margin: '0 0 4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                <span className={`mapa-flag-dot mapa-flag-dot--${flagColorClass(weather.bandera)}`} />
-                                <span style={{ fontWeight: 600, fontSize: '13px' }}>
-                                  {t(claveBandera(weather.bandera))}
-                                </span>
+                              <p className="mapa-popup-flag">
+                                <span className={`mapa-pennant mapa-pennant--${flagColorClass(weather.bandera)}`} aria-hidden="true" />
+                                <span className="mapa-popup-flag-label">{t(claveBandera(weather.bandera))}</span>
                               </p>
                             )}
                             {weather.vientoMs != null && weather.vientoMs > 8 && (
-                              <p style={{ margin: '0 0 4px', color: '#dc2626', fontWeight: 600, fontSize: '13px' }}>
-                                {'\u{1F4A8}'} {t('mapa.vientoFuerteKmh', { kmh: Math.round(weather.vientoMs * 3.6) })}
+                              <p className="mapa-popup-status mapa-popup-status--bad">
+                                {t('mapa.vientoFuerteKmh', { kmh: Math.round(weather.vientoMs * 3.6) })}
                               </p>
                             )}
                           </>
                         );
                       })()}
-                      <p style={{ margin: '0 0 6px' }}>
-                        {isVigilada
-                          ? `\u{1F6DF} ${t('mapa.vigilada')}`
-                          : `\u{1F6AB} ${t('mapa.sinInfoCruzRoja')}`}
+                      <p className="mapa-popup-row mapa-popup-muted">
+                        {isVigilada ? t('mapa.vigilada') : t('mapa.sinInfoCruzRoja')}
                       </p>
                       <button
+                        className="mapa-popup-btn"
                         onClick={() => history.push(`/playas/${playa.codigo}`)}
-                        style={{
-                          marginTop: '4px',
-                          padding: '6px 10px',
-                          backgroundColor: '#3880ff',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          width: '100%',
-                        }}
                       >
                         {t('mapa.verDetalles')}
                       </button>
@@ -273,10 +247,25 @@ const MapaPage: React.FC = () => {
 
             {userLocation && (
               <Marker position={userLocation} icon={userIcon}>
-                <Popup>{'\u{1F4CD}'} {t('mapa.tuUbicacion')}</Popup>
+                <Popup>{t('mapa.tuUbicacion')}</Popup>
               </Marker>
             )}
           </MapContainer>
+
+          <div className="mapa-leyenda">
+            <span className="mapa-leyenda-item">
+              <span className="mapa-leyenda-dot mapa-leyenda-dot--good" aria-hidden="true" /> {t('mapa.leyendaBuenas')}
+            </span>
+            <span className="mapa-leyenda-item">
+              <span className="mapa-leyenda-dot mapa-leyenda-dot--medium" aria-hidden="true" /> {t('mapa.leyendaRegular')}
+            </span>
+            <span className="mapa-leyenda-item">
+              <span className="mapa-leyenda-dot mapa-leyenda-dot--bad" aria-hidden="true" /> {t('mapa.leyendaMalas')}
+            </span>
+            <span className="mapa-leyenda-item mapa-leyenda-item--flag">
+              <span className="mapa-pennant mapa-pennant--green" aria-hidden="true" /> {t('mapa.leyendaBandera')}
+            </span>
+          </div>
         </div>
       </IonContent>
       <IonFooter className="ion-no-border"><BottomNavBar /></IonFooter>

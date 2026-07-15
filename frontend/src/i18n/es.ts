@@ -82,6 +82,10 @@ export const es = {
   'mapa.tuUbicacion': 'Tu ubicación actual',
   'mapa.banderaRoja': 'Bandera roja',
   'mapa.vientoFuerteKmh': 'Viento fuerte ({kmh} km/h)',
+  'mapa.leyendaBuenas': 'Buenas condiciones',
+  'mapa.leyendaRegular': 'Con precaución',
+  'mapa.leyendaMalas': 'Desaconsejada',
+  'mapa.leyendaBandera': 'Bandera Cruz Roja izada',
 
   // ---- Niveles de viento (derivados de vientoMs) ----
   'viento.sinViento': 'sin viento',

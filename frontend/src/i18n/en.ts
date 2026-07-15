@@ -80,6 +80,10 @@ export const en = {
   'mapa.tuUbicacion': 'Your current location',
   'mapa.banderaRoja': 'Red flag',
   'mapa.vientoFuerteKmh': 'Strong wind ({kmh} km/h)',
+  'mapa.leyendaBuenas': 'Good conditions',
+  'mapa.leyendaRegular': 'Use caution',
+  'mapa.leyendaMalas': 'Not advised',
+  'mapa.leyendaBandera': 'Red Cross flag hoisted',
 
   // ---- Niveles de viento ----
   'viento.sinViento': 'no wind',

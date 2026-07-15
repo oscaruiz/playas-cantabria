@@ -1,17 +1,20 @@
-/* --- Sticky header (consistent with HomePage) --- */
+/* --- Sticky header (coherente con el resto de páginas) --- */
 .mapa-sticky-header {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   z-index: 100;
-  background: linear-gradient(135deg, var(--playa-ocean) 0%, var(--playa-ocean-dark, #065a75) 100%);
-  padding: 16px 20px 18px;
+  background-image: var(--playa-chart-lines), var(--playa-header-grad);
+  background-size: 320px 96px, auto;
+  padding: 16px 20px 14px;
   padding-top: calc(env(safe-area-inset-top, 0px) + 16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.16);
 }
 
 .mapa-sticky-title {
   font-family: 'Pacifico', cursive;
+  font-weight: 400;
   font-size: 1.6rem;
   margin: 0 0 4px;
   line-height: 1.2;
@@ -19,11 +22,24 @@
 }
 
 .mapa-sticky-subtitle {
-  font-size: 0.82rem;
-  opacity: 0.85;
+  font-size: 0.8rem;
+  opacity: 0.8;
   margin: 0;
   font-weight: 400;
   color: #ffffff;
+}
+
+/* Alinea el título/selector con el contenedor de las demás páginas
+   (el mapa en sí sigue a sangre completa) */
+@media (min-width: 720px) {
+  .mapa-sticky-header {
+    padding-left: max(20px, calc((100% - 1080px) / 2 + 20px));
+    padding-right: max(20px, calc((100% - 1080px) / 2 + 20px));
+  }
+
+  .mapa-sticky-header .selector-idioma {
+    right: max(16px, calc((100% - 1080px) / 2 + 16px));
+  }
 }
 
 /* --- Content --- */
@@ -37,7 +53,7 @@
   height: 100%;
   width: 100%;
   position: relative;
-  padding-top: calc(env(safe-area-inset-top, 0px) + 80px);
+  padding-top: calc(env(safe-area-inset-top, 0px) + var(--playa-header-h));
 }
 
 .leaflet-map {
@@ -46,30 +62,142 @@
   z-index: 0;
 }
 
+/* --- Popup (clases propias, sin estilos inline) --- */
 .leaflet-popup-content {
-  font-family: system-ui, sans-serif;
-  font-size: 14px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 13px;
   line-height: 1.4;
 }
 
-/* --- Indicador de bandera en el popup --- */
-.mapa-flag-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);
+.mapa-popup {
+  min-width: 180px;
 }
 
-.mapa-flag-dot--green {
+.mapa-popup-title {
+  margin: 0 0 6px;
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.mapa-popup-row {
+  margin: 0 0 4px;
+}
+
+.mapa-popup-muted {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.mapa-popup-status {
+  margin: 0 0 4px;
+  font-size: 12px;
+  padding-left: 10px;
+  border-left: 3px solid currentColor;
+}
+
+.mapa-popup-status--good {
+  color: var(--playa-flag-green);
+}
+
+.mapa-popup-status--medium {
+  color: var(--playa-buoy);
+}
+
+.mapa-popup-status--bad {
+  color: var(--playa-flag-red);
+}
+
+.mapa-popup-flag {
+  margin: 0 0 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mapa-popup-flag-label {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.mapa-popup-btn {
+  margin-top: 6px;
+  padding: 7px 10px;
+  background-color: var(--ion-color-primary);
+  color: var(--ion-color-primary-contrast);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  width: 100%;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  transition: background-color 0.15s ease;
+}
+
+.mapa-popup-btn:active {
+  opacity: 0.8;
+}
+
+@media (hover: hover) {
+  .mapa-popup-btn:hover {
+    background-color: var(--ion-color-primary-shade);
+  }
+}
+
+/* Popup en dark mode (Leaflet pinta el fondo del wrapper) */
+@media (prefers-color-scheme: dark) {
+  .leaflet-popup-content-wrapper,
+  .leaflet-popup-tip {
+    background: var(--playa-foam);
+    color: var(--playa-text);
+  }
+
+  .mapa-popup-muted {
+    color: var(--playa-text-muted);
+  }
+}
+
+/* --- Banderín Cruz Roja (mástil + gallardete; compartido por
+       marcador, popup y leyenda) --- */
+.mapa-pennant {
+  position: relative;
+  display: inline-block;
+  width: 14px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.mapa-pennant::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 2px;
+  height: 16px;
+  border-radius: 1px;
+  background: var(--mapa-pennant-mast, var(--playa-text-muted));
+}
+
+.mapa-pennant::after {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 1px;
+  width: 11px;
+  height: 8px;
+  clip-path: polygon(0 0, 100% 0, 80% 50%, 100% 100%, 0 100%);
+}
+
+.mapa-pennant--green::after {
   background: var(--playa-flag-green);
 }
 
-.mapa-flag-dot--yellow {
+.mapa-pennant--yellow::after {
   background: var(--playa-flag-yellow);
 }
 
-.mapa-flag-dot--red {
+.mapa-pennant--red::after {
   background: var(--playa-flag-red);
 }
 
@@ -82,24 +210,25 @@
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  color: #fff;
+  color: #ffffff;
   font-family: 'Poppins', sans-serif;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  border: 2px solid rgba(255, 255, 255, 0.8);
+  border: 2px solid rgba(255, 255, 255, 0.85);
   position: relative;
   animation: marker-appear 0.3s ease-out both;
 }
 
 .beach-marker--good {
-  background: #22c55e;
+  background: var(--playa-flag-green);
 }
 
 .beach-marker--medium {
-  background: #eab308;
+  background: var(--playa-flag-yellow);
+  color: #1b2a32; /* tinta sobre amarillo: blanco no contrasta */
 }
 
 .beach-marker--bad {
-  background: #ef4444;
+  background: var(--playa-flag-red);
 }
 
 .beach-marker--highlight {
@@ -109,6 +238,12 @@
 
 .beach-marker--best {
   animation: marker-appear 0.3s ease-out both, marker-glow 2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .beach-marker--best {
+    animation: none;
+  }
 }
 
 .beach-marker__sky {
@@ -125,41 +260,30 @@
   font-weight: 700;
   line-height: 1;
   margin-top: 1px;
+  font-variant-numeric: tabular-nums;
 }
 
 .beach-marker--highlight .beach-marker__temp {
   font-size: 0.75rem;
 }
 
-.beach-marker__flag {
+/* Banderín izado sobre el marcador */
+.beach-marker__pennant {
   position: absolute;
-  top: -2px;
-  left: -2px;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  border: 2px solid #fff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-}
-
-.beach-marker__flag--green {
-  background: var(--playa-flag-green);
-}
-
-.beach-marker__flag--yellow {
-  background: var(--playa-flag-yellow);
-}
-
-.beach-marker__flag--red {
-  background: var(--playa-flag-red);
+  top: -14px;
+  left: 3px;
+  --mapa-pennant-mast: #ffffff;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
 }
 
 .beach-marker__badge {
   position: absolute;
   bottom: -2px;
   right: -2px;
-  font-size: 0.7rem;
-  background: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #1b2a32;
+  background: #ffffff;
   border-radius: 50%;
   width: 18px;
   height: 18px;
@@ -167,6 +291,41 @@
   align-items: center;
   justify-content: center;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* --- Marcador fallback y de usuario (sin azul Ionic) --- */
+.fallback-marker {
+  background-color: var(--playa-deep);
+  color: #ffffff;
+  font-weight: 700;
+  font-family: 'Poppins', sans-serif;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.user-marker {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(10, 126, 164, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-marker-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--playa-deep);
+  border: 2px solid #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
 }
 
 @keyframes marker-appear {
@@ -182,16 +341,52 @@
 
 @keyframes marker-glow {
   0%, 100% {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 0 0 rgba(34, 197, 94, 0.4);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 0 0 rgba(21, 128, 61, 0.4);
   }
   50% {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 0 8px rgba(34, 197, 94, 0);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 0 8px rgba(21, 128, 61, 0);
   }
 }
 
-/* --- Dark mode --- */
-@media (prefers-color-scheme: dark) {
-  .mapa-sticky-header {
-    background: linear-gradient(135deg, #0c4a6e 0%, #0f172a 100%);
-  }
+/* --- Leyenda (overlay sobre el mapa) --- */
+.mapa-leyenda {
+  position: absolute;
+  left: 12px;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 68px);
+  z-index: 500;
+  background: var(--playa-foam);
+  border: 1px solid var(--playa-border);
+  border-radius: var(--playa-radius-s);
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 0.68rem;
+  color: var(--playa-text);
+}
+
+.mapa-leyenda-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.mapa-leyenda-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.mapa-leyenda-dot--good {
+  background: var(--playa-flag-green);
+}
+
+.mapa-leyenda-dot--medium {
+  background: var(--playa-flag-yellow);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.25);
+}
+
+.mapa-leyenda-dot--bad {
+  background: var(--playa-flag-red);
 }
