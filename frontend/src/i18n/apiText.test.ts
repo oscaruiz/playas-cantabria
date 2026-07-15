@@ -14,6 +14,18 @@ describe('traducirTextoApi', () => {
     ).toBe('Cloudy sky, cool temperature, no Red Cross coverage, heavy surf');
   });
 
+  it('traduce los fragmentos de lluvia del ranking (motivoBaja/razonRanking)', () => {
+    expect(traducirTextoApi('Lloviendo ahora, 24°, brisa suave', 'en')).toBe(
+      'Raining now, 24°, gentle breeze'
+    );
+    expect(traducirTextoApi('lluvia en la última hora, temperatura fresca', 'en')).toBe(
+      'rain in the last hour, cool temperature'
+    );
+    expect(traducirTextoApi('Lluvia prevista, temperatura fresca', 'en')).toBe(
+      'Rain expected, cool temperature'
+    );
+  });
+
   it('conserva la capitalización inicial', () => {
     expect(traducirTextoApi('Nublado', 'en')).toBe('Cloudy');
     expect(traducirTextoApi('nublado', 'en')).toBe('cloudy');
