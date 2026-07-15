@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aprender React con Playas Cantabria — para un dev de Java</title>
+<style>
+  :root {
+    --bg: #faf6f1;
+    --card: #ffffff;
+    --ink: #1f2933;
+    --muted: #64748b;
+    --primary: #0a7ea4;
+    --accent: #d4a853;
+    --code-bg: #1e293b;
+    --code-ink: #e2e8f0;
+    --border: #e7ded3;
+    --good: #16a34a;
+    --warn: #d97706;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.65;
+  }
+  .layout { display: flex; max-width: 1200px; margin: 0 auto; gap: 32px; padding: 0 24px; }
+  nav {
+    position: sticky; top: 0; align-self: flex-start;
+    width: 240px; padding: 32px 0; max-height: 100vh; overflow-y: auto;
+    font-size: 0.88rem; flex-shrink: 0;
+  }
+  nav h2 { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 0 0 12px; }
+  nav a { display: block; color: var(--ink); text-decoration: none; padding: 5px 10px; border-radius: 8px; margin-bottom: 2px; }
+  nav a:hover { background: #efe7db; color: var(--primary); }
+  main { flex: 1; min-width: 0; padding: 40px 0 120px; }
+  header.hero {
+    background: linear-gradient(135deg, var(--primary), #075e7a);
+    color: #fff; border-radius: 20px; padding: 40px 36px; margin-bottom: 40px;
+  }
+  header.hero h1 { margin: 0 0 8px; font-size: 1.9rem; }
+  header.hero p { margin: 0; opacity: 0.9; }
+  section { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 28px 32px; margin-bottom: 28px; }
+  section > h2 { margin-top: 0; color: var(--primary); font-size: 1.35rem; display: flex; align-items: center; gap: 10px; }
+  section h3 { color: #0b3a49; font-size: 1.05rem; margin-top: 28px; }
+  .step-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px; border-radius: 50%; background: var(--accent);
+    color: #fff; font-size: 0.85rem; font-weight: 700; flex-shrink: 0;
+  }
+  code:not(pre code) { background: #f1e9dd; color: #a1440a; padding: 1px 6px; border-radius: 5px; font-size: 0.88em; font-family: "SF Mono", Consolas, monospace; }
+  pre {
+    background: var(--code-bg); color: var(--code-ink); padding: 18px 20px;
+    border-radius: 12px; overflow-x: auto; font-size: 0.85rem; line-height: 1.55;
+    font-family: "SF Mono", Consolas, "Courier New", monospace;
+  }
+  pre .cm { color: #7c8aa5; font-style: italic; }
+  pre .kw { color: #c792ea; }
+  pre .fn { color: #82aaff; }
+  pre .str { color: #c3e88d; }
+  pre .num { color: #f78c6c; }
+  pre .tag { color: #f07178; }
+  table { width: 100%; border-collapse: collapse; margin: 18px 0; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  tr:last-child td { border-bottom: none; }
+  .callout { border-left: 4px solid var(--accent); background: #fdf6e9; padding: 14px 18px; border-radius: 0 10px 10px 0; margin: 18px 0; }
+  .callout.good { border-color: var(--good); background: #edf9f0; }
+  .callout.warn { border-color: var(--warn); background: #fdf3e6; }
+  .callout strong { color: #0b3a49; }
+  .rule { background: #eef7fa; border: 1px dashed var(--primary); border-radius: 12px; padding: 16px 20px; margin: 18px 0; font-weight: 500; }
+  .flow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 16px 0; font-size: 0.85rem; }
+  .flow span { background: #eef7fa; border: 1px solid #cde7ef; padding: 6px 12px; border-radius: 999px; white-space: nowrap; }
+  .flow .arrow { background: none; border: none; color: var(--muted); padding: 0; }
+  .exercise { background: #f3f0fb; border: 1px solid #ddd3f5; border-radius: 14px; padding: 20px 24px; margin-top: 20px; }
+  .exercise h3 { margin-top: 0; color: #6d28d9; }
+  .lineref { color: var(--muted); font-size: 0.8rem; font-weight: 400; }
+  footer { text-align: center; color: var(--muted); font-size: 0.85rem; padding: 20px; }
+  @media (max-width: 860px) { nav { display: none; } .layout { padding: 0 16px; } main { padding-top: 20px; } }
+</style>
+</head>
+<body>
+<div class="layout">
+  <nav>
+    <h2>Índice</h2>
+    <a href="#metodo">1. El método: sigue el dato</a>
+    <a href="#equivalencias">2. Equivalencias Java ↔ React</a>
+    <a href="#anatomia">3. Anatomía del archivo</a>
+    <a href="#linea796">4. La línea clave: <code>const … = () =></code></a>
+    <a href="#pasos">5. Paso a paso del componente</a>
+    <a href="#jsx">6. JSX condicional y bucles</a>
+    <a href="#padrehijo">7. Datos bajan, eventos suben</a>
+    <a href="#lectura">8. Orden de lectura</a>
+    <a href="#olores">9. Olores de código</a>
+    <a href="#ejercicio">10. Tu ejercicio</a>
+  </nav>
+
+  <main>
+    <header class="hero">
+      <h1>Aprender React leyendo tu propio proyecto</h1>
+      <p>Guía sobre <code style="background:rgba(255,255,255,.2);color:#fff">PlayaDetalle.tsx</code> pensada para un programador que viene de Java.</p>
+    </header>
+
+    <!-- 1 -->
+    <section id="metodo">
+      <h2><span class="step-num">1</span> El método para leer cualquier app React</h2>
+      <p>No leas los archivos por orden alfabético ni por tamaño. Lee <strong>siguiendo el flujo de datos</strong>, que siempre es el mismo:</p>
+      <div class="flow">
+        <span>index.tsx</span><span class="arrow">→</span>
+        <span>App.tsx (router)</span><span class="arrow">→</span>
+        <span>Página</span><span class="arrow">→</span>
+        <span>Fetch / estado</span><span class="arrow">→</span>
+        <span>Render (JSX)</span><span class="arrow">→</span>
+        <span>Componentes hijos</span>
+      </div>
+      <p>Ante cualquier proyecto desconocido: abres <code>src/index.tsx</code>, luego <code>App.tsx</code>, y desde ahí "tiras del hilo". Ese es el 80% del truco.</p>
+      <div class="rule">Regla de oro: <strong>un componente es una función que se re-ejecuta entera cada vez que su estado o sus props cambian.</strong> No hay mutación in-place como en un objeto Java vivo; se vuelve a llamar al método y React compara el resultado nuevo con el anterior.</div>
+    </section>
+
+    <!-- 2 -->
+    <section id="equivalencias">
+      <h2><span class="step-num">2</span> Equivalencias Java ↔ React</h2>
+      <table>
+        <tr><th>React / TypeScript</th><th>Equivalente Java</th></tr>
+        <tr><td><code>const X: React.FC = () => (…)</code></td><td>Un método que devuelve una vista: <code>Supplier&lt;View&gt;</code></td></tr>
+        <tr><td><code>props</code> (lo que recibe el componente)</td><td>Parámetros <code>final</code> del método. No los mutas</td></tr>
+        <tr><td><code>useState(x)</code></td><td>Un campo privado + su setter. Llamar al setter = "vuelve a ejecutar render()"</td></tr>
+        <tr><td><code>useEffect(fn, [dep])</code></td><td>Callback de ciclo de vida (<code>@PostConstruct</code> / listener) que corre tras pintar, y solo si <code>dep</code> cambió</td></tr>
+        <tr><td>JSX (<code>&lt;div&gt;…&lt;/div&gt;</code>)</td><td>El <code>return</code>: un árbol de vista tipado. <code>{expr}</code> = interpolación</td></tr>
+        <tr><td><code>useContext</code> / <code>useIdioma()</code></td><td>Inyección de dependencia: coges algo del scope sin pasarlo por parámetros</td></tr>
+      </table>
+    </section>
+
+    <!-- 3 -->
+    <section id="anatomia">
+      <h2><span class="step-num">3</span> Anatomía del archivo (4 zonas)</h2>
+      <p>Un archivo React grande es como una clase bien ordenada. <code>PlayaDetalle.tsx</code> tiene 4 zonas:</p>
+      <table>
+        <tr><th>Zona</th><th>Líneas</th><th>Qué es</th><th>Símil Java</th></tr>
+        <tr><td><strong>Imports</strong></td><td>1–30</td><td>Dependencias: clases, tipos y funciones sueltas</td><td><code>import</code></td></tr>
+        <tr><td><strong>Helpers puros</strong></td><td>32–98, 162–216, 408–441</td><td>Funciones sin estado que transforman datos</td><td>Métodos <code>static</code> de utilidad</td></tr>
+        <tr><td><strong>Sub-componentes</strong></td><td>100–792</td><td>~13 trozos de pantalla reutilizables</td><td>Clases privadas anidadas</td></tr>
+        <tr><td><strong>Componente principal</strong></td><td>796–958</td><td>El <code>main</code>: orquesta todo</td><td>El método público que compone</td></tr>
+      </table>
+      <div class="callout"><strong>Clave:</strong> lo de arriba son las <em>piezas</em>; lo de abajo es el <em>ensamblaje</em>. El archivo se escribe de abajo-arriba en dependencias: primero los ladrillos, y al final el componente que los usa.</div>
+    </section>
+
+    <!-- 4 -->
+    <section id="linea796">
+      <h2><span class="step-num">4</span> La línea clave, troceada <span class="lineref">— línea 796</span></h2>
+      <pre><span class="kw">const</span> <span class="fn">PlayaDetallePage</span>: React.FC = () => {</pre>
+      <p>Léela como una frase: <em>"declaro una constante llamada <code>PlayaDetallePage</code>, de tipo componente-de-función, cuyo valor es una función que no recibe nada y devuelve JSX."</em></p>
+      <table>
+        <tr><th>Trozo</th><th>Qué es</th><th>Símil Java</th></tr>
+        <tr><td><code>const</code></td><td>Constante (la variable no se reasigna)</td><td><code>final</code></td></tr>
+        <tr><td><code>PlayaDetallePage</code></td><td>El nombre. Empieza en mayúscula a propósito</td><td>Nombre de la clase/método</td></tr>
+        <tr><td><code>: React.FC</code></td><td>El tipo: "Function Component"</td><td>Firma de retorno <code>Supplier&lt;View&gt;</code></td></tr>
+        <tr><td><code>= () => {</code></td><td>Función flecha sin parámetros que abre cuerpo</td><td>Lambda <code>() -> { … }</code></td></tr>
+      </table>
+      <p>En Java sería, aproximadamente:</p>
+      <pre><span class="kw">final</span> Supplier&lt;View&gt; PlayaDetallePage = () -> { <span class="cm">/* … */</span> <span class="kw">return</span> vista; };</pre>
+
+      <h3>Tres cosas que sorprenden viniendo de Java</h3>
+      <div class="callout"><strong>1. Un componente es una variable, no una clase.</strong> En React moderno una "pantalla" es literalmente una función guardada en una <code>const</code>. No hay <code>class ... extends Component</code>. La función <em>es</em> el componente.</div>
+      <div class="callout warn"><strong>2. La mayúscula es obligatoria y semántica.</strong> React usa la inicial mayúscula para distinguir tus componentes (<code>&lt;PlayaDetallePage/&gt;</code>) de las etiquetas HTML nativas (<code>&lt;div/&gt;</code>). Si la llamaras <code>playaDetallePage</code>, React creería que es una etiqueta HTML desconocida y no la pintaría. Es una convención <em>con efecto funcional</em>.</div>
+      <div class="callout"><strong>3. <code>React.FC</code> es solo el tipo.</strong> <code>FC</code> = <em>Function Component</em>. Es opcional (podrías omitir <code>: React.FC</code>), pero documenta la intención. Como escribir <code>Runnable r = …</code> en vez de <code>var r = …</code>.</div>
+
+      <h3>Y el cierre <span class="lineref">— línea 958</span></h3>
+      <pre><span class="kw">export default</span> PlayaDetallePage;</pre>
+      <p><code>export default</code> = "esta es la pieza pública principal del archivo". Como marcar <code>public</code> la clase que otros importan. Es lo que permite que <code>App.tsx</code> haga <code>import PlayaDetallePage from './pages/PlayaDetalle'</code>.</p>
+    </section>
+
+    <!-- 5 -->
+    <section id="pasos">
+      <h2><span class="step-num">5</span> Paso a paso del componente principal</h2>
+      <p>Empieza a leer aquí (línea 796). Es el único con lógica de verdad; el resto solo pinta.</p>
+
+      <h3>Paso 1 — Leer el input de la URL <span class="lineref">797–799</span></h3>
+      <pre><span class="kw">const</span> { codigo } = <span class="fn">useParams</span>&lt;{ codigo: <span class="kw">string</span> }&gt;();
+<span class="kw">const</span> history = <span class="fn">useHistory</span>();</pre>
+      <p><code>useParams</code> saca el <code>:codigo</code> de la ruta <code>/playas/:codigo</code>. Como un <code>@PathVariable</code> de Spring. <code>history</code> sirve para navegar (<code>goBack</code>, <code>push</code>) — como un <code>response.sendRedirect</code>.</p>
+
+      <h3>Paso 2 — Declarar el estado <span class="lineref">800–801</span></h3>
+      <pre><span class="kw">const</span> [datos, setDatos] = <span class="fn">useState</span>&lt;PlayaDetalleData | <span class="kw">null</span>&gt;(<span class="kw">null</span>);
+<span class="kw">const</span> [error, setError] = <span class="fn">useState</span>(<span class="kw">false</span>);</pre>
+      <p>Dos campos: los datos de la playa (empiezan <code>null</code>) y un flag de error. <code>setDatos</code>/<code>setError</code> son sus setters. Cada <code>set*</code> dispara un re-render. La sintaxis <code>[valor, setValor]</code> es <em>desestructuración de array</em>: <code>useState</code> devuelve un par y le pones nombre a cada posición.</p>
+
+      <h3>Paso 3 — Cargar datos al montar <span class="lineref">803–807</span> · el trozo más importante</h3>
+      <pre><span class="fn">useEffect</span>(() => {
+  <span class="fn">getDetallePlaya</span>(codigo)
+    .<span class="fn">then</span>(setDatos)
+    .<span class="fn">catch</span>(() => <span class="fn">setError</span>(<span class="kw">true</span>));
+}, [codigo]);</pre>
+      <p>Traducción: "cuando el componente aparezca (o cuando <code>codigo</code> cambie), lanza la llamada HTTP asíncrona; cuando responda, guarda el resultado en <code>datos</code>; si falla, marca error". El <code>[codigo]</code> es la <strong>dependencia</strong>: solo re-ejecuta si <code>codigo</code> cambia. <code>.then(setDatos)</code> equivale a un <code>CompletableFuture.thenAccept(this::setDatos)</code>.</p>
+      <div class="callout good"><strong>El ciclo completo:</strong> monta → <code>datos</code> es <code>null</code> → pinta el spinner → llega el fetch → <code>setDatos</code> → <strong>se vuelve a ejecutar toda la función</strong> → ahora <code>datos</code> tiene valor → pinta las cards.</div>
+
+      <h3>Paso 4 — Cálculos derivados <span class="lineref">809–812</span></h3>
+      <pre><span class="kw">const</span> [selectedDay, setSelectedDay] = <span class="fn">useState</span>(<span class="num">0</span>);
+<span class="kw">const</span> pred = datos?.prediccionCompleta;
+<span class="kw">const</span> safeDayIndex = pred ? Math.<span class="fn">min</span>(selectedDay, pred.dias.length - <span class="num">1</span>) : <span class="num">0</span>;</pre>
+      <p><code>selectedDay</code> = qué pestaña de día está activa. <code>pred</code> y <code>safeDayIndex</code> <strong>no son estado</strong>: se recalculan en cada render a partir del estado, como variables locales dentro de <code>render()</code>. El <code>?.</code> es null-safe (igual que el <code>?.</code> de Kotlin o un <code>Optional</code> encadenado).</p>
+    </section>
+
+    <!-- 6 -->
+    <section id="jsx">
+      <h2><span class="step-num">6</span> El return: JSX condicional y bucles</h2>
+      <p>El <code>return</code> es el "Thymeleaf/JSP" del método. Tres sintaxis que confunden al venir de Java:</p>
+
+      <h3>a) <code>{condición &amp;&amp; &lt;Componente/&gt;}</code> — if sin else <span class="lineref">ej. 828</span></h3>
+      <pre>{error && (
+  <span class="tag">&lt;div</span> className=<span class="str">"error-container"</span><span class="tag">&gt;</span>
+    <span class="tag">&lt;p&gt;</span>{t(<span class="str">'detalle.errorCarga'</span>)}<span class="tag">&lt;/p&gt;</span>
+  <span class="tag">&lt;/div&gt;</span>
+)}</pre>
+      <p>"Si <code>error</code> es true, pinta esto; si no, nada."</p>
+
+      <h3>b) <code>{cond ? &lt;A/&gt; : &lt;B/&gt;}</code> — ternario = if/else <span class="lineref">ej. 869</span></h3>
+      <pre>{pred && pred.dias.length > <span class="num">0</span> ? (
+  <span class="cm">/* hay predicción completa: DaySelector + ForecastHero + ... */</span>
+) : (
+  <span class="cm">/* fallback: WeatherCard legacy */</span>
+)}</pre>
+
+      <h3>c) <code>{lista.map(x => &lt;Item/&gt;)}</code> — bucle for <span class="lineref">ej. 872 y 188</span></h3>
+      <pre>{fechas.<span class="fn">map</span>((fecha, i) => (
+  <span class="tag">&lt;button</span> key={fecha} onClick={() => <span class="fn">onSelect</span>(i)}<span class="tag">&gt;</span>
+    {<span class="fn">dayTitle</span>(fecha, t, idioma)}
+  <span class="tag">&lt;/button&gt;</span>
+))}</pre>
+      <p>Un bucle que produce N elementos, como un <code>stream().map().collect()</code> que devuelve vistas. El <code>key</code> es obligatorio: le da a React una identidad estable para cada elemento de la lista (para repintar solo lo que cambia).</p>
+
+      <div class="callout"><strong>Los tres estados de pantalla</strong> se pintan por orden de guarda: <code>{error &amp;&amp; …}</code> (828) → <code>{!datos &amp;&amp; !error &amp;&amp; …}</code> spinner (834) → <code>{datos &amp;&amp; (…)}</code> contenido real (841). Solo uno se cumple a la vez. Es el patrón <strong>loading / error / success</strong> que verás en TODA app con fetch.</div>
+    </section>
+
+    <!-- 7 -->
+    <section id="padrehijo">
+      <h2><span class="step-num">7</span> Datos bajan por props, eventos suben por callbacks</h2>
+      <p>Dentro del <code>{datos &amp;&amp; …}</code> se ensamblan los sub-componentes pasándoles datos por props, como llamar métodos:</p>
+      <pre><span class="tag">&lt;FlagBanner</span> cruzRoja={datos.cruzRoja} <span class="tag">/&gt;</span>
+<span class="tag">&lt;ForecastHero</span> dia={pred.dias[safeDayIndex]} ... <span class="tag">/&gt;</span>
+<span class="tag">&lt;DaySelector</span> ... onSelect={setSelectedDay} <span class="tag">/&gt;</span></pre>
+      <p>Fíjate en <code>onSelect={setSelectedDay}</code>: le pasa el <em>setter</em> al hijo como callback. El flujo:</p>
+      <div class="flow">
+        <span>usuario pulsa un día</span><span class="arrow">→</span>
+        <span>hijo llama onSelect(i)</span><span class="arrow">→</span>
+        <span>setSelectedDay(i) en el padre</span><span class="arrow">→</span>
+        <span>re-render</span><span class="arrow">→</span>
+        <span>cambia safeDayIndex</span><span class="arrow">→</span>
+        <span>se repinta el día elegido</span>
+      </div>
+      <p>En Java sería pasarle un <code>Consumer&lt;Integer&gt;</code> al hijo. <strong>Los datos bajan; los eventos suben.</strong></p>
+
+      <h3>¿Dónde vive el estado?</h3>
+      <p><code>DaySelector</code> (180–200) <strong>no tiene estado propio</strong>: recibe <code>selectedDay</code> y avisa hacia arriba con <code>onSelect</code>. Es un <em>componente controlado</em> ("tonto"). En cambio <code>WeatherCard</code> (518) y <code>CruzRojaCard</code> (712) <strong>sí</strong> tienen estado propio:</p>
+      <pre><span class="kw">const</span> [expanded, setExpanded] = <span class="fn">useState</span>(defaultExpanded);</pre>
+      <p>...porque "estoy plegado/desplegado" es asunto interno de la card; al padre no le importa.</p>
+      <div class="rule">Regla práctica: <strong>el estado vive en el nivel más bajo que lo necesite.</strong> Si dos hermanos lo comparten, súbelo al padre común (eso se llama <em>lifting state up</em>).</div>
+    </section>
+
+    <!-- 8 -->
+    <section id="lectura">
+      <h2><span class="step-num">8</span> Por qué se lee del main hacia arriba</h2>
+      <p>Si intentas leer el archivo de arriba abajo (línea 1 → 958), te comes 792 líneas de piezas sueltas <strong>sin saber para qué sirven</strong>, y te rindes.</p>
+      <p>En su lugar: <strong>salta al main (796) primero.</strong> Ves el esqueleto — "esta pantalla es un FlagBanner + un ForecastHero + unas cards" — y solo cuando te preguntes "¿qué pinta exactamente <code>ForecastHero</code>?", subes a leer esa pieza (272). Lees las piezas <strong>bajo demanda</strong>, no en orden de archivo. Es el mismo método "sigue el dato": entras por el main y profundizas solo cuando el flujo te lleva ahí.</p>
+    </section>
+
+    <!-- 9 -->
+    <section id="olores">
+      <h2><span class="step-num">9</span> Olores de código (tu ojo crítico)</h2>
+      <div class="callout warn"><strong>God Component.</strong> Este archivo es funcional pero tiene 958 líneas y 13 componentes en un solo fichero. En el trabajo lo verás marcado como deuda técnica. La refactorización natural: mover cada sub-componente a <code>components/detalle/FlagBanner.tsx</code>, etc. La lógica (pasos 1–4) está limpia; el problema es solo que todo convive en un archivo.</div>
+      <div class="callout"><strong>Lo que este proyecto NO te enseña</strong> (y verás en el trabajo): estado global con librería (Redux/Zustand), data fetching moderno (React Query/SWR) en lugar de <code>fetch</code> en <code>useEffect</code>, y Next.js / Server Components. Entender la versión "manual" primero hace que esas herramientas tengan sentido después.</div>
+    </section>
+
+    <!-- 10 -->
+    <section id="ejercicio">
+      <h2><span class="step-num">10</span> Tu ejercicio</h2>
+      <div class="exercise">
+        <h3>🎯 Analiza <code>FlagBanner</code> (línea 102)</h3>
+        <p>Aplica las <strong>5 preguntas</strong> a cualquier componente:</p>
+        <ol>
+          <li>¿Qué <strong>props</strong> recibe? (mira la firma <code>React.FC&lt;{…}&gt;</code>)</li>
+          <li>¿Qué <strong>estado</strong> tiene? (busca los <code>useState</code>)</li>
+          <li>¿Qué <strong>efectos</strong> hace? (busca los <code>useEffect</code>)</li>
+          <li>¿Qué <strong>renderiza</strong>? (baja al <code>return</code>)</li>
+          <li>¿A qué <strong>hijos</strong> llama? (los <code>&lt;ComponentesConMayúscula/&gt;</code>)</li>
+        </ol>
+        <pre><span class="kw">const</span> <span class="fn">FlagBanner</span>: React.FC&lt;{ cruzRoja?: PlayaDetalleData[<span class="str">'cruzRoja'</span>] }&gt; = ({ cruzRoja }) => {
+  <span class="kw">const</span> { t } = <span class="fn">useIdioma</span>();
+  <span class="kw">const</span> estado = <span class="fn">estadoBandera</span>(cruzRoja);
+  <span class="kw">if</span> (estado === <span class="str">'sinDatos'</span>) {
+    <span class="kw">return</span> <span class="kw">null</span>;   <span class="cm">// no pinta nada</span>
+  }
+  <span class="kw">const</span> colorClass = <span class="fn">flagColorClass</span>(cruzRoja!.bandera);
+  <span class="kw">return</span> (
+    <span class="tag">&lt;div</span> className=<span class="str">"flag-banner"</span><span class="tag">&gt;</span>
+      <span class="cm">/* ... indicador + info de la bandera ... */</span>
+    <span class="tag">&lt;/div&gt;</span>
+  );
+};</pre>
+        <p><strong>Pistas de respuesta:</strong> (1) una prop opcional <code>cruzRoja</code>; (2) <em>ningún</em> <code>useState</code> → no tiene estado; (3) ningún <code>useEffect</code>; (4) devuelve un <code>&lt;div&gt;</code>... o <code>null</code> si no hay datos (un componente puede decidir no pintar nada); (5) no llama a otros componentes tuyos, solo HTML. Es el componente más simple del archivo: puro props → JSX.</p>
+      </div>
+    </section>
+
+    <footer>Generado como material de estudio · Playas Cantabria · <code>frontend/docs/aprender-react.html</code></footer>
+  </main>
+</div>
+</body>
+</html>
