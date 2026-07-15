@@ -123,6 +123,8 @@ const MAPA_RANKING: Record<string, string> = {
   'sin cobertura cruz roja': 'no Red Cross coverage',
   'bandera roja': 'red flag',
   'bandera amarilla': 'yellow flag',
+  'bandera verde': 'green flag',
+  'precaución': 'caution',
   'oleaje peligroso': 'dangerous surf',
   'aviso litoral': 'coastal warning',
   'aviso costero activo': 'active coastal warning',

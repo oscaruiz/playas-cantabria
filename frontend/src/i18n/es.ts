@@ -43,16 +43,19 @@ export const es = {
   'home.locNoDisponibleTitulo': 'Localización no disponible',
   'home.locNoDisponibleSub': 'Toca para activar y ver playas cerca de ti',
   'home.cercaDeTi': 'Playas más cerca de ti',
-  'home.recomendadas': 'Playas recomendadas',
+  'home.mejorHoy': 'La mejor playa para hoy',
+  'home.mejorParaTi': 'La mejor para ti hoy',
+  'home.notaCercania': 'Priorizada por cercanía: hay playas con más puntos, pero más lejos',
+  'home.mejorPuntuacion': 'Mejor puntuación',
+  'home.alternativas': 'Otras buenas opciones',
+  'home.verDetalles': 'Ver detalles',
+  'home.verEnMapa': 'Ver en el mapa',
+  'home.verEnMapaDe': 'Ver {nombre} en el mapa',
+  'home.puntuacionAria': 'Puntuación {n} de 100',
   'home.sinDestacadas': 'Hoy no hay playas destacadas — consulta el listado completo',
   'home.errorCondiciones': 'No se pudieron cargar las condiciones actuales',
   'home.reintentar': 'Reintentar',
   'home.revisarAntes': 'Mejor revisar antes de ir',
-  'home.verTodas': 'Ver todas las playas',
-  'home.playasDisponibles_one': '{count} playa disponible',
-  'home.playasDisponibles_other': '{count} playas disponibles',
-  'home.explorarMapa': 'Explorar en el mapa',
-  'home.localizaCerca': 'Localiza playas cerca de ti',
   'home.banderaAria': 'Bandera {bandera}',
 
   // ---- Lista de playas ----
@@ -169,4 +172,4 @@ export const es = {
 export type ClaveTexto = keyof typeof es;
 
 /** Bases válidas para tPlural(): deben existir `${base}_one` y `${base}_other`. */
-export type BasePlural = 'lista.contador' | 'home.playasBadge' | 'home.playasDisponibles';
+export type BasePlural = 'lista.contador' | 'home.playasBadge';
