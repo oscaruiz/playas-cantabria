@@ -30,7 +30,7 @@
   },
   {
     "nombre": "Luaña-Cobreces",
-    "municipio": "Cobreces",
+    "municipio": "Alfoz de Lloredo",
     "codigo": "3900101",
     "lat": 43.394411412417575,
     "lon": -4.220509796726789,
@@ -59,7 +59,7 @@
   },
   {
     "nombre": "La Arena",
-    "municipio": "Amuero",
+    "municipio": "Arnuero",
     "codigo": "3900602",
     "lat": 43.50376068544449,
     "lon": -3.577431874716216,
@@ -523,7 +523,7 @@
   },
   {
     "nombre": "Oyambre",
-    "municipio": "Val de San Vicente",
+    "municipio": "Valdáliga",
     "codigo": "3909101",
     "lat": 43.390715750738,
     "lon": -4.330638101332154,
