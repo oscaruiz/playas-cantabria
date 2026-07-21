@@ -467,8 +467,8 @@
     "nombre": "San Martín",
     "municipio": "Santoña",
     "codigo": "3907902",
-    "lat": 43.47683316210268,
-    "lon": -3.8765310105943294,
+    "lat": 43.4408333,
+    "lon": -3.445,
     "idCruzRoja": 1033,
     "atributos": {
       "accesoBanista": true,
