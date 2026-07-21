@@ -24,6 +24,7 @@ type RawBeach = {
   lat: number;
   lon: number;
   idCruzRoja: number;
+  sinAemet?: boolean;
   atributos?: RawBeachAttributes;
   longitud?: number;
   anchura?: number;
@@ -77,6 +78,7 @@ export class JsonBeachRepository implements BeachRepository {
       latitude: r.lat,
       longitude: r.lon,
       redCrossId: r.idCruzRoja || 0,
+      sinAemet: r.sinAemet ?? undefined,
       attributes: r.atributos ?? undefined,
       lengthM: r.longitud,
       widthM: r.anchura,

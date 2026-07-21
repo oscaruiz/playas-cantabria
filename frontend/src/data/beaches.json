@@ -578,5 +578,35 @@
     "bus": "Interurbano",
     "hospitalDistancia": 40,
     "submarinismo": false
+  },
+  {
+    "nombre": "Tagle",
+    "municipio": "Suances",
+    "codigo": "3908599",
+    "lat": 43.42756651289524,
+    "lon": -4.091435231267211,
+    "idCruzRoja": 371,
+    "sinAemet": true,
+    "atributos": {
+      "accesoBanista": true,
+      "accesible": false,
+      "mascotas": false,
+      "duchas": true,
+      "aseos": true,
+      "parking": true,
+      "chiringuito": true,
+      "socorrismo": true,
+      "nudista": false,
+      "surf": true
+    },
+    "longitud": 200,
+    "anchura": 50,
+    "tipoPlaya": "Aislada",
+    "arena": "Arena dorada",
+    "acceso": ["A pie", "En coche"],
+    "parkingDescripcion": "Más de 100 plazas",
+    "bus": "Interurbano (Torrelavega-Suances)",
+    "hospitalDistancia": 15,
+    "submarinismo": false
   }
 ]

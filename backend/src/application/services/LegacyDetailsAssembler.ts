@@ -409,6 +409,18 @@ export class LegacyDetailsAssembler {
       }
     }
 
+    // Un prediccionCompleta sin días ni mareas no aporta nada y además falsea la
+    // fuente meteorológica en la UI: en playas sin ficha AEMET (p. ej. código
+    // sintético), el fallback HTML del scraper devuelve un objeto vacío con
+    // fuente 'AEMET_HTML'. Se anula para que el detalle refleje la fuente real
+    // (`clima`, normalmente OpenWeather) en vez de etiquetar AEMET falsamente.
+    if (
+      base.prediccionCompleta &&
+      base.prediccionCompleta.dias.length === 0 &&
+      base.prediccionCompleta.mareas.length === 0
+    ) {
+      base.prediccionCompleta = null;
+    }
 
     return base;
   }

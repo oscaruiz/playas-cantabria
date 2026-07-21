@@ -21,6 +21,8 @@ export interface Beach {
   longitude: number;
   /** Red Cross beach id; 0 or undefined means “no Red Cross record”. */
   redCrossId?: number;
+  /** true si la playa no tiene ficha de previsión en AEMET (solo tiempo actual por coordenadas). */
+  sinAemet?: boolean;
   attributes?: BeachAttributes;
   lengthM?: number;
   widthM?: number;

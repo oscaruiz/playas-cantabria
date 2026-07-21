@@ -36,6 +36,7 @@ export interface BeachDTO {
   lat: number;
   lon: number;
   idCruzRoja: number;
+  sinAemet?: boolean;
   atributos?: BeachAttributesDTO;
   longitud?: number;
   anchura?: number;
