@@ -1,4 +1,12 @@
-import { dentroDeHorario, estadoBandera, esLluviaActiva, horaLocalMadrid, lluviaPrevista } from './beachHelpers';
+import {
+  dentroDeHorario,
+  estadoBandera,
+  esInfoFrescaHoy,
+  formatearHaceTiempo,
+  esLluviaActiva,
+  horaLocalMadrid,
+  lluviaPrevista,
+} from './beachHelpers';
 
 // Durante la temporada de baño, Madrid es CEST (UTC+2): UTC + 2h = hora Madrid.
 const cruzRoja = {
@@ -53,6 +61,67 @@ describe('estadoBandera', () => {
 
   it("'sinDatos' cuando no se conoce el horario", () => {
     expect(estadoBandera({ bandera: 'Desconocida' })).toBe('sinDatos');
+  });
+
+  it("'color' con bandera de HOY dentro del horario", () => {
+    expect(
+      estadoBandera(
+        { ...cruzRoja, bandera: 'Verde', ultimaActualizacion: '2026-06-22T09:00:00Z' },
+        new Date('2026-06-22T12:00:00Z')
+      )
+    ).toBe('color');
+  });
+
+  it("'sinDatos' con bandera de AYER aunque sea dentro del horario (frescura)", () => {
+    // Escenario clave: el cron capturó verde ayer por la tarde; hoy a las 14:00
+    // ese color no refleja lo que ondea → no se muestra.
+    expect(
+      estadoBandera(
+        { ...cruzRoja, bandera: 'Verde', ultimaActualizacion: '2026-06-21T16:00:00Z' },
+        new Date('2026-06-22T12:00:00Z')
+      )
+    ).toBe('sinDatos');
+  });
+
+  it("'fueraDeHorario' aunque haya bandera de hoy, si es de noche", () => {
+    expect(
+      estadoBandera(
+        { ...cruzRoja, bandera: 'Verde', ultimaActualizacion: '2026-06-22T09:00:00Z' },
+        new Date('2026-06-22T18:00:00Z') // 20:00 Madrid
+      )
+    ).toBe('fueraDeHorario');
+  });
+});
+
+describe('esInfoFrescaHoy', () => {
+  const ahora = new Date('2026-06-22T12:00:00Z'); // 14:00 Madrid, día 22
+
+  it('true si la captura es del mismo día (Madrid)', () => {
+    expect(esInfoFrescaHoy('2026-06-22T09:00:00Z', ahora)).toBe(true);
+  });
+
+  it('false si la captura es de ayer', () => {
+    expect(esInfoFrescaHoy('2026-06-21T16:00:00Z', ahora)).toBe(false);
+  });
+
+  it('true (lenient) si el ISO no parsea', () => {
+    expect(esInfoFrescaHoy('no-es-fecha', ahora)).toBe(true);
+  });
+});
+
+describe('formatearHaceTiempo', () => {
+  const t = ((clave: string, vars?: { n: number }) =>
+    vars ? `${clave}|${vars.n}` : clave) as unknown as Parameters<typeof formatearHaceTiempo>[1];
+
+  it('ahora mismo, minutos, horas y días', () => {
+    expect(formatearHaceTiempo(Date.now(), t)).toBe('tiempo.ahoraMismo');
+    expect(formatearHaceTiempo(Date.now() - 5 * 60000 - 100, t)).toBe('tiempo.haceMin|5');
+    expect(formatearHaceTiempo(Date.now() - 3 * 3600000 - 1000, t)).toBe('tiempo.haceHoras|3');
+    expect(formatearHaceTiempo(Date.now() - 2 * 86400000 - 1000, t)).toBe('tiempo.haceDias|2');
+  });
+
+  it('acepta ISO y devuelve "" si no parsea', () => {
+    expect(formatearHaceTiempo('no-es-fecha', t)).toBe('');
   });
 });
 

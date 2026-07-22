@@ -14,6 +14,7 @@ import {
   walkOutline,
   bodyOutline,
 } from 'ionicons/icons';
+import type { TraducirFn } from '../i18n/IdiomaContext';
 
 export function limpiarTexto(texto: string | null | undefined): string {
   if (!texto) return '';
@@ -65,6 +66,28 @@ function isoDesdeDDMMYYYY(fecha?: string | null): string | null {
   return m ? `${m[3]}-${m[2]}-${m[1]}` : null;
 }
 
+/** Fecha "YYYY-MM-DD" de Madrid a partir de un ISO; null si no parsea. */
+function fechaMadridDeIso(iso: string): string | null {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Madrid',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(d);
+}
+
+/**
+ * ¿La captura de la bandera (ISO) es de HOY en Madrid?
+ * Si el ISO no parsea, se asume fresca (lenient) para no ocultar datos buenos.
+ */
+export function esInfoFrescaHoy(iso: string, ahora: Date = new Date()): boolean {
+  const fecha = fechaMadridDeIso(iso);
+  if (!fecha) return true;
+  return fecha === fechaHoyMadrid(ahora);
+}
+
 /**
  * ¿Estamos dentro del horario (y temporada) de vigilancia, en hora de Madrid?
  * Devuelve null si no hay datos de horario para decidir.
@@ -92,16 +115,41 @@ export function dentroDeHorario(
 
 /**
  * Estado a mostrar para la bandera de Cruz Roja:
- *  - 'color'          → bandera real izada (verde/amarilla/roja)
- *  - 'fueraDeHorario' → sin bandera y fuera del horario/temporada de vigilancia
- *  - 'sinDatos'       → sin bandera dentro del horario (aún sin captura) o sin horario conocido
+ *  - 'color'          → bandera real izada y vigente (verde/amarilla/roja)
+ *  - 'fueraDeHorario' → fuera del horario/temporada de vigilancia
+ *  - 'sinDatos'       → dentro del horario pero sin bandera fresca (aún sin captura
+ *                       de hoy o sin horario conocido)
+ *
+ * La bandera solo se pinta con color si es VIGENTE: dentro de horario/temporada Y
+ * con dato de hoy. Un color guardado de una captura anterior (p.ej. el cron de
+ * ayer por la tarde) no refleja lo que ondea ahora → no se muestra.
+ * ESPEJO del backend: misma regla en `application/mappers/flagVigencia.ts`.
  */
 export function estadoBandera(
-  cruzRoja?: { bandera?: string; horario?: string | null; coberturaDesde?: string | null; coberturaHasta?: string | null },
+  cruzRoja?: { bandera?: string; horario?: string | null; coberturaDesde?: string | null; coberturaHasta?: string | null; ultimaActualizacion?: string | null },
   ahora: Date = new Date()
 ): EstadoBandera {
-  if (isFlagAvailable(cruzRoja)) return 'color';
-  return dentroDeHorario(cruzRoja, ahora) === false ? 'fueraDeHorario' : 'sinDatos';
+  if (dentroDeHorario(cruzRoja, ahora) === false) return 'fueraDeHorario';
+  const fresca = cruzRoja?.ultimaActualizacion
+    ? esInfoFrescaHoy(cruzRoja.ultimaActualizacion, ahora)
+    : true;
+  if (isFlagAvailable(cruzRoja) && fresca) return 'color';
+  return 'sinDatos';
+}
+
+/**
+ * "actualizado hace X" (min / horas / días) a partir de un ISO o epoch ms.
+ * Devuelve '' si no parsea. Reutiliza las claves i18n `tiempo.*`.
+ */
+export function formatearHaceTiempo(input: string | number, t: TraducirFn): string {
+  const ms = typeof input === 'number' ? input : new Date(input).getTime();
+  if (!ms || Number.isNaN(ms)) return '';
+  const min = Math.floor((Date.now() - ms) / 60000);
+  if (min < 1) return t('tiempo.ahoraMismo');
+  if (min < 60) return t('tiempo.haceMin', { n: min });
+  const horas = Math.floor(min / 60);
+  if (horas < 24) return t('tiempo.haceHoras', { n: horas });
+  return t('tiempo.haceDias', { n: Math.floor(horas / 24) });
 }
 
 export function capitalizar(s: string | null | undefined): string {

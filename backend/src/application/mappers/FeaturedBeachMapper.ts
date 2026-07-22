@@ -3,6 +3,7 @@ import { Weather } from '../../domain/entities/Weather';
 import { FlagStatus } from '../../domain/entities/Flag';
 import { ForecastEnrichment } from '../../domain/use-cases/BeachScorer';
 import { FeaturedBeachDTO, FeaturedBeachesResponseDTO } from '../dtos/FeaturedBeachDTO';
+import { esBanderaVigente } from './flagVigencia';
 
 export interface FeaturedBeachResult {
   beach: Beach;
@@ -27,15 +28,17 @@ export class FeaturedBeachMapper {
     resumenTodas: FeaturedBeachResult[],
     timestamp: number,
   ): FeaturedBeachesResponseDTO {
+    // "Ahora" único para toda la respuesta: decide qué banderas siguen vigentes.
+    const ahora = new Date(timestamp);
     return {
       timestamp,
-      playas: mejores.map((r) => this.mapOne(r)),
-      revisar: revisar.map((r) => this.mapOne(r)),
-      resumenTodas: resumenTodas.map((r) => this.mapOne(r)),
+      playas: mejores.map((r) => this.mapOne(r, ahora)),
+      revisar: revisar.map((r) => this.mapOne(r, ahora)),
+      resumenTodas: resumenTodas.map((r) => this.mapOne(r, ahora)),
     };
   }
 
-  private static mapOne(r: FeaturedBeachResult): FeaturedBeachDTO {
+  private static mapOne(r: FeaturedBeachResult, ahora: Date): FeaturedBeachDTO {
     return {
       nombre: r.beach.name,
       municipio: r.beach.municipality,
@@ -55,7 +58,12 @@ export class FeaturedBeachMapper {
         null,
       iconoClima: r.weather?.icon ?? null,
       vientoMs: r.weather?.windSpeedMs ?? null,
-      bandera: r.flag?.color ? (FLAG_COLOR_ES[r.flag.color] ?? null) : null,
+      // Solo se muestra la bandera si sigue vigente (dentro de horario/temporada
+      // y con dato de hoy); si no, el color guardado no refleja lo que ondea.
+      bandera:
+        r.flag?.color && esBanderaVigente(r.flag, ahora)
+          ? (FLAG_COLOR_ES[r.flag.color] ?? null)
+          : null,
       puntuacion: r.score,
       razonRanking: r.reason,
       motivoBaja: r.downgradeReason ?? null,

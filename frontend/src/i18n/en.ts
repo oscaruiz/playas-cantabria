@@ -29,6 +29,7 @@ export const en = {
   'tiempo.ahoraMismo': 'updated just now',
   'tiempo.haceMin': 'updated {n} min ago',
   'tiempo.haceHoras': 'updated {n}h ago',
+  'tiempo.haceDias': 'updated {n}d ago',
 
   // ---- Home ----
   'home.subtitulo': 'Discover the best beaches in Cantabria',
@@ -159,6 +160,7 @@ export const en = {
   'cruzroja.coberturaDesde': 'Coverage from',
   'cruzroja.coberturaHasta': 'Coverage until',
   'cruzroja.horario': 'Hours',
+  'cruzroja.ultimaActualizacion': 'Last updated',
 
   // ---- Atributos de playa ----
   'attr.duchas': 'Showers',

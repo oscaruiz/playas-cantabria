@@ -27,6 +27,7 @@ import {
   lluviaPrevista,
   horaLocalMadrid,
   getActiveAttrs,
+  formatearHaceTiempo,
 } from '../utils/beachHelpers';
 import { useIdioma, Idioma, TraducirFn } from '../i18n/IdiomaContext';
 import { ClaveTexto } from '../i18n/es';
@@ -111,7 +112,13 @@ const FlagBanner: React.FC<{ cruzRoja?: PlayaDetalleData['cruzRoja'] }> = ({ cru
     return null;
   }
 
-  const colorClass = flagColorClass(cruzRoja!.bandera); // 'unknown' si fuera de horario
+  // Solo se pinta el color si la bandera es vigente ('color'); fuera de horario o
+  // con dato no fresco se muestra el banderín neutro, aunque haya color guardado.
+  const colorClass = estado === 'color' ? flagColorClass(cruzRoja!.bandera) : 'unknown';
+  const actualizado =
+    estado === 'color' && cruzRoja!.ultimaActualizacion
+      ? formatearHaceTiempo(cruzRoja!.ultimaActualizacion, t)
+      : '';
 
   return (
     <div className="flag-banner">
@@ -122,6 +129,7 @@ const FlagBanner: React.FC<{ cruzRoja?: PlayaDetalleData['cruzRoja'] }> = ({ cru
         {cruzRoja!.horario && (
           <div className="flag-horario">{t('detalle.vigilancia', { horario: cruzRoja!.horario })}</div>
         )}
+        {actualizado && <div className="flag-horario">{capitalizar(actualizado)}</div>}
       </div>
     </div>
   );
@@ -736,6 +744,11 @@ const CruzRojaCard: React.FC<{ cruzRoja?: PlayaDetalleData['cruzRoja'] }> = ({ c
               </span>
             </div>
           </div>
+          {cruzRoja?.ultimaActualizacion && (
+            <p className="cruzroja-actualizado">
+              {capitalizar(formatearHaceTiempo(cruzRoja.ultimaActualizacion, t))}
+            </p>
+          )}
         </div>
       )}
     </div>

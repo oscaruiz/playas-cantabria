@@ -9,23 +9,16 @@ import {
   getPlayas,
   getFeaturedBeaches,
 } from '../services/api';
-import { emojiCielo, flagColorClass } from '../utils/beachHelpers';
+import { emojiCielo, flagColorClass, formatearHaceTiempo } from '../utils/beachHelpers';
 import { haversineKm, rankearPlayas, codigoMejorPuntuacionNoHero } from '../utils/beachRanking';
 import { useUserLocation } from '../hooks/useUserLocation';
 import BottomNavBar from '../components/BottomNavBar';
 import SelectorIdioma from '../components/SelectorIdioma';
-import { useIdioma, TraducirFn } from '../i18n/IdiomaContext';
+import { useIdioma } from '../i18n/IdiomaContext';
 import { traducirTextoApi, claveBandera, claveNivelVientoMs } from '../i18n/apiText';
 import './HomePage.css';
 
 // ---- Helpers ----
-
-function formatTimeAgo(timestamp: number, t: TraducirFn): string {
-  const diff = Math.floor((Date.now() - timestamp) / 60000);
-  if (diff < 1) return t('tiempo.ahoraMismo');
-  if (diff < 60) return t('tiempo.haceMin', { n: diff });
-  return t('tiempo.haceHoras', { n: Math.floor(diff / 60) });
-}
 
 function averageTemp(playas: FeaturedBeach[]): number | null {
   const temps = playas.filter((p) => p.temperatura != null).map((p) => p.temperatura!);
@@ -347,7 +340,7 @@ const HomePage: React.FC = () => {
 
   const avgTemp = featured ? averageTemp(featured.playas) : null;
   const totalBeaches = allPlayas?.length ?? 0;
-  const updatedAt = featured ? formatTimeAgo(featured.timestamp, t) : '';
+  const updatedAt = featured ? formatearHaceTiempo(featured.timestamp, t) : '';
 
   return (
     <IonPage className="hp-page">

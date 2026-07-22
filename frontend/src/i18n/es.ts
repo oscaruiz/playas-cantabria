@@ -31,6 +31,7 @@ export const es = {
   'tiempo.ahoraMismo': 'actualizado ahora mismo',
   'tiempo.haceMin': 'actualizado hace {n} min',
   'tiempo.haceHoras': 'actualizado hace {n}h',
+  'tiempo.haceDias': 'actualizado hace {n} d',
 
   // ---- Home ----
   'home.subtitulo': 'Descubre las mejores playas de Cantabria',
@@ -161,6 +162,7 @@ export const es = {
   'cruzroja.coberturaDesde': 'Cobertura desde',
   'cruzroja.coberturaHasta': 'Cobertura hasta',
   'cruzroja.horario': 'Horario',
+  'cruzroja.ultimaActualizacion': 'Última actualización',
 
   // ---- Atributos de playa (claves alineadas con ATTR_CONFIG) ----
   'attr.duchas': 'Duchas',

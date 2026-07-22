@@ -681,6 +681,14 @@
   padding: 0 0 2px;
 }
 
+/* "Actualizado hace X" al pie de la tarjeta Cruz Roja */
+.cruzroja-actualizado {
+  margin: 8px 0 0;
+  font-size: 0.75rem;
+  color: var(--playa-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
 @keyframes slideDown {
   from {
     opacity: 0;
