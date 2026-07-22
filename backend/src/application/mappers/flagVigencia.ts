@@ -4,14 +4,18 @@ import { FlagStatus } from '../../domain/entities/Flag';
  * Vigencia de la bandera de Cruz Roja: ¿debe mostrarse el color AHORA?
  *
  * Una bandera solo es real mientras hay vigilancia (horario diario dentro de la
- * temporada de cobertura) y si el dato es de hoy. Fuera de eso, el color
- * almacenado (p.ej. la última captura del cron de ayer por la tarde) NO refleja
- * lo que ondea en la playa, así que no debe pintarse.
+ * temporada de cobertura) y si el dato es reciente. La fuente primaria en prod
+ * (`data/flags.json`) se refresca por cron unas pocas veces al día y nada de
+ * madrugada, así que se acepta la última captura de las últimas ~24h; más allá,
+ * el color ya no refleja lo que ondea y no debe pintarse.
  *
  * ESPEJO del frontend: la misma regla vive en
- * `frontend/src/utils/beachHelpers.ts` (`dentroDeHorario` + `esInfoFrescaHoy`,
+ * `frontend/src/utils/beachHelpers.ts` (`dentroDeHorario` + `esInfoReciente`,
  * usados por `estadoBandera`). Mantener ambos lados en sincronía.
  */
+
+/** Ventana de frescura: una captura de hace más de esto ya no se muestra. */
+const MAX_EDAD_BANDERA_MS = 24 * 60 * 60 * 1000; // 24h
 
 /** Fecha "YYYY-MM-DD" en Europe/Madrid (robusto a la TZ del servidor). */
 function fechaMadrid(fecha: Date): string {
@@ -64,18 +68,18 @@ function dentroDeHorario(flag: FlagStatus, ahora: Date): boolean | null {
   return cur >= ini && cur <= fin;
 }
 
-/** ¿La captura del flag es de hoy (Madrid)? Sin timestamp válido → se asume fresca. */
-function esInfoFrescaHoy(timestamp: number, ahora: Date): boolean {
+/** ¿La captura del flag es reciente (≤24h)? Sin timestamp válido → se asume fresca. */
+function esInfoReciente(timestamp: number, ahora: Date): boolean {
   if (!timestamp || Number.isNaN(timestamp)) return true;
-  return fechaMadrid(new Date(timestamp)) === fechaMadrid(ahora);
+  return ahora.getTime() - timestamp <= MAX_EDAD_BANDERA_MS;
 }
 
 /**
  * ¿Debe mostrarse el color de la bandera AHORA? (no comprueba que exista color;
  * eso lo decide quien llama). True si estamos dentro de horario/temporada — o no
- * se conoce el horario — y el dato es de hoy.
+ * se conoce el horario — y el dato es reciente (≤24h).
  */
 export function esBanderaVigente(flag: FlagStatus, ahora: Date = new Date()): boolean {
   if (dentroDeHorario(flag, ahora) === false) return false;
-  return esInfoFrescaHoy(flag.timestamp, ahora);
+  return esInfoReciente(flag.timestamp, ahora);
 }

@@ -18,7 +18,7 @@ const flag = (ts: string, extra: Partial<FlagStatus> = {}): FlagStatus => ({
 });
 
 describe('esBanderaVigente', () => {
-  it('vigente: dentro de horario y con dato de hoy', () => {
+  it('vigente: dentro de horario y con dato reciente', () => {
     const ahora = new Date('2026-07-10T13:00:00Z'); // 15:00 Madrid
     expect(esBanderaVigente(flag('2026-07-10T09:00:00Z'), ahora)).toBe(true);
   });
@@ -28,9 +28,16 @@ describe('esBanderaVigente', () => {
     expect(esBanderaVigente(flag('2026-07-10T16:00:00Z'), ahora)).toBe(false);
   });
 
-  it('no vigente: dentro de horario pero el dato es de ayer', () => {
+  it('vigente: dato de ayer tarde visto hoy a mediodía (≤24h, franja mañanera)', () => {
+    // Regresión: el cron capturó ayer 18:35 Madrid (16:35Z); hoy a las 11:45
+    // Madrid (09:45Z) es lo más fresco disponible → debe mostrarse.
+    const ahora = new Date('2026-07-10T09:45:00Z'); // 11:45 Madrid, dentro de horario
+    expect(esBanderaVigente(flag('2026-07-09T16:35:00Z'), ahora)).toBe(true);
+  });
+
+  it('no vigente: dentro de horario pero el dato tiene más de 24h', () => {
     const ahora = new Date('2026-07-10T13:00:00Z'); // 15:00 Madrid
-    expect(esBanderaVigente(flag('2026-07-09T14:00:00Z'), ahora)).toBe(false);
+    expect(esBanderaVigente(flag('2026-07-09T09:00:00Z'), ahora)).toBe(false); // 28h
   });
 
   it('no vigente: fuera de temporada', () => {
@@ -38,12 +45,12 @@ describe('esBanderaVigente', () => {
     expect(esBanderaVigente(flag('2026-09-20T09:00:00Z'), ahora)).toBe(false);
   });
 
-  it('sin horario conocido: vigente si el dato es de hoy', () => {
+  it('sin horario conocido: vigente si el dato es reciente', () => {
     const ahora = new Date('2026-07-10T13:00:00Z');
     expect(esBanderaVigente(flag('2026-07-10T09:00:00Z', { schedule: null }), ahora)).toBe(true);
   });
 
-  it('sin horario y dato de ayer: no vigente (frescura)', () => {
+  it('sin horario y dato de hace >24h: no vigente (frescura)', () => {
     const ahora = new Date('2026-07-10T13:00:00Z');
     expect(esBanderaVigente(flag('2026-07-09T09:00:00Z', { schedule: null }), ahora)).toBe(false);
   });

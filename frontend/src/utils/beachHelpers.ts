@@ -66,26 +66,17 @@ function isoDesdeDDMMYYYY(fecha?: string | null): string | null {
   return m ? `${m[3]}-${m[2]}-${m[1]}` : null;
 }
 
-/** Fecha "YYYY-MM-DD" de Madrid a partir de un ISO; null si no parsea. */
-function fechaMadridDeIso(iso: string): string | null {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return null;
-  return new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Europe/Madrid',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(d);
-}
+/** Ventana de frescura: una captura de hace más de esto ya no se muestra. */
+const MAX_EDAD_BANDERA_MS = 24 * 60 * 60 * 1000; // 24h — espejo de flagVigencia.ts
 
 /**
- * ¿La captura de la bandera (ISO) es de HOY en Madrid?
+ * ¿La captura de la bandera (ISO) es reciente (≤24h)?
  * Si el ISO no parsea, se asume fresca (lenient) para no ocultar datos buenos.
  */
-export function esInfoFrescaHoy(iso: string, ahora: Date = new Date()): boolean {
-  const fecha = fechaMadridDeIso(iso);
-  if (!fecha) return true;
-  return fecha === fechaHoyMadrid(ahora);
+export function esInfoReciente(iso: string, ahora: Date = new Date()): boolean {
+  const ms = new Date(iso).getTime();
+  if (Number.isNaN(ms)) return true;
+  return ahora.getTime() - ms <= MAX_EDAD_BANDERA_MS;
 }
 
 /**
@@ -117,12 +108,12 @@ export function dentroDeHorario(
  * Estado a mostrar para la bandera de Cruz Roja:
  *  - 'color'          → bandera real izada y vigente (verde/amarilla/roja)
  *  - 'fueraDeHorario' → fuera del horario/temporada de vigilancia
- *  - 'sinDatos'       → dentro del horario pero sin bandera fresca (aún sin captura
- *                       de hoy o sin horario conocido)
+ *  - 'sinDatos'       → dentro del horario pero sin bandera fresca (sin captura
+ *                       reciente o sin horario conocido)
  *
  * La bandera solo se pinta con color si es VIGENTE: dentro de horario/temporada Y
- * con dato de hoy. Un color guardado de una captura anterior (p.ej. el cron de
- * ayer por la tarde) no refleja lo que ondea ahora → no se muestra.
+ * con dato reciente (≤24h). Un color de una captura más antigua ya no refleja lo
+ * que ondea ahora → no se muestra.
  * ESPEJO del backend: misma regla en `application/mappers/flagVigencia.ts`.
  */
 export function estadoBandera(
@@ -131,7 +122,7 @@ export function estadoBandera(
 ): EstadoBandera {
   if (dentroDeHorario(cruzRoja, ahora) === false) return 'fueraDeHorario';
   const fresca = cruzRoja?.ultimaActualizacion
-    ? esInfoFrescaHoy(cruzRoja.ultimaActualizacion, ahora)
+    ? esInfoReciente(cruzRoja.ultimaActualizacion, ahora)
     : true;
   if (isFlagAvailable(cruzRoja) && fresca) return 'color';
   return 'sinDatos';

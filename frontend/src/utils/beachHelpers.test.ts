@@ -1,7 +1,7 @@
 import {
   dentroDeHorario,
   estadoBandera,
-  esInfoFrescaHoy,
+  esInfoReciente,
   formatearHaceTiempo,
   esLluviaActiva,
   horaLocalMadrid,
@@ -63,7 +63,7 @@ describe('estadoBandera', () => {
     expect(estadoBandera({ bandera: 'Desconocida' })).toBe('sinDatos');
   });
 
-  it("'color' con bandera de HOY dentro del horario", () => {
+  it("'color' con bandera reciente dentro del horario", () => {
     expect(
       estadoBandera(
         { ...cruzRoja, bandera: 'Verde', ultimaActualizacion: '2026-06-22T09:00:00Z' },
@@ -72,13 +72,22 @@ describe('estadoBandera', () => {
     ).toBe('color');
   });
 
-  it("'sinDatos' con bandera de AYER aunque sea dentro del horario (frescura)", () => {
-    // Escenario clave: el cron capturó verde ayer por la tarde; hoy a las 14:00
-    // ese color no refleja lo que ondea → no se muestra.
+  it("'color' con bandera de ayer tarde vista hoy a mediodía (≤24h, franja mañanera)", () => {
+    // Regresión: el cron capturó verde ayer 18:35 Madrid (16:35Z); hoy a las 11:45
+    // Madrid (09:45Z) es lo más fresco disponible y estamos en horario → se muestra.
     expect(
       estadoBandera(
-        { ...cruzRoja, bandera: 'Verde', ultimaActualizacion: '2026-06-21T16:00:00Z' },
-        new Date('2026-06-22T12:00:00Z')
+        { ...cruzRoja, bandera: 'Verde', ultimaActualizacion: '2026-06-21T16:35:00Z' },
+        new Date('2026-06-22T09:45:00Z')
+      )
+    ).toBe('color');
+  });
+
+  it("'sinDatos' con bandera de hace más de 24h aunque sea dentro del horario (frescura)", () => {
+    expect(
+      estadoBandera(
+        { ...cruzRoja, bandera: 'Verde', ultimaActualizacion: '2026-06-21T09:00:00Z' },
+        new Date('2026-06-22T12:00:00Z') // 27h después
       )
     ).toBe('sinDatos');
   });
@@ -93,19 +102,20 @@ describe('estadoBandera', () => {
   });
 });
 
-describe('esInfoFrescaHoy', () => {
+describe('esInfoReciente', () => {
   const ahora = new Date('2026-06-22T12:00:00Z'); // 14:00 Madrid, día 22
 
-  it('true si la captura es del mismo día (Madrid)', () => {
-    expect(esInfoFrescaHoy('2026-06-22T09:00:00Z', ahora)).toBe(true);
+  it('true si la captura tiene ≤24h', () => {
+    expect(esInfoReciente('2026-06-22T09:00:00Z', ahora)).toBe(true); // 3h
+    expect(esInfoReciente('2026-06-21T16:00:00Z', ahora)).toBe(true); // 20h
   });
 
-  it('false si la captura es de ayer', () => {
-    expect(esInfoFrescaHoy('2026-06-21T16:00:00Z', ahora)).toBe(false);
+  it('false si la captura tiene más de 24h', () => {
+    expect(esInfoReciente('2026-06-21T09:00:00Z', ahora)).toBe(false); // 27h
   });
 
   it('true (lenient) si el ISO no parsea', () => {
-    expect(esInfoFrescaHoy('no-es-fecha', ahora)).toBe(true);
+    expect(esInfoReciente('no-es-fecha', ahora)).toBe(true);
   });
 });
 
