@@ -1,5 +1,5 @@
 import { BeachDetails } from '../../domain/use-cases/GetBeachDetails';
-import { Beach, BeachAttributes } from '../../domain/entities/Beach';
+import { Beach, BeachAttributes, Webcam } from '../../domain/entities/Beach';
 import { FlagStatus } from '../../domain/entities/Flag';
 import { Weather } from '../../domain/entities/Weather';
 import { RainNowcast } from '../../domain/entities/RainNowcast';
@@ -104,6 +104,7 @@ export type LegacyDetailsDTO = {
   bus: string | null;
   hospitalDistancia: number | null;
   submarinismo: boolean | null;
+  webcam: Webcam | null;
   temperaturaActual: number | null;
   tiempoActual: TiempoActualDTO | null;
   clima: ClimaDTO | null;
@@ -176,6 +177,7 @@ export class LegacyDetailsMapper {
       bus: b.busInfo ?? null,
       hospitalDistancia: b.hospitalDistanceKm ?? null,
       submarinismo: b.diving ?? null,
+      webcam: b.webcam ?? null,
     };
   }
 

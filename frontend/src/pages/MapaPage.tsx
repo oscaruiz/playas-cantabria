@@ -2,15 +2,17 @@ import {
   IonPage,
   IonContent,
   IonFooter,
+  IonIcon,
   useIonViewDidEnter,
   useIonViewWillLeave,
 } from '@ionic/react';
+import { videocamOutline } from 'ionicons/icons';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L, { Map as LeafletMap, DivIcon } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Playa, FeaturedBeach, getPlayas, getFeaturedBeaches } from '../services/api';
-import { emojiCielo, flagColorClass } from '../utils/beachHelpers';
+import { emojiCielo, flagColorClass, webcamDisponible } from '../utils/beachHelpers';
 import { useIdioma } from '../i18n/IdiomaContext';
 import { traducirTextoApi, claveNivelVientoMs, claveBandera } from '../i18n/apiText';
 import { useUserLocation } from '../hooks/useUserLocation';
@@ -233,6 +235,12 @@ const MapaPage: React.FC = () => {
                       <p className="mapa-popup-row mapa-popup-muted">
                         {isVigilada ? t('mapa.vigilada') : t('mapa.sinInfoCruzRoja')}
                       </p>
+                      {webcamDisponible(playa.webcam) && (
+                        <p className="mapa-popup-row mapa-popup-webcam">
+                          <IonIcon icon={videocamOutline} aria-hidden="true" />
+                          {t('mapa.webcamDisponible')}
+                        </p>
+                      )}
                       <button
                         className="mapa-popup-btn"
                         onClick={() => history.push(`/playas/${playa.codigo}`)}

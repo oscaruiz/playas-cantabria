@@ -1,4 +1,5 @@
 import { WeatherSource } from '../../domain/entities/Weather';
+import { Webcam } from '../../domain/entities/Beach';
 
 export interface WeatherDTO {
   source: WeatherSource;
@@ -47,6 +48,7 @@ export interface BeachDTO {
   bus?: string;
   hospitalDistancia?: number;
   submarinismo?: boolean;
+  webcam?: Webcam;
   clima?: WeatherDTO;
   bandera?: string;
 }

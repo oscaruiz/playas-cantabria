@@ -325,6 +325,17 @@
   flex-shrink: 0;
 }
 
+.badge-webcam {
+  display: flex;
+  align-items: center;
+  color: var(--playa-ocean);
+  flex-shrink: 0;
+}
+
+.badge-webcam ion-icon {
+  font-size: 1rem;
+}
+
 .beach-card-dist {
   color: var(--playa-ocean);
   font-weight: 600;

@@ -72,6 +72,7 @@ export const es = {
   'lista.paraFiltro': 'para "{filtro}"',
   'lista.noEncontradas': 'No se encontraron playas para "{filtro}"',
   'lista.vigiladaAria': 'Playa vigilada por Cruz Roja',
+  'lista.webcamAria': 'Playa con webcam disponible',
   'lista.errorCarga': 'No se pudieron cargar las playas',
 
   // ---- Mapa ----
@@ -79,6 +80,7 @@ export const es = {
   'mapa.municipio': 'Municipio:',
   'mapa.vigilada': 'Vigilada por Cruz Roja',
   'mapa.sinInfoCruzRoja': 'No hay info de Cruz Roja',
+  'mapa.webcamDisponible': 'Webcam disponible',
   'mapa.verDetalles': 'Ver detalles',
   'mapa.tuUbicacion': 'Tu ubicación actual',
   'mapa.banderaRoja': 'Bandera roja',
@@ -163,6 +165,12 @@ export const es = {
   'cruzroja.coberturaHasta': 'Cobertura hasta',
   'cruzroja.horario': 'Horario',
   'cruzroja.ultimaActualizacion': 'Última actualización',
+
+  // ---- Webcam (tarjeta de detalle) ----
+  'webcam.enDirecto': 'Webcam en directo',
+  'webcam.vistaPanoramica': 'Vista panorámica de la zona',
+  'webcam.cercana': 'Webcam cercana',
+  'webcam.abrir': 'Abrir webcam',
 
   // ---- Atributos de playa (claves alineadas con ATTR_CONFIG) ----
   'attr.duchas': 'Duchas',

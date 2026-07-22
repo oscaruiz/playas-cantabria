@@ -150,6 +150,39 @@
   font-size: 0.95rem;
 }
 
+/* --- Webcam (enlace externo a la cámara; nunca embebido) --- */
+.webcam-open-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--playa-ocean);
+  border: 1px solid var(--playa-ocean);
+  border-radius: var(--playa-radius-s);
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: 'Poppins', sans-serif;
+  padding: 10px 16px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: opacity 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.webcam-open-link:active {
+  opacity: 0.8;
+}
+
+@media (hover: hover) {
+  .webcam-open-link:hover {
+    opacity: 0.9;
+  }
+}
+
+.webcam-open-link ion-icon {
+  font-size: 1.05rem;
+}
+
 /* --- Flag banner (banderín de señalización de playa) --- */
 .flag-banner {
   display: flex;

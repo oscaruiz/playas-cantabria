@@ -24,6 +24,7 @@ export class BeachMapper {
       ...(beach.busInfo ? { bus: beach.busInfo } : {}),
       ...(beach.hospitalDistanceKm != null ? { hospitalDistancia: beach.hospitalDistanceKm } : {}),
       ...(beach.diving != null ? { submarinismo: beach.diving } : {}),
+      ...(beach.webcam ? { webcam: beach.webcam } : {}),
     };
   }
 

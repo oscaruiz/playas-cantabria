@@ -77,6 +77,7 @@ export interface Playa {
   bus?: string;
   hospitalDistancia?: number;
   submarinismo?: boolean;
+  webcam?: WebcamPlaya | null;
 }
 
 // ------------------------------
@@ -223,6 +224,18 @@ export interface TiempoActual {
 // ------------------------------
 // Detalle de Playa
 // ------------------------------
+
+/**
+ * Webcam de una playa (dato editorial estático). `cobertura` distingue si enfoca
+ * exactamente esta playa, una panorámica compartida o una playa cercana. Solo se
+ * ofrece como enlace externo (no se embebe).
+ */
+export interface WebcamPlaya {
+  url: string;
+  cobertura: 'exacta' | 'compartida' | 'cercana';
+  estado?: 'activa' | 'desactivada';
+}
+
 export interface PlayaDetalle {
   nombre: string;
   municipio: string;
@@ -252,6 +265,9 @@ export interface PlayaDetalle {
 
   // Predicción enriquecida (3 días, mareas, avisos)
   prediccionCompleta?: PrediccionCompletaDTO;
+
+  // Webcam de la playa (puede no venir). Solo enlace externo.
+  webcam?: WebcamPlaya | null;
 }
 
 export async function getDetallePlaya(codigo: string): Promise<PlayaDetalle> {

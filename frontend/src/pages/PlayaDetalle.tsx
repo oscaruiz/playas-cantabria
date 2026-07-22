@@ -6,7 +6,7 @@ import {
   IonSpinner,
   IonIcon,
 } from '@ionic/react';
-import { chevronBackOutline, navigateOutline, mapOutline } from 'ionicons/icons';
+import { chevronBackOutline, navigateOutline, mapOutline, videocamOutline } from 'ionicons/icons';
 import { useHistory, useParams } from 'react-router-dom';
 import {
   getDetallePlaya,
@@ -28,6 +28,7 @@ import {
   horaLocalMadrid,
   getActiveAttrs,
   formatearHaceTiempo,
+  claveCoberturaWebcam,
 } from '../utils/beachHelpers';
 import { useIdioma, Idioma, TraducirFn } from '../i18n/IdiomaContext';
 import { ClaveTexto } from '../i18n/es';
@@ -749,6 +750,32 @@ const CruzRojaCard: React.FC<{ cruzRoja?: PlayaDetalleData['cruzRoja'] }> = ({ c
   );
 };
 
+// ---- Webcam Card ----
+
+/**
+ * Webcam de la playa como ENLACE externo (nunca embebido). El título muestra la
+ * cobertura (exacta / panorámica compartida / cercana) para no inducir a error.
+ * Se oculta por completo si no hay webcam o está desactivada.
+ */
+export const WebcamCard: React.FC<{ webcam?: PlayaDetalleData['webcam'] }> = ({ webcam }) => {
+  const { t } = useIdioma();
+  if (!webcam || webcam.estado === 'desactivada') return null;
+
+  return (
+    <section className="detail-section webcam-section">
+      <h3 className="section-kicker">{t(claveCoberturaWebcam(webcam.cobertura))}</h3>
+      <a
+        className="webcam-open-link"
+        href={webcam.url}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <IonIcon icon={videocamOutline} aria-hidden="true" /> {t('webcam.abrir')}
+      </a>
+    </section>
+  );
+};
+
 // ---- Main Page ----
 
 const PlayaDetallePage: React.FC = () => {
@@ -864,6 +891,8 @@ const PlayaDetallePage: React.FC = () => {
 
               <div className="detail-col detail-col--info">
               {datos.cruzRoja != null && <CruzRojaCard cruzRoja={datos.cruzRoja} />}
+
+              <WebcamCard webcam={datos.webcam} />
 
               <BeachInfoSection datos={datos} />
               {datos.atributos && (

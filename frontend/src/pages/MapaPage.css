@@ -120,6 +120,19 @@
   font-size: 13px;
 }
 
+.mapa-popup-webcam {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--playa-ocean);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.mapa-popup-webcam ion-icon {
+  font-size: 15px;
+}
+
 .mapa-popup-btn {
   margin-top: 6px;
   padding: 7px 10px;

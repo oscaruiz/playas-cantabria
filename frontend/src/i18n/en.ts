@@ -70,6 +70,7 @@ export const en = {
   'lista.paraFiltro': 'for "{filtro}"',
   'lista.noEncontradas': 'No beaches found for "{filtro}"',
   'lista.vigiladaAria': 'Beach supervised by the Red Cross',
+  'lista.webcamAria': 'Beach with webcam available',
   'lista.errorCarga': 'Could not load beaches',
 
   // ---- Mapa ----
@@ -77,6 +78,7 @@ export const en = {
   'mapa.municipio': 'Municipality:',
   'mapa.vigilada': 'Supervised by the Red Cross',
   'mapa.sinInfoCruzRoja': 'No Red Cross info',
+  'mapa.webcamDisponible': 'Webcam available',
   'mapa.verDetalles': 'View details',
   'mapa.tuUbicacion': 'Your current location',
   'mapa.banderaRoja': 'Red flag',
@@ -161,6 +163,12 @@ export const en = {
   'cruzroja.coberturaHasta': 'Coverage until',
   'cruzroja.horario': 'Hours',
   'cruzroja.ultimaActualizacion': 'Last updated',
+
+  // ---- Webcam (detail card) ----
+  'webcam.enDirecto': 'Live webcam',
+  'webcam.vistaPanoramica': 'Panoramic view of the area',
+  'webcam.cercana': 'Nearby webcam',
+  'webcam.abrir': 'Open webcam',
 
   // ---- Atributos de playa ----
   'attr.duchas': 'Showers',

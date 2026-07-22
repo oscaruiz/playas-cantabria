@@ -101,6 +101,28 @@ Two-step response: first returns a data URL, then you download the actual JSON.
 - `municipio`: municipality per AEMET.
 - `lat`, `lon`: coordinates verified against AEMET.
 - `idCruzRoja`: Red Cross scraper ID (0 = no coverage).
+- `webcam` (optional): beach webcam, shown on the detail page. Editorial static data.
+
+### Webcams
+
+Optional `webcam` object per beach in `data/beaches.json` (propagated through `Beach` →
+`LegacyDetailsDTO` like `atributos`):
+
+```jsonc
+"webcam": {
+  "url": "https://...",        // public provider page (or YouTube watch URL)
+  "cobertura": "exacta",       // "exacta" | "compartida" | "cercana"
+  "estado": "activa"           // optional; "desactivada" hides it without deleting
+}
+```
+
+- **Never embedded** — the frontend only renders an external link (`Abrir webcam`, opens in a new
+  tab). Do not assume providers (Skyline, Hispacams, Camaramar, YouTube, municipal sites) allow iframe.
+- `cobertura` drives the honest label: `exacta` → "Webcam en directo", `compartida` → "Vista
+  panorámica de la zona", `cercana` → "Webcam cercana". Never present a shared/nearby cam as exact.
+- **Add / change**: edit the beach's `webcam` object. **Disable** without losing it:
+  `"estado": "desactivada"`. **Remove**: delete the `webcam` key (the section auto-hides).
+- Beaches with no reliable cam simply omit `webcam`.
 
 
 ## Encoding and scraping

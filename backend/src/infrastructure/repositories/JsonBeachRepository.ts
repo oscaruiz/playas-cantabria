@@ -1,6 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { Beach } from '../../domain/entities/Beach';
+import { Beach, Webcam } from '../../domain/entities/Beach';
 import { BeachRepository } from '../../domain/ports/BeachRepository';
 import { InMemoryCache, CacheKeys } from '../cache/InMemoryCache';
 
@@ -35,6 +35,7 @@ type RawBeach = {
   bus?: string;
   hospitalDistancia?: number;
   submarinismo?: boolean;
+  webcam?: Webcam;
 };
 
 export class JsonBeachRepository implements BeachRepository {
@@ -89,6 +90,7 @@ export class JsonBeachRepository implements BeachRepository {
       busInfo: r.bus,
       hospitalDistanceKm: r.hospitalDistancia,
       diving: r.submarinismo,
+      webcam: r.webcam ?? undefined,
     };
   }
 }

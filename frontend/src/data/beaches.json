@@ -26,7 +26,11 @@
     "parkingDescripcion": "Más de 100 plazas",
     "bus": "Interurbano",
     "hospitalDistancia": 10,
-    "submarinismo": false
+    "submarinismo": false,
+    "webcam": {
+      "url": "https://www.skylinewebcams.com/en/webcam/espana/cantabria/suances/playa-de-la-concha.html",
+      "cobertura": "exacta"
+    }
   },
   {
     "nombre": "Luaña-Cobreces",
@@ -55,7 +59,11 @@
     "parkingDescripcion": "Más de 100 plazas",
     "bus": "Interurbano",
     "hospitalDistancia": 30,
-    "submarinismo": false
+    "submarinismo": false,
+    "webcam": {
+      "url": "https://www.hispacams.com/en/webcams/playa-de-cobreces/",
+      "cobertura": "exacta"
+    }
   },
   {
     "nombre": "La Arena",
@@ -84,7 +92,11 @@
     "parkingDescripcion": "Menos de 50 plazas",
     "bus": "Interurbano",
     "hospitalDistancia": 30,
-    "submarinismo": false
+    "submarinismo": false,
+    "webcam": {
+      "url": "https://www.webcamsencantabria.com/webcam-arnuero-playa-de-la-arena/",
+      "cobertura": "exacta"
+    }
   },
   {
     "nombre": "Cuberris",
@@ -113,7 +125,11 @@
     "parkingDescripcion": "Más de 100 plazas",
     "bus": "Interurbano",
     "hospitalDistancia": 30,
-    "submarinismo": false
+    "submarinismo": false,
+    "webcam": {
+      "url": "https://www.camaramar.com/webcam/bareyo-playa-de-cuberris",
+      "cobertura": "exacta"
+    }
   },
   {
     "nombre": "Oriñon",
@@ -142,7 +158,11 @@
     "parkingDescripcion": "Entre 50 y 100 plazas",
     "bus": "Interurbano",
     "hospitalDistancia": 20,
-    "submarinismo": false
+    "submarinismo": false,
+    "webcam": {
+      "url": "https://www.camaramar.com/webcam/castro-urdiales-playa-de-orinon",
+      "cobertura": "exacta"
+    }
   },
   {
     "nombre": "Ostende",
@@ -171,7 +191,11 @@
     "parkingDescripcion": "Más de 100 plazas",
     "bus": "Interurbano",
     "hospitalDistancia": 25,
-    "submarinismo": false
+    "submarinismo": false,
+    "webcam": {
+      "url": "https://www.webcamsencantabria.com/webcam-castro-urdiales-playa-de-ostende/",
+      "cobertura": "exacta"
+    }
   },
   {
     "nombre": "Comillas",
@@ -200,7 +224,11 @@
     "parkingDescripcion": "Más de 100 plazas",
     "bus": "Interurbano",
     "hospitalDistancia": 30,
-    "submarinismo": false
+    "submarinismo": false,
+    "webcam": {
+      "url": "https://www.comillas.es/comillas/web_php/index.php?contenido=subapartados_coconut&id_boto=82&lang=48&title=webcams-comillas",
+      "cobertura": "exacta"
+    }
   },
   {
     "nombre": "La Salve",
@@ -229,7 +257,11 @@
     "parkingDescripcion": "Más de 100 plazas",
     "bus": "Interurbano (Santander-Laredo)",
     "hospitalDistancia": 1,
-    "submarinismo": false
+    "submarinismo": false,
+    "webcam": {
+      "url": "https://www.hispacams.com/webcams/laredo-playa-regaton-playa-salve/",
+      "cobertura": "exacta"
+    }
   },
   {
     "nombre": "Cuchia-Marzan",
@@ -287,7 +319,11 @@
     "parkingDescripcion": "Más de 100 plazas",
     "bus": "Interurbano",
     "hospitalDistancia": 30,
-    "submarinismo": false
+    "submarinismo": false,
+    "webcam": {
+      "url": "https://www.youtube.com/watch?v=2OCl1G8ft20",
+      "cobertura": "compartida"
+    }
   },
   {
     "nombre": "Ris",
@@ -316,7 +352,11 @@
     "parkingDescripcion": "Más de 100 plazas",
     "bus": "Interurbano",
     "hospitalDistancia": 20,
-    "submarinismo": false
+    "submarinismo": false,
+    "webcam": {
+      "url": "https://worldcam.eu/webcams/europe/spain/34060-noja-playa-de-ris",
+      "cobertura": "exacta"
+    }
   },
   {
     "nombre": "Valdearenas",
@@ -345,7 +385,11 @@
     "parkingDescripcion": "Más de 100 plazas",
     "bus": "Interurbano",
     "hospitalDistancia": 20,
-    "submarinismo": false
+    "submarinismo": false,
+    "webcam": {
+      "url": "https://www.youtube.com/watch?v=2OCl1G8ft20",
+      "cobertura": "compartida"
+    }
   },
   {
     "nombre": "Somo",
@@ -374,7 +418,11 @@
     "parkingDescripcion": "Más de 100 plazas",
     "bus": "Interurbano (Santander-Somo)",
     "hospitalDistancia": 20,
-    "submarinismo": false
+    "submarinismo": false,
+    "webcam": {
+      "url": "https://www.youtube.com/watch?v=bV_ltoX7Jy8",
+      "cobertura": "compartida"
+    }
   },
   {
     "nombre": "San Juan de la Canal",
@@ -403,7 +451,11 @@
     "parkingDescripcion": "Menos de 50 plazas",
     "bus": "Interurbano (Santander-Soto de la Marina)",
     "hospitalDistancia": 15,
-    "submarinismo": false
+    "submarinismo": false,
+    "webcam": {
+      "url": "https://www.hispacams.com/en/webcams/playa-de-san-juan-de-la-canal/",
+      "cobertura": "exacta"
+    }
   },
   {
     "nombre": "Sardinero",
@@ -432,7 +484,11 @@
     "parkingDescripcion": "Entre 50 y 100 plazas",
     "bus": "Urbano",
     "hospitalDistancia": 5,
-    "submarinismo": false
+    "submarinismo": false,
+    "webcam": {
+      "url": "https://www.skylinewebcams.com/es/webcam/espana/cantabria/santander/playa-del-sardinero.html",
+      "cobertura": "exacta"
+    }
   },
   {
     "nombre": "La Magdalena",
@@ -519,7 +575,11 @@
     "parkingDescripcion": "Más de 100 plazas",
     "bus": "Interurbano (Santander-San Vicente de la Barquera)",
     "hospitalDistancia": 35,
-    "submarinismo": false
+    "submarinismo": false,
+    "webcam": {
+      "url": "https://www.camaramar.com/webcam/san-vicente-de-la-barquera-playa-de-meron",
+      "cobertura": "exacta"
+    }
   },
   {
     "nombre": "Oyambre",
@@ -548,7 +608,11 @@
     "parkingDescripcion": "Menos de 50 plazas",
     "bus": "Interurbano",
     "hospitalDistancia": 25,
-    "submarinismo": false
+    "submarinismo": false,
+    "webcam": {
+      "url": "https://www.hispacams.com/webcams/san-vicente-de-la-barquera-oyambre-playa-de-oyambre-pajaro-amarillo/",
+      "cobertura": "exacta"
+    }
   },
   {
     "nombre": "Amio",
@@ -607,6 +671,10 @@
     "parkingDescripcion": "Más de 100 plazas",
     "bus": "Interurbano (Torrelavega-Suances)",
     "hospitalDistancia": 15,
-    "submarinismo": false
+    "submarinismo": false,
+    "webcam": {
+      "url": "https://www.camaramar.com/webcam/tagle-playa-de-la-tablia",
+      "cobertura": "exacta"
+    }
   }
 ]

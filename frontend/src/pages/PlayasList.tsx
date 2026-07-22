@@ -6,9 +6,9 @@ import {
   IonSpinner,
   IonIcon,
 } from '@ionic/react';
-import { searchOutline, locateOutline } from 'ionicons/icons';
+import { searchOutline, locateOutline, videocamOutline } from 'ionicons/icons';
 import { Playa, FeaturedBeach, getPlayas, getFeaturedBeaches } from '../services/api';
-import { getActiveAttrs, emojiCielo } from '../utils/beachHelpers';
+import { getActiveAttrs, emojiCielo, webcamDisponible } from '../utils/beachHelpers';
 import { useUserLocation } from '../hooks/useUserLocation';
 import { useIdioma } from '../i18n/IdiomaContext';
 import BottomNavBar from '../components/BottomNavBar';
@@ -275,14 +275,25 @@ const PlayasList: React.FC = () => {
                     ) : null;
                   })()}
                 </div>
-                {playa.idCruzRoja !== 0 && playa.idCruzRoja !== undefined && (
-                  <div className="beach-card-badges">
-                    <span className="badge-vigilada" aria-label={t('lista.vigiladaAria')}>
-                      <span className="badge-vigilada-dot" aria-hidden="true" />
-                      {t('comun.cruzRoja')}
-                    </span>
-                  </div>
-                )}
+                {(() => {
+                  const vigilada = playa.idCruzRoja !== 0 && playa.idCruzRoja !== undefined;
+                  const conWebcam = webcamDisponible(playa.webcam);
+                  return vigilada || conWebcam ? (
+                    <div className="beach-card-badges">
+                      {vigilada && (
+                        <span className="badge-vigilada" aria-label={t('lista.vigiladaAria')}>
+                          <span className="badge-vigilada-dot" aria-hidden="true" />
+                          {t('comun.cruzRoja')}
+                        </span>
+                      )}
+                      {conWebcam && (
+                        <span className="badge-webcam" aria-label={t('lista.webcamAria')}>
+                          <IonIcon icon={videocamOutline} aria-hidden="true" />
+                        </span>
+                      )}
+                    </div>
+                  ) : null;
+                })()}
                 <span className="beach-card-arrow" aria-hidden="true">&#8250;</span>
               </div>
               );

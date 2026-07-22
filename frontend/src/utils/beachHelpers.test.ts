@@ -6,6 +6,8 @@ import {
   esLluviaActiva,
   horaLocalMadrid,
   lluviaPrevista,
+  claveCoberturaWebcam,
+  webcamDisponible,
 } from './beachHelpers';
 
 // Durante la temporada de baño, Madrid es CEST (UTC+2): UTC + 2h = hora Madrid.
@@ -116,6 +118,24 @@ describe('esInfoReciente', () => {
 
   it('true (lenient) si el ISO no parsea', () => {
     expect(esInfoReciente('no-es-fecha', ahora)).toBe(true);
+  });
+});
+
+describe('webcamDisponible', () => {
+  it('true solo si hay webcam y no está desactivada', () => {
+    expect(webcamDisponible({ estado: 'activa' })).toBe(true);
+    expect(webcamDisponible({})).toBe(true);
+    expect(webcamDisponible({ estado: 'desactivada' })).toBe(false);
+    expect(webcamDisponible(null)).toBe(false);
+    expect(webcamDisponible(undefined)).toBe(false);
+  });
+});
+
+describe('claveCoberturaWebcam', () => {
+  it('mapea cada cobertura a su clave i18n', () => {
+    expect(claveCoberturaWebcam('exacta')).toBe('webcam.enDirecto');
+    expect(claveCoberturaWebcam('compartida')).toBe('webcam.vistaPanoramica');
+    expect(claveCoberturaWebcam('cercana')).toBe('webcam.cercana');
   });
 });
 

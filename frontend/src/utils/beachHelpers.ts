@@ -15,6 +15,7 @@ import {
   bodyOutline,
 } from 'ionicons/icons';
 import type { TraducirFn } from '../i18n/IdiomaContext';
+import type { ClaveTexto } from '../i18n/es';
 
 export function limpiarTexto(texto: string | null | undefined): string {
   if (!texto) return '';
@@ -126,6 +127,32 @@ export function estadoBandera(
     : true;
   if (isFlagAvailable(cruzRoja) && fresca) return 'color';
   return 'sinDatos';
+}
+
+/** ¿La playa tiene una webcam mostrable? (existe y no está desactivada). */
+export function webcamDisponible(
+  webcam?: { estado?: 'activa' | 'desactivada' } | null
+): boolean {
+  return !!webcam && webcam.estado !== 'desactivada';
+}
+
+export type CoberturaWebcam = 'exacta' | 'compartida' | 'cercana';
+
+/**
+ * Clave i18n del título/etiqueta de una webcam según su cobertura. La etiqueta es
+ * la señal honesta al usuario: una cámara compartida o cercana NUNCA se presenta
+ * como exacta. Devuelve una `ClaveTexto` para pasarla a `t()`.
+ */
+export function claveCoberturaWebcam(cobertura: CoberturaWebcam): ClaveTexto {
+  switch (cobertura) {
+    case 'compartida':
+      return 'webcam.vistaPanoramica';
+    case 'cercana':
+      return 'webcam.cercana';
+    case 'exacta':
+    default:
+      return 'webcam.enDirecto';
+  }
 }
 
 /**
