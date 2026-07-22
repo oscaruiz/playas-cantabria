@@ -5,6 +5,13 @@ name: Scrape Cruz Roja flags
 # (En Render el scrape en vivo da 403 por el WAF F5; esto lo desacopla.)
 
 on:
+  # Al desplegar (push a main) refrescamos las banderas para que producción no
+  # tenga que esperar al siguiente disparo del cron. Fuera de horario de vigilancia
+  # el scrape devuelve "No hay información" y scrape-flags.ts NO sobrescribe (0
+  # banderas con color), así que es seguro. El auto-commit lleva "[skip ci]", que
+  # GitHub respeta para no reencadenar este workflow (sin bucle).
+  push:
+    branches: [main]
   schedule:
     # Cruz Roja solo iza bandera en horario de vigilancia (11:30–19:30 Madrid, a
     # diario). Scrapear antes de las 11:30 captura "No hay información" para todas;
