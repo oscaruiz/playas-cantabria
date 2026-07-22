@@ -13,12 +13,12 @@ import {
   PlayaDetalle as PlayaDetalleData,
   DiaPrediccionDTO,
   HalfDayDTO,
+  PrediccionDia,
 } from '../services/api';
 import BottomNavBar from '../components/BottomNavBar';
 import SelectorIdioma from '../components/SelectorIdioma';
 import './PlayaDetalle.css';
 import {
-  limpiarTexto,
   flagColorClass,
   estadoBandera,
   capitalizar,
@@ -190,13 +190,16 @@ function windSpeedLevel(text: string): number {
   return 1; // default: light animation
 }
 
-/** CSS animation duration (seconds) per wind level. Level 0 = paused. */
-const WIND_DURATIONS = [0, 4, 2, 1, 0.5];
+/**
+ * Duración (segundos) de la animación por nivel de viento. Nivel 0 (calma) no
+ * se para del todo: gira muy lento para que el molino se vea "vivo" y no roto.
+ */
+const WIND_DURATIONS = [7, 4, 2, 1, 0.5];
 
 const WindTurbine: React.FC<{ level: number; label: string }> = ({ level, label }) => {
   const { t } = useIdioma();
   const duration = WIND_DURATIONS[level] ?? 2;
-  const paused = level === 0;
+  const paused = false;
 
   return (
     <div className="wind-turbine-wrap">
@@ -308,6 +311,90 @@ const ForecastHero: React.FC<{
         {oleaje && <WavesIndicator label={traducirTextoApi(oleaje, idioma)} />}
       </div>
     </div>
+  );
+};
+
+// ---- Clima Hero (playas sin ficha AEMET: mismo estilo, datos de `clima`) ----
+
+/**
+ * Nivel UV (etiqueta traducible) derivado del índice, escala OMS. OpenWeather
+ * solo da el número, así que sintetizamos la etiqueta para que `DailyStats`
+ * muestre "10 — Muy alto" como en las playas con ficha AEMET. Claves alineadas
+ * con `MAPA_UV` de `i18n/apiText.ts`.
+ */
+function nivelUVDesdeIndice(uv: number): string {
+  if (uv <= 2) return 'Bajo';
+  if (uv <= 5) return 'Medio';
+  if (uv <= 7) return 'Alto';
+  if (uv <= 10) return 'Muy alto';
+  return 'Extremo';
+}
+
+/**
+ * Adapta un día de `clima` (OpenWeather) al shape que consume `ForecastHero`.
+ * Solo interesa el titular (cielo/temp/agua/viento/oleaje); no hay desglose
+ * mañana/tarde ni avisos, así que ambos medios días llevan el mismo resumen.
+ * `esHoy`: sin máxima diaria en OpenWeather, la temp principal de hoy es la
+ * observación real (`temperaturaActual`), así que dejamos `temperaturaMaxima`
+ * a null para no pintar una línea "Máx" duplicada.
+ */
+function climaDiaAPrediccion(d: PrediccionDia, fecha: string, esHoy: boolean): DiaPrediccionDTO {
+  const medio: HalfDayDTO = { cielo: d.summary, iconoCielo: null, viento: d.wind, oleaje: d.waves };
+  return {
+    fecha,
+    manana: medio,
+    tarde: medio,
+    temperaturaMaxima: esHoy ? null : d.temperature,
+    sensacionTermica: d.sensation,
+    temperaturaAgua: d.waterTemperature,
+    indiceUV: d.uvIndex ?? null,
+    nivelUV: d.uvIndex != null ? nivelUVDesdeIndice(d.uvIndex) : null,
+    aviso: null,
+  };
+}
+
+/**
+ * Cabecera meteorológica para playas SIN ficha AEMET (`prediccionCompleta`
+ * nula, p. ej. código sintético). Reutiliza el hero con selector Hoy/Mañana a
+ * partir de `clima`, omitiendo el desglose "Previsión AEMET" y las mareas, que
+ * esta fuente no aporta.
+ */
+const ClimaHero: React.FC<{
+  clima: NonNullable<PlayaDetalleData['clima']>;
+  temperaturaActual?: number | null;
+  tiempoActual?: PlayaDetalleData['tiempoActual'];
+}> = ({ clima, temperaturaActual, tiempoActual }) => {
+  const [diaSel, setDiaSel] = useState(0);
+
+  const hoy = new Date();
+  const isoConOffset = (dias: number): string => {
+    const d = new Date(hoy);
+    d.setDate(hoy.getDate() + dias);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
+
+  const dias = [
+    { clima: clima.hoy, fecha: isoConOffset(0), esHoy: true },
+    ...(clima.manana ? [{ clima: clima.manana, fecha: isoConOffset(1), esHoy: false }] : []),
+  ];
+  const sel = Math.min(diaSel, dias.length - 1);
+  const actual = dias[sel];
+  const dia = climaDiaAPrediccion(actual.clima, actual.fecha, actual.esHoy);
+
+  return (
+    <>
+      {dias.length > 1 && (
+        <DaySelector fechas={dias.map((d) => d.fecha)} selectedDay={sel} onSelect={setDiaSel} />
+      )}
+      <div className="detail-card prevision-panel">
+        <ForecastHero
+          dia={dia}
+          climaActual={actual.esHoy ? temperaturaActual : undefined}
+          tiempoActual={actual.esHoy ? tiempoActual : undefined}
+        />
+        <DailyStats dia={dia} embedded />
+      </div>
+    </>
   );
 };
 
@@ -485,99 +572,6 @@ const MetadataFooter: React.FC<{
       {zonaAvisos && <span>{t('detalle.zonaAvisos', { zona: zonaAvisos })}</span>}
       {zonaAvisos && elaboracion && <span> &middot; </span>}
       {elaboracion && <span>{elaboracion}</span>}
-    </div>
-  );
-};
-
-// ---- Legacy WeatherCard (fallback when no prediccionCompleta) ----
-
-interface WeatherCardProps {
-  title: string;
-  subtitle?: string;
-  clima: PlayaDetalleData['clima'];
-  day: 'hoy' | 'manana';
-  defaultExpanded?: boolean;
-}
-
-const WeatherCard: React.FC<WeatherCardProps> = ({
-  title,
-  subtitle,
-  clima,
-  day,
-  defaultExpanded = true,
-}) => {
-  const { t, idioma } = useIdioma();
-  const [expanded, setExpanded] = useState(defaultExpanded);
-  const contentId = `weather-content-${day}`;
-  if (!clima) return null;
-  const data = clima[day];
-  if (!data) return null;
-
-  return (
-    <div className="detail-disclosure">
-      <div
-        className="card-header"
-        onClick={() => setExpanded((v) => !v)}
-        role="button"
-        tabIndex={0}
-        aria-expanded={expanded}
-        aria-controls={contentId}
-        aria-label={`${expanded ? t('detalle.contraer') : t('detalle.expandir')} ${title}`}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            setExpanded((v) => !v);
-          }
-        }}
-      >
-        <div>
-          <div className="card-header-title">
-            {title}
-            {subtitle && <span className="card-header-subtitle"> &middot; {subtitle}</span>}
-          </div>
-        </div>
-        <span className={`card-header-chevron ${expanded ? 'open' : ''}`} aria-hidden="true">&#9662;</span>
-      </div>
-
-      {expanded && (
-        <div className="card-body card-body-enter" id={contentId}>
-          <div className="weather-rows">
-            <div className="weather-row">
-              <span className="weather-row-label">
-                <span className="weather-row-icon" aria-hidden="true">{emojiCielo(data.summary)}</span>
-                {t('detalle.cielo')}
-              </span>
-              <span className="weather-row-value">{traducirTextoApi(limpiarTexto(data.summary), idioma)}</span>
-            </div>
-            <div className="weather-row">
-              <span className="weather-row-label">{t('detalle.temperatura')}</span>
-              <span className="weather-row-value">{data.temperature} &#176;C</span>
-            </div>
-            <div className="weather-row">
-              <span className="weather-row-label">{t('detalle.agua')}</span>
-              <span className="weather-row-value">{data.waterTemperature} &#176;C</span>
-            </div>
-            <div className="weather-row">
-              <span className="weather-row-label">{t('detalle.sensacion')}</span>
-              <span className="weather-row-value">{traducirTextoApi(limpiarTexto(data.sensation), idioma)}</span>
-            </div>
-            <div className="weather-row">
-              <span className="weather-row-label">{t('detalle.viento')}</span>
-              <span className="weather-row-value">{traducirTextoApi(limpiarTexto(data.wind), idioma)}</span>
-            </div>
-            <div className="weather-row">
-              <span className="weather-row-label">{t('detalle.oleaje')}</span>
-              <span className="weather-row-value">{traducirTextoApi(limpiarTexto(data.waves), idioma)}</span>
-            </div>
-            {data.uvIndex !== undefined && (
-              <div className="weather-row">
-                <span className="weather-row-label">{t('detalle.indiceUV')}</span>
-                <span className="weather-row-value">{data.uvIndex}</span>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 };
@@ -859,29 +853,13 @@ const PlayaDetallePage: React.FC = () => {
                     />
                   )}
                 </>
-              ) : (
-                <>
-                  <WeatherCard
-                    title={t('fecha.hoy')}
-                    clima={datos.clima}
-                    day="hoy"
-                    defaultExpanded={true}
-                  />
-                  <WeatherCard
-                    title={t('fecha.manana')}
-                    clima={datos.clima}
-                    day="manana"
-                    defaultExpanded={false}
-                  />
-                  {pred?.mareas?.[0] && (
-                    <TidesSection
-                      marea={pred.mareas[0]}
-                      fuenteMareas={pred.fuenteMareas}
-                      isToday={true}
-                    />
-                  )}
-                </>
-              )}
+              ) : datos.clima ? (
+                <ClimaHero
+                  clima={datos.clima}
+                  temperaturaActual={datos.temperaturaActual}
+                  tiempoActual={datos.tiempoActual}
+                />
+              ) : null}
               </div>
 
               <div className="detail-col detail-col--info">
