@@ -111,6 +111,7 @@ export const es = {
   // ---- Detalle de playa ----
   'detalle.titulo': 'Detalle',
   'detalle.volver': 'Volver',
+  'detalle.puntuacion': 'Puntuación de hoy',
   'detalle.cargando': 'Cargando datos de la playa...',
   'detalle.errorCarga': 'No se pudo cargar el detalle de la playa',
   'detalle.comoLlegar': 'Cómo llegar',

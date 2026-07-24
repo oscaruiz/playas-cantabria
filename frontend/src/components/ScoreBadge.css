@@ -1,0 +1,48 @@
+.score-badge {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 1px;
+  flex-shrink: 0;
+  line-height: 1;
+  border-radius: 999px;
+  font-variant-numeric: tabular-nums;
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 600;
+  color: var(--score-color, var(--ion-color-primary));
+  background: var(--score-bg, transparent);
+  border: 1.5px solid var(--score-color, var(--ion-color-primary));
+}
+
+/* Tramos de color */
+.score-badge--alta {
+  --score-color: var(--playa-flag-green);
+  --score-bg: color-mix(in srgb, var(--playa-flag-green) 12%, transparent);
+}
+.score-badge--media {
+  --score-color: var(--playa-flag-yellow);
+  --score-bg: color-mix(in srgb, var(--playa-flag-yellow) 14%, transparent);
+}
+.score-badge--baja {
+  --score-color: var(--playa-flag-red);
+  --score-bg: color-mix(in srgb, var(--playa-flag-red) 12%, transparent);
+}
+
+/* Tamaño pequeño (tarjetas de lista / cerca de ti) */
+.score-badge--sm {
+  min-width: 30px;
+  padding: 3px 7px;
+  font-size: 0.9rem;
+}
+
+/* Tamaño grande (cabecera del detalle) */
+.score-badge--lg {
+  padding: 8px 14px;
+  font-size: 1.7rem;
+}
+.score-badge--lg .score-badge-max {
+  font-size: 0.72rem;
+  font-weight: 600;
+  opacity: 0.75;
+  margin-left: 1px;
+}

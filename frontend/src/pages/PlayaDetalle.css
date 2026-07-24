@@ -117,6 +117,49 @@
   margin-bottom: 14px;
 }
 
+/* Tarjeta de puntuación (valoración del ranking) — clara sobre el hero oscuro */
+.pd-score-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 12px;
+  padding: 12px 14px;
+  background: var(--playa-card-bg);
+  border: 1px solid var(--playa-border);
+  border-radius: 14px;
+}
+
+.pd-score-text {
+  min-width: 0;
+  flex: 1;
+}
+
+.pd-score-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+  color: var(--playa-text-muted);
+  margin: 0;
+}
+
+.pd-score-reason {
+  font-size: 0.95rem;
+  color: var(--playa-text);
+  margin: 3px 0 0;
+  line-height: 1.4;
+}
+
+.pd-score-caveat {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.82rem;
+  color: var(--playa-flag-red);
+  margin: 6px 0 0;
+  line-height: 1.35;
+}
+
 .hero-directions-link {
   display: inline-flex;
   align-items: center;

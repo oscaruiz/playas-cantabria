@@ -1,4 +1,4 @@
-import { traducirTextoApi, claveBandera, claveEstadoBandera, claveNivelVientoMs } from './apiText';
+import { traducirTextoApi, razonLegible, claveBandera, claveEstadoBandera, claveNivelVientoMs } from './apiText';
 import { traducirNombreDiaApi, formatearFechaCorta } from './fechas';
 
 describe('traducirTextoApi', () => {
@@ -39,6 +39,22 @@ describe('traducirTextoApi', () => {
   it('gestiona null/undefined', () => {
     expect(traducirTextoApi(null, 'en')).toBe('');
     expect(traducirTextoApi(undefined, 'es')).toBe('');
+  });
+});
+
+describe('razonLegible', () => {
+  it('antepone "viento" a flojo/fuerte sueltos', () => {
+    expect(razonLegible('Sol, 24°, flojo, bandera verde')).toBe('Sol, 24°, viento flojo, bandera verde');
+    expect(razonLegible('Bandera roja, fuerte')).toBe('Bandera roja, viento fuerte');
+  });
+
+  it('no duplica "viento" si ya está delante', () => {
+    expect(razonLegible('viento fuerte')).toBe('viento fuerte');
+    expect(razonLegible('viento flojo del norte')).toBe('viento flojo del norte');
+  });
+
+  it('deja intactas las razones sin flojo/fuerte', () => {
+    expect(razonLegible('Sol, 24°, sin viento, bandera verde')).toBe('Sol, 24°, sin viento, bandera verde');
   });
 });
 

@@ -218,6 +218,15 @@ export function traducirTextoApi(texto: string | null | undefined, idioma: Idiom
     .join(', ');
 }
 
+/**
+ * Antepone "viento" a "flojo/fuerte" en la razón cruda del ranking, para que se lea
+ * "viento flojo" en vez de "flojo". Opera sobre el español del API, SIEMPRE antes de
+ * traducir con traducirTextoApi.
+ */
+export function razonLegible(razonRanking: string): string {
+  return razonRanking.replace(/(?<!viento )\b(flojo|fuerte)\b/i, 'viento $1');
+}
+
 /** Clave de diccionario para la bandera de Cruz Roja (sustituye a flagDisplayText). */
 export function claveBandera(bandera?: string): ClaveTexto {
   const b = bandera?.toLowerCase() || '';

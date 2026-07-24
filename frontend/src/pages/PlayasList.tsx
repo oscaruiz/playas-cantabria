@@ -11,6 +11,8 @@ import { Playa, FeaturedBeach, getPlayas, getFeaturedBeaches } from '../services
 import { getActiveAttrs, emojiCielo, webcamDisponible, coincidePlaya } from '../utils/beachHelpers';
 import { useUserLocation } from '../hooks/useUserLocation';
 import { useIdioma } from '../i18n/IdiomaContext';
+import { traducirTextoApi, razonLegible } from '../i18n/apiText';
+import ScoreBadge from '../components/ScoreBadge';
 import BottomNavBar from '../components/BottomNavBar';
 import SelectorIdioma from '../components/SelectorIdioma';
 import { useHistory } from 'react-router-dom';
@@ -36,7 +38,7 @@ const PlayasList: React.FC = () => {
   const [filtro, setFiltro] = useState('');
   const [orden, setOrden] = useState<OrdenMode>('az');
   const [error, setError] = useState(false);
-  const { t, tPlural } = useIdioma();
+  const { t, tPlural, idioma } = useIdioma();
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeIdx, setActiveIdx] = useState(-1);
   const { userLocation } = useUserLocation();
@@ -269,7 +271,13 @@ const PlayasList: React.FC = () => {
                       </div>
                     ) : null;
                   })()}
+                  {weather?.razonRanking && (
+                    <p className="beach-card-reason">
+                      {traducirTextoApi(razonLegible(weather.razonRanking), idioma)}
+                    </p>
+                  )}
                 </div>
+                {weather && <ScoreBadge puntuacion={weather.puntuacion} />}
                 {(() => {
                   const vigilada = playa.idCruzRoja !== 0 && playa.idCruzRoja !== undefined;
                   const conWebcam = webcamDisponible(playa.webcam);

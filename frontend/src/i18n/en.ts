@@ -109,6 +109,7 @@ export const en = {
   // ---- Detalle de playa ----
   'detalle.titulo': 'Detail',
   'detalle.volver': 'Back',
+  'detalle.puntuacion': "Today's score",
   'detalle.cargando': 'Loading beach data...',
   'detalle.errorCarga': 'Could not load beach details',
   'detalle.comoLlegar': 'Directions',

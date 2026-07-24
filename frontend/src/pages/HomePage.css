@@ -497,6 +497,17 @@
   font-variant-numeric: tabular-nums;
 }
 
+.hp-nearest-reason {
+  font-size: 0.75rem;
+  color: var(--playa-text-muted);
+  margin: 3px 0 0;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .hp-nearest-arrow {
   color: var(--playa-text-muted);
   font-size: 1.1rem;

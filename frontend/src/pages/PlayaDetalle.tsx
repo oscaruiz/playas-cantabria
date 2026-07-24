@@ -6,10 +6,12 @@ import {
   IonSpinner,
   IonIcon,
 } from '@ionic/react';
-import { chevronBackOutline, navigateOutline, mapOutline, videocamOutline } from 'ionicons/icons';
+import { chevronBackOutline, navigateOutline, mapOutline, videocamOutline, warningOutline } from 'ionicons/icons';
 import { useHistory, useParams } from 'react-router-dom';
 import {
   getDetallePlaya,
+  getFeaturedBeaches,
+  FeaturedBeach,
   PlayaDetalle as PlayaDetalleData,
   DiaPrediccionDTO,
   HalfDayDTO,
@@ -32,7 +34,8 @@ import {
 } from '../utils/beachHelpers';
 import { useIdioma, Idioma, TraducirFn } from '../i18n/IdiomaContext';
 import { ClaveTexto } from '../i18n/es';
-import { traducirTextoApi, claveEstadoBandera } from '../i18n/apiText';
+import { traducirTextoApi, razonLegible, claveEstadoBandera } from '../i18n/apiText';
+import ScoreBadge from '../components/ScoreBadge';
 import { nombreDia, traducirNombreDiaApi, formatearFechaCorta } from '../i18n/fechas';
 
 // ---- Helpers ----
@@ -781,14 +784,27 @@ export const WebcamCard: React.FC<{ webcam?: PlayaDetalleData['webcam'] }> = ({ 
 const PlayaDetallePage: React.FC = () => {
   const { codigo } = useParams<{ codigo: string }>();
   const history = useHistory();
-  const { t } = useIdioma();
+  const { t, idioma } = useIdioma();
   const [datos, setDatos] = useState<PlayaDetalleData | null>(null);
   const [error, setError] = useState(false);
+  // Puntuación del ranking (endpoint featured). Se pide EN PARALELO y es opcional:
+  // el detalle se pinta sin esperarla, y si falla/tarda simplemente no se muestra.
+  const [puntuada, setPuntuada] = useState<FeaturedBeach | null>(null);
 
   useEffect(() => {
     getDetallePlaya(codigo)
       .then(setDatos)
       .catch(() => setError(true));
+  }, [codigo]);
+
+  useEffect(() => {
+    let activo = true;
+    getFeaturedBeaches()
+      .then((res) => {
+        if (activo) setPuntuada(res.resumenTodas.find((b) => b.codigo === codigo) ?? null);
+      })
+      .catch(() => { /* no bloqueante: sin puntuación */ });
+    return () => { activo = false; };
   }, [codigo]);
 
   const [selectedDay, setSelectedDay] = useState(0);
@@ -847,6 +863,26 @@ const PlayaDetallePage: React.FC = () => {
               )}
 
               <FlagBanner cruzRoja={datos.cruzRoja} />
+
+              {puntuada && (
+                <div className="pd-score-card">
+                  <ScoreBadge puntuacion={puntuada.puntuacion} size="lg" />
+                  <div className="pd-score-text">
+                    <p className="pd-score-label">{t('detalle.puntuacion')}</p>
+                    {puntuada.razonRanking && (
+                      <p className="pd-score-reason">
+                        {traducirTextoApi(razonLegible(puntuada.razonRanking), idioma)}
+                      </p>
+                    )}
+                    {puntuada.motivoBaja && (
+                      <p className="pd-score-caveat">
+                        <IonIcon icon={warningOutline} aria-hidden="true" />{' '}
+                        {traducirTextoApi(puntuada.motivoBaja, idioma)}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* DETAIL CONTENT */}

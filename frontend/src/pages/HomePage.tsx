@@ -15,7 +15,8 @@ import { useUserLocation } from '../hooks/useUserLocation';
 import BottomNavBar from '../components/BottomNavBar';
 import SelectorIdioma from '../components/SelectorIdioma';
 import { useIdioma } from '../i18n/IdiomaContext';
-import { traducirTextoApi, claveBandera, claveNivelVientoMs } from '../i18n/apiText';
+import { traducirTextoApi, razonLegible, claveBandera, claveNivelVientoMs } from '../i18n/apiText';
+import ScoreBadge from '../components/ScoreBadge';
 import './HomePage.css';
 
 // ---- Helpers ----
@@ -26,19 +27,13 @@ function averageTemp(playas: FeaturedBeach[]): number | null {
   return Math.round(temps.reduce((a, b) => a + b, 0) / temps.length);
 }
 
-// Antepone "viento" a "flojo/fuerte" — opera sobre el español crudo
-// del API, SIEMPRE antes de traducir con traducirTextoApi
-function razonLegible(razonRanking: string): string {
-  return razonRanking.replace(/(?<!viento )\b(flojo|fuerte)\b/i, 'viento $1');
-}
-
 // ---- Sub-components ----
 
 const NearestCard: React.FC<{
-  beach: { nombre: string; municipio: string; distKm: number };
+  beach: FeaturedBeach & { distKm: number };
   onClick: () => void;
 }> = ({ beach, onClick }) => {
-  const { t } = useIdioma();
+  const { t, idioma } = useIdioma();
   return (
     <div
       className="hp-nearest-card"
@@ -56,7 +51,11 @@ const NearestCard: React.FC<{
       <div className="hp-nearest-info">
         <p className="hp-nearest-name">{beach.nombre}</p>
         <p className="hp-nearest-sub">{beach.municipio} &middot; {t('comun.aKm', { km: Math.round(beach.distKm) })}</p>
+        {beach.razonRanking && (
+          <p className="hp-nearest-reason">{traducirTextoApi(razonLegible(beach.razonRanking), idioma)}</p>
+        )}
       </div>
+      <ScoreBadge puntuacion={beach.puntuacion} />
       <span className="hp-nearest-arrow" aria-hidden="true">&#8250;</span>
     </div>
   );
