@@ -1,6 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { Beach, Webcam } from '../../domain/entities/Beach';
+import { Beach, Webcam, CruzRojaStation, BeachSector } from '../../domain/entities/Beach';
 import { BeachRepository } from '../../domain/ports/BeachRepository';
 import { InMemoryCache, CacheKeys } from '../cache/InMemoryCache';
 
@@ -23,7 +23,10 @@ type RawBeach = {
   codigo: string;
   lat: number;
   lon: number;
-  idCruzRoja: number;
+  idCruzRoja?: number;
+  cruzRojaStations?: Array<{ id?: number; nombreFuente: string }>;
+  alias?: string[];
+  sectores?: BeachSector[];
   sinAemet?: boolean;
   atributos?: RawBeachAttributes;
   longitud?: number;
@@ -71,6 +74,15 @@ export class JsonBeachRepository implements BeachRepository {
   }
 
   private mapToEntity(r: RawBeach): Beach {
+    const stations: CruzRojaStation[] | undefined = r.cruzRojaStations?.map((s) => ({
+      ...(typeof s.id === 'number' ? { id: s.id } : {}),
+      nombreFuente: s.nombreFuente,
+    }));
+
+    // redCrossId de compatibilidad: el explícito, o el del primer puesto con id.
+    const derivedFromStations = stations?.find((s) => typeof s.id === 'number' && s.id > 0)?.id;
+    const redCrossId = r.idCruzRoja && r.idCruzRoja > 0 ? r.idCruzRoja : derivedFromStations ?? 0;
+
     return {
       id: r.codigo,
       name: r.nombre,
@@ -78,7 +90,10 @@ export class JsonBeachRepository implements BeachRepository {
       aemetCode: r.codigo,
       latitude: r.lat,
       longitude: r.lon,
-      redCrossId: r.idCruzRoja || 0,
+      redCrossId,
+      ...(stations && stations.length > 0 ? { cruzRojaStations: stations } : {}),
+      ...(r.alias && r.alias.length > 0 ? { alias: r.alias } : {}),
+      ...(r.sectores && r.sectores.length > 0 ? { sectores: r.sectores } : {}),
       sinAemet: r.sinAemet ?? undefined,
       attributes: r.atributos ?? undefined,
       lengthM: r.longitud,

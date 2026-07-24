@@ -24,6 +24,27 @@ export interface Webcam {
   estado?: 'activa' | 'desactivada';
 }
 
+/**
+ * Un puesto de Cruz Roja. Una playa física puede tener 0, 1 o varios puestos
+ * (p. ej. Berria, Trengandín, Loredo). Cada puesto conserva su nombre e id de
+ * origen para resolverlo hacia su playa canónica y agregar sus banderas.
+ */
+export interface CruzRojaStation {
+  /** Id del puesto en Cruz Roja. Ausente/undefined = id no verificado todavía. */
+  id?: number;
+  /** Nombre del puesto tal cual aparece en Cruz Roja (alias operativo). */
+  nombreFuente: string;
+}
+
+/**
+ * Sector diferenciado de una playa (p. ej. Somocuevas Oriental/Occidental,
+ * Langre La Grande/La Pequeña). Metadato: NO se suman longitudes entre sectores.
+ */
+export interface BeachSector {
+  nombre: string;
+  longitud?: number;
+}
+
 export interface Beach {
   /** Internal beach id: we’ll use the AEMET `codigo` from the static JSON. */
   id: string;
@@ -32,8 +53,23 @@ export interface Beach {
   aemetCode: string;
   latitude: number;
   longitude: number;
-  /** Red Cross beach id; 0 or undefined means “no Red Cross record”. */
+  /**
+   * Red Cross beach id; 0 or undefined means “no Red Cross record”.
+   * Sigue siendo la fuente para las 20 playas legadas y para consumidores de una
+   * sola bandera (featured). En playas con varios puestos, el repositorio lo
+   * deriva del primer puesto con id conocido.
+   */
   redCrossId?: number;
+  /**
+   * Puestos de Cruz Roja de esta playa física (0, 1 o varios). Cuando existe y
+   * trae ids, las banderas se agregan con una regla conservadora (la más
+   * restrictiva). Complementa `redCrossId` sin romper compatibilidad.
+   */
+  cruzRojaStations?: CruzRojaStation[];
+  /** Nombres alternativos/topónimos/sectores para búsqueda y resolución de nombres. */
+  alias?: string[];
+  /** Sectores diferenciados (metadato). No se suman longitudes entre sectores. */
+  sectores?: BeachSector[];
   /** true si la playa no tiene ficha de previsión en AEMET (solo tiempo actual por coordenadas). */
   sinAemet?: boolean;
   attributes?: BeachAttributes;

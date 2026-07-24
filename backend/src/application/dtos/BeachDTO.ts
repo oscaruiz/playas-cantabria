@@ -1,5 +1,5 @@
 import { WeatherSource } from '../../domain/entities/Weather';
-import { Webcam } from '../../domain/entities/Beach';
+import { Webcam, CruzRojaStation, BeachSector } from '../../domain/entities/Beach';
 
 export interface WeatherDTO {
   source: WeatherSource;
@@ -37,6 +37,12 @@ export interface BeachDTO {
   lat: number;
   lon: number;
   idCruzRoja: number;
+  /** Puestos de Cruz Roja (0, 1 o varios). Presente solo en playas multi-puesto. */
+  cruzRojaStations?: CruzRojaStation[];
+  /** Nombres alternativos/topónimos para búsqueda. */
+  alias?: string[];
+  /** Sectores diferenciados (metadato; no se suman longitudes). */
+  sectores?: BeachSector[];
   sinAemet?: boolean;
   atributos?: BeachAttributesDTO;
   longitud?: number;

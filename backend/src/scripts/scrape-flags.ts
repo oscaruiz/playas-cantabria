@@ -77,10 +77,17 @@ async function main() {
   const beaches = JSON.parse(await fs.readFile(path.join(dataDir, 'beaches.json'), 'utf-8')) as Array<{
     nombre: string;
     idCruzRoja?: number;
+    cruzRojaStations?: Array<{ id?: number; nombreFuente: string }>;
   }>;
 
+  // Recolecta ids de la playa única (idCruzRoja) Y de todos los puestos
+  // (cruzRojaStations) de las playas multi-puesto.
   const ids = Array.from(
-    new Set(beaches.map((b) => b.idCruzRoja).filter((x): x is number => typeof x === 'number' && x > 0))
+    new Set(
+      beaches
+        .flatMap((b) => [b.idCruzRoja, ...(b.cruzRojaStations ?? []).map((s) => s.id)])
+        .filter((x): x is number => typeof x === 'number' && x > 0)
+    )
   );
 
   const flags: Record<string, StoredFlag> = {};

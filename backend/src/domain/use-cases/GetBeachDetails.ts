@@ -6,6 +6,7 @@ import { BeachRepository } from '../ports/BeachRepository';
 import { WeatherProvider } from '../ports/WeatherProvider';
 import { FlagProvider } from '../ports/FlagProvider';
 import { TidesProvider } from '../ports/TidesProvider';
+import { resolveFlagForStations } from '../services/flagAggregation';
 
 export interface BeachDetails {
   beach: Beach;
@@ -44,7 +45,7 @@ export class GetBeachDetails {
 
     const [weather, flag, tideInfo] = await Promise.all([
       this.getWeatherConsistent(beach.latitude, beach.longitude),
-      this.getFlagSafe(beach.redCrossId),
+      this.getFlagForBeach(beach),
       this.getTidesSafe(beach.latitude, beach.longitude),
     ]);
 
@@ -65,6 +66,17 @@ export class GetBeachDetails {
         return null;
       }
     }
+  }
+
+  /**
+   * Bandera de la playa. Si tiene varios puestos de Cruz Roja (con id conocido),
+   * consulta todos en paralelo y agrega con la regla conservadora (la más
+   * restrictiva). Si no, usa el único `redCrossId` (camino de las 20 legadas).
+   */
+  private getFlagForBeach(beach: Beach): Promise<FlagStatus | null> {
+    return resolveFlagForStations(beach.redCrossId, beach.cruzRojaStations, (id) =>
+      this.getFlagSafe(id),
+    );
   }
 
   private async getFlagSafe(redCrossId?: number): Promise<FlagStatus | null> {

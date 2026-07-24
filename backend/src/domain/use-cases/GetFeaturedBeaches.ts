@@ -7,6 +7,7 @@ import { buildRainForecastSignal } from './RainForecast';
 import { BeachRepository } from '../ports/BeachRepository';
 import { WeatherProvider } from '../ports/WeatherProvider';
 import { FlagProvider } from '../ports/FlagProvider';
+import { resolveFlagForStations } from '../services/flagAggregation';
 import { InMemoryCache, CacheKeys } from '../../infrastructure/cache/InMemoryCache';
 import { Config } from '../../infrastructure/config/config';
 import { AemetBeachForecastProvider, AemetBeachForecast } from '../../infrastructure/providers/AemetBeachForecastProvider';
@@ -128,8 +129,10 @@ export class GetFeaturedBeaches {
   }> {
     const [weather, flag, enrichment, rain] = await Promise.all([
       this.getWeatherRace(beach.latitude, beach.longitude),
-      this.getFlagSafe(beach.redCrossId),
-      this.getForecastEnrichment(beach.aemetCode),
+      this.getFlagForBeach(beach),
+      // Las playas sin ficha AEMET (código sintético) no deben provocar una
+      // llamada AEMET que siempre daría 404: se omite la enriquecedora.
+      beach.sinAemet ? Promise.resolve(null) : this.getForecastEnrichment(beach.aemetCode),
       this.getRainSafe(beach.latitude, beach.longitude),
     ]);
 
@@ -158,6 +161,13 @@ export class GetFeaturedBeaches {
         return null;
       }
     }
+  }
+
+  /** Bandera de la playa: agrega varios puestos si los hay, o usa el id único. */
+  private getFlagForBeach(beach: Beach): Promise<FlagStatus | null> {
+    return resolveFlagForStations(beach.redCrossId, beach.cruzRojaStations, (id) =>
+      this.getFlagSafe(id),
+    );
   }
 
   private async getFlagSafe(redCrossId?: number): Promise<FlagStatus | null> {
