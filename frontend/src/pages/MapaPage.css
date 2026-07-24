@@ -362,6 +362,45 @@
 }
 
 /* --- Leyenda (overlay sobre el mapa) --- */
+/* Botón "localizarme" (estilo Google Maps): esquina inferior derecha */
+.mapa-locate-btn {
+  position: absolute;
+  right: 12px;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 68px);
+  z-index: 500;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid var(--playa-border);
+  background: var(--playa-foam);
+  color: var(--ion-color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(18, 36, 44, 0.22);
+  -webkit-tap-highlight-color: transparent;
+}
+.mapa-locate-btn ion-icon {
+  font-size: 1.35rem;
+}
+.mapa-locate-btn ion-spinner {
+  width: 20px;
+  height: 20px;
+}
+.mapa-locate-btn:active {
+  transform: scale(0.94);
+}
+@media (hover: hover) {
+  .mapa-locate-btn:hover {
+    background: var(--playa-ocean-light);
+  }
+}
+.mapa-locate-btn--denied {
+  color: var(--playa-text-muted);
+}
+
 .mapa-leyenda {
   position: absolute;
   left: 12px;

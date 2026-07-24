@@ -3,10 +3,11 @@ import {
   IonContent,
   IonFooter,
   IonIcon,
+  IonSpinner,
   useIonViewDidEnter,
   useIonViewWillLeave,
 } from '@ionic/react';
-import { videocamOutline } from 'ionicons/icons';
+import { videocamOutline, locateOutline } from 'ionicons/icons';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L, { Map as LeafletMap, DivIcon } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -75,7 +76,8 @@ function getFallbackIcon(numero: number): DivIcon {
 const MapaPage: React.FC = () => {
   const [playas, setPlayas] = useState<Playa[]>([]);
   const [weatherMap, setWeatherMap] = useState<Map<string, FeaturedBeach>>(new Map());
-  const { userLocation } = useUserLocation();
+  const { userLocation, locationLoading, locationDenied, retryLocation } = useUserLocation();
+  const [locateRequested, setLocateRequested] = useState(false);
   const mapRef = useRef<LeafletMap | null>(null);
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
   const history = useHistory();
@@ -141,6 +143,28 @@ const MapaPage: React.FC = () => {
       }
     }
   }, [location.search, playas]);
+
+  // Cuando llega la ubicación tras pulsar "localizarme", centrar el mapa en ella.
+  useEffect(() => {
+    if (locateRequested && userLocation && mapRef.current) {
+      mapRef.current.flyTo(userLocation, 14, { duration: 0.8 });
+      setLocateRequested(false);
+    }
+  }, [locateRequested, userLocation]);
+
+  // Si el usuario deniega el permiso, dejar de esperar (para el spinner del botón).
+  useEffect(() => {
+    if (locationDenied) setLocateRequested(false);
+  }, [locationDenied]);
+
+  const handleLocate = () => {
+    if (userLocation && mapRef.current) {
+      mapRef.current.flyTo(userLocation, 14, { duration: 0.8 });
+    } else {
+      setLocateRequested(true);
+      retryLocation();
+    }
+  };
 
   useIonViewWillLeave(() => {
     if (mapRef.current) mapRef.current.closePopup();
@@ -259,6 +283,20 @@ const MapaPage: React.FC = () => {
               </Marker>
             )}
           </MapContainer>
+
+          <button
+            type="button"
+            className={`mapa-locate-btn${locationDenied ? ' mapa-locate-btn--denied' : ''}`}
+            onClick={handleLocate}
+            aria-label={t('mapa.localizarme')}
+            title={t('mapa.localizarme')}
+          >
+            {locateRequested && locationLoading ? (
+              <IonSpinner name="crescent" />
+            ) : (
+              <IonIcon icon={locateOutline} aria-hidden="true" />
+            )}
+          </button>
 
           <div className="mapa-leyenda">
             <span className="mapa-leyenda-item">

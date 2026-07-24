@@ -81,6 +81,7 @@ export const en = {
   'mapa.webcamDisponible': 'Webcam available',
   'mapa.verDetalles': 'View details',
   'mapa.tuUbicacion': 'Your current location',
+  'mapa.localizarme': 'Locate me',
   'mapa.banderaRoja': 'Red flag',
   'mapa.vientoFuerteKmh': 'Strong wind ({kmh} km/h)',
   'mapa.leyendaBuenas': 'Good conditions',
