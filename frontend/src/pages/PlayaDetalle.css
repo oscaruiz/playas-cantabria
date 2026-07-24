@@ -118,15 +118,36 @@
 }
 
 /* Tarjeta de puntuación (valoración del ranking) — clara sobre el hero oscuro */
+.pd-score-block {
+  margin-top: 12px;
+}
+
 .pd-score-card {
   display: flex;
   align-items: center;
   gap: 14px;
-  margin-top: 12px;
   padding: 12px 14px;
   background: var(--playa-card-bg);
   border: 1px solid var(--playa-border);
   border-radius: 14px;
+}
+
+/* La tarjeta es un botón que despliega la explicación */
+.pd-score-card--btn {
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+.pd-score-card--btn:active {
+  opacity: 0.75;
+}
+@media (hover: hover) {
+  .pd-score-card--btn:hover {
+    border-color: var(--ion-color-primary);
+  }
 }
 
 .pd-score-text {
@@ -135,12 +156,62 @@
 }
 
 .pd-score-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-weight: 700;
   color: var(--playa-text-muted);
   margin: 0;
+}
+
+.pd-score-help {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--ion-color-primary);
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 600;
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+.pd-score-chevron {
+  font-size: 0.9rem;
+  transition: transform 0.2s ease;
+}
+.pd-score-chevron.open {
+  transform: rotate(180deg);
+}
+
+/* Panel explicativo desplegable */
+.pd-score-info {
+  margin-top: 8px;
+  padding: 14px 16px;
+  background: var(--playa-card-bg);
+  border: 1px solid var(--playa-border);
+  border-radius: 14px;
+  color: var(--playa-text);
+}
+
+.pd-score-info-intro {
+  font-size: 0.88rem;
+  line-height: 1.45;
+  margin: 0 0 10px;
+}
+
+/* Las filas usan el mismo patrón etiqueta/valor de "Información de la playa"
+   (.beach-info-grid / .beach-info-row) para verse idénticas al resto del detalle. */
+
+.pd-score-info-cierre {
+  font-size: 0.8rem;
+  font-style: italic;
+  color: var(--playa-text-muted);
+  margin: 12px 0 0;
 }
 
 .pd-score-reason {

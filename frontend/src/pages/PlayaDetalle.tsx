@@ -6,7 +6,7 @@ import {
   IonSpinner,
   IonIcon,
 } from '@ionic/react';
-import { chevronBackOutline, navigateOutline, mapOutline, videocamOutline, warningOutline } from 'ionicons/icons';
+import { chevronBackOutline, navigateOutline, mapOutline, videocamOutline, warningOutline, chevronDownOutline } from 'ionicons/icons';
 import { useHistory, useParams } from 'react-router-dom';
 import {
   getDetallePlaya,
@@ -781,12 +781,28 @@ export const WebcamCard: React.FC<{ webcam?: PlayaDetalleData['webcam'] }> = ({ 
 
 // ---- Main Page ----
 
+// Factores del cálculo de la puntuación (grosso modo, sin detalles técnicos),
+// ordenados por el peso aproximado que tienen en la nota. Cada texto es
+// "Concepto: descripción" y se pinta como fila etiqueta/valor (patrón de la
+// sección "Información de la playa").
+const SCORE_ROWS: ClaveTexto[] = [
+  'detalle.scoreInfo.sol',
+  'detalle.scoreInfo.temp',
+  'detalle.scoreInfo.bandera',
+  'detalle.scoreInfo.viento',
+  'detalle.scoreInfo.oleaje',
+  'detalle.scoreInfo.uv',
+  'detalle.scoreInfo.lluvia',
+  'detalle.scoreInfo.peligro',
+];
+
 const PlayaDetallePage: React.FC = () => {
   const { codigo } = useParams<{ codigo: string }>();
   const history = useHistory();
   const { t, idioma } = useIdioma();
   const [datos, setDatos] = useState<PlayaDetalleData | null>(null);
   const [error, setError] = useState(false);
+  const [scoreInfoOpen, setScoreInfoOpen] = useState(false);
   // Puntuación del ranking (endpoint featured). Se pide EN PARALELO y es opcional:
   // el detalle se pinta sin esperarla, y si falla/tarda simplemente no se muestra.
   const [puntuada, setPuntuada] = useState<FeaturedBeach | null>(null);
@@ -865,22 +881,61 @@ const PlayaDetallePage: React.FC = () => {
               <FlagBanner cruzRoja={datos.cruzRoja} />
 
               {puntuada && (
-                <div className="pd-score-card">
-                  <ScoreBadge puntuacion={puntuada.puntuacion} size="lg" />
-                  <div className="pd-score-text">
-                    <p className="pd-score-label">{t('detalle.puntuacion')}</p>
-                    {puntuada.razonRanking && (
-                      <p className="pd-score-reason">
-                        {traducirTextoApi(razonLegible(puntuada.razonRanking), idioma)}
+                <div className="pd-score-block">
+                  <button
+                    type="button"
+                    className="pd-score-card pd-score-card--btn"
+                    onClick={() => setScoreInfoOpen((o) => !o)}
+                    aria-expanded={scoreInfoOpen}
+                    aria-controls="pd-score-info"
+                  >
+                    <ScoreBadge puntuacion={puntuada.puntuacion} size="lg" />
+                    <div className="pd-score-text">
+                      <p className="pd-score-label">
+                        <span>{t('detalle.puntuacion')}</span>
+                        <span className="pd-score-help">
+                          {t('detalle.comoSeCalcula')}
+                          <IonIcon
+                            icon={chevronDownOutline}
+                            className={`pd-score-chevron${scoreInfoOpen ? ' open' : ''}`}
+                            aria-hidden="true"
+                          />
+                        </span>
                       </p>
-                    )}
-                    {puntuada.motivoBaja && (
-                      <p className="pd-score-caveat">
-                        <IonIcon icon={warningOutline} aria-hidden="true" />{' '}
-                        {traducirTextoApi(puntuada.motivoBaja, idioma)}
-                      </p>
-                    )}
-                  </div>
+                      {puntuada.razonRanking && (
+                        <p className="pd-score-reason">
+                          {traducirTextoApi(razonLegible(puntuada.razonRanking), idioma)}
+                        </p>
+                      )}
+                      {puntuada.motivoBaja && (
+                        <p className="pd-score-caveat">
+                          <IonIcon icon={warningOutline} aria-hidden="true" />{' '}
+                          {traducirTextoApi(puntuada.motivoBaja, idioma)}
+                        </p>
+                      )}
+                    </div>
+                  </button>
+
+                  {scoreInfoOpen && (
+                    <div id="pd-score-info" className="pd-score-info">
+                      <p className="pd-score-info-intro">{t('detalle.scoreInfo.intro')}</p>
+                      <div className="beach-info-grid">
+                        {SCORE_ROWS.map((k) => {
+                          const texto = t(k);
+                          const sep = texto.indexOf(':');
+                          const etiqueta = sep >= 0 ? texto.slice(0, sep) : texto;
+                          const valor = sep >= 0 ? texto.slice(sep + 1).trim() : '';
+                          return (
+                            <div className="beach-info-row" key={k}>
+                              <span className="beach-info-label">{etiqueta}</span>
+                              <span className="beach-info-value">{valor}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <p className="pd-score-info-cierre">{t('detalle.scoreInfo.cierre')}</p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
