@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-23T17:54:44.728Z",
+  "generatedAt": "2026-07-23T21:27:32.594Z",
   "flags": {
     "30": {
       "color": "yellow",
@@ -8,7 +8,42 @@
       "coverageTo": "15-09-2026",
       "schedule": "11:30 - 19:30"
     },
+    "31": {
+      "color": "yellow",
+      "message": "Amarilla",
+      "coverageFrom": "12-06-2026",
+      "coverageTo": "15-09-2026",
+      "schedule": "11:30 - 19:30"
+    },
+    "32": {
+      "color": null,
+      "message": "No hay información",
+      "coverageFrom": "12-06-2026",
+      "coverageTo": "15-09-2026",
+      "schedule": "11:30 - 19:30"
+    },
+    "33": {
+      "color": null,
+      "message": "No hay información",
+      "coverageFrom": "12-06-2026",
+      "coverageTo": "15-09-2026",
+      "schedule": "11:30 - 19:30"
+    },
+    "34": {
+      "color": null,
+      "message": "No hay información",
+      "coverageFrom": "12-06-2026",
+      "coverageTo": "15-09-2026",
+      "schedule": "11:30 - 19:30"
+    },
     "35": {
+      "color": "green",
+      "message": "Verde",
+      "coverageFrom": "12-06-2026",
+      "coverageTo": "15-09-2026",
+      "schedule": "11:30 - 19:30"
+    },
+    "36": {
       "color": "green",
       "message": "Verde",
       "coverageFrom": "12-06-2026",
@@ -22,7 +57,49 @@
       "coverageTo": "15-09-2026",
       "schedule": "11:30 - 19:30"
     },
+    "131": {
+      "color": "green",
+      "message": "Verde",
+      "coverageFrom": "12-06-2026",
+      "coverageTo": "15-09-2026",
+      "schedule": "11:30 - 19:30"
+    },
+    "163": {
+      "color": null,
+      "message": "No hay información",
+      "coverageFrom": "12-06-2026",
+      "coverageTo": "15-09-2026",
+      "schedule": "11:30 - 19:30"
+    },
+    "164": {
+      "color": "green",
+      "message": "Verde",
+      "coverageFrom": "12-06-2026",
+      "coverageTo": "15-09-2026",
+      "schedule": "11:30 - 19:30"
+    },
     "278": {
+      "color": "green",
+      "message": "Verde",
+      "coverageFrom": "12-06-2026",
+      "coverageTo": "15-09-2026",
+      "schedule": "11:30 - 19:30"
+    },
+    "279": {
+      "color": "green",
+      "message": "Verde",
+      "coverageFrom": "12-06-2026",
+      "coverageTo": "15-09-2026",
+      "schedule": "11:30 - 19:30"
+    },
+    "280": {
+      "color": "green",
+      "message": "Verde",
+      "coverageFrom": "12-06-2026",
+      "coverageTo": "15-09-2026",
+      "schedule": "11:30 - 19:30"
+    },
+    "282": {
       "color": "green",
       "message": "Verde",
       "coverageFrom": "12-06-2026",
@@ -43,7 +120,49 @@
       "coverageTo": "15-09-2026",
       "schedule": "11:30 - 19:30"
     },
+    "329": {
+      "color": "green",
+      "message": "Verde",
+      "coverageFrom": "12-06-2026",
+      "coverageTo": "15-09-2026",
+      "schedule": "11:30 - 19:30"
+    },
+    "330": {
+      "color": "green",
+      "message": "Verde",
+      "coverageFrom": "12-06-2026",
+      "coverageTo": "15-09-2026",
+      "schedule": "11:30 - 19:30"
+    },
+    "331": {
+      "color": "green",
+      "message": "Verde",
+      "coverageFrom": "12-06-2026",
+      "coverageTo": "15-09-2026",
+      "schedule": "11:30 - 19:30"
+    },
+    "367": {
+      "color": "green",
+      "message": "Verde",
+      "coverageFrom": "12-06-2026",
+      "coverageTo": "15-09-2026",
+      "schedule": "11:30 - 19:30"
+    },
+    "368": {
+      "color": "yellow",
+      "message": "Amarilla",
+      "coverageFrom": "12-06-2026",
+      "coverageTo": "15-09-2026",
+      "schedule": "11:30 - 19:30"
+    },
     "369": {
+      "color": "yellow",
+      "message": "Amarilla",
+      "coverageFrom": "12-06-2026",
+      "coverageTo": "15-09-2026",
+      "schedule": "11:30 - 19:30"
+    },
+    "370": {
       "color": "yellow",
       "message": "Amarilla",
       "coverageFrom": "12-06-2026",
@@ -57,7 +176,49 @@
       "coverageTo": "15-09-2026",
       "schedule": "11:30 - 19:30"
     },
+    "372": {
+      "color": "green",
+      "message": "Verde",
+      "coverageFrom": "12-06-2026",
+      "coverageTo": "15-09-2026",
+      "schedule": "11:30 - 19:30"
+    },
     "373": {
+      "color": "green",
+      "message": "Verde",
+      "coverageFrom": "12-06-2026",
+      "coverageTo": "15-09-2026",
+      "schedule": "11:30 - 19:30"
+    },
+    "374": {
+      "color": "green",
+      "message": "Verde",
+      "coverageFrom": "12-06-2026",
+      "coverageTo": "15-09-2026",
+      "schedule": "11:30 - 19:30"
+    },
+    "375": {
+      "color": "green",
+      "message": "Verde",
+      "coverageFrom": "12-06-2026",
+      "coverageTo": "15-09-2026",
+      "schedule": "11:30 - 19:30"
+    },
+    "376": {
+      "color": "green",
+      "message": "Verde",
+      "coverageFrom": "12-06-2026",
+      "coverageTo": "15-09-2026",
+      "schedule": "11:30 - 19:30"
+    },
+    "469": {
+      "color": "green",
+      "message": "Verde",
+      "coverageFrom": "12-06-2026",
+      "coverageTo": "15-09-2026",
+      "schedule": "11:30 - 19:30"
+    },
+    "471": {
       "color": "green",
       "message": "Verde",
       "coverageFrom": "12-06-2026",
@@ -71,6 +232,90 @@
       "coverageTo": "15-09-2026",
       "schedule": "11:30 - 19:30"
     },
+    "564": {
+      "color": "yellow",
+      "message": "Amarilla",
+      "coverageFrom": "12-06-2026",
+      "coverageTo": "15-09-2026",
+      "schedule": "11:30 - 19:30"
+    },
+    "808": {
+      "color": "green",
+      "message": "Verde",
+      "coverageFrom": "12-06-2026",
+      "coverageTo": "15-09-2026",
+      "schedule": "11:30 - 19:30"
+    },
+    "809": {
+      "color": "green",
+      "message": "Verde",
+      "coverageFrom": "12-06-2026",
+      "coverageTo": "15-09-2026",
+      "schedule": "11:30 - 19:30"
+    },
+    "810": {
+      "color": "green",
+      "message": "Verde",
+      "coverageFrom": "12-06-2026",
+      "coverageTo": "15-09-2026",
+      "schedule": "11:30 - 19:30"
+    },
+    "811": {
+      "color": "green",
+      "message": "Verde",
+      "coverageFrom": "12-06-2026",
+      "coverageTo": "15-09-2026",
+      "schedule": "11:30 - 19:30"
+    },
+    "812": {
+      "color": "green",
+      "message": "Verde",
+      "coverageFrom": "12-06-2026",
+      "coverageTo": "15-09-2026",
+      "schedule": "11:30 - 19:30"
+    },
+    "813": {
+      "color": "green",
+      "message": "Verde",
+      "coverageFrom": "12-06-2026",
+      "coverageTo": "15-09-2026",
+      "schedule": "11:30 - 19:30"
+    },
+    "814": {
+      "color": "green",
+      "message": "Verde",
+      "coverageFrom": "12-06-2026",
+      "coverageTo": "15-09-2026",
+      "schedule": "11:30 - 19:30"
+    },
+    "815": {
+      "color": "green",
+      "message": "Verde",
+      "coverageFrom": "12-06-2026",
+      "coverageTo": "15-09-2026",
+      "schedule": "11:30 - 19:30"
+    },
+    "817": {
+      "color": "yellow",
+      "message": "Amarilla",
+      "coverageFrom": "12-06-2026",
+      "coverageTo": "15-09-2026",
+      "schedule": "11:30 - 19:30"
+    },
+    "818": {
+      "color": "green",
+      "message": "Verde",
+      "coverageFrom": "12-06-2026",
+      "coverageTo": "15-09-2026",
+      "schedule": "11:30 - 19:30"
+    },
+    "820": {
+      "color": "green",
+      "message": "Verde",
+      "coverageFrom": "12-06-2026",
+      "coverageTo": "15-09-2026",
+      "schedule": "11:30 - 19:30"
+    },
     "1014": {
       "color": "yellow",
       "message": "Amarilla",
@@ -78,9 +323,51 @@
       "coverageTo": "15-09-2026",
       "schedule": "11:30 - 19:30"
     },
+    "1031": {
+      "color": "yellow",
+      "message": "Amarilla",
+      "coverageFrom": "12-06-2026",
+      "coverageTo": "15-09-2026",
+      "schedule": "11:30 - 19:30"
+    },
+    "1032": {
+      "color": "red",
+      "message": "Roja",
+      "coverageFrom": "12-06-2026",
+      "coverageTo": "15-09-2026",
+      "schedule": "11:30 - 19:30"
+    },
     "1033": {
       "color": "green",
       "message": "Verde",
+      "coverageFrom": "12-06-2026",
+      "coverageTo": "15-09-2026",
+      "schedule": "11:30 - 19:30"
+    },
+    "1034": {
+      "color": "green",
+      "message": "Verde",
+      "coverageFrom": "12-06-2026",
+      "coverageTo": "15-09-2026",
+      "schedule": "11:30 - 19:30"
+    },
+    "1117": {
+      "color": "green",
+      "message": "Verde",
+      "coverageFrom": "12-06-2026",
+      "coverageTo": "15-09-2026",
+      "schedule": "11:30 - 19:30"
+    },
+    "1118": {
+      "color": "green",
+      "message": "Verde",
+      "coverageFrom": "12-06-2026",
+      "coverageTo": "15-09-2026",
+      "schedule": "11:30 - 19:30"
+    },
+    "1119": {
+      "color": "yellow",
+      "message": "Amarilla",
       "coverageFrom": "12-06-2026",
       "coverageTo": "15-09-2026",
       "schedule": "11:30 - 19:30"
@@ -99,9 +386,93 @@
       "coverageTo": "15-09-2026",
       "schedule": "11:30 - 19:30"
     },
+    "1128": {
+      "color": "green",
+      "message": "Verde",
+      "coverageFrom": "12-06-2026",
+      "coverageTo": "15-09-2026",
+      "schedule": "11:30 - 19:30"
+    },
+    "1198": {
+      "color": "green",
+      "message": "Verde",
+      "coverageFrom": "12-06-2026",
+      "coverageTo": "15-09-2026",
+      "schedule": "11:30 - 19:30"
+    },
+    "1232": {
+      "color": "yellow",
+      "message": "Amarilla",
+      "coverageFrom": "12-06-2026",
+      "coverageTo": "15-09-2026",
+      "schedule": "11:30 - 19:30"
+    },
     "1233": {
       "color": "green",
       "message": "Verde",
+      "coverageFrom": "12-06-2026",
+      "coverageTo": "15-09-2026",
+      "schedule": "11:30 - 19:30"
+    },
+    "1234": {
+      "color": "green",
+      "message": "Verde",
+      "coverageFrom": "12-06-2026",
+      "coverageTo": "15-09-2026",
+      "schedule": "11:30 - 19:30"
+    },
+    "1235": {
+      "color": "green",
+      "message": "Verde",
+      "coverageFrom": "12-06-2026",
+      "coverageTo": "15-09-2026",
+      "schedule": "11:30 - 19:30"
+    },
+    "1236": {
+      "color": "green",
+      "message": "Verde",
+      "coverageFrom": "12-06-2026",
+      "coverageTo": "15-09-2026",
+      "schedule": "11:30 - 19:30"
+    },
+    "1237": {
+      "color": "yellow",
+      "message": "Amarilla",
+      "coverageFrom": "12-06-2026",
+      "coverageTo": "15-09-2026",
+      "schedule": "11:30 - 19:30"
+    },
+    "1238": {
+      "color": "yellow",
+      "message": "Amarilla",
+      "coverageFrom": "12-06-2026",
+      "coverageTo": "15-09-2026",
+      "schedule": "11:30 - 19:30"
+    },
+    "1263": {
+      "color": null,
+      "message": "No hay información",
+      "coverageFrom": "12-06-2026",
+      "coverageTo": "15-09-2026",
+      "schedule": "11:30 - 19:30"
+    },
+    "1276": {
+      "color": "green",
+      "message": "Verde",
+      "coverageFrom": "12-06-2026",
+      "coverageTo": "15-09-2026",
+      "schedule": "11:30 - 19:30"
+    },
+    "1277": {
+      "color": "green",
+      "message": "Verde",
+      "coverageFrom": "12-06-2026",
+      "coverageTo": "15-09-2026",
+      "schedule": "11:30 - 19:30"
+    },
+    "1282": {
+      "color": "yellow",
+      "message": "Amarilla",
       "coverageFrom": "12-06-2026",
       "coverageTo": "15-09-2026",
       "schedule": "11:30 - 19:30"

@@ -5,7 +5,6 @@
     "codigo": "3908503",
     "lat": 43.43553526584305,
     "lon": -4.0427976710155225,
-    "idCruzRoja": 373,
     "atributos": {
       "accesoBanista": true,
       "accesible": true,
@@ -22,7 +21,10 @@
     "anchura": 60,
     "tipoPlaya": "Urbana",
     "arena": "Arena dorada",
-    "acceso": ["A pie", "En coche"],
+    "acceso": [
+      "A pie",
+      "En coche"
+    ],
     "parkingDescripcion": "Más de 100 plazas",
     "bus": "Interurbano",
     "hospitalDistancia": 10,
@@ -30,7 +32,17 @@
     "webcam": {
       "url": "https://www.skylinewebcams.com/en/webcam/espana/cantabria/suances/playa-de-la-concha.html",
       "cobertura": "exacta"
-    }
+    },
+    "cruzRojaStations": [
+      {
+        "id": 373,
+        "nombreFuente": "LA CONCHA I SUANCES"
+      },
+      {
+        "id": 820,
+        "nombreFuente": "LA CONCHA II SUANCES"
+      }
+    ]
   },
   {
     "nombre": "Luaña-Cobreces",
@@ -55,7 +67,9 @@
     "anchura": 70,
     "tipoPlaya": "Semiurbana",
     "arena": "Arena dorada",
-    "acceso": ["En coche"],
+    "acceso": [
+      "En coche"
+    ],
     "parkingDescripcion": "Más de 100 plazas",
     "bus": "Interurbano",
     "hospitalDistancia": 30,
@@ -88,7 +102,10 @@
     "anchura": 40,
     "tipoPlaya": "Semiurbana",
     "arena": "Arena dorada",
-    "acceso": ["A pie", "En coche"],
+    "acceso": [
+      "A pie",
+      "En coche"
+    ],
     "parkingDescripcion": "Menos de 50 plazas",
     "bus": "Interurbano",
     "hospitalDistancia": 30,
@@ -121,7 +138,9 @@
     "anchura": 150,
     "tipoPlaya": "Semiurbana",
     "arena": "Arena dorada",
-    "acceso": ["En coche"],
+    "acceso": [
+      "En coche"
+    ],
     "parkingDescripcion": "Más de 100 plazas",
     "bus": "Interurbano",
     "hospitalDistancia": 30,
@@ -154,7 +173,9 @@
     "anchura": 100,
     "tipoPlaya": "Urbana",
     "arena": "Arena dorada",
-    "acceso": ["A pie"],
+    "acceso": [
+      "A pie"
+    ],
     "parkingDescripcion": "Entre 50 y 100 plazas",
     "bus": "Interurbano",
     "hospitalDistancia": 20,
@@ -187,7 +208,10 @@
     "anchura": 50,
     "tipoPlaya": "Urbana",
     "arena": "Arena oscura",
-    "acceso": ["A pie", "En coche"],
+    "acceso": [
+      "A pie",
+      "En coche"
+    ],
     "parkingDescripcion": "Más de 100 plazas",
     "bus": "Interurbano",
     "hospitalDistancia": 25,
@@ -220,7 +244,10 @@
     "anchura": 40,
     "tipoPlaya": "Urbana",
     "arena": "Arena dorada",
-    "acceso": ["A pie", "En coche"],
+    "acceso": [
+      "A pie",
+      "En coche"
+    ],
     "parkingDescripcion": "Más de 100 plazas",
     "bus": "Interurbano",
     "hospitalDistancia": 30,
@@ -236,7 +263,6 @@
     "codigo": "3903502",
     "lat": 43.41904926443771,
     "lon": -3.437040159832106,
-    "idCruzRoja": 328,
     "atributos": {
       "accesoBanista": true,
       "accesible": true,
@@ -253,7 +279,10 @@
     "anchura": 120,
     "tipoPlaya": "Urbana",
     "arena": "Arena dorada",
-    "acceso": ["A pie", "En coche"],
+    "acceso": [
+      "A pie",
+      "En coche"
+    ],
     "parkingDescripcion": "Más de 100 plazas",
     "bus": "Interurbano (Santander-Laredo)",
     "hospitalDistancia": 1,
@@ -261,7 +290,41 @@
     "webcam": {
       "url": "https://www.hispacams.com/webcams/laredo-playa-regaton-playa-salve/",
       "cobertura": "exacta"
-    }
+    },
+    "cruzRojaStations": [
+      {
+        "id": 328,
+        "nombreFuente": "LA SALVE 1"
+      },
+      {
+        "id": 808,
+        "nombreFuente": "LA SALVE 2"
+      },
+      {
+        "id": 809,
+        "nombreFuente": "LA SALVE 3"
+      },
+      {
+        "id": 810,
+        "nombreFuente": "LA SALVE 4"
+      },
+      {
+        "id": 811,
+        "nombreFuente": "LA SALVE 5"
+      },
+      {
+        "id": 812,
+        "nombreFuente": "LA SALVE 6"
+      },
+      {
+        "id": 813,
+        "nombreFuente": "LA SALVE 7"
+      },
+      {
+        "id": 814,
+        "nombreFuente": "LA SALVE 8"
+      }
+    ]
   },
   {
     "nombre": "Cuchia-Marzan",
@@ -269,7 +332,7 @@
     "codigo": "3904401",
     "lat": 43.43595619518627,
     "lon": -4.0308170936788255,
-    "idCruzRoja": 0,
+    "idCruzRoja": 331,
     "atributos": {
       "accesoBanista": true,
       "accesible": false,
@@ -286,7 +349,9 @@
     "anchura": 40,
     "tipoPlaya": "Dunas",
     "arena": "Arena dorada",
-    "acceso": ["En coche"],
+    "acceso": [
+      "En coche"
+    ],
     "parkingDescripcion": "Más de 100 plazas",
     "bus": "Interurbano",
     "hospitalDistancia": 20,
@@ -298,7 +363,7 @@
     "codigo": "3904405",
     "lat": 43.4391698944411,
     "lon": -3.9726999236382476,
-    "idCruzRoja": 373,
+    "idCruzRoja": 376,
     "atributos": {
       "accesoBanista": true,
       "accesible": false,
@@ -315,7 +380,9 @@
     "anchura": 15,
     "tipoPlaya": "Urbana",
     "arena": "Arena dorada",
-    "acceso": ["En coche"],
+    "acceso": [
+      "En coche"
+    ],
     "parkingDescripcion": "Más de 100 plazas",
     "bus": "Interurbano",
     "hospitalDistancia": 30,
@@ -331,7 +398,6 @@
     "codigo": "3904701",
     "lat": 43.4914462044969,
     "lon": -3.5289174541786283,
-    "idCruzRoja": 1233,
     "atributos": {
       "accesoBanista": true,
       "accesible": true,
@@ -348,7 +414,10 @@
     "anchura": 100,
     "tipoPlaya": "Urbana",
     "arena": "Arena dorada",
-    "acceso": ["A pie", "En coche"],
+    "acceso": [
+      "A pie",
+      "En coche"
+    ],
     "parkingDescripcion": "Más de 100 plazas",
     "bus": "Interurbano",
     "hospitalDistancia": 20,
@@ -356,7 +425,29 @@
     "webcam": {
       "url": "https://worldcam.eu/webcams/europe/spain/34060-noja-playa-de-ris",
       "cobertura": "exacta"
-    }
+    },
+    "alias": [
+      "Joyel",
+      "Suaces"
+    ],
+    "cruzRojaStations": [
+      {
+        "id": 1233,
+        "nombreFuente": "RIS ZONA MURO"
+      },
+      {
+        "id": 1234,
+        "nombreFuente": "RIS ZONA PINEDA"
+      },
+      {
+        "id": 1232,
+        "nombreFuente": "JOYEL"
+      },
+      {
+        "id": 1276,
+        "nombreFuente": "SUACES"
+      }
+    ]
   },
   {
     "nombre": "Valdearenas",
@@ -381,7 +472,9 @@
     "anchura": 50,
     "tipoPlaya": "Dunas",
     "arena": "Arena dorada",
-    "acceso": ["En coche"],
+    "acceso": [
+      "En coche"
+    ],
     "parkingDescripcion": "Más de 100 plazas",
     "bus": "Interurbano",
     "hospitalDistancia": 20,
@@ -397,7 +490,6 @@
     "codigo": "3906102",
     "lat": 43.45839029165217,
     "lon": -3.735182762115226,
-    "idCruzRoja": 369,
     "atributos": {
       "accesoBanista": true,
       "accesible": true,
@@ -414,7 +506,11 @@
     "anchura": 80,
     "tipoPlaya": "Semiurbana",
     "arena": "Arena dorada",
-    "acceso": ["A pie", "En coche", "En barco"],
+    "acceso": [
+      "A pie",
+      "En coche",
+      "En barco"
+    ],
     "parkingDescripcion": "Más de 100 plazas",
     "bus": "Interurbano (Santander-Somo)",
     "hospitalDistancia": 20,
@@ -422,7 +518,21 @@
     "webcam": {
       "url": "https://www.youtube.com/watch?v=bV_ltoX7Jy8",
       "cobertura": "compartida"
-    }
+    },
+    "cruzRojaStations": [
+      {
+        "id": 369,
+        "nombreFuente": "SOMO I"
+      },
+      {
+        "id": 816,
+        "nombreFuente": "SOMO II"
+      },
+      {
+        "id": 817,
+        "nombreFuente": "SOMO III"
+      }
+    ]
   },
   {
     "nombre": "San Juan de la Canal",
@@ -447,7 +557,10 @@
     "anchura": 50,
     "tipoPlaya": "Urbana",
     "arena": "Arena dorada",
-    "acceso": ["A pie", "En coche"],
+    "acceso": [
+      "A pie",
+      "En coche"
+    ],
     "parkingDescripcion": "Menos de 50 plazas",
     "bus": "Interurbano (Santander-Soto de la Marina)",
     "hospitalDistancia": 15,
@@ -463,7 +576,6 @@
     "codigo": "3907506",
     "lat": 43.47711066141211,
     "lon": -3.7870797897346318,
-    "idCruzRoja": 278,
     "atributos": {
       "accesoBanista": true,
       "accesible": true,
@@ -480,7 +592,10 @@
     "anchura": 80,
     "tipoPlaya": "Urbana",
     "arena": "Arena dorada",
-    "acceso": ["A pie", "En coche"],
+    "acceso": [
+      "A pie",
+      "En coche"
+    ],
     "parkingDescripcion": "Entre 50 y 100 plazas",
     "bus": "Urbano",
     "hospitalDistancia": 5,
@@ -488,7 +603,21 @@
     "webcam": {
       "url": "https://www.skylinewebcams.com/es/webcam/espana/cantabria/santander/playa-del-sardinero.html",
       "cobertura": "exacta"
-    }
+    },
+    "cruzRojaStations": [
+      {
+        "id": 278,
+        "nombreFuente": "CASTAÑEDA (SEGUNDA SARDINERO)"
+      },
+      {
+        "id": 280,
+        "nombreFuente": "LA PRIMERA SARDINERO"
+      },
+      {
+        "id": 279,
+        "nombreFuente": "PIQUIO"
+      }
+    ]
   },
   {
     "nombre": "La Magdalena",
@@ -513,7 +642,10 @@
     "anchura": 30,
     "tipoPlaya": "Urbana",
     "arena": "Arena dorada",
-    "acceso": ["A pie", "En coche"],
+    "acceso": [
+      "A pie",
+      "En coche"
+    ],
     "parkingDescripcion": "Menos de 50 plazas",
     "bus": "Urbano",
     "hospitalDistancia": 5,
@@ -525,7 +657,6 @@
     "codigo": "3907902",
     "lat": 43.4408333,
     "lon": -3.445,
-    "idCruzRoja": 1033,
     "atributos": {
       "accesoBanista": true,
       "accesible": false,
@@ -542,11 +673,27 @@
     "anchura": 10,
     "tipoPlaya": "Urbana",
     "arena": "Arena dorada y bolos",
-    "acceso": ["A pie", "En coche"],
+    "acceso": [
+      "A pie",
+      "En coche"
+    ],
     "parkingDescripcion": "Entre 50 y 100 plazas",
     "bus": "Interurbano (Santander-Santoña)",
     "hospitalDistancia": 15,
-    "submarinismo": false
+    "submarinismo": false,
+    "alias": [
+      "La Machina"
+    ],
+    "cruzRojaStations": [
+      {
+        "id": 1033,
+        "nombreFuente": "SAN MARTIN"
+      },
+      {
+        "id": 1034,
+        "nombreFuente": "LA MACHINA"
+      }
+    ]
   },
   {
     "nombre": "El Sable de Merón",
@@ -554,7 +701,6 @@
     "codigo": "3908004",
     "lat": 43.390554164871766,
     "lon": -4.37798552043929,
-    "idCruzRoja": 1127,
     "atributos": {
       "accesoBanista": true,
       "accesible": false,
@@ -571,7 +717,9 @@
     "anchura": 40,
     "tipoPlaya": "Semiurbana",
     "arena": "Arena blanca",
-    "acceso": ["En coche"],
+    "acceso": [
+      "En coche"
+    ],
     "parkingDescripcion": "Más de 100 plazas",
     "bus": "Interurbano (Santander-San Vicente de la Barquera)",
     "hospitalDistancia": 35,
@@ -579,7 +727,20 @@
     "webcam": {
       "url": "https://www.camaramar.com/webcam/san-vicente-de-la-barquera-playa-de-meron",
       "cobertura": "exacta"
-    }
+    },
+    "alias": [
+      "El Rosal"
+    ],
+    "cruzRojaStations": [
+      {
+        "id": 1127,
+        "nombreFuente": "MERON"
+      },
+      {
+        "id": 1118,
+        "nombreFuente": "EL ROSAL"
+      }
+    ]
   },
   {
     "nombre": "Oyambre",
@@ -604,7 +765,9 @@
     "anchura": 40,
     "tipoPlaya": "Montaña",
     "arena": "Arena dorada",
-    "acceso": ["En coche"],
+    "acceso": [
+      "En coche"
+    ],
     "parkingDescripcion": "Menos de 50 plazas",
     "bus": "Interurbano",
     "hospitalDistancia": 25,
@@ -637,7 +800,10 @@
     "anchura": 50,
     "tipoPlaya": "Acantilados",
     "arena": "Arena dorada y grava",
-    "acceso": ["A pie", "En coche"],
+    "acceso": [
+      "A pie",
+      "En coche"
+    ],
     "parkingDescripcion": "Más de 100 plazas",
     "bus": "Interurbano",
     "hospitalDistancia": 40,
@@ -667,7 +833,10 @@
     "anchura": 50,
     "tipoPlaya": "Aislada",
     "arena": "Arena dorada",
-    "acceso": ["A pie", "En coche"],
+    "acceso": [
+      "A pie",
+      "En coche"
+    ],
     "parkingDescripcion": "Más de 100 plazas",
     "bus": "Interurbano (Torrelavega-Suances)",
     "hospitalDistancia": 15,
@@ -676,5 +845,639 @@
       "url": "https://www.camaramar.com/webcam/tagle-playa-de-la-tablia",
       "cobertura": "exacta"
     }
+  },
+  {
+    "nombre": "Bikinis",
+    "municipio": "Santander",
+    "codigo": "3907590",
+    "lat": 43.46737260093111,
+    "lon": -3.7682247161865234,
+    "cruzRojaStations": [
+      {
+        "id": 329,
+        "nombreFuente": "BIKINIS"
+      },
+      {
+        "id": 1198,
+        "nombreFuente": "BIKINIS II"
+      }
+    ],
+    "sinAemet": true,
+    "longitud": 670,
+    "tipoPlaya": "Urbana / semiurbana",
+    "arena": "Arena dorada y fina",
+    "acceso": [
+      "A pie por el recinto de la península de La Magdalena"
+    ]
+  },
+  {
+    "nombre": "El Camello",
+    "municipio": "Santander",
+    "codigo": "3907591",
+    "lat": 43.469677398584786,
+    "lon": -3.7755203247070312,
+    "cruzRojaStations": [
+      {
+        "id": 282,
+        "nombreFuente": "CAMELLO"
+      }
+    ],
+    "sinAemet": true,
+    "longitud": 500,
+    "tipoPlaya": "Urbana",
+    "arena": "Arena dorada y fina",
+    "acceso": [
+      "A pie desde la avenida de la Reina Victoria, hacia La Magdalena"
+    ]
+  },
+  {
+    "nombre": "El Bocal",
+    "municipio": "Santander",
+    "codigo": "3907592",
+    "lat": 43.48821380724025,
+    "lon": -3.825012445449829,
+    "cruzRojaStations": [
+      {
+        "id": 469,
+        "nombreFuente": "EL BOCAL"
+      }
+    ],
+    "sinAemet": true,
+    "longitud": 200,
+    "tipoPlaya": "Acantilado",
+    "arena": "Arena dorada y fina",
+    "acceso": [
+      "Desde Monte; último tramo a pie de aproximadamente 1,2 km"
+    ]
+  },
+  {
+    "nombre": "La Maruca",
+    "municipio": "Santander",
+    "codigo": "3907593",
+    "lat": 43.48102716582023,
+    "lon": -3.8352177743134583,
+    "cruzRojaStations": [
+      {
+        "id": 164,
+        "nombreFuente": "LA MARUCA"
+      }
+    ],
+    "sinAemet": true,
+    "longitud": 120,
+    "tipoPlaya": "Acantilado",
+    "arena": "Arena tostada y fina, con zonas rocosas",
+    "acceso": [
+      "En coche desde Monte",
+      "A pie"
+    ]
+  },
+  {
+    "nombre": "Los Peligros",
+    "municipio": "Santander",
+    "codigo": "3907594",
+    "lat": 43.464880828929545,
+    "lon": -3.7803268432617188,
+    "cruzRojaStations": [
+      {
+        "id": 367,
+        "nombreFuente": "LOS PELIGROS"
+      }
+    ],
+    "sinAemet": true,
+    "longitud": 200,
+    "tipoPlaya": "Urbana / semiurbana",
+    "arena": "Arena dorada y fina",
+    "acceso": [
+      "A pie",
+      "En coche por la zona de la avenida de la Reina Victoria"
+    ]
+  },
+  {
+    "nombre": "Mataleñas",
+    "municipio": "Santander",
+    "codigo": "3907595",
+    "lat": 43.4859175007774,
+    "lon": -3.788158893585205,
+    "cruzRojaStations": [
+      {
+        "id": 131,
+        "nombreFuente": "MATALEÑAS"
+      }
+    ],
+    "sinAemet": true,
+    "atributos": {
+      "accesible": false
+    },
+    "longitud": 230,
+    "tipoPlaya": "Acantilado",
+    "arena": "Arena blanca y fina",
+    "acceso": [
+      "A pie mediante una escalera pronunciada"
+    ]
+  },
+  {
+    "nombre": "Virgen del Mar",
+    "municipio": "Santander",
+    "codigo": "3907596",
+    "lat": 43.47771235710197,
+    "lon": -3.8765430450439453,
+    "cruzRojaStations": [
+      {
+        "id": 36,
+        "nombreFuente": "VIRGEN DEL MAR"
+      }
+    ],
+    "sinAemet": true,
+    "longitud": 380,
+    "tipoPlaya": "Acantilado",
+    "arena": "Arena dorada y fina",
+    "acceso": [
+      "En coche desde San Román de la Llanilla",
+      "A pie"
+    ]
+  },
+  {
+    "nombre": "Canallave",
+    "municipio": "Piélagos",
+    "codigo": "3905290",
+    "lat": 43.45267709127484,
+    "lon": -3.962134072092032,
+    "cruzRojaStations": [
+      {
+        "id": 31,
+        "nombreFuente": "CANALLAVE"
+      }
+    ],
+    "sinAemet": true,
+    "atributos": {
+      "surf": true
+    },
+    "longitud": 840,
+    "tipoPlaya": "Acantilado",
+    "arena": "Arena dorada y fina",
+    "acceso": [
+      "En coche por la carretera S-4643",
+      "A pie"
+    ]
+  },
+  {
+    "nombre": "La Arnía",
+    "municipio": "Piélagos",
+    "codigo": "3905291",
+    "lat": 43.474037586161295,
+    "lon": -3.916025161743164,
+    "cruzRojaStations": [
+      {
+        "id": 33,
+        "nombreFuente": "LA ARNIA"
+      }
+    ],
+    "alias": [
+      "Arnia"
+    ],
+    "sinAemet": true,
+    "longitud": 220,
+    "tipoPlaya": "Montaña",
+    "arena": "Arena dorada y fina",
+    "acceso": [
+      "En coche hasta las proximidades",
+      "Último tramo a pie"
+    ]
+  },
+  {
+    "nombre": "Portio",
+    "municipio": "Piélagos",
+    "codigo": "3905292",
+    "lat": 43.470487171491094,
+    "lon": -3.930530548095703,
+    "cruzRojaStations": [
+      {
+        "id": 32,
+        "nombreFuente": "PORTIO"
+      }
+    ],
+    "sinAemet": true,
+    "longitud": 250,
+    "tipoPlaya": "Urbana",
+    "arena": "Arena dorada y fina",
+    "acceso": [
+      "En coche por la carretera S-463",
+      "A pie"
+    ]
+  },
+  {
+    "nombre": "Somocuevas",
+    "municipio": "Piélagos",
+    "codigo": "3905293",
+    "lat": 43.46961510791184,
+    "lon": -3.9447784423828125,
+    "cruzRojaStations": [
+      {
+        "id": 163,
+        "nombreFuente": "SOMOCUEVAS"
+      }
+    ],
+    "alias": [
+      "Somocuevas Occidental",
+      "Somocuevas Oriental"
+    ],
+    "sinAemet": true,
+    "atributos": {
+      "accesible": false
+    },
+    "tipoPlaya": "Acantilado",
+    "arena": "Arena dorada y fina",
+    "acceso": [
+      "En coche por la carretera S-463",
+      "Descenso a pie desde una cota elevada"
+    ],
+    "sectores": [
+      {
+        "nombre": "Somocuevas Occidental",
+        "longitud": 310
+      },
+      {
+        "nombre": "Somocuevas Oriental",
+        "longitud": 310
+      }
+    ]
+  },
+  {
+    "nombre": "El Puntal",
+    "municipio": "Ribamontán al Mar",
+    "codigo": "3906190",
+    "lat": 43.45721798649288,
+    "lon": -3.7417030334472656,
+    "cruzRojaStations": [
+      {
+        "id": 471,
+        "nombreFuente": "EL PUNTAL I"
+      },
+      {
+        "id": 818,
+        "nombreFuente": "EL PUNTAL II"
+      }
+    ],
+    "sinAemet": true,
+    "longitud": 500,
+    "tipoPlaya": "Dunas / humedal / semiurbana",
+    "arena": "Arena dorada y fina",
+    "acceso": [
+      "A pie, aproximadamente 2 km desde Somo",
+      "En barco desde Santander o Somo"
+    ]
+  },
+  {
+    "nombre": "Galizano",
+    "municipio": "Ribamontán al Mar",
+    "codigo": "3906191",
+    "lat": 43.47961153265875,
+    "lon": -3.674401338537461,
+    "cruzRojaStations": [
+      {
+        "id": 370,
+        "nombreFuente": "GALIZANO"
+      }
+    ],
+    "sinAemet": true,
+    "atributos": {
+      "surf": true
+    },
+    "longitud": 1490,
+    "tipoPlaya": "Montaña / ría",
+    "arena": "Arena dorada y fina",
+    "acceso": [
+      "En coche hasta las proximidades",
+      "A pie"
+    ]
+  },
+  {
+    "nombre": "Langre",
+    "municipio": "Ribamontán al Mar",
+    "codigo": "3906192",
+    "lat": 43.47553243520177,
+    "lon": -3.6893463134765625,
+    "cruzRojaStations": [
+      {
+        "id": 368,
+        "nombreFuente": "LANGRE"
+      }
+    ],
+    "alias": [
+      "Langre La Grande",
+      "Langre La Pequeña"
+    ],
+    "sinAemet": true,
+    "atributos": {
+      "accesible": false,
+      "surf": true
+    },
+    "tipoPlaya": "Acantilado",
+    "arena": "Arena dorada y fina",
+    "acceso": [
+      "A pie mediante escaleras desde la parte alta del acantilado"
+    ],
+    "sectores": [
+      {
+        "nombre": "Langre La Grande"
+      },
+      {
+        "nombre": "Langre La Pequeña"
+      }
+    ]
+  },
+  {
+    "nombre": "Loredo",
+    "municipio": "Ribamontán al Mar",
+    "codigo": "3906193",
+    "lat": 43.46326112204825,
+    "lon": -3.7264251708984375,
+    "cruzRojaStations": [
+      {
+        "id": 330,
+        "nombreFuente": "LOREDO I"
+      },
+      {
+        "id": 815,
+        "nombreFuente": "LOREDO II"
+      },
+      {
+        "id": 1282,
+        "nombreFuente": "LOREDO III"
+      }
+    ],
+    "sinAemet": true,
+    "atributos": {
+      "surf": true
+    },
+    "longitud": 1200,
+    "tipoPlaya": "Dunas / humedal / semiurbana",
+    "arena": "Arena dorada y fina",
+    "acceso": [
+      "En coche por la carretera S-430",
+      "A pie",
+      "En barco hasta Somo y continuación por tierra"
+    ]
+  },
+  {
+    "nombre": "El Cabo / Gerra / Bederna",
+    "municipio": "San Vicente de la Barquera",
+    "codigo": "3908090",
+    "lat": 43.401368300834555,
+    "lon": -4.354877471923828,
+    "cruzRojaStations": [
+      {
+        "id": 1119,
+        "nombreFuente": "BEDERNA - GERRA"
+      },
+      {
+        "id": 1128,
+        "nombreFuente": "EL CABO"
+      }
+    ],
+    "alias": [
+      "Gerra",
+      "El Cabo",
+      "Bederna",
+      "Playa de Gerra"
+    ],
+    "sinAemet": true,
+    "atributos": {
+      "duchas": true,
+      "surf": true
+    },
+    "longitud": 900,
+    "anchura": 20,
+    "tipoPlaya": "Aislada",
+    "arena": "Arena dorada",
+    "acceso": [
+      "A pie",
+      "En coche desde la CA-131 hasta las proximidades"
+    ]
+  },
+  {
+    "nombre": "El Tostadero",
+    "municipio": "San Vicente de la Barquera",
+    "codigo": "3908091",
+    "lat": 43.3862750602921,
+    "lon": -4.387664794921875,
+    "cruzRojaStations": [
+      {
+        "id": 1117,
+        "nombreFuente": "EL TOSTADERO"
+      }
+    ],
+    "sinAemet": true,
+    "longitud": 360,
+    "tipoPlaya": "Semiurbana",
+    "arena": "Arena blanca y fina",
+    "acceso": [
+      "En coche por la N-634 y la S-4832",
+      "A pie"
+    ]
+  },
+  {
+    "nombre": "Berria",
+    "municipio": "Santoña",
+    "codigo": "3907990",
+    "lat": 43.464133277299865,
+    "lon": -3.466358184814453,
+    "cruzRojaStations": [
+      {
+        "id": 564,
+        "nombreFuente": "BERRIA 1 BRUSCO"
+      },
+      {
+        "id": 1031,
+        "nombreFuente": "BERRIA 2 CENTRO (BASE)"
+      },
+      {
+        "id": 1032,
+        "nombreFuente": "BERRIA 3 CAMPING"
+      }
+    ],
+    "sinAemet": true,
+    "atributos": {
+      "socorrismo": true,
+      "surf": true
+    },
+    "longitud": 2200,
+    "tipoPlaya": "Semiurbana",
+    "arena": "Arena blanca y fina",
+    "acceso": [
+      "A pie",
+      "En coche"
+    ]
+  },
+  {
+    "nombre": "Helgueras",
+    "municipio": "Noja",
+    "codigo": "3904790",
+    "lat": 43.4700611,
+    "lon": -3.493238888888889,
+    "cruzRojaStations": [
+      {
+        "id": 1237,
+        "nombreFuente": "HELGUERA"
+      }
+    ],
+    "sinAemet": true,
+    "longitud": 2217,
+    "tipoPlaya": "Rural / dunas",
+    "arena": "Arena dorada y fina",
+    "acceso": [
+      "A pie",
+      "En coche hasta las proximidades"
+    ]
+  },
+  {
+    "nombre": "Trengandín",
+    "municipio": "Noja",
+    "codigo": "3904791",
+    "lat": 43.47696496416688,
+    "lon": -3.5135650634765625,
+    "cruzRojaStations": [
+      {
+        "id": 1235,
+        "nombreFuente": "TRENGANDIN 1 EL BARCO"
+      },
+      {
+        "id": 1236,
+        "nombreFuente": "TRENGANDIN 2 CAMPO FUTBOL"
+      },
+      {
+        "id": 1238,
+        "nombreFuente": "BRUSCO"
+      },
+      {
+        "id": 1277,
+        "nombreFuente": "PASEO DEL BRUSCO"
+      }
+    ],
+    "alias": [
+      "Brusco",
+      "Paseo del Brusco",
+      "Trengandin"
+    ],
+    "sinAemet": true,
+    "atributos": {
+      "duchas": true,
+      "aseos": true,
+      "parking": true,
+      "socorrismo": true,
+      "surf": true
+    },
+    "longitud": 3400,
+    "tipoPlaya": "Semiurbana",
+    "arena": "Arena blanca y fina",
+    "acceso": [
+      "A pie mediante pasarelas",
+      "En coche hasta diversos accesos"
+    ],
+    "parkingDescripcion": "Aparcamiento gratuito y de pago, según zona"
+  },
+  {
+    "nombre": "La Ribera",
+    "municipio": "Suances",
+    "codigo": "3908590",
+    "lat": 43.432071439952786,
+    "lon": -4.03570463029579,
+    "cruzRojaStations": [
+      {
+        "id": 374,
+        "nombreFuente": "LA RIBERA"
+      }
+    ],
+    "sinAemet": true,
+    "longitud": 350
+  },
+  {
+    "nombre": "Los Locos",
+    "municipio": "Suances",
+    "codigo": "3908591",
+    "lat": 43.43772943360433,
+    "lon": -4.047346115112305,
+    "cruzRojaStations": [
+      {
+        "id": 372,
+        "nombreFuente": "LOS LOCOS I"
+      }
+    ],
+    "sinAemet": true,
+    "atributos": {
+      "accesible": false,
+      "surf": true
+    },
+    "longitud": 750,
+    "tipoPlaya": "Acantilado",
+    "arena": "Arena dorada y fina",
+    "acceso": [
+      "A pie mediante escaleras"
+    ]
+  },
+  {
+    "nombre": "Covachos",
+    "municipio": "Santa Cruz de Bezana",
+    "codigo": "3907390",
+    "lat": 43.47243849165285,
+    "lon": -3.911520899338771,
+    "cruzRojaStations": [
+      {
+        "id": 34,
+        "nombreFuente": "COVACHOS"
+      }
+    ],
+    "sinAemet": true,
+    "atributos": {
+      "accesible": false
+    },
+    "longitud": 690,
+    "tipoPlaya": "Acantilado",
+    "arena": "Arena dorada y fina",
+    "acceso": [
+      "En coche hasta las proximidades",
+      "Último tramo a pie"
+    ]
+  },
+  {
+    "nombre": "Usgo",
+    "municipio": "Miengo",
+    "codigo": "3904490",
+    "lat": 43.43955237017744,
+    "lon": -4.000053405761719,
+    "cruzRojaStations": [
+      {
+        "id": 375,
+        "nombreFuente": "USGO"
+      }
+    ],
+    "sinAemet": true,
+    "longitud": 330,
+    "tipoPlaya": "Montaña",
+    "arena": "Arena dorada y fina",
+    "acceso": [
+      "En coche por las carreteras R-67 y S-470",
+      "Acceso final por un camino estrecho"
+    ]
+  },
+  {
+    "nombre": "Punta Parayas",
+    "municipio": "Camargo",
+    "codigo": "3901690",
+    "lat": 43.42156989433291,
+    "lon": -3.8103246688842773,
+    "cruzRojaStations": [
+      {
+        "id": 1263,
+        "nombreFuente": "PUNTA PARAYAS"
+      }
+    ],
+    "sinAemet": true,
+    "longitud": 32,
+    "tipoPlaya": "Urbana / artificial",
+    "arena": "Sustrato de cemento; la ficha oficial la clasifica como playa de arena blanca",
+    "acceso": [
+      "En coche y a pie desde Maliaño"
+    ]
   }
 ]
