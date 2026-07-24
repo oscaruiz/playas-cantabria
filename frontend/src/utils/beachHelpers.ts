@@ -22,6 +22,27 @@ export function limpiarTexto(texto: string | null | undefined): string {
   return texto.replace(/\uFFFD/g, 'e');
 }
 
+/** Normaliza para b\u00FAsqueda: min\u00FAsculas + sin tildes (Arn\u00EDa \u2192 arnia). */
+export function normalizarBusqueda(texto: string): string {
+  return texto.toLowerCase().normalize('NFD').replace(/\p{M}/gu, '');
+}
+
+/**
+ * \u00BFLa playa coincide con el t\u00E9rmino de b\u00FAsqueda? Busca (sin distinguir tildes) en
+ * nombre, municipio y alias, de modo que un nombre can\u00F3nico o un alias (top\u00F3nimo,
+ * sector o nombre de puesto de Cruz Roja) encuentre la playa sin duplicar resultados.
+ */
+export function coincidePlaya(
+  p: { nombre: string; municipio: string; alias?: string[] },
+  termino: string
+): boolean {
+  const t = normalizarBusqueda(termino);
+  if (normalizarBusqueda(p.nombre).includes(t) || normalizarBusqueda(p.municipio).includes(t)) {
+    return true;
+  }
+  return (p.alias ?? []).some((a) => normalizarBusqueda(a).includes(t));
+}
+
 export function flagColorClass(bandera?: string): string {
   const b = bandera?.toLowerCase() || '';
   if (b.includes('roja')) return 'red';

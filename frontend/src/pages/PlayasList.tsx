@@ -8,7 +8,7 @@ import {
 } from '@ionic/react';
 import { searchOutline, locateOutline, videocamOutline } from 'ionicons/icons';
 import { Playa, FeaturedBeach, getPlayas, getFeaturedBeaches } from '../services/api';
-import { getActiveAttrs, emojiCielo, webcamDisponible } from '../utils/beachHelpers';
+import { getActiveAttrs, emojiCielo, webcamDisponible, coincidePlaya } from '../utils/beachHelpers';
 import { useUserLocation } from '../hooks/useUserLocation';
 import { useIdioma } from '../i18n/IdiomaContext';
 import BottomNavBar from '../components/BottomNavBar';
@@ -63,9 +63,8 @@ const PlayasList: React.FC = () => {
 
   const suggestions = useMemo(() => {
     if (!playas || filtro.length < 2) return [];
-    const f = filtro.toLowerCase();
     return playas
-      .filter((p) => p.nombre.toLowerCase().includes(f) || p.municipio.toLowerCase().includes(f))
+      .filter((p) => coincidePlaya(p, filtro))
       .slice(0, 5);
   }, [playas, filtro]);
 
@@ -94,11 +93,7 @@ const PlayasList: React.FC = () => {
 
   const filtradas = useMemo(() => {
     if (!playas) return [];
-    const f = filtro.toLowerCase();
-    const result = playas.filter(
-      (p) =>
-        p.nombre.toLowerCase().includes(f) || p.municipio.toLowerCase().includes(f)
-    );
+    const result = playas.filter((p) => coincidePlaya(p, filtro));
     if (orden === 'cerca' && userLocation) {
       const [uLat, uLon] = userLocation;
       return result.sort((a, b) =>

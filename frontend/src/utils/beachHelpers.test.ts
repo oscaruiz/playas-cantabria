@@ -8,6 +8,8 @@ import {
   lluviaPrevista,
   claveCoberturaWebcam,
   webcamDisponible,
+  coincidePlaya,
+  normalizarBusqueda,
 } from './beachHelpers';
 
 // Durante la temporada de baño, Madrid es CEST (UTC+2): UTC + 2h = hora Madrid.
@@ -222,5 +224,44 @@ describe('lluviaPrevista', () => {
   it('null sin señal de previsión o sin datos', () => {
     expect(lluviaPrevista({ cielo: 'despejado', precipitacionMm: 0, lluvia: { estado: 'sin_lluvia' } })).toBeNull();
     expect(lluviaPrevista(null)).toBeNull();
+  });
+});
+
+describe('normalizarBusqueda', () => {
+  it('minúsculas y sin tildes', () => {
+    expect(normalizarBusqueda('Arnía')).toBe('arnia');
+    expect(normalizarBusqueda('TRENGANDÍN')).toBe('trengandin');
+    expect(normalizarBusqueda('Mataleñas')).toBe('matalenas');
+  });
+});
+
+describe('coincidePlaya — búsqueda por nombre, municipio y alias', () => {
+  const arnia = { nombre: 'La Arnía', municipio: 'Piélagos', alias: ['Arnia'] };
+  const gerra = {
+    nombre: 'El Cabo / Gerra / Bederna',
+    municipio: 'San Vicente de la Barquera',
+    alias: ['Gerra', 'El Cabo', 'Bederna'],
+  };
+
+  it('encuentra por nombre canónico ignorando tildes', () => {
+    expect(coincidePlaya(arnia, 'arnia')).toBe(true);
+    expect(coincidePlaya(arnia, 'Arní')).toBe(true);
+  });
+
+  it('encuentra por municipio', () => {
+    expect(coincidePlaya(arnia, 'piélagos')).toBe(true);
+  });
+
+  it('encuentra por alias (topónimo / puesto)', () => {
+    expect(coincidePlaya(gerra, 'gerra')).toBe(true);
+    expect(coincidePlaya(gerra, 'bederna')).toBe(true);
+  });
+
+  it('no coincide con términos ajenos', () => {
+    expect(coincidePlaya(arnia, 'sardinero')).toBe(false);
+  });
+
+  it('sin alias no rompe', () => {
+    expect(coincidePlaya({ nombre: 'Somo', municipio: 'Ribamontán al Mar' }, 'somo')).toBe(true);
   });
 });

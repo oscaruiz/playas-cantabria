@@ -60,6 +60,16 @@ export interface PlayaAtributos {
   surf?: boolean;
 }
 
+export interface CruzRojaStation {
+  id?: number;
+  nombreFuente: string;
+}
+
+export interface BeachSector {
+  nombre: string;
+  longitud?: number;
+}
+
 export interface Playa {
   nombre: string;
   municipio: string;
@@ -67,6 +77,9 @@ export interface Playa {
   lat: number;
   lon: number;
   idCruzRoja?: number;
+  cruzRojaStations?: CruzRojaStation[];
+  alias?: string[];
+  sectores?: BeachSector[];
   atributos?: PlayaAtributos;
   longitud?: number;
   anchura?: number;
