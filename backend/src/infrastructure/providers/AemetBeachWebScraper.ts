@@ -28,11 +28,17 @@ const TIDES_CACHE_TTL = 43200; // 12 hours — tides are astronomical, barely ch
 // Helpers
 // ---------------------------------------------------------------------------
 
-/** Trim whitespace and non-breaking spaces (\u00a0). */
-function clean(text: string | undefined | null): string | null {
+/**
+ * Trim whitespace y non-breaking spaces (\u00a0). Adem\u00e1s normaliza el centinela
+ * "nd" (no disponible) de AEMET a null: AEMET lo emite en cielo/viento/oleaje/etc.
+ * cuando a\u00fan no ha publicado la previsi\u00f3n del d\u00eda (t\u00edpico a primera hora). Sin esto,
+ * el literal "nd" se colaba a la UI en vez de tratarse como "sin dato".
+ */
+export function clean(text: string | undefined | null): string | null {
   if (text == null) return null;
   const trimmed = text.replace(/\u00a0/g, ' ').trim();
-  return trimmed.length > 0 ? trimmed : null;
+  if (trimmed.length === 0 || trimmed.toLowerCase() === 'nd') return null;
+  return trimmed;
 }
 
 /** Parse a number from text, returning null on NaN. */

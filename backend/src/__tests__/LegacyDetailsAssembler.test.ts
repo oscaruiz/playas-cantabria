@@ -77,6 +77,7 @@ function buildAssembler(opts: {
   forecast: BeachFullForecast | null;
   owCurrent: Weather | (() => Promise<Weather>);
   rain?: RainNowcast | (() => Promise<RainNowcast>);
+  owHalfDays?: Array<{ manana: any; tarde: any }>;
 }) {
   const getDetails = {
     execute: async () => opts.details,
@@ -109,6 +110,7 @@ function buildAssembler(opts: {
     getCloudinessTodayAndTomorrow: async () => {
       throw new Error('skip');
     },
+    getForecastHalfDays: async () => opts.owHalfDays ?? [],
   } as unknown as OpenWeatherWeatherProvider;
 
   const rainNowcast = {
@@ -273,6 +275,41 @@ describe('LegacyDetailsAssembler — coherencia resumen vs desglose y "ahora" re
     expect(result.tiempoActual?.lluvia?.prevista).toBeUndefined();
   });
 
+  it('playa sinAemet: NO llama al scraper ni a la API de playas de AEMET (sin llamadas inválidas)', async () => {
+    let scraperCalls = 0;
+    let playasCalls = 0;
+    const beachSinAemet: Beach = { ...COBRECES, id: '3907595', aemetCode: '3907595', sinAemet: true };
+
+    const getDetails = {
+      execute: async () => ({ beach: beachSinAemet, weather: makeOwCurrent(), flag: null, tides: null }),
+    } as unknown as GetBeachDetails;
+    const aemetScraper = {
+      // getBeachForecast es la petición de red que NO debe dispararse en sinAemet.
+      getBeachForecast: async () => { scraperCalls++; throw new Error('no debería llamarse'); },
+      // getCachedTides es una lectura de caché en memoria (sin red) → permitida.
+      getCachedTides: () => null,
+    } as unknown as AemetBeachWebScraper;
+    const aemetPlayas = {
+      getByBeachCode: async () => { playasCalls++; throw new Error('no debería llamarse'); },
+    } as unknown as AemetBeachForecastProvider;
+    const openWeather = {
+      getCurrentByCoords: async () => makeOwCurrent(),
+      getTomorrowByCoords: async () => { throw new Error('skip'); },
+      getDailyUVIndex: async () => { throw new Error('skip'); },
+      getCloudinessTodayAndTomorrow: async () => { throw new Error('skip'); },
+    } as unknown as OpenWeatherWeatherProvider;
+    const rainNowcast = { execute: async () => { throw new Error('skip'); } } as unknown as GetRainNowcast;
+
+    const assembler = new LegacyDetailsAssembler(getDetails, aemetScraper, aemetPlayas, openWeather, rainNowcast);
+    const result = await assembler.assemble(beachSinAemet.id);
+
+    expect(scraperCalls).toBe(0);
+    expect(playasCalls).toBe(0);
+    // Sigue funcionando: clima por OpenWeather, sin previsión AEMET falseada.
+    expect(result.clima).not.toBeNull();
+    expect(result.prediccionCompleta).toBeNull();
+  });
+
   it('no confía en cielo sintético de AEMET: tiempoActual = null si OpenWeather falla y el hedge es AEMET', async () => {
     const aemetSynthetic = makeOwCurrent({ source: 'AEMET', description: 'Templado y húmedo' });
     const assembler = buildAssembler({
@@ -286,5 +323,52 @@ describe('LegacyDetailsAssembler — coherencia resumen vs desglose y "ahora" re
     const result = await assembler.assemble(COBRECES.id);
 
     expect(result.tiempoActual).toBeNull();
+  });
+
+  it('rellena cielo/viento/oleaje vacíos de AEMET ("nd") con OpenWeather, sin pisar lo que AEMET sí trae', async () => {
+    // AEMET hoy: cielo/viento/oleaje vacíos (nd→null) pero con temperatura real.
+    const forecast: BeachFullForecast = {
+      source: 'AEMET_XML',
+      elaboration: '2026-07-24T06:00:00',
+      warningZone: 'Litoral cántabro',
+      days: [
+        {
+          date: 'viernes 24',
+          morning: half(), // todo null (nd)
+          afternoon: half({ skyDescription: 'Despejado' }), // AEMET SÍ trae la tarde
+          maxTemperatureC: 24,
+          thermalSensation: null,
+          waterTemperatureC: 24,
+          uvIndexMax: 7,
+          uvLevel: 'alto',
+          warning: null,
+        },
+      ],
+      tides: [],
+      tidesSource: null,
+    };
+    const assembler = buildAssembler({
+      details: { beach: COBRECES, weather: makeOwCurrent(), flag: null, tides: null },
+      forecast,
+      owCurrent: makeOwCurrent(),
+      owHalfDays: [
+        {
+          manana: { descripcion: 'nubes dispersas', iconOw: '03d', vientoMs: 8 },
+          tarde: { descripcion: 'cielo claro', iconOw: '01d', vientoMs: 4 },
+        },
+      ],
+    });
+
+    const dia = (await assembler.assemble(COBRECES.id)).prediccionCompleta!.dias[0];
+    // Mañana estaba vacía → se rellena con OpenWeather (capitalizado).
+    expect(dia.manana.cielo).toBe('Nubes dispersas');
+    expect(dia.manana.viento).toBe('moderado'); // guessWind(8 m/s)
+    expect(dia.manana.oleaje).toBe('agitado'); // wavesFromWind(8 m/s = 28.8 km/h)
+    // Tarde la trae AEMET → NO se pisa.
+    expect(dia.tarde.cielo).toBe('Despejado');
+    // Datos numéricos de AEMET intactos.
+    expect(dia.temperaturaMaxima).toBe(24);
+    expect(dia.temperaturaAgua).toBe(24);
+    expect(dia.indiceUV).toBe(7);
   });
 });

@@ -78,6 +78,27 @@ export class LegacyDetailsAssembler {
     return 'fuerte';
   }
 
+  /**
+   * Rellena los campos de un medio día (mañana/tarde) que AEMET dejó vacíos, con la
+   * previsión de OpenWeather. Nunca pisa un valor de AEMET existente. El oleaje se
+   * estima del viento (OpenWeather no da oleaje), coherente con la tarjeta resumen.
+   */
+  private rellenarMedioDia(
+    half: { cielo: string | null; iconoCielo: number | null; viento: string | null; oleaje: string | null },
+    ow?: { descripcion: string | null; iconOw: string | null; vientoMs: number | null },
+  ): { cielo: string | null; iconoCielo: number | null; viento: string | null; oleaje: string | null } {
+    if (!ow) return half;
+    const cielo =
+      half.cielo ??
+      (ow.descripcion ? ow.descripcion.charAt(0).toUpperCase() + ow.descripcion.slice(1) : null);
+    return {
+      cielo,
+      iconoCielo: half.iconoCielo ?? this.legacyIconFromSummary(cielo),
+      viento: half.viento ?? this.guessWind(ow.vientoMs),
+      oleaje: half.oleaje ?? this.wavesFromWind(ow.vientoMs),
+    };
+  }
+
   // -----------------------------------------------------------------------
   // Build clima from scraper forecast (Layer 1)
   // -----------------------------------------------------------------------
@@ -234,12 +255,16 @@ export class LegacyDetailsAssembler {
       // sin señal de lluvia estructurada; el resto del endpoint no se ve afectado
     }
 
-    // Step 2: Try scraper (Layer 1 — richest source)
+    // Step 2: Try scraper (Layer 1 — richest source).
+    // Las playas sin ficha AEMET (código sintético) no deben provocar llamadas
+    // AEMET que siempre darían 404: se omite el scraper y la API de playas.
     let forecast: BeachFullForecast | null = null;
-    try {
-      forecast = await this.aemetScraper.getBeachForecast(details.beach.aemetCode);
-    } catch {
-      // scraper failed, forecast stays null
+    if (!details.beach.sinAemet) {
+      try {
+        forecast = await this.aemetScraper.getBeachForecast(details.beach.aemetCode);
+      } catch {
+        // scraper failed, forecast stays null
+      }
     }
 
     // Step 2.5: Lluvia PREVISTA — previsión numérica Open-Meteo (próximas 6h,
@@ -274,9 +299,9 @@ export class LegacyDetailsAssembler {
       // Layer 1: scraper succeeded
       base.clima = this.buildClimaFromForecast(forecast);
     } else {
-      // Layer 2: AEMET Playas API
+      // Layer 2: AEMET Playas API (se omite en playas sin ficha AEMET)
       try {
-        if (details.beach.aemetCode) {
+        if (details.beach.aemetCode && !details.beach.sinAemet) {
           const playa = await this.aemetPlayas.getByBeachCode(details.beach.aemetCode);
           base.clima = this.buildClimaFromAemetPlayas(playa, base.clima);
         }
@@ -390,6 +415,34 @@ export class LegacyDetailsAssembler {
 
     // Step 8: prediccionCompleta (only when scraper succeeded)
     base.prediccionCompleta = forecast ? this.mapForecastToDTO(forecast) : null;
+
+    // Step 8.5: rellenar cielo/viento/oleaje que AEMET dejó vacíos ("nd") con
+    // OpenWeather (fuente gratuita). Solo se llama si hay huecos → sin coste cuando
+    // AEMET está completa. Oleaje se estima del viento (igual que la tarjeta resumen).
+    if (base.prediccionCompleta && base.prediccionCompleta.dias.length > 0) {
+      const hayHuecos = base.prediccionCompleta.dias.some((d) =>
+        [d.manana, d.tarde].some((h) => h.cielo == null || h.viento == null || h.oleaje == null),
+      );
+      if (hayHuecos) {
+        try {
+          const ow = await this.openWeather.getForecastHalfDays(
+            details.beach.latitude,
+            details.beach.longitude,
+            base.prediccionCompleta.dias.length,
+          );
+          base.prediccionCompleta = {
+            ...base.prediccionCompleta,
+            dias: base.prediccionCompleta.dias.map((d, i) => ({
+              ...d,
+              manana: this.rellenarMedioDia(d.manana, ow[i]?.manana),
+              tarde: this.rellenarMedioDia(d.tarde, ow[i]?.tarde),
+            })),
+          };
+        } catch {
+          // OpenWeather no disponible: la previsión se queda como está (con huecos)
+        }
+      }
+    }
 
     // Step 9: If scraper failed entirely, try to recover tides from long-lived cache
     if (!base.prediccionCompleta) {

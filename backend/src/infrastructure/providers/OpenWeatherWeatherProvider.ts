@@ -5,6 +5,13 @@ import { InMemoryCache, CacheKeys } from '../cache/InMemoryCache';
 import { Config } from '../config/config';
 import { debugLog } from '../utils/debug';
 
+/** Medio día (mañana o tarde) de la previsión OpenWeather, para rellenar huecos de AEMET. */
+export type OwHalf = {
+  descripcion: string | null;
+  iconOw: string | null;
+  vientoMs: number | null;
+};
+
 export class OpenWeatherWeatherProvider implements WeatherProvider {
   private lastRaw: unknown = null;
 
@@ -117,6 +124,76 @@ export class OpenWeatherWeatherProvider implements WeatherProvider {
       } catch (e: any) {
         const name = e?.code || e?.name;
         throw new ProviderError('OpenWeather', e?.message || 'OpenWeather forecast failed', name);
+      }
+    });
+  }
+
+  /**
+   * Previsión por MEDIOS DÍAS (mañana/tarde) para hoy y los próximos días, a partir
+   * del forecast gratuito 5d/3h. Se usa para RELLENAR la previsión de AEMET cuando
+   * ésta viene incompleta ("nd" en cielo/viento). Índice 0 = hoy, 1 = mañana, ...
+   */
+  async getForecastHalfDays(
+    lat: number,
+    lon: number,
+    days = 3
+  ): Promise<Array<{ manana: OwHalf; tarde: OwHalf }>> {
+    const cfg = Config.get();
+    if (!cfg.openWeatherApiKey) throw new ProviderError('OpenWeather', 'Missing OpenWeather API key');
+
+    const cacheKey = `ow:forecast:halfdays:${lat.toFixed(4)},${lon.toFixed(4)}`;
+    return this.cache.getOrSet(cacheKey, cfg.cacheTtlSeconds, async () => {
+      try {
+        const resp = await http.get('https://api.openweathermap.org/data/2.5/forecast', {
+          params: { lat, lon, units: 'metric', lang: 'es', appid: cfg.openWeatherApiKey },
+          timeout: 8000
+        });
+        const list: any[] = Array.isArray(resp.data?.list) ? resp.data.list : [];
+        const tzSec: number = resp.data?.city?.timezone ?? 0;
+        const inLocal = (dtSec: number) => new Date(dtSec * 1000 + tzSec * 1000);
+        const dayKey = (dtSec: number) => inLocal(dtSec).toISOString().slice(0, 10);
+
+        // Agrupar slots por fecha local
+        const byDay = new Map<string, any[]>();
+        for (const it of list) {
+          if (typeof it.dt !== 'number') continue;
+          const k = dayKey(it.dt);
+          (byDay.get(k) ?? byDay.set(k, []).get(k)!).push(it);
+        }
+        const keys = Array.from(byDay.keys()).sort().slice(0, days);
+
+        const toHalf = (slot: any | undefined): OwHalf => {
+          if (!slot) return { descripcion: null, iconOw: null, vientoMs: null };
+          const w0 = Array.isArray(slot.weather) ? slot.weather[0] ?? {} : {};
+          return {
+            descripcion: w0.description ?? null,
+            iconOw: w0.icon ?? null,
+            vientoMs: slot.wind?.speed ?? null
+          };
+        };
+        // Slot más cercano a una hora objetivo dentro de una ventana [min,max).
+        const pick = (slots: any[], target: number, min: number, max: number) => {
+          const inWin = slots.filter((s) => {
+            const h = inLocal(s.dt).getUTCHours();
+            return h >= min && h < max;
+          });
+          const pool = inWin.length ? inWin : slots;
+          return pool.reduce(
+            (best, s) =>
+              best == null || Math.abs(inLocal(s.dt).getUTCHours() - target) < Math.abs(inLocal(best.dt).getUTCHours() - target)
+                ? s
+                : best,
+            null as any
+          );
+        };
+
+        return keys.map((k) => {
+          const slots = byDay.get(k)!;
+          return { manana: toHalf(pick(slots, 11, 6, 14)), tarde: toHalf(pick(slots, 17, 14, 22)) };
+        });
+      } catch (e: any) {
+        const name = e?.code || e?.name;
+        throw new ProviderError('OpenWeather', e?.message || 'OpenWeather half-day forecast failed', name);
       }
     });
   }
