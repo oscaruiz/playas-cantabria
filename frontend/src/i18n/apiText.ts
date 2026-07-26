@@ -16,6 +16,9 @@ import type { EstadoBandera } from '../utils/beachHelpers';
 const MAPA_CIELO: Record<string, string> = {
   'despejado': 'clear',
   'soleado': 'sunny',
+  // Palabras cortas que genera el ranking del backend (razonRanking)
+  'sol': 'sun',
+  'parcialmente soleado': 'partly sunny',
   'poco nuboso': 'partly cloudy',
   'intervalos nubosos': 'cloudy intervals',
   'intervalos nubosos con lluvia escasa': 'cloudy intervals with light rain',

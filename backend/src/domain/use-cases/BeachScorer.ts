@@ -84,7 +84,10 @@ function skyScoreFromDescription(desc: string): number {
   const s = desc.toLowerCase();
   if (/(despejado|soleado)/.test(s)) return 25;
   if (/(poco\s*nuboso|intervalos|parcial|claro)/.test(s)) return 20;
-  if (/(nuboso|nublado|cubierto|muy nuboso)/.test(s)) return 10;
+  // "nubes dispersas" (OpenWeather 03x, 25-50% de cobertura) antes que el
+  // genérico "nubes" (04x, cubierto), que sí es cielo nublado.
+  if (/nubes\s*dispersas/.test(s)) return 16;
+  if (/(nuboso|nublado|cubierto|muy nuboso|nubes)/.test(s)) return 10;
   if (/(lluvia|chubasc|llovizna)/.test(s)) return 0;
   if (/(tormenta|eléctrica|rayos)/.test(s)) return 0;
   if (/(niebla|bruma|neblina)/.test(s)) return 4;
@@ -101,7 +104,8 @@ function skyScoreFromDescription(desc: string): number {
 function skyWordFromDescription(desc: string): string | null {
   const s = desc.toLowerCase();
   if (/(despejado|soleado|cielo claro)/.test(s)) return 'Sol';
-  if (/(poco\s*nuboso|intervalos|parcial|algo de nubes|claro)/.test(s)) return 'Parcialmente soleado';
+  if (/(poco\s*nuboso|intervalos|parcial|algo de nubes|nubes\s*dispersas|claro)/.test(s))
+    return 'Parcialmente soleado';
   if (/(muy nuboso|nuboso|nublado|cubierto|nubes)/.test(s)) return 'Nublado';
   if (/(lluvia|chubasc|llovizna)/.test(s)) return 'Lluvia';
   if (/(tormenta|eléctrica|rayos)/.test(s)) return 'Tormenta';

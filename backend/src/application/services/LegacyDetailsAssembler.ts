@@ -42,8 +42,8 @@ export class LegacyDetailsAssembler {
     if (!summary) return null;
     const s = summary.toLowerCase();
     if (/(despejado|soleado)/.test(s)) return 100;
-    if (/(poco\s*nuboso|intervalos|parcial|claro)/.test(s)) return 110;
-    if (/(nuboso|nublado|muy nuboso|cubierto)/.test(s)) return 120;
+    if (/(poco\s*nuboso|intervalos|parcial|nubes\s*dispersas|claro)/.test(s)) return 110;
+    if (/(nuboso|nublado|muy nuboso|cubierto|nubes)/.test(s)) return 120;
     if (/(llovizna|chubasc|lluvia)/.test(s)) return 200;
     if (/(tormenta|electrica|rayos)/.test(s)) return 210;
     if (/(nieve|nevada|aguanieve)/.test(s)) return 300;

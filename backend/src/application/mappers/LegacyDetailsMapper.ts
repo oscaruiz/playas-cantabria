@@ -254,7 +254,8 @@ export class LegacyDetailsMapper {
     if (source === 'OpenWeather' || source === 'AEMET') {
       if (icon.startsWith('01')) return 100; // ☀️ Despejado
       if (icon.startsWith('02')) return 110; // ⛅ Parcialmente nublado
-      if (icon.startsWith('03') || icon.startsWith('04')) return 120; // ☁️ Nublado
+      if (icon.startsWith('03')) return 110; // ⛅ Nubes dispersas (25-50%)
+      if (icon.startsWith('04')) return 120; // ☁️ Nublado
       if (icon.startsWith('09') || icon.startsWith('10')) return 200; // 🌧️ Lluvia
       if (icon.startsWith('11')) return 210; // ⛈️ Tormenta
       if (icon.startsWith('13')) return 300; // ❄️ Nieve

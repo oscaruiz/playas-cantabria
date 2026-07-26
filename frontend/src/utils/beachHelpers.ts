@@ -275,8 +275,9 @@ export function emojiCielo(cielo: string | null): string {
   if (!cielo) return '\u26C5';
   const c = cielo.toLowerCase();
   if (/despejado|soleado/.test(c)) return '\u2600\uFE0F';
-  if (/poco nuboso|intervalos|parcial|claro/.test(c)) return '\u{1F324}\uFE0F';
-  if (/muy nuboso|cubierto/.test(c)) return '\u2601\uFE0F';
+  if (/poco nuboso|intervalos|parcial|nubes dispersas|algo de nubes|claro/.test(c)) return '\u{1F324}\uFE0F';
+  // "nubes" a secas es el cubierto de OpenWeather (04x); las dispersas ya se han filtrado arriba.
+  if (/muy nuboso|cubierto|nubes/.test(c)) return '\u2601\uFE0F';
   if (/nuboso|nublado/.test(c)) return '\u26C5';
   if (/tormenta|el[eé]ctrica|rayos/.test(c)) return '\u26C8\uFE0F';
   if (/lluvia|llovizna|chubascos/.test(c)) return '\u{1F327}\uFE0F';

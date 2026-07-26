@@ -70,4 +70,17 @@ describe('buildRankingReason — palabra de cielo desde la observación', () => 
     const reason = buildRankingReason(subScores, makeWeather({ source: 'AEMET', description: 'Templado' }), null, makeEnrichment({ summary: 'Despejado' }));
     expect(reason).toContain('Sol'); // palabra derivada de la previsión "Despejado"
   });
+
+  // "nubes dispersas" es el 03x de OpenWeather (25-50% de cobertura): con medio
+  // cielo azul NO es "Nublado". Solo el 04x ("nubes" a secas) lo es.
+  it('"nubes dispersas" es parcialmente soleado, no nublado', () => {
+    const reason = buildRankingReason(subScores, makeWeather({ description: 'nubes dispersas', icon: '03d' }), null, makeEnrichment());
+    expect(reason).toContain('Parcialmente soleado');
+    expect(reason).not.toContain('Nublado');
+  });
+
+  it('"nubes" (cubierto, 04x) sigue siendo nublado', () => {
+    const reason = buildRankingReason({ ...subScores, cielo: 10 }, makeWeather({ description: 'nubes', icon: '04d' }), null, makeEnrichment());
+    expect(reason).toContain('Nublado');
+  });
 });
