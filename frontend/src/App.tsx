@@ -1,4 +1,4 @@
-import React from 'react'; // 👈 ¡IMPORTANTE!
+import React, { lazy, Suspense } from 'react';
 import {
   IonApp,
   IonRouterOutlet,
@@ -7,10 +7,11 @@ import {
 import { IonReactRouter } from '@ionic/react-router';
 import { Route } from 'react-router-dom';
 import HomePage from './pages/HomePage';
-import PlayasList from './pages/PlayasList';
-import PlayaDetallePage from './pages/PlayaDetalle';
-import MapaPage from './pages/MapaPage';
 import { IdiomaProvider } from './i18n/IdiomaContext';
+
+const PlayasList = lazy(() => import('./pages/PlayasList'));
+const PlayaDetallePage = lazy(() => import('./pages/PlayaDetalle'));
+const MapaPage = lazy(() => import('./pages/MapaPage'));
 
 /* Ionic core styles */
 import '@ionic/react/css/core.css';
@@ -29,12 +30,14 @@ const App: React.FC = () => (
   <IonApp>
     <IdiomaProvider>
       <IonReactRouter>
-        <IonRouterOutlet animated={false}>
-          <Route exact path="/" component={HomePage} />
-          <Route exact path="/playas" component={PlayasList} />
-          <Route exact path="/playas/:codigo" component={PlayaDetallePage} />
-          <Route path="/mapa" component={MapaPage} exact />
-        </IonRouterOutlet>
+        <Suspense fallback={<div className="ion-padding" role="status">Cargando…</div>}>
+          <IonRouterOutlet animated={false}>
+            <Route exact path="/" component={HomePage} />
+            <Route exact path="/playas" component={PlayasList} />
+            <Route exact path="/playas/:codigo" component={PlayaDetallePage} />
+            <Route path="/mapa" component={MapaPage} exact />
+          </IonRouterOutlet>
+        </Suspense>
       </IonReactRouter>
     </IdiomaProvider>
   </IonApp>

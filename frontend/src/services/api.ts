@@ -1,7 +1,40 @@
 import { buildApiUrl } from '../config/api';
-import fallbackPlayas from '../data/beaches.json';
 
 const PLAYAS_FALLBACK_TIMEOUT_MS = 2500;
+const CLIENT_CACHE_TTL_MS = 5 * 60 * 1000;
+
+let fallbackPromise: Promise<Playa[]> | null = null;
+let playasRequest: Promise<Playa[]> | null = null;
+let playasCache: { value: Playa[]; expiresAt: number } | null = null;
+
+function loadFallbackPlayas(): Promise<Playa[]> {
+  fallbackPromise ??= import('../data/beaches.json').then(
+    (module) => module.default as Playa[],
+  );
+  return fallbackPromise;
+}
+
+function fetchPlayasOnce(): Promise<Playa[]> {
+  if (playasCache && playasCache.expiresAt > Date.now()) {
+    return Promise.resolve(playasCache.value);
+  }
+  if (playasRequest) return playasRequest;
+
+  playasRequest = fetch(buildApiUrl('/api/beaches'))
+    .then((res) => {
+      if (!res.ok) throw new Error('Error al obtener playas');
+      return res.json() as Promise<Playa[]>;
+    })
+    .then((data) => {
+      playasCache = { value: data, expiresAt: Date.now() + CLIENT_CACHE_TTL_MS };
+      return data;
+    })
+    .finally(() => {
+      playasRequest = null;
+    });
+
+  return playasRequest;
+}
 
 type GetPlayasOptions = {
   timeoutMs?: number;
@@ -13,11 +46,7 @@ export async function getPlayas(options: GetPlayasOptions = {}): Promise<Playa[]
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
   let didReturnFallback = false;
 
-  const fetchPromise = fetch(buildApiUrl('/api/beaches'))
-    .then((res) => {
-      if (!res.ok) throw new Error('Error al obtener playas');
-      return res.json() as Promise<Playa[]>;
-    })
+  const fetchPromise = fetchPlayasOnce()
     .then((data) => {
       if (didReturnFallback) {
         onBackendData?.(data);
@@ -28,14 +57,14 @@ export async function getPlayas(options: GetPlayasOptions = {}): Promise<Playa[]
   const timeoutPromise = new Promise<Playa[]>((resolve) => {
     timeoutId = setTimeout(() => {
       didReturnFallback = true;
-      resolve(fallbackPlayas as Playa[]);
+      void loadFallbackPlayas().then(resolve);
     }, timeoutMs);
   });
 
   try {
     return await Promise.race([fetchPromise, timeoutPromise]);
   } catch (error) {
-    return fallbackPlayas as Playa[];
+    return loadFallbackPlayas();
   } finally {
     if (timeoutId) {
       clearTimeout(timeoutId);
@@ -317,8 +346,29 @@ export interface FeaturedBeachesResponse {
   resumenTodas: FeaturedBeach[];
 }
 
-export async function getFeaturedBeaches(): Promise<FeaturedBeachesResponse> {
-  const res = await fetch(buildApiUrl('/api/beaches/featured'));
-  if (!res.ok) throw new Error('No se pudieron cargar las playas destacadas');
-  return res.json();
+let featuredRequest: Promise<FeaturedBeachesResponse> | null = null;
+let featuredCache: { value: FeaturedBeachesResponse; expiresAt: number } | null = null;
+
+export async function getFeaturedBeaches(
+  options: { force?: boolean } = {},
+): Promise<FeaturedBeachesResponse> {
+  if (!options.force && featuredCache && featuredCache.expiresAt > Date.now()) {
+    return featuredCache.value;
+  }
+  if (featuredRequest) return featuredRequest;
+
+  featuredRequest = fetch(buildApiUrl('/api/beaches/featured'))
+    .then((res) => {
+      if (!res.ok) throw new Error('No se pudieron cargar las playas destacadas');
+      return res.json() as Promise<FeaturedBeachesResponse>;
+    })
+    .then((value) => {
+      featuredCache = { value, expiresAt: Date.now() + CLIENT_CACHE_TTL_MS };
+      return value;
+    })
+    .finally(() => {
+      featuredRequest = null;
+    });
+
+  return featuredRequest;
 }

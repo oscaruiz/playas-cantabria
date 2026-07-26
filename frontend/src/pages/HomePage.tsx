@@ -265,7 +265,7 @@ const HomePage: React.FC = () => {
   const [featured, setFeatured] = useState<FeaturedBeachesResponse | null>(null);
   const [allPlayas, setAllPlayas] = useState<Playa[] | null>(null);
   const [featuredError, setFeaturedError] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [featuredLoading, setFeaturedLoading] = useState(true);
   const { userLocation, locationLoading, locationDenied, locationBlocked, retryLocation } = useUserLocation();
   const history = useHistory();
   const { t } = useIdioma();
@@ -273,24 +273,21 @@ const HomePage: React.FC = () => {
   useEffect(() => {
     let mounted = true;
 
-    Promise.allSettled([
-      getFeaturedBeaches(),
-      getPlayas({ onBackendData: (data) => { if (mounted) setAllPlayas(data); } }),
-    ]).then(([featuredResult, playasResult]) => {
-      if (!mounted) return;
+    getFeaturedBeaches()
+      .then((value) => {
+        if (mounted) setFeatured(value);
+      })
+      .catch(() => {
+        if (mounted) setFeaturedError(true);
+      })
+      .finally(() => {
+        if (mounted) setFeaturedLoading(false);
+      });
 
-      if (featuredResult.status === 'fulfilled') {
-        setFeatured(featuredResult.value);
-      } else {
-        setFeaturedError(true);
-      }
-
-      if (playasResult.status === 'fulfilled') {
-        setAllPlayas(playasResult.value);
-      }
-
-      setLoading(false);
-    });
+    getPlayas({ onBackendData: (data) => { if (mounted) setAllPlayas(data); } })
+      .then((data) => {
+        if (mounted) setAllPlayas(data);
+      });
 
     return () => { mounted = false; };
   }, []);
@@ -359,7 +356,7 @@ const HomePage: React.FC = () => {
 
         <div className="hp-body">
           {/* Loading state */}
-          {loading && (
+          {featuredLoading && (
             <div className="hp-loading">
               <IonSpinner name="crescent" />
               <span>{t('home.buscando')}</span>
@@ -367,7 +364,7 @@ const HomePage: React.FC = () => {
           )}
 
           {/* Location banner */}
-          {!loading && !userLocation && locationDenied && (
+          {!userLocation && locationDenied && (
             locationBlocked ? (
               <div className="hp-location-banner hp-location-banner--blocked">
                 <IonIcon className="hp-location-icon" icon={locationOutline} aria-hidden="true" />
@@ -394,7 +391,7 @@ const HomePage: React.FC = () => {
           )}
 
           {/* Best beach + alternatives */}
-          {!loading && !featuredError && mejorPlaya && (
+          {!featuredLoading && !featuredError && mejorPlaya && (
             <div className="hp-main-grid">
               <section className="hp-section hp-section--hero">
                 <h2 className="section-kicker">{t(userLocation ? 'home.mejorParaTi' : 'home.mejorHoy')}</h2>
@@ -427,7 +424,7 @@ const HomePage: React.FC = () => {
           )}
 
           {/* Featured empty */}
-          {!loading && !featuredError && featured && !mejorPlaya && (
+          {!featuredLoading && !featuredError && featured && !mejorPlaya && (
             <section className="hp-section">
               <h2 className="section-kicker">{t('home.mejorHoy')}</h2>
               <div className="hp-empty-msg">
@@ -437,7 +434,7 @@ const HomePage: React.FC = () => {
           )}
 
           {/* Featured error */}
-          {!loading && featuredError && (
+          {!featuredLoading && featuredError && (
             <section className="hp-section">
               <div className="hp-error-msg">
                 <p>{t('home.errorCondiciones')}</p>
@@ -445,11 +442,11 @@ const HomePage: React.FC = () => {
                   className="hp-retry-btn"
                   onClick={() => {
                     setFeaturedError(false);
-                    setLoading(true);
-                    getFeaturedBeaches()
+                    setFeaturedLoading(true);
+                    getFeaturedBeaches({ force: true })
                       .then(setFeatured)
                       .catch(() => setFeaturedError(true))
-                      .finally(() => setLoading(false));
+                      .finally(() => setFeaturedLoading(false));
                   }}
                 >
                   {t('home.reintentar')}
@@ -459,7 +456,7 @@ const HomePage: React.FC = () => {
           )}
 
           {/* Nearest beaches section */}
-          {!loading && !locationDenied && (locationLoading || nearestBeaches.length > 0) && (
+          {!locationDenied && (locationLoading || nearestBeaches.length > 0) && (
             <section className="hp-section">
               <h2 className="section-kicker">{t('home.cercaDeTi')}</h2>
               <div className="hp-nearest-list">
@@ -489,7 +486,7 @@ const HomePage: React.FC = () => {
           )}
 
           {/* Caution section */}
-          {!loading && cautionBeaches.length > 0 && (
+          {!featuredLoading && cautionBeaches.length > 0 && (
             <section className="hp-section">
               <h2 className="section-kicker">{t('home.revisarAntes')}</h2>
               <div className="hp-caution-list">
