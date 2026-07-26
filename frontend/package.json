@@ -57,6 +57,7 @@
     "sync-beaches": "cp ../backend/data/beaches.json src/data/beaches.json",
     "start": "npm run sync-beaches && react-scripts start",
     "build": "npm run sync-beaches && react-scripts build",
+    "perf:budget": "node scripts/check-bundle-size.mjs",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "lint": "eslint --ext .ts,.tsx src"

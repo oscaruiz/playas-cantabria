@@ -12,7 +12,8 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc -p config/tsconfig.json",
     "start": "node dist/index.js",
-    "test": "vitest",
+    "test": "vitest run src/__tests__",
+    "test:watch": "vitest src/__tests__",
     "test:scraper": "tsx src/scripts/test-scraper.ts",
     "test:full": "tsx src/scripts/test-full-details.ts",
     "scrape:flags": "tsx src/scripts/scrape-flags.ts"
