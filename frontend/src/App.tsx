@@ -1,4 +1,4 @@
-import React, { lazy, Suspense } from 'react';
+import React from 'react';
 import {
   IonApp,
   IonRouterOutlet,
@@ -7,11 +7,16 @@ import {
 import { IonReactRouter } from '@ionic/react-router';
 import { Route } from 'react-router-dom';
 import HomePage from './pages/HomePage';
+import PlayasList from './pages/PlayasList';
+import PlayaDetallePage from './pages/PlayaDetalle';
+import MapaPage from './pages/MapaPage';
 import { IdiomaProvider } from './i18n/IdiomaContext';
 
-const PlayasList = lazy(() => import('./pages/PlayasList'));
-const PlayaDetallePage = lazy(() => import('./pages/PlayaDetalle'));
-const MapaPage = lazy(() => import('./pages/MapaPage'));
+// Las rutas se importan de forma estatica a proposito: IonRouterOutlet mantiene
+// su propia pila de vistas y no tolera que un Suspense ancestro lo desmonte
+// mientras carga un chunk. Al remontarse, el ViewStacks de IonReactRouter (que
+// vive por encima) queda apuntando a nodos muertos y la navegacion se rompe con
+// pantalla en blanco. Para dividir el bundle, hacerlo DENTRO de una pagina.
 
 /* Ionic core styles */
 import '@ionic/react/css/core.css';
@@ -30,14 +35,12 @@ const App: React.FC = () => (
   <IonApp>
     <IdiomaProvider>
       <IonReactRouter>
-        <Suspense fallback={<div className="ion-padding" role="status">Cargando…</div>}>
-          <IonRouterOutlet animated={false}>
-            <Route exact path="/" component={HomePage} />
-            <Route exact path="/playas" component={PlayasList} />
-            <Route exact path="/playas/:codigo" component={PlayaDetallePage} />
-            <Route path="/mapa" component={MapaPage} exact />
-          </IonRouterOutlet>
-        </Suspense>
+        <IonRouterOutlet animated={false}>
+          <Route exact path="/" component={HomePage} />
+          <Route exact path="/playas" component={PlayasList} />
+          <Route exact path="/playas/:codigo" component={PlayaDetallePage} />
+          <Route path="/mapa" component={MapaPage} exact />
+        </IonRouterOutlet>
       </IonReactRouter>
     </IdiomaProvider>
   </IonApp>
