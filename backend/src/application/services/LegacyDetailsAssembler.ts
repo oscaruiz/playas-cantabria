@@ -14,6 +14,8 @@ import { GetRainNowcast } from '../../domain/use-cases/GetRainNowcast';
 import { buildRainForecastSignal, textosRestantesHoy } from '../../domain/use-cases/RainForecast';
 import type { RainNowcast } from '../../domain/entities/RainNowcast';
 import type { BeachFullForecast } from '../../domain/entities/BeachForecast';
+import { CacheKeys, InMemoryCache } from '../../infrastructure/cache/InMemoryCache';
+import { Config } from '../../infrastructure/config/config';
 
 /**
  * Legacy details assembler — fallback chain:
@@ -29,6 +31,7 @@ export class LegacyDetailsAssembler {
     private readonly aemetPlayas: AemetBeachForecastProvider,
     private readonly openWeather: OpenWeatherWeatherProvider,
     private readonly rainNowcast: GetRainNowcast,
+    private readonly cache?: InMemoryCache,
   ) {}
 
   // -----------------------------------------------------------------------
@@ -215,19 +218,42 @@ export class LegacyDetailsAssembler {
   // -----------------------------------------------------------------------
 
   async assemble(beachId: string): Promise<LegacyDetailsDTO> {
+    if (!this.cache) return this.assembleFresh(beachId);
+
+    return this.cache.getOrSetStale(
+      CacheKeys.detailsByBeachId(beachId),
+      Config.detailsFreshTtlSeconds(),
+      Config.detailsStaleTtlSeconds(),
+      () => this.assembleFresh(beachId),
+    );
+  }
+
+  private async assembleFresh(beachId: string): Promise<LegacyDetailsDTO> {
     // Step 1: Base data from use-case (hedged weather + Cruz Roja flag)
     const details = await this.getDetails.execute(beachId);
     let base = LegacyDetailsMapper.toDTO(details);
+    const currentPromise = this.openWeather
+      .getCurrentByCoords(details.beach.latitude, details.beach.longitude)
+      .catch(() => null);
+    const rainPromise = this.rainNowcast
+      .execute(details.beach.latitude, details.beach.longitude)
+      .catch(() => null);
+    const forecastPromise = details.beach.sinAemet
+      ? Promise.resolve(null)
+      : this.aemetScraper
+          .getBeachForecast(details.beach.aemetCode)
+          .catch(() => null);
+    const tomorrowPromise = this.openWeather
+      .getTomorrowByCoords(details.beach.latitude, details.beach.longitude)
+      .catch(() => null);
 
     // Step 1.5: "Ahora" en tiempo real para HOY (observación, no previsión).
     // El cielo debe venir de OpenWeather current (real); `details.weather` puede
     // ser AEMET-observación, cuya descripción de cielo es sintética (temp/humedad).
     // La llamada está cacheada (misma clave que el hedge) → sin coste extra.
     try {
-      const now = await this.openWeather.getCurrentByCoords(
-        details.beach.latitude,
-        details.beach.longitude,
-      );
+      const now = await currentPromise;
+      if (!now) throw new Error('Current weather unavailable');
       base.tiempoActual = LegacyDetailsMapper.mapTiempoActual(now);
     } catch {
       base.tiempoActual =
@@ -241,11 +267,8 @@ export class LegacyDetailsAssembler {
     // llovizna costera hiperlocal; se cruza con más fuentes. Campo aditivo.
     let rainSignal: RainNowcast | null = null;
     try {
-      rainSignal = await this.rainNowcast.execute(
-        details.beach.latitude,
-        details.beach.longitude,
-      );
-      if (base.tiempoActual) {
+      rainSignal = await rainPromise;
+      if (rainSignal && base.tiempoActual) {
         base.tiempoActual = {
           ...base.tiempoActual,
           lluvia: LegacyDetailsMapper.mapLluvia(rainSignal),
@@ -258,14 +281,7 @@ export class LegacyDetailsAssembler {
     // Step 2: Try scraper (Layer 1 — richest source).
     // Las playas sin ficha AEMET (código sintético) no deben provocar llamadas
     // AEMET que siempre darían 404: se omite el scraper y la API de playas.
-    let forecast: BeachFullForecast | null = null;
-    if (!details.beach.sinAemet) {
-      try {
-        forecast = await this.aemetScraper.getBeachForecast(details.beach.aemetCode);
-      } catch {
-        // scraper failed, forecast stays null
-      }
-    }
+    const forecast: BeachFullForecast | null = await forecastPromise;
 
     // Step 2.5: Lluvia PREVISTA — previsión numérica Open-Meteo (próximas 6h,
     // viene en el nowcast del Step 1.6) ∪ texto AEMET del tramo restante de
@@ -312,10 +328,8 @@ export class LegacyDetailsAssembler {
 
     // Step 4: Enrich manana with OpenWeather forecast if still missing
     try {
-      const owTomorrow = await this.openWeather.getTomorrowByCoords(
-        details.beach.latitude,
-        details.beach.longitude,
-      );
+      const owTomorrow = await tomorrowPromise;
+      if (!owTomorrow) throw new Error('Tomorrow forecast unavailable');
       const mapIcon = (icon: string | null) => {
         if (!icon) return null;
         if (icon.startsWith('01')) return 100;

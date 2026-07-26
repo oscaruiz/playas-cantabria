@@ -94,6 +94,7 @@ export function configureDependencies(container: DIContainer, overrides: { cache
       c.get('aemetBeachForecastProvider'),
       c.get('openWeatherProvider'),
       c.get('getRainNowcast'),
+      c.get('cache'),
     )
   );
 }

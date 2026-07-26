@@ -25,6 +25,7 @@ import type { FeaturedBeachResult } from '../../application/mappers/FeaturedBeac
 const MIN_SCORE = 30;
 const MIN_BEACHES = 2;
 const CAUTION_COUNT = 3;
+const ENRICHMENT_CONCURRENCY = 6;
 
 export interface FeaturedBeachesFullResult {
   mejores: FeaturedBeachResult[];
@@ -44,11 +45,10 @@ export class GetFeaturedBeaches {
   ) {}
 
   async execute(topN = 5): Promise<FeaturedBeachesFullResult> {
-    const ttl = Config.cacheTtlSeconds();
-
-    return this.cache.getOrSet<FeaturedBeachesFullResult>(
+    return this.cache.getOrSetStale<FeaturedBeachesFullResult>(
       CacheKeys.featuredBeaches,
-      ttl,
+      Config.featuredFreshTtlSeconds(),
+      Config.featuredStaleTtlSeconds(),
       () => this.compute(topN),
     );
   }
@@ -56,17 +56,35 @@ export class GetFeaturedBeaches {
   private async compute(topN: number): Promise<FeaturedBeachesFullResult> {
     const beaches = await this.beachRepo.getAll();
 
-    const settled = await Promise.allSettled(
-      beaches.map((beach) => this.enrichBeach(beach)),
+    const enriched: Array<Awaited<ReturnType<GetFeaturedBeaches['enrichBeach']>> | null> =
+      new Array(beaches.length).fill(null);
+    let nextIndex = 0;
+
+    const worker = async () => {
+      while (nextIndex < beaches.length) {
+        const index = nextIndex++;
+        try {
+          enriched[index] = await this.enrichBeach(beaches[index]);
+        } catch {
+          enriched[index] = null;
+        }
+      }
+    };
+
+    await Promise.all(
+      Array.from(
+        { length: Math.min(ENRICHMENT_CONCURRENCY, beaches.length) },
+        () => worker(),
+      ),
     );
 
     const good: FeaturedBeachResult[] = [];
     const caution: FeaturedBeachResult[] = [];
     const all: FeaturedBeachResult[] = [];
 
-    for (const result of settled) {
-      if (result.status !== 'fulfilled') continue;
-      const { beach, weather, flag, enrichment, rain } = result.value;
+    for (const result of enriched) {
+      if (!result) continue;
+      const { beach, weather, flag, enrichment, rain } = result;
 
       // Excluded beaches go directly to caution with specific reason
       if (isExcluded(weather, flag, enrichment)) {

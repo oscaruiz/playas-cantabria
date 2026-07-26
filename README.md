@@ -210,7 +210,11 @@ El endpoint `/details` consolida datos de **AEMET, OpenWeatherMap y Cruz Roja** 
 | `AEMET_API_KEY` | Clave API de AEMET OpenData | — |
 | `OPENWEATHER_API_KEY` | Clave API de OpenWeatherMap | — |
 | `CORS_ORIGIN` | Origen CORS permitido | `*` |
-| `CACHE_TTL_SECONDS` | TTL de la caché en segundos | `300` |
+| `CACHE_TTL_SECONDS` | TTL general de proveedores en segundos | `1800` |
+| `FEATURED_FRESH_TTL_SECONDS` | Tiempo fresco del ranking antes de refrescar en segundo plano | `300` |
+| `FEATURED_STALE_TTL_SECONDS` | Máximo tiempo durante el que se puede servir el último ranking válido | `3600` |
+| `DETAILS_FRESH_TTL_SECONDS` | Tiempo fresco del detalle consolidado | `60` |
+| `DETAILS_STALE_TTL_SECONDS` | Máximo tiempo para servir un detalle previo durante el refresco | `600` |
 | `DEBUG_WEATHER` | Habilita logs detallados y endpoint debug | — |
 
 ### Frontend

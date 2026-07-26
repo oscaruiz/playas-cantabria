@@ -61,6 +61,14 @@ export function buildExpressApp({ cache }: BuildDeps = {}): Express {
   const getFeaturedBeaches = container.get<GetFeaturedBeaches>('getFeaturedBeaches');
   const legacyDetailsAssembler = container.get<LegacyDetailsAssembler>('legacyDetailsAssembler');
 
+  // Warm the aggregate without delaying server startup. Subsequent refreshes
+  // use stale-while-revalidate, so users do not pay the full provider fan-out.
+  if (process.env.NODE_ENV === 'production') {
+    setTimeout(() => {
+      void getFeaturedBeaches.execute(5).catch(() => undefined);
+    }, 250);
+  }
+
   // Routes configuration
   app.use(
     '/api/beaches',

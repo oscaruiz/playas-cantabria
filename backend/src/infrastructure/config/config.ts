@@ -15,6 +15,10 @@ function readFirebaseRuntimeConfig():
       aemet_api_key?: string;
       openweather_api_key?: string;
       cache_ttl_seconds?: string | number;
+      featured_fresh_ttl_seconds?: string | number;
+      featured_stale_ttl_seconds?: string | number;
+      details_fresh_ttl_seconds?: string | number;
+      details_stale_ttl_seconds?: string | number;
     }
   | undefined {
   try {
@@ -29,13 +33,25 @@ function readFirebaseRuntimeConfig():
     const aemet_api_key = flat.aemet_api_key ?? ns.aemet_api_key;
     const openweather_api_key = flat.openweather_api_key ?? ns.openweather_api_key;
     const cache_ttl_seconds = flat.cache_ttl_seconds ?? ns.cache_ttl_seconds;
+    const featured_fresh_ttl_seconds =
+      flat.featured_fresh_ttl_seconds ?? ns.featured_fresh_ttl_seconds;
+    const featured_stale_ttl_seconds =
+      flat.featured_stale_ttl_seconds ?? ns.featured_stale_ttl_seconds;
+    const details_fresh_ttl_seconds =
+      flat.details_fresh_ttl_seconds ?? ns.details_fresh_ttl_seconds;
+    const details_stale_ttl_seconds =
+      flat.details_stale_ttl_seconds ?? ns.details_stale_ttl_seconds;
 
     if (
       port === undefined &&
       cors_origin === undefined &&
       aemet_api_key === undefined &&
       openweather_api_key === undefined &&
-      cache_ttl_seconds === undefined
+      cache_ttl_seconds === undefined &&
+      featured_fresh_ttl_seconds === undefined &&
+      featured_stale_ttl_seconds === undefined &&
+      details_fresh_ttl_seconds === undefined &&
+      details_stale_ttl_seconds === undefined
     ) {
       return undefined;
     }
@@ -46,6 +62,10 @@ function readFirebaseRuntimeConfig():
       aemet_api_key,
       openweather_api_key,
       cache_ttl_seconds,
+      featured_fresh_ttl_seconds,
+      featured_stale_ttl_seconds,
+      details_fresh_ttl_seconds,
+      details_stale_ttl_seconds,
     };
   } catch {
     return undefined;
@@ -59,6 +79,10 @@ function readEnvConfig() {
     aemet_api_key: process.env.AEMET_API_KEY,
     openweather_api_key: process.env.OPENWEATHER_API_KEY,
     cache_ttl_seconds: process.env.CACHE_TTL_SECONDS,
+    featured_fresh_ttl_seconds: process.env.FEATURED_FRESH_TTL_SECONDS,
+    featured_stale_ttl_seconds: process.env.FEATURED_STALE_TTL_SECONDS,
+    details_fresh_ttl_seconds: process.env.DETAILS_FRESH_TTL_SECONDS,
+    details_stale_ttl_seconds: process.env.DETAILS_STALE_TTL_SECONDS,
   };
 }
 
@@ -68,6 +92,10 @@ const ConfigSchema = z.object({
   aemetApiKey: z.string().min(1).optional(),
   openWeatherApiKey: z.string().min(1).optional(),
   cacheTtlSeconds: z.coerce.number().int().positive().default(1800),
+  featuredFreshTtlSeconds: z.coerce.number().int().positive().default(300),
+  featuredStaleTtlSeconds: z.coerce.number().int().positive().default(3600),
+  detailsFreshTtlSeconds: z.coerce.number().int().positive().default(60),
+  detailsStaleTtlSeconds: z.coerce.number().int().positive().default(600),
 });
 
 export type AppConfig = z.infer<typeof ConfigSchema>;
@@ -96,6 +124,14 @@ export function loadConfig(): AppConfig {
       fromEnv.openweather_api_key) as string | undefined,
     cacheTtlSeconds:
       fromFirebase?.cache_ttl_seconds ?? fromEnv.cache_ttl_seconds,
+    featuredFreshTtlSeconds:
+      fromFirebase?.featured_fresh_ttl_seconds ?? fromEnv.featured_fresh_ttl_seconds,
+    featuredStaleTtlSeconds:
+      fromFirebase?.featured_stale_ttl_seconds ?? fromEnv.featured_stale_ttl_seconds,
+    detailsFreshTtlSeconds:
+      fromFirebase?.details_fresh_ttl_seconds ?? fromEnv.details_fresh_ttl_seconds,
+    detailsStaleTtlSeconds:
+      fromFirebase?.details_stale_ttl_seconds ?? fromEnv.details_stale_ttl_seconds,
   };
 
   const parsed = ConfigSchema.parse(merged);
@@ -121,5 +157,17 @@ export const Config = {
   },
   cacheTtlSeconds(): number {
     return loadConfig().cacheTtlSeconds;
+  },
+  featuredFreshTtlSeconds(): number {
+    return loadConfig().featuredFreshTtlSeconds;
+  },
+  featuredStaleTtlSeconds(): number {
+    return loadConfig().featuredStaleTtlSeconds;
+  },
+  detailsFreshTtlSeconds(): number {
+    return loadConfig().detailsFreshTtlSeconds;
+  },
+  detailsStaleTtlSeconds(): number {
+    return loadConfig().detailsStaleTtlSeconds;
   },
 };
