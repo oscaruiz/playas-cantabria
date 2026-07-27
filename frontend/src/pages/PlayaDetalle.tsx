@@ -23,6 +23,8 @@ import './PlayaDetalle.css';
 import {
   flagColorClass,
   estadoBandera,
+  ultimaBanderaRegistrada,
+  fechaMadrid,
   capitalizar,
   emojiCielo,
   esLluviaActiva,
@@ -108,17 +110,43 @@ function hasHalfDayData(h: HalfDayDTO): boolean {
 
 // ---- Sub-components ----
 
+/** "Registrada hoy / ayer / el <fecha> a las HH:MM" — momento en hora de Madrid. */
+function textoRegistrada(iso: string, t: TraducirFn, idioma: Idioma): string {
+  const hora = horaLocalMadrid(iso);
+  if (!hora) return '';
+  const ahora = new Date();
+  const dia = fechaMadrid(new Date(iso));
+  if (dia === fechaMadrid(ahora)) return t('detalle.registradaHoy', { hora });
+  if (dia === fechaMadrid(new Date(ahora.getTime() - 86400000))) {
+    return t('detalle.registradaAyer', { hora });
+  }
+  const [anio, mes, diaMes] = dia.split('-').map(Number);
+  const nombre = capitalizar(nombreDia(new Date(Date.UTC(anio, mes - 1, diaMes)).getUTCDay(), idioma));
+  return t('detalle.registradaFecha', {
+    fecha: formatearFechaCorta(nombre, diaMes, mes - 1, idioma),
+    hora,
+  });
+}
+
 const FlagBanner: React.FC<{ cruzRoja?: PlayaDetalleData['cruzRoja'] }> = ({ cruzRoja }) => {
-  const { t } = useIdioma();
+  const { t, idioma } = useIdioma();
   const estado = estadoBandera(cruzRoja);
   // 'sinDatos' (dentro de horario aún sin captura, transitorio): no mostramos banner.
   if (estado === 'sinDatos') {
     return null;
   }
 
-  // Solo se pinta el color si la bandera es vigente ('color'); fuera de horario o
-  // con dato no fresco se muestra el banderín neutro, aunque haya color guardado.
-  const colorClass = estado === 'color' ? flagColorClass(cruzRoja!.bandera) : 'unknown';
+  // Fuera de horario no hay bandera vigente, pero sí se enseña la última registrada
+  // (color atenuado + cuándo ondeaba) siempre que siga siendo informativa.
+  const ultima = estado === 'fueraDeHorario' ? ultimaBanderaRegistrada(cruzRoja) : null;
+
+  // El color pleno solo es para la bandera vigente ('color'); sin bandera que
+  // mostrar, banderín neutro aunque haya un color guardado.
+  const colorClass = estado === 'color'
+    ? flagColorClass(cruzRoja!.bandera)
+    : ultima
+      ? `${flagColorClass(ultima.bandera)} atenuada`
+      : 'unknown';
   const actualizado =
     estado === 'color' && cruzRoja!.ultimaActualizacion
       ? formatearHaceTiempo(cruzRoja!.ultimaActualizacion, t)
@@ -129,10 +157,17 @@ const FlagBanner: React.FC<{ cruzRoja?: PlayaDetalleData['cruzRoja'] }> = ({ cru
       <span className={`flag-pennant ${colorClass}`} role="img" aria-label={t('detalle.banderaAria')} />
       <div className="flag-info">
         <div className="flag-label">{t('detalle.estadoBano')}</div>
-        <div className="flag-value">{t(claveEstadoBandera(estado, cruzRoja!.bandera))}</div>
+        <div className="flag-value">
+          {ultima
+            ? t('bandera.ultimaRegistrada', {
+                bandera: capitalizar(traducirTextoApi(ultima.bandera, idioma)),
+              })
+            : t(claveEstadoBandera(estado, cruzRoja!.bandera))}
+        </div>
         {cruzRoja!.horario && (
           <div className="flag-horario">{t('detalle.vigilancia', { horario: cruzRoja!.horario })}</div>
         )}
+        {ultima && <div className="flag-horario">{textoRegistrada(ultima.registradaIso, t, idioma)}</div>}
         {actualizado && <div className="flag-horario">{capitalizar(actualizado)}</div>}
       </div>
     </div>

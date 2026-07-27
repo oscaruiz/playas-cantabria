@@ -101,6 +101,7 @@ export const en = {
   'bandera.verde': 'Green Flag',
   'bandera.sinDatos': 'No data',
   'bandera.fueraDeHorario': 'Outside hours',
+  'bandera.ultimaRegistrada': 'Last recorded flag: {bandera}',
 
   // ---- Fechas relativas ----
   'fecha.hoy': 'Today',
@@ -129,6 +130,9 @@ export const en = {
   'detalle.estadoBano': 'Swimming conditions (per Red Cross)',
   'detalle.banderaAria': 'flag',
   'detalle.vigilancia': 'Lifeguard hours: {horario}',
+  'detalle.registradaHoy': 'Recorded today at {hora}',
+  'detalle.registradaAyer': 'Recorded yesterday at {hora}',
+  'detalle.registradaFecha': 'Recorded on {fecha} at {hora}',
   'detalle.temperatura': 'Temperature',
   'detalle.agua': 'Water',
   'detalle.viento': 'Wind',

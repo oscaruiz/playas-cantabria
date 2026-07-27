@@ -59,26 +59,26 @@ export function isFlagAvailable(cruzRoja?: { bandera?: string }): boolean {
 
 export type EstadoBandera = 'color' | 'fueraDeHorario' | 'sinDatos';
 
-/** Minutos transcurridos del día en la hora actual de Madrid (robusto a la TZ del dispositivo). */
-function minutosAhoraMadrid(ahora: Date): number {
+/** Minutos transcurridos del día en hora de Madrid (robusto a la TZ del dispositivo). */
+function minutosMadrid(fecha: Date): number {
   const hhmm = new Intl.DateTimeFormat('en-GB', {
     timeZone: 'Europe/Madrid',
     hour: '2-digit',
     minute: '2-digit',
     hour12: false,
-  }).format(ahora);
+  }).format(fecha);
   const [h, m] = hhmm.split(':').map(Number);
   return h * 60 + m;
 }
 
-/** Fecha "YYYY-MM-DD" de Madrid hoy, para comparar con la cobertura de temporada. */
-function fechaHoyMadrid(ahora: Date): string {
+/** Fecha "YYYY-MM-DD" en Madrid, para comparar con la cobertura de temporada. */
+export function fechaMadrid(fecha: Date): string {
   return new Intl.DateTimeFormat('en-CA', {
     timeZone: 'Europe/Madrid',
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
-  }).format(ahora); // en-CA → "YYYY-MM-DD"
+  }).format(fecha); // en-CA → "YYYY-MM-DD"
 }
 
 /** Convierte "DD-MM-YYYY" (formato Cruz Roja) a "YYYY-MM-DD"; null si no parsea. */
@@ -114,13 +114,13 @@ export function dentroDeHorario(
   if (!m) return null;
 
   // Fuera de temporada (cobertura) → no hay servicio aunque sea media tarde.
-  const hoy = fechaHoyMadrid(ahora);
+  const hoy = fechaMadrid(ahora);
   const desde = isoDesdeDDMMYYYY(cruzRoja.coberturaDesde);
   const hasta = isoDesdeDDMMYYYY(cruzRoja.coberturaHasta);
   if (desde && hoy < desde) return false;
   if (hasta && hoy > hasta) return false;
 
-  const cur = minutosAhoraMadrid(ahora);
+  const cur = minutosMadrid(ahora);
   const ini = +m[1] * 60 + +m[2];
   const fin = +m[3] * 60 + +m[4];
   return cur >= ini && cur <= fin;
@@ -148,6 +148,57 @@ export function estadoBandera(
     : true;
   if (isFlagAvailable(cruzRoja) && fresca) return 'color';
   return 'sinDatos';
+}
+
+/** Antigüedad máxima de la última bandera registrada: la jornada de vigilancia actual o la anterior. */
+const MAX_EDAD_ULTIMA_BANDERA_MS = 36 * 60 * 60 * 1000; // 36h
+
+/**
+ * Última bandera registrada, para enseñarla FUERA de horario (cuando ya no hay
+ * bandera vigente que pintar). Devuelve el momento en el que como muy tarde
+ * ondeaba: Cruz Roja mantiene su ficha publicada toda la noche, así que una
+ * captura posterior al cierre se acota al cierre de esa jornada — nunca decimos
+ * "hace 2 minutos" de madrugada.
+ *
+ * null si no hay color, si seguimos dentro de horario, si no se conoce el
+ * horario, si el registro cae fuera de la temporada de cobertura o si tiene más
+ * de ~36h (entonces el detalle sigue mostrando "Fuera de horario" a secas).
+ */
+export function ultimaBanderaRegistrada(
+  cruzRoja?: {
+    bandera?: string;
+    horario?: string | null;
+    coberturaDesde?: string | null;
+    coberturaHasta?: string | null;
+    ultimaActualizacion?: string | null;
+  },
+  ahora: Date = new Date()
+): { bandera: string; registradaIso: string } | null {
+  if (!isFlagAvailable(cruzRoja) || dentroDeHorario(cruzRoja, ahora) !== false) return null;
+
+  const captura = cruzRoja?.ultimaActualizacion ? new Date(cruzRoja.ultimaActualizacion) : null;
+  if (!captura || Number.isNaN(captura.getTime())) return null;
+
+  const m = cruzRoja!.horario!.match(/(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})/);
+  if (!m) return null;
+  const ini = +m[1] * 60 + +m[2];
+  const fin = +m[3] * 60 + +m[4];
+
+  // Acotar la captura al cierre de la jornada de vigilancia a la que pertenece.
+  const capturaMin = minutosMadrid(captura);
+  let registrada = captura.getTime();
+  if (capturaMin > fin) registrada -= (capturaMin - fin) * 60000; // cerró ese mismo día
+  else if (capturaMin < ini) registrada -= (capturaMin + 1440 - fin) * 60000; // cerró el día anterior
+
+  if (ahora.getTime() - registrada > MAX_EDAD_ULTIMA_BANDERA_MS) return null;
+
+  // Un registro fuera de la temporada de cobertura no corresponde a vigilancia real.
+  const dia = fechaMadrid(new Date(registrada));
+  const desde = isoDesdeDDMMYYYY(cruzRoja?.coberturaDesde);
+  const hasta = isoDesdeDDMMYYYY(cruzRoja?.coberturaHasta);
+  if ((desde && dia < desde) || (hasta && dia > hasta)) return null;
+
+  return { bandera: cruzRoja!.bandera!, registradaIso: new Date(registrada).toISOString() };
 }
 
 /** ¿La playa tiene una webcam mostrable? (existe y no está desactivada). */

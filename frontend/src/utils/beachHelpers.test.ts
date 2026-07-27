@@ -1,6 +1,7 @@
 import {
   dentroDeHorario,
   estadoBandera,
+  ultimaBanderaRegistrada,
   esInfoReciente,
   formatearHaceTiempo,
   esLluviaActiva,
@@ -103,6 +104,71 @@ describe('estadoBandera', () => {
         new Date('2026-06-22T18:00:00Z') // 20:00 Madrid
       )
     ).toBe('fueraDeHorario');
+  });
+});
+
+describe('ultimaBanderaRegistrada', () => {
+  const verde = { ...cruzRoja, bandera: 'Verde' };
+
+  it('acota la captura posterior al cierre a las 19:30 de ese mismo día', () => {
+    // Scrapeada a las 23:00 Madrid (21:00Z): Cruz Roja sigue publicando la ficha,
+    // pero la bandera dejó de ondear a las 19:30 → esa es la hora que se enseña.
+    const r = ultimaBanderaRegistrada(
+      { ...verde, ultimaActualizacion: '2026-06-22T21:00:00Z' },
+      new Date('2026-06-22T21:05:00Z')
+    );
+    expect(r?.bandera).toBe('Verde');
+    expect(r?.registradaIso).toBe('2026-06-22T17:30:00.000Z'); // 19:30 Madrid
+  });
+
+  it('antes del izado, la última bandera es la del cierre de ayer', () => {
+    // 09:00 Madrid (07:00Z), captura de esa madrugada → cerró ayer a las 19:30.
+    const r = ultimaBanderaRegistrada(
+      { ...verde, ultimaActualizacion: '2026-06-22T05:00:00Z' },
+      new Date('2026-06-22T07:00:00Z')
+    );
+    expect(r?.registradaIso).toBe('2026-06-21T17:30:00.000Z');
+  });
+
+  it('conserva la hora exacta si la captura fue dentro del horario', () => {
+    const r = ultimaBanderaRegistrada(
+      { ...verde, ultimaActualizacion: '2026-06-22T16:00:00Z' }, // 18:00 Madrid
+      new Date('2026-06-22T18:00:00Z') // 20:00 Madrid, ya cerrado
+    );
+    expect(r?.registradaIso).toBe('2026-06-22T16:00:00.000Z');
+  });
+
+  it('null dentro de horario (ahí manda la bandera vigente)', () => {
+    expect(
+      ultimaBanderaRegistrada(
+        { ...verde, ultimaActualizacion: '2026-06-22T09:00:00Z' },
+        new Date('2026-06-22T12:00:00Z')
+      )
+    ).toBeNull();
+  });
+
+  it('null si el registro tiene más de 36h', () => {
+    expect(
+      ultimaBanderaRegistrada(
+        { ...verde, ultimaActualizacion: '2026-06-20T16:00:00Z' }, // 18:00 Madrid del día 20
+        new Date('2026-06-22T07:00:00Z') // 09:00 Madrid del 22 → 39h
+      )
+    ).toBeNull();
+  });
+
+  it('null fuera de temporada y sin bandera con color', () => {
+    expect(
+      ultimaBanderaRegistrada(
+        { ...verde, ultimaActualizacion: '2026-09-16T16:00:00Z' },
+        new Date('2026-09-16T18:00:00Z') // ya pasó coberturaHasta (15-09)
+      )
+    ).toBeNull();
+    expect(
+      ultimaBanderaRegistrada(
+        { ...cruzRoja, bandera: 'Desconocida', ultimaActualizacion: '2026-06-22T16:00:00Z' },
+        new Date('2026-06-22T18:00:00Z')
+      )
+    ).toBeNull();
   });
 });
 

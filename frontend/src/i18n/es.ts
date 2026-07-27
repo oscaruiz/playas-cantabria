@@ -103,6 +103,7 @@ export const es = {
   'bandera.verde': 'Bandera Verde',
   'bandera.sinDatos': 'Sin datos',
   'bandera.fueraDeHorario': 'Fuera de horario',
+  'bandera.ultimaRegistrada': 'Última bandera registrada: {bandera}',
 
   // ---- Fechas relativas ----
   'fecha.hoy': 'Hoy',
@@ -131,6 +132,9 @@ export const es = {
   'detalle.estadoBano': 'Estado para bañarse (según Cruz Roja)',
   'detalle.banderaAria': 'bandera',
   'detalle.vigilancia': 'Vigilancia: {horario}',
+  'detalle.registradaHoy': 'Registrada hoy a las {hora}',
+  'detalle.registradaAyer': 'Registrada ayer a las {hora}',
+  'detalle.registradaFecha': 'Registrada el {fecha} a las {hora}',
   'detalle.temperatura': 'Temperatura',
   'detalle.agua': 'Agua',
   'detalle.viento': 'Viento',
