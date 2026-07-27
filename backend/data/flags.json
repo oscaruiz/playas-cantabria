@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-27T15:58:06.065Z",
+  "generatedAt": "2026-07-27T18:01:38.311Z",
   "flags": {
     "30": {
       "color": "red",
@@ -58,8 +58,8 @@
       "schedule": "11:30 - 19:30"
     },
     "131": {
-      "color": "green",
-      "message": "Verde",
+      "color": "yellow",
+      "message": "Amarilla",
       "coverageFrom": "12-06-2026",
       "coverageTo": "15-09-2026",
       "schedule": "11:30 - 19:30"
@@ -79,15 +79,15 @@
       "schedule": "11:30 - 19:30"
     },
     "278": {
-      "color": "green",
-      "message": "Verde",
+      "color": "yellow",
+      "message": "Amarilla",
       "coverageFrom": "12-06-2026",
       "coverageTo": "15-09-2026",
       "schedule": "11:30 - 19:30"
     },
     "279": {
-      "color": null,
-      "message": "No hay información",
+      "color": "yellow",
+      "message": "Amarilla",
       "coverageFrom": "12-06-2026",
       "coverageTo": "15-09-2026",
       "schedule": "11:30 - 19:30"
