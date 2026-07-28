@@ -12,6 +12,7 @@ import {
   vigilanciaDisponible,
   coincidePlaya,
   normalizarBusqueda,
+  emojiCielo,
 } from './beachHelpers';
 
 // Durante la temporada de baño, Madrid es CEST (UTC+2): UTC + 2h = hora Madrid.
@@ -361,5 +362,72 @@ describe('vigilanciaDisponible', () => {
     expect(vigilanciaDisponible({})).toBe(false);
     expect(vigilanciaDisponible(undefined)).toBe(false);
     expect(vigilanciaDisponible(null)).toBe(false);
+  });
+});
+
+describe('emojiCielo', () => {
+  // Los emojis se escriben escapados, igual que en beachHelpers.ts, para que
+  // el fichero no dependa de cómo represente cada editor los modificadores.
+  const SOL = '\u2600\uFE0F';
+  const SOL_NUBE = '\u{1F324}\uFE0F';
+  const NUBE_SOL = '\u26C5';
+  const NUBES = '\u2601\uFE0F';
+  const TORMENTA = '\u26C8\uFE0F';
+  const LLUVIA = '\u{1F327}\uFE0F';
+  const NIEVE = '\u{1F328}\uFE0F';
+  const NIEBLA = '\u{1F32B}\uFE0F';
+
+  it('da sol para el despejado de las dos fuentes', () => {
+    // OpenWeather dice "cielo claro" (01x) donde AEMET dice "despejado".
+    expect(emojiCielo('cielo claro')).toBe(SOL);
+    expect(emojiCielo('Despejado')).toBe(SOL);
+    expect(emojiCielo('cielo despejado')).toBe(SOL);
+    expect(emojiCielo('soleado')).toBe(SOL);
+  });
+
+  it('da sol entre nubes para las coberturas parciales', () => {
+    expect(emojiCielo('poco nuboso')).toBe(SOL_NUBE);
+    expect(emojiCielo('Intervalos nubosos')).toBe(SOL_NUBE);
+    expect(emojiCielo('nubes dispersas')).toBe(SOL_NUBE);
+    expect(emojiCielo('algo de nubes')).toBe(SOL_NUBE);
+    // 'parcial' gana a 'soleado', que si no se lo llevaría entero.
+    expect(emojiCielo('parcialmente soleado')).toBe(SOL_NUBE);
+  });
+
+  it('distingue el cubierto del nuboso', () => {
+    expect(emojiCielo('muy nuboso')).toBe(NUBES);
+    expect(emojiCielo('cubierto')).toBe(NUBES);
+    // 'nubes' a secas es el 04x de OpenWeather, que es cubierto.
+    expect(emojiCielo('nubes')).toBe(NUBES);
+    expect(emojiCielo('nuboso')).toBe(NUBE_SOL);
+    expect(emojiCielo('cielo nublado')).toBe(NUBE_SOL);
+  });
+
+  it('la precipitación gana a la cobertura en los estados combinados de AEMET', () => {
+    // Antes salía la nube o el sol y la lluvia se perdía por completo.
+    expect(emojiCielo('Cubierto con lluvia')).toBe(LLUVIA);
+    expect(emojiCielo('Cubierto con lluvia escasa')).toBe(LLUVIA);
+    expect(emojiCielo('Intervalos nubosos con lluvia')).toBe(LLUVIA);
+    expect(emojiCielo('Intervalos nubosos con lluvia escasa')).toBe(LLUVIA);
+    expect(emojiCielo('Muy nuboso con nieve')).toBe(NIEVE);
+    expect(emojiCielo('Nuboso con tormenta')).toBe(TORMENTA);
+  });
+
+  it('cubre el resto de fenómenos', () => {
+    expect(emojiCielo('lluvia ligera')).toBe(LLUVIA);
+    expect(emojiCielo('llovizna')).toBe(LLUVIA);
+    expect(emojiCielo('chubascos')).toBe(LLUVIA);
+    expect(emojiCielo('tormenta')).toBe(TORMENTA);
+    // 'tormentosos' no contiene 'tormenta'; por eso el patrón es 'torment'.
+    expect(emojiCielo('chubascos tormentosos')).toBe(TORMENTA);
+    expect(emojiCielo('nieve')).toBe(NIEVE);
+    expect(emojiCielo('niebla')).toBe(NIEBLA);
+    expect(emojiCielo('bruma')).toBe(NIEBLA);
+  });
+
+  it('cae al genérico sin dato o sin reconocer', () => {
+    expect(emojiCielo(null)).toBe(NUBE_SOL);
+    expect(emojiCielo('')).toBe(NUBE_SOL);
+    expect(emojiCielo('vete a saber')).toBe(NUBE_SOL);
   });
 });

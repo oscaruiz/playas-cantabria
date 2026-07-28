@@ -348,14 +348,24 @@ export function lluviaPrevista(
 export function emojiCielo(cielo: string | null): string {
   if (!cielo) return '\u26C5';
   const c = cielo.toLowerCase();
-  if (/despejado|soleado/.test(c)) return '\u2600\uFE0F';
-  if (/poco nuboso|intervalos|parcial|nubes dispersas|algo de nubes|claro/.test(c)) return '\u{1F324}\uFE0F';
+
+  // El tiempo significativo va PRIMERO. AEMET mete la cobertura y la
+  // precipitación en la misma cadena ("Cubierto con lluvia", "Intervalos
+  // nubosos con lluvia escasa"), así que mirando antes la nubosidad la lluvia
+  // no salía nunca: esas dos daban nube y sol respectivamente.
+  // 'torment', no 'tormenta', para que entre también "chubascos tormentosos".
+  if (/torment|el[eé]ctrica|rayos/.test(c)) return '\u26C8\uFE0F';
+  if (/nieve|nevada|aguanieve/.test(c)) return '\u{1F328}\uFE0F';
+  if (/lluvia|llovizna|chubascos/.test(c)) return '\u{1F327}\uFE0F';
+  if (/niebla|bruma|neblina/.test(c)) return '\u{1F32B}\uFE0F';
+
+  // Cobertura, de menos a más. Los parciales van ANTES que el despejado para
+  // que el 'soleado' de "parcialmente soleado" no se lo lleve.
+  if (/poco nuboso|intervalos|parcial|nubes dispersas|algo de nubes/.test(c)) return '\u{1F324}\uFE0F';
+  // "cielo claro" es el despejado de OpenWeather (01x); AEMET dice "despejado".
+  if (/despejado|soleado|claro/.test(c)) return '\u2600\uFE0F';
   // "nubes" a secas es el cubierto de OpenWeather (04x); las dispersas ya se han filtrado arriba.
   if (/muy nuboso|cubierto|nubes/.test(c)) return '\u2601\uFE0F';
   if (/nuboso|nublado/.test(c)) return '\u26C5';
-  if (/tormenta|el[eé]ctrica|rayos/.test(c)) return '\u26C8\uFE0F';
-  if (/lluvia|llovizna|chubascos/.test(c)) return '\u{1F327}\uFE0F';
-  if (/nieve|nevada|aguanieve/.test(c)) return '\u{1F328}\uFE0F';
-  if (/niebla|bruma|neblina/.test(c)) return '\u{1F32B}\uFE0F';
   return '\u26C5';
 }
