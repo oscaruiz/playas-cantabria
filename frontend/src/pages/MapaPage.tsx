@@ -13,7 +13,7 @@ import L, { Map as LeafletMap, DivIcon } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Playa, FeaturedBeach, getPlayas, getFeaturedBeaches } from '../services/api';
-import { emojiCielo, flagColorClass, webcamDisponible } from '../utils/beachHelpers';
+import { emojiCielo, flagColorClass, webcamDisponible, vigilanciaDisponible } from '../utils/beachHelpers';
 import { useIdioma } from '../i18n/IdiomaContext';
 import { traducirTextoApi, claveNivelVientoMs, claveBandera } from '../i18n/apiText';
 import { useUserLocation } from '../hooks/useUserLocation';
@@ -203,7 +203,7 @@ const MapaPage: React.FC = () => {
               const icon = weather
                 ? getBeachIcon(weather, playa.codigo === bestCodigo)
                 : getFallbackIcon(index + 1);
-              const isVigilada = playa.idCruzRoja && playa.idCruzRoja > 0;
+              const isVigilada = vigilanciaDisponible(playa);
 
               return (
                 <Marker

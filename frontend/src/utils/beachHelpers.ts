@@ -208,6 +208,29 @@ export function webcamDisponible(
   return !!webcam && webcam.estado !== 'desactivada';
 }
 
+/**
+ * ¿La playa tiene vigilancia de Cruz Roja? Mira primero los puestos y después el
+ * `idCruzRoja` de compatibilidad.
+ *
+ * Hay que consultar las DOS fuentes porque `src/data/beaches.json` (el fallback
+ * local) es el fichero crudo del repositorio, no el DTO: 32 de las 46 playas
+ * solo traen `cruzRojaStations`. El backend sí deriva un `idCruzRoja` a partir
+ * del primer puesto con id (`JsonBeachRepository.mapToEntity`), así que mirando
+ * solo ese campo el badge aparecía con backend y desaparecía con el fallback.
+ *
+ * ESPEJO del backend: mismo orden de preferencia que
+ * `domain/services/flagAggregation.ts` → `resolveFlagForStations`.
+ */
+export function vigilanciaDisponible(
+  playa?: { idCruzRoja?: number; cruzRojaStations?: Array<{ id?: number }> } | null
+): boolean {
+  const conPuesto = (playa?.cruzRojaStations ?? []).some(
+    (p) => typeof p.id === 'number' && p.id > 0
+  );
+  if (conPuesto) return true;
+  return (playa?.idCruzRoja ?? 0) > 0;
+}
+
 export type CoberturaWebcam = 'exacta' | 'compartida' | 'cercana';
 
 /**

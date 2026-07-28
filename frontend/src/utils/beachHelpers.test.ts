@@ -9,6 +9,7 @@ import {
   lluviaPrevista,
   claveCoberturaWebcam,
   webcamDisponible,
+  vigilanciaDisponible,
   coincidePlaya,
   normalizarBusqueda,
 } from './beachHelpers';
@@ -329,5 +330,36 @@ describe('coincidePlaya — búsqueda por nombre, municipio y alias', () => {
 
   it('sin alias no rompe', () => {
     expect(coincidePlaya({ nombre: 'Somo', municipio: 'Ribamontán al Mar' }, 'somo')).toBe(true);
+  });
+});
+
+describe('vigilanciaDisponible', () => {
+  it('detecta el idCruzRoja de compatibilidad', () => {
+    expect(vigilanciaDisponible({ idCruzRoja: 482 })).toBe(true);
+  });
+
+  it('detecta los puestos aunque no haya idCruzRoja', () => {
+    // Caso de La Concha en el JSON crudo del fallback: solo puestos.
+    expect(vigilanciaDisponible({ cruzRojaStations: [{ id: 373 }, { id: 820 }] })).toBe(true);
+  });
+
+  it('detecta los puestos aunque el idCruzRoja venga a 0', () => {
+    // Caso del DTO cuando el backend no pudo derivar el id.
+    expect(vigilanciaDisponible({ idCruzRoja: 0, cruzRojaStations: [{ id: 373 }] })).toBe(true);
+  });
+
+  it('no cuenta un puesto sin id verificado', () => {
+    expect(vigilanciaDisponible({ idCruzRoja: 0, cruzRojaStations: [{}] })).toBe(false);
+  });
+
+  it('no cuenta un puesto con id 0', () => {
+    expect(vigilanciaDisponible({ cruzRojaStations: [{ id: 0 }] })).toBe(false);
+  });
+
+  it('sin ninguna fuente es falso', () => {
+    expect(vigilanciaDisponible({ idCruzRoja: 0 })).toBe(false);
+    expect(vigilanciaDisponible({})).toBe(false);
+    expect(vigilanciaDisponible(undefined)).toBe(false);
+    expect(vigilanciaDisponible(null)).toBe(false);
   });
 });
