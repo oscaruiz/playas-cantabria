@@ -71,7 +71,8 @@ export const en = {
   'lista.noEncontradas': 'No beaches found for "{filtro}"',
   'lista.vigiladaAria': 'Beach supervised by the Red Cross',
   'lista.webcamAria': 'Beach with webcam available',
-  'lista.errorCarga': 'Could not load beaches',
+  'lista.datosLocales': 'Offline: showing saved data, it may be out of date',
+  'lista.datosNoDisponibles': 'Could not load beaches or saved data',
 
   // ---- Mapa ----
   'mapa.subtitulo': 'Explore the beaches on the map',

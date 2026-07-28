@@ -388,12 +388,13 @@
 }
 
 /* --- Error state --- */
-.home-error {
+/* Aviso, no error: el listado se ve igual, solo que desde la copia local. */
+.home-fallback {
   margin: 20px auto;
   max-width: 640px;
   padding: 1.25rem 16px 1.25rem 14px;
-  border-left: 3px solid var(--playa-flag-red);
-  color: var(--playa-text);
+  border-left: 3px solid var(--playa-flag-yellow);
+  color: var(--playa-text-muted);
   font-size: 0.9rem;
 }
 
@@ -427,7 +428,7 @@
   .search-bar-container,
   .beach-count,
   .beach-list,
-  .home-error,
+  .home-fallback,
   .home-empty {
     max-width: 1080px;
   }

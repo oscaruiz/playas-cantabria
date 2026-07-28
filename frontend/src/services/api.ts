@@ -39,12 +39,45 @@ function fetchPlayasOnce(): Promise<Playa[]> {
 type GetPlayasOptions = {
   timeoutMs?: number;
   onBackendData?: (data: Playa[]) => void;
+  /**
+   * Se llama (como mucho una vez) cuando se devuelven los datos locales en vez
+   * de los del backend, para poder avisar al usuario de que no son frescos.
+   *
+   * Hay dos caminos y solo uno se recupera: si saltó el timeout, el backend
+   * todavía puede llegar y disparar `onBackendData`; si falló la petición, no
+   * llegará nunca.
+   */
+  onFallback?: () => void;
+  /**
+   * Se llama si tampoco se puede cargar la copia local. `getPlayas` conserva su
+   * contrato de no rechazar y devuelve [], pero la UI puede distinguir este
+   * fallo de una búsqueda legítimamente vacía.
+   */
+  onFallbackUnavailable?: () => void;
 };
 
 export async function getPlayas(options: GetPlayasOptions = {}): Promise<Playa[]> {
-  const { timeoutMs = PLAYAS_FALLBACK_TIMEOUT_MS, onBackendData } = options;
+  const {
+    timeoutMs = PLAYAS_FALLBACK_TIMEOUT_MS,
+    onBackendData,
+    onFallback,
+    onFallbackUnavailable,
+  } = options;
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
   let didReturnFallback = false;
+  let didReportFallbackUnavailable = false;
+
+  const loadFallbackOrEmpty = async (): Promise<Playa[]> => {
+    try {
+      return await loadFallbackPlayas();
+    } catch {
+      if (!didReportFallbackUnavailable) {
+        didReportFallbackUnavailable = true;
+        onFallbackUnavailable?.();
+      }
+      return [];
+    }
+  };
 
   const fetchPromise = fetchPlayasOnce()
     .then((data) => {
@@ -57,14 +90,22 @@ export async function getPlayas(options: GetPlayasOptions = {}): Promise<Playa[]
   const timeoutPromise = new Promise<Playa[]>((resolve) => {
     timeoutId = setTimeout(() => {
       didReturnFallback = true;
-      void loadFallbackPlayas().then(resolve);
+      onFallback?.();
+      // El segundo argumento evita que un fallo al cargar el JSON deje esta
+      // promesa colgada para siempre (spinner infinito): getPlayas resuelve
+      // SIEMPRE, que es el contrato del que dependen las tres páginas.
+      loadFallbackOrEmpty().then(resolve);
     }, timeoutMs);
   });
 
   try {
     return await Promise.race([fetchPromise, timeoutPromise]);
-  } catch (error) {
-    return loadFallbackPlayas();
+  } catch {
+    if (!didReturnFallback) {
+      didReturnFallback = true;
+      onFallback?.();
+    }
+    return loadFallbackOrEmpty();
   } finally {
     if (timeoutId) {
       clearTimeout(timeoutId);

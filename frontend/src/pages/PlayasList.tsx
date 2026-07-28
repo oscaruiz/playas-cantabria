@@ -8,9 +8,16 @@ import {
 } from '@ionic/react';
 import { searchOutline, locateOutline, videocamOutline } from 'ionicons/icons';
 import { Playa, FeaturedBeach, getPlayas, getFeaturedBeaches } from '../services/api';
-import { getActiveAttrs, emojiCielo, webcamDisponible, coincidePlaya } from '../utils/beachHelpers';
+import {
+  getActiveAttrs,
+  emojiCielo,
+  webcamDisponible,
+  vigilanciaDisponible,
+  coincidePlaya,
+} from '../utils/beachHelpers';
 import { useUserLocation } from '../hooks/useUserLocation';
 import { useIdioma } from '../i18n/IdiomaContext';
+import { ClaveTexto } from '../i18n/es';
 import { traducirTextoApi, razonLegible } from '../i18n/apiText';
 import ScoreBadge from '../components/ScoreBadge';
 import BottomNavBar from '../components/BottomNavBar';
@@ -37,7 +44,10 @@ const PlayasList: React.FC = () => {
   const [weatherMap, setWeatherMap] = useState<Map<string, FeaturedBeach>>(new Map());
   const [filtro, setFiltro] = useState('');
   const [orden, setOrden] = useState<OrdenMode>('az');
-  const [error, setError] = useState(false);
+  // No hay estado de error: `getPlayas` nunca rechaza, siempre cae al JSON
+  // local. Lo que sí hay que contar es que los datos no son frescos.
+  const [esFallback, setEsFallback] = useState(false);
+  const [datosNoDisponibles, setDatosNoDisponibles] = useState(false);
   const { t, tPlural, idioma } = useIdioma();
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeIdx, setActiveIdx] = useState(-1);
@@ -47,10 +57,17 @@ const PlayasList: React.FC = () => {
 
   useEffect(() => {
     getPlayas({
-      onBackendData: (data) => setPlayas(data),
-    })
-      .then(setPlayas)
-      .catch(() => setError(true));
+      onFallback: () => setEsFallback(true),
+      onFallbackUnavailable: () => {
+        setEsFallback(false);
+        setDatosNoDisponibles(true);
+      },
+      onBackendData: (data) => {
+        setPlayas(data);
+        setEsFallback(false);
+        setDatosNoDisponibles(false);
+      },
+    }).then(setPlayas);
 
     getFeaturedBeaches()
       .then((res) => {
@@ -200,15 +217,21 @@ const PlayasList: React.FC = () => {
           )}
         </div>
 
-        {/* Error state */}
-        {error && (
-          <div className="home-error">
-            <p style={{ margin: 0 }}>{t('lista.errorCarga')}</p>
+        {/* Datos locales (backend no disponible) */}
+        {esFallback && (
+          <div className="home-fallback" role="status">
+            <p style={{ margin: 0 }}>{t('lista.datosLocales')}</p>
+          </div>
+        )}
+
+        {datosNoDisponibles && (
+          <div className="home-fallback" role="alert">
+            <p style={{ margin: 0 }}>{t('lista.datosNoDisponibles')}</p>
           </div>
         )}
 
         {/* Loading state */}
-        {!playas && !error && (
+        {!playas && (
           <div className="home-loading">
             <IonSpinner name="crescent" />
             <span className="home-loading-text">{t('lista.cargando')}</span>
@@ -216,7 +239,7 @@ const PlayasList: React.FC = () => {
         )}
 
         {/* Beach count */}
-        {playas && (
+        {playas && !datosNoDisponibles && (
           <div className="beach-count">
             {tPlural('lista.contador', filtradas.length)}
             {filtro && ` ${t('lista.paraFiltro', { filtro })}`}
@@ -258,7 +281,10 @@ const PlayasList: React.FC = () => {
                   <p className="beach-card-municipio">
                     {playa.municipio}
                     {distKm != null && (
-                      <span className="beach-card-dist"> &middot; a {Math.round(distKm)} km</span>
+                      <span className="beach-card-dist">
+                        {' · '}
+                        {t('comun.aKm', { km: Math.round(distKm) })}
+                      </span>
                     )}
                   </p>
                   {(() => {
@@ -266,7 +292,13 @@ const PlayasList: React.FC = () => {
                     return attrs.length > 0 ? (
                       <div className="beach-card-attrs">
                         {attrs.map((a) => (
-                          <IonIcon key={a.key} className="beach-attr-mini" icon={a.icon} title={a.label} aria-hidden="true" />
+                          <IonIcon
+                            key={a.key}
+                            className="beach-attr-mini"
+                            icon={a.icon}
+                            title={t(`attr.${a.key}` as ClaveTexto)}
+                            aria-hidden="true"
+                          />
                         ))}
                       </div>
                     ) : null;
@@ -279,7 +311,7 @@ const PlayasList: React.FC = () => {
                 </div>
                 {weather && <ScoreBadge puntuacion={weather.puntuacion} />}
                 {(() => {
-                  const vigilada = playa.idCruzRoja !== 0 && playa.idCruzRoja !== undefined;
+                  const vigilada = vigilanciaDisponible(playa);
                   const conWebcam = webcamDisponible(playa.webcam);
                   return vigilada || conWebcam ? (
                     <div className="beach-card-badges">
@@ -305,7 +337,7 @@ const PlayasList: React.FC = () => {
         )}
 
         {/* Empty state */}
-        {playas && filtradas.length === 0 && (
+        {playas && !datosNoDisponibles && filtradas.length === 0 && (
           <div className="home-empty">
             <p className="home-empty-text">
               {t('lista.noEncontradas', { filtro })}

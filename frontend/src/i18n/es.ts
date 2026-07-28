@@ -73,7 +73,8 @@ export const es = {
   'lista.noEncontradas': 'No se encontraron playas para "{filtro}"',
   'lista.vigiladaAria': 'Playa vigilada por Cruz Roja',
   'lista.webcamAria': 'Playa con webcam disponible',
-  'lista.errorCarga': 'No se pudieron cargar las playas',
+  'lista.datosLocales': 'Sin conexión: mostrando datos guardados, puede que estén desactualizados',
+  'lista.datosNoDisponibles': 'No se pudieron cargar las playas ni los datos guardados',
 
   // ---- Mapa ----
   'mapa.subtitulo': 'Explora las playas en el mapa',
