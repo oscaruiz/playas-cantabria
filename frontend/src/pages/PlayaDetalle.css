@@ -159,7 +159,11 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  /* La insignia se come ~120px del ancho, así que en móvil el rótulo y "Cómo se
+     calcula" no caben en la misma línea y este último se salía de la tarjeta.
+     Con el salto permitido baja a su propia línea en vez de desbordar. */
+  flex-wrap: wrap;
+  gap: 2px 8px;
   font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -177,7 +181,8 @@
   letter-spacing: normal;
   font-weight: 600;
   font-size: 0.72rem;
-  white-space: nowrap;
+  /* Sin `nowrap` a propósito: en pantallas muy estrechas (Fold cerrado, ~280px)
+     no cabe entero ni en su propia línea. Dejándolo partir siempre queda dentro. */
 }
 
 .pd-score-chevron {
