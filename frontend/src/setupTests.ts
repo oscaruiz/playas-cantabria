@@ -21,3 +21,16 @@ window.matchMedia = window.matchMedia || function() {
 beforeEach(() => {
   localStorage.setItem('app_idioma', 'es');
 });
+
+// @testing-library/react 13 llama a `act` desde react-dom/test-utils, que
+// React 18.3 marca como obsoleto. Es ruido de librería, no del código de la
+// app, y ensucia cada render. Se filtra SOLO ese mensaje: cualquier otro
+// console.error sigue viéndose.
+const errorOriginal = console.error;
+// eslint-disable-next-line no-console
+console.error = (...args: unknown[]) => {
+  if (typeof args[0] === 'string' && args[0].includes('ReactDOMTestUtils.act` is deprecated')) {
+    return;
+  }
+  errorOriginal(...args);
+};
