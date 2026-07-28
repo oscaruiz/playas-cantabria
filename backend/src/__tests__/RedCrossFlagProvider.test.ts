@@ -140,3 +140,75 @@ describe('RedCrossFlagProvider — fuente primaria por fichero (flags.json)', ()
     expect(status?.schedule).toBe('11:30 - 19:30');
   });
 });
+
+// Ficha real cuando aún no hay bandera izada: responde 200, con cobertura y
+// horario, pero el alt de la imagen no es un color.
+const FICHA_SIN_BANDERA = `
+<html><body>
+  <div id="listaFicha">
+    <img alt="No hay información" src="/img/nodata.png" />
+    <ul>
+      <li>Cobertura desde</li><li>12-06-2026</li>
+      <li>Hasta</li><li>15-09-2026</li>
+      <li>Horario</li><li>11:30 - 19:30</li>
+    </ul>
+  </div>
+</body></html>`;
+
+describe('RedCrossFlagProvider — caché del scrape en vivo', () => {
+  it('un resultado SIN color no se queda cacheado el resto del día', async () => {
+    // El bug: "No hay información" es un 200 válido, así que entraba en la caché
+    // de 24h y la playa se quedaba sin bandera aunque se izara minutos después.
+    let ahora = Date.parse('2026-07-28T10:00:00.000Z');
+    const cache = new InMemoryCache(() => ahora);
+    const spy = vi.spyOn(http, 'post').mockResolvedValue({ data: FICHA_SIN_BANDERA } as any);
+    const provider = new RedCrossFlagProvider(cache, NO_FILE);
+
+    const antes = await provider.getFlagByRedCrossId(555);
+    expect(antes?.color).toBeUndefined();
+    expect(spy).toHaveBeenCalledTimes(1);
+
+    // Dentro del TTL corto no se machaca a cruzroja.es.
+    ahora += 60_000;
+    await provider.getFlagByRedCrossId(555);
+    expect(spy).toHaveBeenCalledTimes(1);
+
+    // Pasado el TTL corto se vuelve a mirar, y para entonces ya está izada.
+    ahora += 5 * 60_000;
+    spy.mockResolvedValue({ data: FICHA_HTML } as any);
+    const despues = await provider.getFlagByRedCrossId(555);
+    expect(spy).toHaveBeenCalledTimes(2);
+    expect(despues?.color).toBe('green');
+  });
+
+  it('un resultado CON color sí aguanta cacheado', async () => {
+    let ahora = Date.parse('2026-07-28T12:00:00.000Z');
+    const cache = new InMemoryCache(() => ahora);
+    const spy = vi.spyOn(http, 'post').mockResolvedValue({ data: FICHA_HTML } as any);
+    const provider = new RedCrossFlagProvider(cache, NO_FILE);
+
+    await provider.getFlagByRedCrossId(555);
+    ahora += 60 * 60_000;
+    const status = await provider.getFlagByRedCrossId(555);
+
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(status?.color).toBe('green');
+  });
+
+  it('servirla de caché no renueva el TTL: acaba caducando aunque haya tráfico', async () => {
+    let ahora = Date.parse('2026-07-28T12:00:00.000Z');
+    const cache = new InMemoryCache(() => ahora);
+    const spy = vi.spyOn(http, 'post').mockResolvedValue({ data: FICHA_HTML } as any);
+    const provider = new RedCrossFlagProvider(cache, NO_FILE);
+
+    await provider.getFlagByRedCrossId(555);
+    // Una lectura por hora durante 25h. Si cada una renovase la entrada, no se
+    // volvería a scrapear jamás y la bandera se quedaría congelada.
+    for (let i = 0; i < 25; i++) {
+      ahora += 60 * 60_000;
+      await provider.getFlagByRedCrossId(555);
+    }
+
+    expect(spy).toHaveBeenCalledTimes(2);
+  });
+});

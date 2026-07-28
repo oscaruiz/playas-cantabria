@@ -116,17 +116,26 @@ export class RedCrossFlagProvider implements FlagProvider {
     return fromFile ?? live ?? null;
   }
 
-  /** Scrape en vivo con cache 24h y reintento. Nunca lanza: devuelve null si falla. */
+  /** Scrape en vivo con cache y reintento. Nunca lanza: devuelve null si falla. */
   private async fetchLiveCached(redCrossId: number): Promise<FlagStatus | null> {
-    const ttl = 86400; // 24h — flags rarely change, reduce scraping load
+    // La ficha responde 200 con "No hay información" mientras no hay bandera izada
+    // (antes de las 11:30, y en muchas playas buena parte del día). Eso es una
+    // respuesta VÁLIDA, así que se cacheaba igual que un color: 24h. Resultado: la
+    // playa se quedaba sin bandera el resto del día aunque se izara cinco minutos
+    // después, y encima tapaba al fichero. Sin color se vuelve a mirar pronto.
+    const TTL_CON_COLOR = 86400; // la bandera ya izada no suele cambiar
+    const TTL_SIN_COLOR = 300;
     const key = CacheKeys.flagByRedCrossId(redCrossId);
+
+    const cacheado = this.cache.get<FlagStatus>(key);
+    if (cacheado !== undefined) return cacheado;
 
     try {
       // El catch externo devuelve null SIN cachear: cruzroja.es es lento e
       // inestable (respuestas de 10-12s y 503 intermitentes tras su WAF F5), así
       // que un fallo no debe quedar cacheado 24h — se reintenta en la siguiente
       // petición y se autocura cuando la web responde.
-      return await this.cache.getOrSet(key, ttl, async () => {
+      const status = await this.cache.getOrSet(key, TTL_SIN_COLOR, async () => {
         const maxAttempts = 2;
         let lastErr: unknown;
 
@@ -143,6 +152,12 @@ export class RedCrossFlagProvider implements FlagProvider {
         }
         throw lastErr ?? new Error('cruzroja: sin respuesta');
       });
+
+      // El TTL largo se aplica SOLO justo después de calcular, nunca al servir de
+      // caché (por eso el `get` de arriba sale antes): si se renovara en cada
+      // petición, una bandera con color no caducaría nunca mientras haya tráfico.
+      if (status?.color) this.cache.set(key, status, TTL_CON_COLOR);
+      return status;
     } catch {
       return null;
     }
