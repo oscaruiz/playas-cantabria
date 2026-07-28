@@ -1,4 +1,11 @@
-import { traducirTextoApi, razonLegible, claveBandera, claveEstadoBandera, claveNivelVientoMs } from './apiText';
+import {
+  traducirTextoApi,
+  razonLegible,
+  claveBandera,
+  claveEstadoBandera,
+  claveNivelVientoMs,
+  TABLAS_API,
+} from './apiText';
 import { traducirNombreDiaApi, formatearFechaCorta } from './fechas';
 
 describe('traducirTextoApi', () => {
@@ -96,5 +103,152 @@ describe('fechas', () => {
   it('formatea fecha corta por idioma', () => {
     expect(formatearFechaCorta('Domingo', 5, 5, 'es')).toBe('Domingo 5 de junio');
     expect(formatearFechaCorta('Sunday', 5, 5, 'en')).toBe('Sunday, June 5');
+  });
+});
+
+describe('viento compuesto', () => {
+  const tr = (t: string) => traducirTextoApi(t, 'en');
+
+  it('traduce intensidad + dirección', () => {
+    expect(tr('flojo del noreste')).toBe('light wind from the northeast');
+    expect(tr('moderado del oeste')).toBe('moderate wind from the west');
+    expect(tr('fuerte del noroeste')).toBe('strong wind from the northwest');
+    expect(tr('muy fuerte del sur')).toBe('very strong wind from the south');
+  });
+
+  it('traduce intensidad + variable', () => {
+    expect(tr('flojo variable')).toBe('light variable wind');
+    expect(tr('muy fuerte variable')).toBe('very strong variable wind');
+  });
+
+  it('acepta las variantes de AEMET "componente" y nordeste/sudoeste', () => {
+    expect(tr('moderado de componente norte')).toBe('moderate wind from the north');
+    expect(tr('flojo del nordeste')).toBe('light wind from the northeast');
+    expect(tr('fuerte del sudoeste')).toBe('strong wind from the southwest');
+  });
+
+  it('da lo mismo lleve o no el prefijo "viento" que añade razonLegible', () => {
+    // La home y la lista pasan por razonLegible; el detalle no.
+    expect(tr('viento flojo del noreste')).toBe('light wind from the northeast');
+    expect(tr('flojo del noreste')).toBe('light wind from the northeast');
+  });
+
+  it('respeta la mayúscula inicial', () => {
+    expect(tr('Flojo del noreste')).toBe('Light wind from the northeast');
+  });
+
+  it('compone bien dentro de una razón de ranking completa', () => {
+    const razon = razonLegible('Sol, 24°, flojo del noreste, bandera verde');
+    expect(razon).toBe('Sol, 24°, viento flojo del noreste, bandera verde');
+    expect(traducirTextoApi(razon, 'en')).toBe(
+      'Sun, 24°, light wind from the northeast, green flag'
+    );
+  });
+
+  it('no interfiere con el oleaje de la misma frase', () => {
+    expect(tr('Sol, fuerte del noroeste, oleaje fuerte')).toBe(
+      'Sun, strong wind from the northwest, heavy surf'
+    );
+  });
+
+  it('el acierto directo sigue teniendo prioridad', () => {
+    expect(tr('Nublado, 19°, flojo')).toBe('Cloudy, 19°, light');
+    expect(tr('en calma')).toBe('calm');
+  });
+
+  it('SEGURIDAD: no toca el texto libre que contiene "de" o "del"', () => {
+    const acceso = 'A pie por el recinto de la península de La Magdalena';
+    expect(tr(acceso)).toBe(acceso);
+    expect(tr('aviso amarillo por oleaje')).toBe('aviso amarillo por oleaje');
+    expect(tr('Desde Monte; último tramo a pie')).toBe('Desde Monte; último tramo a pie');
+  });
+
+  it('hueco conocido: las variantes con "tendiendo a" pasan sin traducir', () => {
+    const texto = 'moderado del oeste tendiendo a flojo';
+    expect(tr(texto)).toBe(texto);
+  });
+});
+
+describe('entradas nuevas de las tablas', () => {
+  const tr = (t: string) => traducirTextoApi(t, 'en');
+
+  it('cubre los niveles de viento y oleaje derivados en el backend', () => {
+    expect(tr('viento fresco')).toBe('fresh wind');
+    expect(tr('agitado')).toBe('choppy');
+    expect(tr('tranquilo')).toBe('calm');
+  });
+
+  it('traduce sin desplazar los niveles de la escala Douglas', () => {
+    expect(tr('gruesa')).toBe('rough sea');
+    expect(tr('muy gruesa')).toBe('very rough sea');
+    expect(tr('arbolada')).toBe('high sea');
+    expect(tr('montañosa')).toBe('very high sea');
+    expect(tr('enorme')).toBe('phenomenal sea');
+    expect(tr('mar gruesa')).toBe('rough sea');
+  });
+
+  it('cubre la escala de sensación térmica completa', () => {
+    expect(tr('templado')).toBe('mild');
+    expect(tr('calor moderado')).toBe('warm');
+    expect(tr('calor intenso')).toBe('very hot');
+  });
+
+  it('cubre los cinco colores de bandera', () => {
+    expect(tr('Verde')).toBe('Green');
+    expect(tr('Amarilla')).toBe('Yellow');
+    expect(tr('Roja')).toBe('Red');
+    expect(tr('Negra')).toBe('Black');
+    expect(tr('Desconocida')).toBe('Unknown');
+  });
+
+  it('cubre los motivos de exclusión, que llegan como cadena completa', () => {
+    expect(tr('Baño prohibido (bandera negra)')).toBe('Swimming prohibited (black flag)');
+    expect(tr('Bandera roja con viento muy fuerte')).toBe('Red flag with very strong wind');
+    expect(tr('Tormenta activa')).toBe('Active storm');
+    expect(tr('Alerta meteorológica')).toBe('Weather alert');
+    expect(tr('Condiciones peligrosas')).toBe('Dangerous conditions');
+  });
+
+  it('cubre los factores de bajada del ranking', () => {
+    expect(tr('Condiciones aceptables')).toBe('Acceptable conditions');
+    expect(tr('UV muy alto')).toBe('Very high UV');
+    expect(tr('temperatura baja')).toBe('low temperature');
+    expect(tr('condiciones poco favorables')).toBe('unfavourable conditions');
+  });
+
+  it('el nivel UV sigue traduciéndose sin el prefijo que recorta el detalle', () => {
+    expect(tr('Muy alto')).toBe('Very high');
+    expect(tr('Extremo')).toBe('Extreme');
+  });
+
+  it('cubre los tamaños de parking que existen en los datos', () => {
+    expect(tr('Menos de 50 plazas')).toBe('Fewer than 50 spaces');
+    expect(tr('Entre 50 y 100 plazas')).toBe('50-100 spaces');
+  });
+
+  it('traduce el "cielo claro" de OpenWeather, no solo el de AEMET', () => {
+    // `tiempoActual.cielo` viene de OpenWeather y usa otra palabra que AEMET.
+    expect(tr('Cielo claro')).toBe('Clear sky');
+    expect(tr('Cielo despejado')).toBe('Clear sky');
+  });
+});
+
+describe('integridad de las tablas', () => {
+  it('no hay colisiones entre tablas salvo la documentada de "fresco"', () => {
+    const vistas = new Map<string, string>();
+    const colisiones: string[] = [];
+
+    for (const [nombre, tabla] of Object.entries(TABLAS_API)) {
+      for (const clave of Object.keys(tabla)) {
+        const previa = vistas.get(clave);
+        if (previa) colisiones.push(`${clave} (${previa} vs ${nombre})`);
+        else vistas.set(clave, nombre);
+      }
+    }
+
+    // 'fresco' es a la vez nivel de viento y sensación térmica; gana la
+    // sensación por el orden del spread. Cualquier otra colisión sería un bug:
+    // la última tabla ensombrecería a la anterior en silencio.
+    expect(colisiones).toEqual(['fresco (MAPA_VIENTO vs MAPA_SENSACION)']);
   });
 });

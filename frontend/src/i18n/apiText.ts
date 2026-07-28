@@ -36,6 +36,10 @@ const MAPA_CIELO: Record<string, string> = {
   'algo de nubes': 'a few clouds',
   'nubes': 'clouds',
   'nubes dispersas': 'scattered clouds',
+  // OpenWeather en español dice "cielo claro", no "cielo despejado" (que es lo
+  // que dice AEMET). Es el titular del detalle en cualquier día soleado, así que
+  // la fuga se veía en la primera línea de la página. Detectado ejecutando la app.
+  'cielo claro': 'clear sky',
   'lluvia': 'rain',
   'lluvia ligera': 'light rain',
   'lluvia escasa': 'light rain',
@@ -49,29 +53,49 @@ const MAPA_CIELO: Record<string, string> = {
   'nieve': 'snow',
 };
 
-// Viento (descripciones y fragmentos)
-const MAPA_VIENTO: Record<string, string> = {
-  'en calma': 'calm',
-  'calma': 'calm',
-  'flojo': 'light',
-  'viento flojo': 'light wind',
-  'moderado': 'moderate',
-  'viento moderado': 'moderate wind',
-  'fuerte': 'strong',
-  'viento fuerte': 'strong wind',
-  'muy fuerte': 'very strong',
-  'sin viento': 'no wind',
-  'brisa suave': 'gentle breeze',
-  'brisa': 'breeze',
-  'variable': 'variable',
+/**
+ * Direcciones cardinales. Se usan sueltas (como fragmento) y como segunda mitad
+ * de las descripciones compuestas de AEMET ("flojo del noreste").
+ * `nordeste`/`sudoeste` son las variantes que también emite AEMET.
+ */
+const DIRECCION_VIENTO: Record<string, string> = {
   'norte': 'north',
   'sur': 'south',
   'este': 'east',
   'oeste': 'west',
   'noreste': 'northeast',
+  'nordeste': 'northeast',
   'noroeste': 'northwest',
   'sureste': 'southeast',
   'suroeste': 'southwest',
+  'sudoeste': 'southwest',
+};
+
+/** Intensidades del viento, primera mitad de las descripciones compuestas. */
+const INTENSIDAD_VIENTO: Record<string, string> = {
+  'en calma': 'calm',
+  'calma': 'calm',
+  'flojo': 'light',
+  'moderado': 'moderate',
+  'fresco': 'fresh',
+  'fuerte': 'strong',
+  'muy fuerte': 'very strong',
+};
+
+// Viento (descripciones y fragmentos)
+const MAPA_VIENTO: Record<string, string> = {
+  ...DIRECCION_VIENTO,
+  ...INTENSIDAD_VIENTO,
+  'viento flojo': 'light wind',
+  'viento moderado': 'moderate wind',
+  // `BeachScorer` emite este literal en `razonRanking`. La forma suelta
+  // ('fresco') NO se añade aquí: la pisa `MAPA_SENSACION` (ver nota al fusionar).
+  'viento fresco': 'fresh wind',
+  'viento fuerte': 'strong wind',
+  'sin viento': 'no wind',
+  'brisa suave': 'gentle breeze',
+  'brisa': 'breeze',
+  'variable': 'variable',
 };
 
 // Oleaje / estado del mar
@@ -85,8 +109,20 @@ const MAPA_OLEAJE: Record<string, string> = {
   'marejadilla': 'slight sea',
   'marejada': 'moderate sea',
   'fuerte marejada': 'rough sea',
-  'mar gruesa': 'very rough sea',
+  'mar gruesa': 'rough sea',
   'mar de fondo': 'groundswell',
+  // Derivados del viento en el backend (`wavesFromWind`, `wavesTextFromWind`).
+  'agitado': 'choppy',
+  'tranquilo': 'calm',
+  // Resto de la escala Douglas de AEMET. Ojo: NO se añaden 'moderado' ni
+  // 'fuerte' sueltos, que ya resuelven vía MAPA_VIENTO — añadirlos aquí los
+  // pisaría por el orden del spread.
+  'llana': 'calm sea',
+  'gruesa': 'rough sea',
+  'muy gruesa': 'very rough sea',
+  'arbolada': 'high sea',
+  'montañosa': 'very high sea',
+  'enorme': 'phenomenal sea',
 };
 
 // Sensación térmica / temperatura
@@ -105,6 +141,10 @@ const MAPA_SENSACION: Record<string, string> = {
   'muy frío': 'very cold',
   'muy caluroso': 'very hot',
   'caluroso': 'hot',
+  // Escala completa de `sensationFromTemp` en el backend.
+  'templado': 'mild',
+  'calor moderado': 'warm',
+  'calor intenso': 'very hot',
 };
 
 // Niveles UV ("muy alto" tras quitar el prefijo "índice ultravioleta")
@@ -114,11 +154,8 @@ const MAPA_UV: Record<string, string> = {
   'alto': 'high',
   'muy alto': 'very high',
   'extremo': 'extreme',
-  'índice ultravioleta bajo': 'low UV index',
-  'índice ultravioleta medio': 'moderate UV index',
-  'índice ultravioleta alto': 'high UV index',
-  'índice ultravioleta muy alto': 'very high UV index',
-  'índice ultravioleta extremo': 'extreme UV index',
+  // Las variantes con el prefijo completo se han eliminado: `PlayaDetalle` lo
+  // recorta antes de traducir, así que nunca llegaban a consultarse.
 };
 
 // Fragmentos generados por el ranking del backend (razonRanking / motivoBaja)
@@ -140,6 +177,18 @@ const MAPA_RANKING: Record<string, string> = {
   'riesgo': 'risk',
   'riesgo importante': 'significant risk',
   'riesgo extremo': 'extreme risk',
+  // Fragmentos de `buildCautionReason` / `buildDowngradeFactors`.
+  'condiciones aceptables': 'acceptable conditions',
+  'baño prohibido': 'swimming prohibited',
+  'uv muy alto': 'very high UV',
+  'temperatura baja': 'low temperature',
+  'condiciones poco favorables': 'unfavourable conditions',
+  // Motivos de exclusión: llegan como cadena completa, sin comas.
+  'baño prohibido (bandera negra)': 'swimming prohibited (black flag)',
+  'bandera roja con viento muy fuerte': 'red flag with very strong wind',
+  'tormenta activa': 'active storm',
+  'alerta meteorológica': 'weather alert',
+  'condiciones peligrosas': 'dangerous conditions',
 };
 
 // Colores de bandera tal cual llegan de Cruz Roja ("Verde"/"Amarilla"/"Roja")
@@ -147,6 +196,10 @@ const MAPA_COLORES: Record<string, string> = {
   'verde': 'green',
   'amarilla': 'yellow',
   'roja': 'red',
+  // El backend también emite estas dos (`flagToEs`), aunque hoy la interfaz las
+  // trate como "sin datos" — ver known-issues/blackFlag.test.tsx.
+  'negra': 'black',
+  'desconocida': 'unknown',
 };
 
 // Información estática de la playa (tipoPlaya, arena, acceso, bus...)
@@ -174,10 +227,21 @@ const MAPA_INFO: Record<string, string> = {
   'sí': 'yes',
   'no': 'no',
   'más de 100 plazas': 'more than 100 spaces',
-  'menos de 100 plazas': 'fewer than 100 spaces',
+  'menos de 50 plazas': 'fewer than 50 spaces',
+  'entre 50 y 100 plazas': '50-100 spaces',
   'no disponible': 'not available',
 };
 
+/**
+ * Tabla única de consulta. OJO con el orden: una clave repetida la gana la
+ * ÚLTIMA tabla del spread. Hoy solo colisiona `'fresco'`, a propósito:
+ * lo emiten tanto el viento como la sensación térmica, y gana la sensación
+ * ('cool'). El lado del viento se resuelve donde sí hay contexto: con el
+ * literal `'viento fresco'` y dentro de la traducción compuesta.
+ *
+ * El test `no hay colisiones entre tablas salvo la documentada` vigila que no
+ * se cuele ninguna más (p. ej. un `'fuerte'` de oleaje pisaría el del viento).
+ */
 const MAPA_API: Record<string, string> = {
   ...MAPA_CIELO,
   ...MAPA_VIENTO,
@@ -187,6 +251,18 @@ const MAPA_API: Record<string, string> = {
   ...MAPA_RANKING,
   ...MAPA_COLORES,
   ...MAPA_INFO,
+};
+
+/** Tablas expuestas solo para el test que vigila las colisiones. */
+export const TABLAS_API = {
+  MAPA_CIELO,
+  MAPA_VIENTO,
+  MAPA_OLEAJE,
+  MAPA_SENSACION,
+  MAPA_UV,
+  MAPA_RANKING,
+  MAPA_COLORES,
+  MAPA_INFO,
 };
 
 /** Conserva la capitalización inicial del texto original. */
@@ -199,10 +275,54 @@ function respetarMayuscula(original: string, traduccion: string): string {
   return traduccion;
 }
 
+/**
+ * Conectores entre intensidad y dirección, del más específico al menos.
+ * El espacio suelto va el último para que "flojo variable" también parta.
+ */
+const CONECTORES_VIENTO = [' del ', ' de ', ' '];
+
+/**
+ * Traduce las descripciones compuestas de viento de AEMET ("flojo del noreste"),
+ * que no se pueden enumerar: son intensidad × dirección y el texto es libre.
+ *
+ * PROPIEDAD DE SEGURIDAD: solo devuelve algo si TODAS las partes son conocidas.
+ * Si cualquiera falla, devuelve null y el fragmento se deja intacto. Eso es lo
+ * que impide destrozar texto libre que contenga " de " o " del ", como el campo
+ * `acceso` ("A pie por el recinto de la península de La Magdalena").
+ *
+ * Devuelve null si no reconoce la forma.
+ */
+function traducirVientoCompuesto(fragmento: string): string | null {
+  const bajo = fragmento.toLowerCase();
+
+  for (const conector of CONECTORES_VIENTO) {
+    // La dirección es siempre el último token, de ahí lastIndexOf.
+    const corte = bajo.lastIndexOf(conector);
+    if (corte < 0) continue;
+
+    const izq = bajo.slice(0, corte).replace(/^viento /, '');
+    const der = bajo.slice(corte + conector.length).replace(/^componente /, '');
+
+    const intensidad = INTENSIDAD_VIENTO[izq];
+    if (!intensidad) continue;
+
+    if (der === 'variable') return `${intensidad} variable wind`;
+
+    const direccion = DIRECCION_VIENTO[der];
+    if (direccion) return `${intensidad} wind from the ${direccion}`;
+  }
+
+  return null;
+}
+
 function traducirFragmento(fragmento: string): string {
   if (!fragmento) return fragmento;
   const directo = MAPA_API[fragmento.toLowerCase()];
   if (directo) return respetarMayuscula(fragmento, directo);
+
+  const viento = traducirVientoCompuesto(fragmento);
+  if (viento) return respetarMayuscula(fragmento, viento);
+
   // Fragmento numérico ("19°", "09:00 - 21:00") o texto libre → intacto
   return fragmento;
 }
