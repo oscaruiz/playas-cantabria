@@ -144,11 +144,7 @@
     "parkingDescripcion": "Más de 100 plazas",
     "bus": "Interurbano",
     "hospitalDistancia": 30,
-    "submarinismo": false,
-    "webcam": {
-      "url": "https://www.camaramar.com/webcam/bareyo-playa-de-cuberris",
-      "cobertura": "exacta"
-    }
+    "submarinismo": false
   },
   {
     "nombre": "Oriñon",
@@ -724,10 +720,6 @@
     "bus": "Interurbano (Santander-San Vicente de la Barquera)",
     "hospitalDistancia": 35,
     "submarinismo": false,
-    "webcam": {
-      "url": "https://www.camaramar.com/webcam/san-vicente-de-la-barquera-playa-de-meron",
-      "cobertura": "exacta"
-    },
     "alias": [
       "El Rosal"
     ],
@@ -840,11 +832,7 @@
     "parkingDescripcion": "Más de 100 plazas",
     "bus": "Interurbano (Torrelavega-Suances)",
     "hospitalDistancia": 15,
-    "submarinismo": false,
-    "webcam": {
-      "url": "https://www.camaramar.com/webcam/tagle-playa-de-la-tablia",
-      "cobertura": "exacta"
-    }
+    "submarinismo": false
   },
   {
     "nombre": "Bikinis",
@@ -1274,7 +1262,11 @@
     "acceso": [
       "En coche por la N-634 y la S-4832",
       "A pie"
-    ]
+    ],
+    "webcam": {
+      "url": "https://webcamsdeasturias.com/webcam.php?id=57",
+      "cobertura": "compartida"
+    }
   },
   {
     "nombre": "Berria",
@@ -1307,7 +1299,11 @@
     "acceso": [
       "A pie",
       "En coche"
-    ]
+    ],
+    "webcam": {
+      "url": "https://www.watsaysurfschool.com/webcam/",
+      "cobertura": "exacta"
+    }
   },
   {
     "nombre": "Helgueras",
@@ -1413,7 +1409,11 @@
     "arena": "Arena dorada y fina",
     "acceso": [
       "A pie mediante escaleras"
-    ]
+    ],
+    "webcam": {
+      "url": "https://www.skylinewebcams.com/en/webcam/espana/cantabria/suances/playa-de-los-locos.html",
+      "cobertura": "exacta"
+    }
   },
   {
     "nombre": "Covachos",
