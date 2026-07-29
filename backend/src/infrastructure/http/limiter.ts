@@ -13,7 +13,12 @@
 
 const LIMITES: Record<string, number> = {
   'api.openweathermap.org': 4,
-  'opendata.aemet.es': 3,
+  // AEMET OpenData limita POR CLAVE, no por IP, y con poca tolerancia a ráfagas:
+  // en el primer arranque en producción, 40 peticiones (20 playas x meta+datos)
+  // se saldaron con 14 correctas y 6 rechazadas con 429, y el enfriamiento cortó
+  // el resto. Serializadas tardan unos segundos más, pero ese fan-out siempre
+  // ocurre en segundo plano (refresco de /featured), así que no lo espera nadie.
+  'opendata.aemet.es': 1,
   'www.aemet.es': 3,
   'api.open-meteo.com': 4,
   'www.cruzroja.es': 3,
