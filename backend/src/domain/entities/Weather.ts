@@ -18,6 +18,10 @@ export interface Weather {
    *  alternative to `description` (2xx/3xx/5xx = precipitating). Optional. */
   conditionCode?: number | null;
 
+  /** Nubosidad (%) de la observación actual. La rellena OpenWeather
+   *  (`clouds.all`); sirve para estimar UV sin gastar otra llamada. Opcional. */
+  cloudinessPct?: number | null;
+
   windSpeedMs: number | null;
   windDirectionDeg: number | null;
 

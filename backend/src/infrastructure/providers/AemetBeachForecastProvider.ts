@@ -30,7 +30,8 @@ export class AemetBeachForecastProvider {
     if (!cfg.aemetApiKey) throw new Error('Missing AEMET_API_KEY');
 
     const cacheKey = `aemet:beach:${codigo}`;
-    return this.cache.getOrSet(cacheKey, cfg.cacheTtlSeconds, async () => {
+    // AEMET publica esta previsión un par de veces al día: TTL de previsión.
+    return this.cache.getOrSetStale(cacheKey, Config.forecastTtlSeconds(), Config.forecastStaleTtlSeconds(), async () => {
       const metaUrl = `https://opendata.aemet.es/opendata/api/prediccion/especifica/playa/${codigo}`;
       const meta = await http.get(metaUrl, {
         headers: { api_key: cfg.aemetApiKey as string },

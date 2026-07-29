@@ -16,7 +16,8 @@
     "test:watch": "vitest src/__tests__",
     "test:scraper": "tsx src/scripts/test-scraper.ts",
     "test:full": "tsx src/scripts/test-full-details.ts",
-    "scrape:flags": "tsx src/scripts/scrape-flags.ts"
+    "scrape:flags": "tsx src/scripts/scrape-flags.ts",
+    "build:snapshot": "tsx src/scripts/build-snapshot.ts"
   },
   "dependencies": {
     "axios": "^1.7.7",

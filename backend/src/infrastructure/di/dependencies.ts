@@ -1,5 +1,7 @@
 import { DIContainer } from './DIContainer';
 import { InMemoryCache } from '../cache/InMemoryCache';
+import { TieredCache } from '../cache/TieredCache';
+import { UpstashRedisStore } from '../cache/UpstashRedisStore';
 import { JsonBeachRepository } from '../repositories/JsonBeachRepository';
 import { AemetWeatherProvider } from '../providers/AemetWeatherProvider';
 import { OpenWeatherWeatherProvider } from '../providers/OpenWeatherWeatherProvider';
@@ -14,9 +16,19 @@ import { AemetBeachForecastProvider } from '../providers/AemetBeachForecastProvi
 import { AemetBeachWebScraper } from '../providers/AemetBeachWebScraper';
 import { OpenMeteoPrecipitationProvider } from '../providers/OpenMeteoPrecipitationProvider';
 
+/**
+ * Caché de la app: con Upstash configurado (UPSTASH_REDIS_REST_URL/TOKEN) se usa
+ * la de dos niveles, que sobrevive al dormido y a los despliegues de Render free.
+ * Sin esas variables, exactamente la de siempre en memoria.
+ */
+function crearCache(): InMemoryCache {
+  const l2 = UpstashRedisStore.fromEnv();
+  return l2 ? new TieredCache(l2) : new InMemoryCache();
+}
+
 export function configureDependencies(container: DIContainer, overrides: { cache?: InMemoryCache } = {}): void {
   // Infrastructure Layer - Singletons
-  container.registerSingleton('cache', () => overrides.cache ?? new InMemoryCache());
+  container.registerSingleton('cache', () => overrides.cache ?? crearCache());
   
   container.registerSingleton('beachRepository', (c) => 
     new JsonBeachRepository(c.get('cache'))

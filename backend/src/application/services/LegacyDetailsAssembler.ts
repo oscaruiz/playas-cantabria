@@ -372,16 +372,19 @@ export class LegacyDetailsAssembler {
       // forecast failed -> keep current value
     }
 
-    // Step 5: UV enrichment (OneCall + cloudiness estimation)
+    // Step 5: UV. Prioridad: AEMET (ya en clima) → Open-Meteo (viene GRATIS en el
+    // nowcast del Step 1.6, misma petición) → estimación por nubosidad. La antigua
+    // llamada a OpenWeather One Call 2.5 se retiró: el endpoint está muerto y solo
+    // gastaba cuota para acabar siempre aquí abajo.
     if (base.clima) {
       let hoyUv: number | null = base.clima.hoy.uvIndex ?? null;
       let mananaUv: number | null = base.clima.manana ? base.clima.manana.uvIndex ?? null : null;
 
-      try {
-        const uv = await this.openWeather.getDailyUVIndex(details.beach.latitude, details.beach.longitude);
-        hoyUv = hoyUv ?? uv.today ?? null;
-        mananaUv = base.clima.manana ? (mananaUv ?? uv.tomorrow ?? null) : null;
-      } catch {}
+      const uvOpenMeteo = rainSignal?.uvIndexMax ?? null;
+      if (uvOpenMeteo) {
+        hoyUv = hoyUv ?? uvOpenMeteo.today ?? null;
+        mananaUv = base.clima.manana ? (mananaUv ?? uvOpenMeteo.tomorrow ?? null) : null;
+      }
 
       if (hoyUv == null || (base.clima.manana && mananaUv == null)) {
         try {

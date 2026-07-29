@@ -38,6 +38,41 @@ export class RedCrossFlagProvider implements FlagProvider {
   // scrape en vivo (que funciona en local).
   private fileFlags: Map<number, FlagStatus> | null = null;
 
+  // Cortacircuitos del scrape en vivo. cruzroja.es responde en 10-12s y bloquea
+  // por WAF a las IPs de datacenter: con 69 puestos, reintentar en cada petición
+  // secuestra el único proceso (0,1 CPU en Render free) sin obtener nada. Tras
+  // varios fallos seguidos se deja de intentar un rato y se sirve flags.json.
+  private fallosSeguidos = 0;
+  private abiertoHasta = 0;
+  private static readonly FALLOS_PARA_ABRIR = 3;
+  private static readonly APERTURA_MS = 15 * 60 * 1000;
+
+  private get circuitoAbierto(): boolean {
+    if (this.abiertoHasta === 0) return false;
+    if (Date.now() >= this.abiertoHasta) {
+      // Medio abierto: se deja pasar un intento para autocurarse.
+      this.abiertoHasta = 0;
+      this.fallosSeguidos = 0;
+      return false;
+    }
+    return true;
+  }
+
+  private anotarResultadoLive(ok: boolean): void {
+    if (ok) {
+      this.fallosSeguidos = 0;
+      this.abiertoHasta = 0;
+      return;
+    }
+    this.fallosSeguidos++;
+    if (this.fallosSeguidos >= RedCrossFlagProvider.FALLOS_PARA_ABRIR) {
+      this.abiertoHasta = Date.now() + RedCrossFlagProvider.APERTURA_MS;
+      console.error(
+        `[CRUZ ROJA] ${this.fallosSeguidos} fallos seguidos: scrape en vivo en pausa 15 min (se sirve flags.json)`
+      );
+    }
+  }
+
   constructor(
     private readonly cache: InMemoryCache,
     private readonly flagsFile = 'data/flags.json'
@@ -130,6 +165,8 @@ export class RedCrossFlagProvider implements FlagProvider {
     const cacheado = this.cache.get<FlagStatus>(key);
     if (cacheado !== undefined) return cacheado;
 
+    if (this.circuitoAbierto) return null;
+
     try {
       // El catch externo devuelve null SIN cachear: cruzroja.es es lento e
       // inestable (respuestas de 10-12s y 503 intermitentes tras su WAF F5), así
@@ -157,8 +194,10 @@ export class RedCrossFlagProvider implements FlagProvider {
       // caché (por eso el `get` de arriba sale antes): si se renovara en cada
       // petición, una bandera con color no caducaría nunca mientras haya tráfico.
       if (status?.color) this.cache.set(key, status, TTL_CON_COLOR);
+      this.anotarResultadoLive(true);
       return status;
     } catch {
+      this.anotarResultadoLive(false);
       return null;
     }
   }

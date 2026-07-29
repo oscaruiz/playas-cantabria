@@ -51,6 +51,8 @@ export interface RainNowcast {
   timestamp: number;
   /** Previsión de precipitación próximas ~6h (null si Open-Meteo no respondió). */
   upcoming?: RainUpcoming | null;
+  /** UV máximo hoy/mañana de Open-Meteo (null si no respondió). */
+  uvIndexMax?: UvIndexMax | null;
 }
 
 /** Observación cruda de precipitación actual de Open-Meteo. */
@@ -66,4 +68,13 @@ export interface PrecipitationNow {
   weatherCode: number | null;
   /** Tramos de 15 min de las próximas ~6h (minutely_15). Vacío si la API no los trae. */
   upcomingSlots?: PrecipitationSlot[];
+  /** UV máximo previsto para hoy y mañana (`daily.uv_index_max`), en la MISMA
+   *  petición que la precipitación: sustituye a la llamada muerta de One Call. */
+  uvIndexMax?: UvIndexMax | null;
+}
+
+/** UV máximo diario (hoy / mañana). */
+export interface UvIndexMax {
+  today: number | null;
+  tomorrow: number | null;
 }

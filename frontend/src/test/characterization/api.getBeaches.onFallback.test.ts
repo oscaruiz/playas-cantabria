@@ -22,9 +22,16 @@ async function loadApi() {
   return import('../../services/api');
 }
 
+// Ver nota en api.getBeaches.test.ts: el listado real que guarda un test en
+// localStorage sería el fallback del siguiente.
+beforeEach(() => {
+  localStorage.clear();
+});
+
 afterEach(() => {
   restoreFetch();
   jest.dontMock('../../data/beaches.json');
+  localStorage.clear();
 });
 
 describe('getPlayas — señal de datos locales', () => {

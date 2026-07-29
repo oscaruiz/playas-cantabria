@@ -29,9 +29,19 @@ async function loadApi() {
   return import('../../services/api');
 }
 
+// Aislamiento entre tests: `getPlayas` guarda en localStorage el último listado
+// REAL del backend y lo prefiere al JSON del build como fallback. Sin limpiar,
+// el listado que deja un test contamina el fallback del siguiente. Lo que estos
+// tests fijan es el camino "no hay copia guardada" → JSON del build; el camino
+// con copia guardada vive en api.getBeaches.persistencia.test.ts.
+beforeEach(() => {
+  localStorage.clear();
+});
+
 afterEach(() => {
   restoreFetch();
   jest.useRealTimers();
+  localStorage.clear();
 });
 
 describe('getPlayas — carrera contra el fallback local', () => {

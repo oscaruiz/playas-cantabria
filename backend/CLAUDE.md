@@ -154,15 +154,44 @@ Environment variables (or `.env`):
 - `CORS_ORIGIN` (default *)
 - `AEMET_API_KEY` — for OpenData API (fallback layer 2)
 - `OPENWEATHER_API_KEY` — for OpenWeather (fallback layer 3)
-- `CACHE_TTL_SECONDS` (default 300)
+- `CACHE_TTL_SECONDS` (default 1800) — TTL BASE de proveedores; se multiplica por `ttlFactor()`
+  (×1 en franja de playa de temporada, ×4 el resto del día, ×12 fuera de temporada). Bajarlo a 300
+  multiplicaría por 6 el consumo y rompería la cuota diaria de Open-Meteo.
+- `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` — opcionales. Si están, la caché pasa a ser
+  de dos niveles (`TieredCache`) y sobrevive al dormido y a los despliegues de Render free.
 - `DEBUG_WEATHER=1` — enables detailed logs from all providers
+
+## Cuota y diagnóstico
+
+`GET /api/_diag/metrics` expone el consumo real: peticiones salientes por host (desde el arranque,
+última hora y último día), concurrencia y enfriamientos por 429, aciertos/fallos de caché por familia
+de clave y RSS. Es la única forma fiable de saber a qué distancia se está de los límites gratuitos
+(OpenWeather 60/min y 1M/mes, Open-Meteo 10k/día).
+
+Referencias medidas en local con 46 playas y caché fría: un `/details` completo cuesta **2 llamadas a
+OpenWeather** (antes 6) y un `/featured` completo ~132 peticiones salientes. Con `data/snapshot.json`
+sembrado, el primer `/featured` tras arrancar cuesta **0 peticiones** y responde en decenas de ms.
 
 ## Rules for Claude Code
 
 - **Never delete existing providers.** Add new ones, don't replace.
 - **Never change HTTP endpoint signatures.** Existing response fields are backward compatible.
 - **Defensive parsing**: every field from external APIs can be null. Never assume a field exists.
-- **Cache everything**: always use `cache.getOrSet()` for external calls. Never make uncached requests.
+- **Cache everything**: never make an uncached external request, y elige el TTL según la
+  naturaleza del dato:
+  - **AHORA** (observación actual, precipitación en curso) →
+    `Config.providerTtlSeconds()` / `providerStaleTtlSeconds()`. Corto a propósito: manda la
+    frescura del "¿está lloviendo?".
+  - **PREVISIÓN** (forecast de OpenWeather, playas de AEMET, scraper web) →
+    `Config.forecastTtlSeconds()` / `forecastStaleTtlSeconds()`. AEMET publica la previsión de
+    playa un par de veces al día; pedirla al ritmo del nowcast gastaba ~6.500 llamadas diarias
+    para recibir los mismos bytes.
+
+  Siempre con `getOrSetStale`: la ventana stale hace que una caída del proveedor sirva el último
+  valor bueno en vez de `null`. Ambos TTL se escalan solos con `ttlFactor()` (hora y temporada).
+- **One payload, one call**: before adding a provider method, check whether an existing cache key
+  already holds that payload. The three OpenWeather methods that each re-fetched `/data/2.5/forecast`
+  cost 3× the quota for the same bytes; they now share `getForecastRaw()`.
 - **Encoding**: when downloading from aemet.es, always use `responseType: 'arraybuffer'` + `iconv-lite`.
 - **Type-check**: run `npx tsc --noEmit` after every change to verify types.
 - **Logging**: use `debugLog()` from `infrastructure/utils/debug.ts`, not direct console.log (except for critical process errors).
