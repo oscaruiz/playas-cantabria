@@ -51,12 +51,29 @@ const HOST_TOMADO = Symbol('hostTomado');
 // previo, se falla rápido: el proveedor tiene stale-while-revalidate, así que el
 // usuario recibe el último valor bueno en vez de otra llamada que también sería
 // rechazada.
+//
+// El enfriamiento se comprueba DESPUÉS de coger turno, y esto es lo importante:
+// en un fan-out, las peticiones entran todas a la vez y se quedan esperando en la
+// cola del semáforo. Si se mirase solo al entrar, todas habrían pasado el control
+// antes de que la primera respuesta trajera el 429, y saldrían igualmente. Fue
+// exactamente lo observado contra AEMET: seis 429 seguidos en vez de uno.
 http.interceptors.request.use(async (config: any) => {
   const host = hostOf(config?.url, config?.baseURL);
-  const enfriando = hostLimiter.enfriamientoRestanteMs(host);
-  if (enfriando > 0) throw new HostEnfriadoError(host, enfriando);
+  const rechazaSiEnfriando = () => {
+    const restante = hostLimiter.enfriamientoRestanteMs(host);
+    if (restante > 0) throw new HostEnfriadoError(host, restante);
+  };
+
+  rechazaSiEnfriando(); // barato: evita encolar lo que ya está condenado
 
   await hostLimiter.adquirir(host);
+  try {
+    rechazaSiEnfriando(); // el 429 puede haber llegado mientras esperaba turno
+  } catch (e) {
+    hostLimiter.liberar(host);
+    throw e;
+  }
+
   config[HOST_TOMADO] = host;
   return config;
 });
