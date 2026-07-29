@@ -9,10 +9,11 @@
 // service worker, and the Workbox build step will be skipped.
 
 import { clientsClaim } from 'workbox-core';
+import { CacheableResponsePlugin } from 'workbox-cacheable-response';
 import { ExpirationPlugin } from 'workbox-expiration';
 import { precacheAndRoute, createHandlerBoundToURL } from 'workbox-precaching';
 import { registerRoute } from 'workbox-routing';
-import { StaleWhileRevalidate } from 'workbox-strategies';
+import { NetworkFirst, StaleWhileRevalidate } from 'workbox-strategies';
 
 declare const self: ServiceWorkerGlobalScope;
 
@@ -65,6 +66,28 @@ registerRoute(
       // Ensure that once this runtime cache reaches a maximum size the
       // least-recently used images are removed.
       new ExpirationPlugin({ maxEntries: 50 }),
+    ],
+  })
+);
+
+// Respuestas del backend de playas (otro origen: Render).
+//
+// NetworkFirst con timeout corto: se intenta el dato fresco, pero si el backend
+// está dormido —Render free duerme el proceso a los 15 min y tarda decenas de
+// segundos en despertar— se sirve la última respuesta cacheada en vez de dejar
+// al usuario mirando un spinner. Efecto secundario buscado: la app sigue siendo
+// útil en la playa con mala cobertura, y las revisitas no gastan cuota de las
+// APIs gratuitas.
+registerRoute(
+  ({ url }) => url.pathname.startsWith('/api/beaches'),
+  new NetworkFirst({
+    cacheName: 'api-playas',
+    networkTimeoutSeconds: 3,
+    plugins: [
+      // Solo se cachean respuestas completas: una 5xx del backend no debe
+      // quedarse pegada como si fuera el dato bueno.
+      new CacheableResponsePlugin({ statuses: [200] }),
+      new ExpirationPlugin({ maxEntries: 60, maxAgeSeconds: 24 * 60 * 60 }),
     ],
   })
 );

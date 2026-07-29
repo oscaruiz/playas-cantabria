@@ -3,11 +3,50 @@ import { buildApiUrl } from '../config/api';
 const PLAYAS_FALLBACK_TIMEOUT_MS = 2500;
 const CLIENT_CACHE_TTL_MS = 5 * 60 * 1000;
 
+const CLAVE_PLAYAS_GUARDADAS = 'playas:ultimoListado';
+/** Pasado un día, la copia guardada deja de ser mejor que el JSON del build. */
+const EDAD_MAXIMA_GUARDADAS_MS = 24 * 60 * 60 * 1000;
+
 let fallbackPromise: Promise<Playa[]> | null = null;
 let playasRequest: Promise<Playa[]> | null = null;
 let playasCache: { value: Playa[]; expiresAt: number } | null = null;
 
+/**
+ * Guarda el último listado REAL del backend. `data/beaches.json` es una foto del
+ * momento del build, así que una respuesta de ayer del backend siempre es mejor
+ * fallback que esa copia. Escribir en localStorage puede fallar (modo privado,
+ * cuota llena): nunca debe romper la petición.
+ */
+function guardarPlayas(data: Playa[]): void {
+  if (data.length === 0) return;
+  try {
+    localStorage.setItem(
+      CLAVE_PLAYAS_GUARDADAS,
+      JSON.stringify({ guardadoEn: Date.now(), playas: data }),
+    );
+  } catch {
+    // sin persistencia: se seguirá usando el JSON del build
+  }
+}
+
+function leerPlayasGuardadas(): Playa[] | null {
+  try {
+    const crudo = localStorage.getItem(CLAVE_PLAYAS_GUARDADAS);
+    if (!crudo) return null;
+    const parsed = JSON.parse(crudo) as { guardadoEn?: number; playas?: unknown };
+    if (!Array.isArray(parsed.playas) || parsed.playas.length === 0) return null;
+    if (typeof parsed.guardadoEn !== 'number') return null;
+    if (Date.now() - parsed.guardadoEn > EDAD_MAXIMA_GUARDADAS_MS) return null;
+    return parsed.playas as Playa[];
+  } catch {
+    return null;
+  }
+}
+
 function loadFallbackPlayas(): Promise<Playa[]> {
+  const guardadas = leerPlayasGuardadas();
+  if (guardadas) return Promise.resolve(guardadas);
+
   fallbackPromise ??= import('../data/beaches.json').then(
     (module) => module.default as Playa[],
   );
@@ -27,6 +66,7 @@ function fetchPlayasOnce(): Promise<Playa[]> {
     })
     .then((data) => {
       playasCache = { value: data, expiresAt: Date.now() + CLIENT_CACHE_TTL_MS };
+      guardarPlayas(data);
       return data;
     })
     .finally(() => {
