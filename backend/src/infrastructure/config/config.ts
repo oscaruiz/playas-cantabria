@@ -178,9 +178,20 @@ export type ModoCorreccionCielo = 'off' | 'shadow' | 'on';
 /**
  * Modo del corrector de cielo por insolación observada.
  *
- *  shadow  calcula y cuenta lo que HARÍA, pero devuelve el dato sin tocar (por defecto)
- *  on      aplica la corrección
+ *  on      aplica la corrección (POR DEFECTO)
+ *  shadow  calcula y cuenta lo que haría, pero devuelve el dato sin tocar
  *  off     ni siquiera la calcula
+ *
+ * Nació en `shadow` para validarlo sin tocar producción. Se cambió a `on` el
+ * 29-jul con la costa cubierta: el METAR de Santander daba OVC020 (cubierto
+ * total) y la insolación 0 minutos en toda la costa, mientras los modelos
+ * seguían diciendo despejado en las 46 playas. La validación en sombra dio 44
+ * correcciones y 2 descartes, justo los previstos.
+ *
+ * El defecto vive aquí y no en una variable del panel de Render a propósito:
+ * así queda versionado, y el generador del snapshot en CI usa el mismo criterio
+ * que el servidor (si divergen, la primera respuesta tras arrancar sale con el
+ * cielo sin corregir hasta el primer refresco).
  *
  * Se lee de `process.env` en cada llamada en vez de pasar por `loadConfig()`: no
  * es un secreto ni viaja en la runtime config de Firebase, y así se puede
@@ -188,7 +199,7 @@ export type ModoCorreccionCielo = 'off' | 'shadow' | 'on';
  */
 export function skyCorrectionMode(): ModoCorreccionCielo {
   const v = (process.env.SKY_CORRECTION ?? '').trim().toLowerCase();
-  return v === 'on' || v === 'off' ? v : 'shadow';
+  return v === 'shadow' || v === 'off' ? v : 'on';
 }
 
 /**

@@ -53,11 +53,10 @@ describe('corregirCieloObservado — modos', () => {
     expect(snap.corregidas.map((c) => c.playa)).toEqual(['Sardinero']);
   });
 
-  it('shadow es el modo por defecto si la env no está puesta', () => {
+  it('sin env puesta corrige: "on" es el modo por defecto', () => {
     delete process.env.SKY_CORRECTION;
-    expect(corregirCieloObservado('Sardinero', DESPEJADO, SIN_SOL, false, EN_FRANJA)).toBe(
-      DESPEJADO,
-    );
+    const res = corregirCieloObservado('Sardinero', DESPEJADO, SIN_SOL, false, EN_FRANJA);
+    expect(res?.description).toBe('muy nuboso');
   });
 
   it('on: aplica la corrección', () => {
@@ -78,13 +77,13 @@ describe('corregirCieloObservado — modos', () => {
     expect(skyCorrectionMetrics.snapshot().total).toBe(0);
   });
 
-  it('un valor raro en la env cae a shadow, no a on', () => {
-    // Encender el corrector debe ser deliberado: cualquier cosa que no sea
-    // exactamente "on" deja la salida intacta.
-    process.env.SKY_CORRECTION = 'ON_PLEASE';
-    expect(corregirCieloObservado('Sardinero', DESPEJADO, SIN_SOL, false, EN_FRANJA)).toBe(
-      DESPEJADO,
-    );
+  it('un valor raro en la env cae al defecto (on), no deja el corrector mudo', () => {
+    // Apagarlo tiene que ser deliberado: solo "shadow" u "off" exactos lo paran.
+    // Un typo en la variable no debe dejar la app diciendo "sol" con el cielo
+    // cubierto sin que nadie se entere.
+    process.env.SKY_CORRECTION = 'OFF_PLEASE';
+    const res = corregirCieloObservado('Sardinero', DESPEJADO, SIN_SOL, false, EN_FRANJA);
+    expect(res?.description).toBe('muy nuboso');
   });
 });
 

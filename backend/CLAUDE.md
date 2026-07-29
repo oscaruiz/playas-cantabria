@@ -159,6 +159,11 @@ Environment variables (or `.env`):
   multiplicaría por 6 el consumo y rompería la cuota diaria de Open-Meteo.
 - `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` — opcionales. Si están, la caché pasa a ser
   de dos niveles (`TieredCache`) y sobrevive al dormido y a los despliegues de Render free.
+- `SKY_CORRECTION` — corrector de cielo por insolación observada de AEMET (`inso`).
+  `on` por defecto: corrige el cielo a peor cuando las estaciones no ven sol y el modelo
+  dice despejado. `shadow` calcula y cuenta en `/api/_diag/sky` sin tocar la respuesta;
+  `off` lo desactiva. Solo actúa en franja de playa. Usa el mismo valor en CI que en el
+  servidor, o el primer `/featured` tras arrancar sale del snapshot sin corregir.
 - `DEBUG_WEATHER=1` — enables detailed logs from all providers
 
 ## Cuota y diagnóstico
