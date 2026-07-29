@@ -3,6 +3,12 @@ name: Scrape Cruz Roja flags
 # Scrapea las banderas de Cruz Roja desde el runner de GitHub (IP no-Render) y
 # commitea backend/data/flags.json, que el backend sirve como fuente primaria.
 # (En Render el scrape en vivo da 403 por el WAF F5; esto lo desacopla.)
+#
+# El push a main REDESPLIEGA en Render, y eso es intencionado: el backend lee
+# flags.json una sola vez al arrancar, así que el despliegue es el mecanismo de
+# entrega de las banderas nuevas. Para que ese arranque no le cueste al primer
+# usuario el fan-out completo a los proveedores, en el mismo commit viaja
+# data/snapshot.json con el agregado ya calculado (ver build-snapshot.ts).
 
 on:
   # Al desplegar (push a main) refrescamos las banderas para que producción no
@@ -52,14 +58,27 @@ jobs:
       - name: Scrape flags
         run: npm run scrape:flags
 
-      - name: Commit flags.json if changed
+      # Precalcula el agregado de /featured con las banderas recién scrapeadas.
+      # El backend lo siembra al arrancar, así que el primer usuario tras un
+      # despliegue (o tras el dormido de Render free) no paga el fan-out de ~200
+      # peticiones a proveedores. Si faltan las claves, el script aborta solo y
+      # conserva el snapshot anterior: por eso `continue-on-error`.
+      - name: Build cache snapshot
+        continue-on-error: true
+        env:
+          OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
+          AEMET_API_KEY: ${{ secrets.AEMET_API_KEY }}
+        run: npm run build:snapshot
+
+      - name: Commit flags.json / snapshot.json if changed
         run: |
-          if [[ -n "$(git status --porcelain data/flags.json)" ]]; then
+          if [[ -n "$(git status --porcelain data/flags.json data/snapshot.json)" ]]; then
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
             git add data/flags.json
+            [[ -f data/snapshot.json ]] && git add data/snapshot.json
             git commit -m "chore(flags): actualizar banderas Cruz Roja [skip ci]"
             git push
           else
-            echo "Sin cambios en flags.json"
+            echo "Sin cambios en flags.json ni snapshot.json"
           fi

@@ -3,8 +3,10 @@ import compression from 'compression';
 import { corsMiddleware } from './middlewares/cors';
 import { errorHandler } from './middlewares/errorHandler';
 import { notFoundHandler } from './middlewares/notFoundHandler';
+import { rateLimit } from './middlewares/rateLimit';
 
 import { InMemoryCache } from '../cache/InMemoryCache';
+import { sembrarDesdeSnapshot } from '../cache/snapshotSeed';
 import { DIContainer } from '../di/DIContainer';
 import { configureDependencies } from '../di/dependencies';
 
@@ -36,6 +38,12 @@ export interface BuildDeps {
 export function buildExpressApp({ cache }: BuildDeps = {}): Express {
   const app = express();
 
+  // Render (y Firebase Functions) sirven detrás de un proxy: sin esto `req.ip`
+  // devuelve la IP del proxy para TODO el mundo y el límite por IP se convertiría
+  // en un límite global compartido. Se confía en un solo salto, no en toda la
+  // cadena de X-Forwarded-For, que un cliente puede falsificar.
+  app.set('trust proxy', 1);
+
   // Middleware configuration
   app.use(compression());
   app.use(corsMiddleware());
@@ -61,6 +69,11 @@ export function buildExpressApp({ cache }: BuildDeps = {}): Express {
   const getFeaturedBeaches = container.get<GetFeaturedBeaches>('getFeaturedBeaches');
   const legacyDetailsAssembler = container.get<LegacyDetailsAssembler>('legacyDetailsAssembler');
 
+  // Arranque en caliente: se siembra el agregado desde el snapshot de CI (como
+  // STALE) para que el primer usuario tras un despliegue o tras el dormido de
+  // Render no pague el fan-out completo a los proveedores.
+  sembrarDesdeSnapshot(container.get<InMemoryCache>('cache'));
+
   // Warm the aggregate without delaying server startup. Subsequent refreshes
   // use stale-while-revalidate, so users do not pay the full provider fan-out.
   if (process.env.NODE_ENV === 'production') {
@@ -68,6 +81,10 @@ export function buildExpressApp({ cache }: BuildDeps = {}): Express {
       void getFeaturedBeaches.execute(5).catch(() => undefined);
     }, 250);
   }
+
+  // Protege la cuota gratuita de los proveedores frente a scrapers ajenos.
+  // Una visita normal hace 2-3 peticiones; 60/min por IP no molesta a nadie real.
+  app.use('/api', rateLimit({ ventanaMs: 60_000, maxPeticiones: 60 }));
 
   // Routes configuration
   app.use(
@@ -85,6 +102,7 @@ export function buildExpressApp({ cache }: BuildDeps = {}): Express {
     '/api/_diag',
     createDiagRouter({
       flagProvider: container.get<RedCrossFlagProvider>('redCrossFlagProvider'),
+      cache: container.get<InMemoryCache>('cache'),
     })
   );
 
