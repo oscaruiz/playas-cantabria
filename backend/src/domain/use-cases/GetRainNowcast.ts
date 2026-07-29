@@ -153,6 +153,7 @@ export class GetRainNowcast {
         sources,
         timestamp: Date.now(),
         upcoming: om.status === 'fulfilled' ? computeUpcoming(om.value) : null,
+        uvIndexMax: om.status === 'fulfilled' ? om.value.uvIndexMax ?? null : null,
       };
 
       return nowcast;

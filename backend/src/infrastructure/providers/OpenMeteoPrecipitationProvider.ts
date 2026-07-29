@@ -8,8 +8,10 @@ import { debugLog } from '../utils/debug';
 
 /**
  * Precipitación actual desde Open-Meteo (https://open-meteo.com):
- * gratuito, sin API key (free tier ~10k llamadas/día; 20 playas × TTL 300s
- * ≈ 5,8k/día máximo). Complementa a OpenWeather para detectar lluvia que
+ * gratuito, sin API key (free tier ~10k llamadas/día; 46 playas × TTL 1800s
+ * ≈ 2,2k/día, y menos aún fuera de la franja de playa por el `ttlFactor`).
+ * OJO: bajar CACHE_TTL_SECONDS a 300 dispararía el consumo a ~13k/día y
+ * rompería la cuota. Complementa a OpenWeather para detectar lluvia que
  * los modelos de un solo proveedor pierden (llovizna costera hiperlocal).
  */
 export class OpenMeteoPrecipitationProvider implements PrecipitationNowProvider {
@@ -22,10 +24,9 @@ export class OpenMeteoPrecipitationProvider implements PrecipitationNowProvider 
   }
 
   async getPrecipitationNow(lat: number, lon: number): Promise<PrecipitationNow> {
-    const cfg = Config.get();
     const cacheKey = `openmeteo:now:${lat.toFixed(4)},${lon.toFixed(4)}`;
 
-    return this.cache.getOrSet(cacheKey, cfg.cacheTtlSeconds, async () => {
+    return this.cache.getOrSetStale(cacheKey, Config.providerTtlSeconds(), Config.providerStaleTtlSeconds(), async () => {
       try {
         const resp = await http.get('https://api.open-meteo.com/v1/forecast', {
           params: {
@@ -35,6 +36,10 @@ export class OpenMeteoPrecipitationProvider implements PrecipitationNowProvider 
             // Previsión próximas 6h (24 tramos de 15 min) en la MISMA llamada.
             minutely_15: 'precipitation,weather_code',
             forecast_minutely_15: 24,
+            // UV máximo de hoy y mañana, también en la misma llamada (coste 0):
+            // sustituye a OpenWeather One Call 2.5, que está retirado.
+            daily: 'uv_index_max',
+            forecast_days: 2,
             timezone: 'UTC'
           },
           timeout: 7000
@@ -69,6 +74,13 @@ export class OpenMeteoPrecipitationProvider implements PrecipitationNowProvider 
           });
         }
 
+        // `timezone: UTC` hace que los días de `daily` sean días UTC. En España
+        // (UTC+1/+2) solo divergen las primeras horas de la madrugada, cuando el
+        // UV es 0 e irrelevante para una ficha de playa.
+        const uv: unknown[] = Array.isArray(resp.data?.daily?.uv_index_max)
+          ? resp.data.daily.uv_index_max
+          : [];
+
         const now: PrecipitationNow = {
           source: 'OpenMeteo',
           timestamp,
@@ -76,7 +88,8 @@ export class OpenMeteoPrecipitationProvider implements PrecipitationNowProvider 
           rainMm: num(c.rain),
           showersMm: num(c.showers),
           weatherCode: num(c.weather_code),
-          upcomingSlots
+          upcomingSlots,
+          uvIndexMax: uv.length > 0 ? { today: num(uv[0]), tomorrow: num(uv[1]) } : null
         };
 
         return now;

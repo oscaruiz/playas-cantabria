@@ -33,6 +33,23 @@ function haversineSq(lat1: number, lon1: number, lat2: number, lon2: number): nu
   return 2 * R * Math.asin(Math.sqrt(a));
 }
 
+/**
+ * Caja envolvente de Cantabria con margen (~40 km) para conservar estaciones
+ * limítrofes de Asturias, Castilla y León y Vizcaya que a veces son la más
+ * cercana a una playa del extremo del litoral.
+ */
+const CANTABRIA_BBOX = { latMin: 42.5, latMax: 43.8, lonMin: -5.2, lonMax: -2.8 };
+
+function enEntornoDeCantabria(o: AemetObs): boolean {
+  if (typeof o.lat !== 'number' || typeof o.lon !== 'number') return false;
+  return (
+    o.lat >= CANTABRIA_BBOX.latMin &&
+    o.lat <= CANTABRIA_BBOX.latMax &&
+    o.lon >= CANTABRIA_BBOX.lonMin &&
+    o.lon <= CANTABRIA_BBOX.lonMax
+  );
+}
+
 // ⏰ PARSER DE TIEMPO AEMET
 function parseAemetTime(fint: string): number {
   try {
@@ -62,7 +79,7 @@ export class AemetWeatherProvider implements WeatherProvider {
       throw new ProviderError('AEMET', 'Missing AEMET API key');
     }
     const cacheKey = CacheKeys.weatherByCoords(lat, lon, 'AEMET');
-    return this.cache.getOrSet(cacheKey, cfg.cacheTtlSeconds, async () => {
+    return this.cache.getOrSetStale(cacheKey, Config.providerTtlSeconds(), Config.providerStaleTtlSeconds(), async () => {
       try {
         const arr = await this.getObservacionesCached();
 
@@ -128,13 +145,16 @@ export class AemetWeatherProvider implements WeatherProvider {
   }
 
   /**
-   * Descarga (o recupera de caché) el payload completo de observaciones de
-   * toda España bajo una clave única: una sola descarga por TTL sirve a las
-   * ~20 playas (antes cada playa re-descargaba todo el payload).
+   * Descarga (o recupera de caché) el payload de observaciones bajo una clave
+   * única: una sola descarga por TTL sirve a todas las playas (antes cada playa
+   * re-descargaba todo el payload).
+   *
+   * Se RECORTA a Cantabria antes de cachear: AEMET devuelve todas las estaciones
+   * de España (decenas de MB) y el proceso vive en 512 MB de RAM.
    */
   private async getObservacionesCached(): Promise<AemetObs[]> {
     const cfg = Config.get();
-    return this.cache.getOrSet('aemet:obs:todas', cfg.cacheTtlSeconds, async () => {
+    return this.cache.getOrSetStale('aemet:obs:todas', Config.providerTtlSeconds(), Config.providerStaleTtlSeconds(), async () => {
       const meta = await http.get('https://opendata.aemet.es/opendata/api/observacion/convencional/todas', {
         params: { api_key: cfg.aemetApiKey },
         timeout: 7000
@@ -148,10 +168,13 @@ export class AemetWeatherProvider implements WeatherProvider {
       }
 
       const obsResp = await http.get<AemetObs[]>(datosUrl, { timeout: 7000, responseType: 'json' });
-      const arr = Array.isArray(obsResp.data) ? obsResp.data : [];
+      const todas = Array.isArray(obsResp.data) ? obsResp.data : [];
+      const arr = todas.filter(enEntornoDeCantabria);
       this.lastRaw = arr;
-      debugLog('aemet.obs', arr.slice(0, 5));
-      return arr;
+      debugLog('aemet.obs', { totalEspana: todas.length, cantabria: arr.length, muestra: arr.slice(0, 5) });
+      // Si el recorte deja el payload vacío (formato inesperado), mejor todas que
+      // ninguna: la playa se queda sin dato AEMET solo si de verdad no hay nada.
+      return arr.length > 0 ? arr : todas;
     });
   }
 

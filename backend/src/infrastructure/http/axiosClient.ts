@@ -1,6 +1,8 @@
 import axios from 'axios';
 import httpModule from 'http';
 import https from 'https';
+import { httpMetrics, hostOf } from './metrics';
+import { hostLimiter, HostEnfriadoError } from './limiter';
 
 const httpAgent = new httpModule.Agent({
   keepAlive: true,
@@ -41,3 +43,49 @@ export const http = axios.create({
     Accept: 'application/json, text/html;q=0.9, */*;q=0.8'
   }
 });
+
+/** Marca interna para no liberar dos veces el mismo hueco del semáforo. */
+const HOST_TOMADO = Symbol('hostTomado');
+
+// Toma turno ANTES de salir a la red. Si el host está enfriándose por un 429
+// previo, se falla rápido: el proveedor tiene stale-while-revalidate, así que el
+// usuario recibe el último valor bueno en vez de otra llamada que también sería
+// rechazada.
+http.interceptors.request.use(async (config: any) => {
+  const host = hostOf(config?.url, config?.baseURL);
+  const enfriando = hostLimiter.enfriamientoRestanteMs(host);
+  if (enfriando > 0) throw new HostEnfriadoError(host, enfriando);
+
+  await hostLimiter.adquirir(host);
+  config[HOST_TOMADO] = host;
+  return config;
+});
+
+// Contabiliza TODA petición saliente (una sola vez, aquí) para poder ver el
+// consumo real de cuota en /api/_diag/metrics, y libera el turno. No altera el
+// flujo: reemite el error tal cual.
+const liberar = (cfg: any) => {
+  const host = cfg?.[HOST_TOMADO];
+  if (host) {
+    delete cfg[HOST_TOMADO];
+    hostLimiter.liberar(host);
+  }
+};
+
+http.interceptors.response.use(
+  (resp) => {
+    httpMetrics.record(hostOf(resp.config?.url, resp.config?.baseURL), resp.status);
+    liberar(resp.config);
+    return resp;
+  },
+  (error: any) => {
+    const cfg = error?.config;
+    const host = hostOf(cfg?.url, cfg?.baseURL);
+    const status = error?.response?.status ?? null;
+    if (status === 429) hostLimiter.registrar429(host, error?.response?.headers?.['retry-after']);
+    // Un rechazo del propio interceptor de petición no llegó a tomar turno.
+    if (error?.code !== 'HOST_COOLDOWN') httpMetrics.record(host, status);
+    liberar(cfg);
+    return Promise.reject(error);
+  }
+);

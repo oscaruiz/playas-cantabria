@@ -2,6 +2,7 @@ import * as cheerio from 'cheerio';
 import iconv from 'iconv-lite';
 import { http, BROWSER_HEADERS } from '../http/axiosClient';
 import { InMemoryCache } from '../cache/InMemoryCache';
+import { Config } from '../config/config';
 import { debugLog } from '../utils/debug';
 import type {
   BeachFullForecast,
@@ -67,7 +68,11 @@ export class AemetBeachWebScraper {
 
   async getBeachForecast(codigo: string): Promise<BeachFullForecast> {
     const cacheKey = `aemet:web:${codigo}`;
-    return this.cache.getOrSet(cacheKey, CACHE_TTL, async () => {
+    // El scraping de aemet.es no gasta cuota de API pero sí CPU (cheerio) y
+    // expone la IP de Render a bloqueos. Es una PREVISIÓN (3 días, mareas,
+    // avisos), así que va con el TTL largo, nunca por debajo del de la web.
+    const ttl = Math.max(CACHE_TTL, Config.forecastTtlSeconds());
+    return this.cache.getOrSetStale(cacheKey, ttl, Config.forecastStaleTtlSeconds(), async () => {
       // 1. Try HTML first (has mareas, avisos, UV level)
       try {
         const result = await this.fetchAndParseHtml(codigo);
