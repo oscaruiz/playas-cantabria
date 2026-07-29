@@ -139,9 +139,72 @@ export function loadConfig(): AppConfig {
   return parsed;
 }
 
+/**
+ * Hora y mes en Europe/Madrid (Render corre en UTC, así que no vale getHours()).
+ */
+function madridNow(now: Date): { hour: number; month: number } {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Europe/Madrid',
+    hour: 'numeric',
+    month: 'numeric',
+    hour12: false,
+  }).formatToParts(now);
+  const get = (type: string) => Number(parts.find((p) => p.type === type)?.value ?? 0);
+  return { hour: get('hour'), month: get('month') };
+}
+
+/**
+ * Multiplicador de TTL para las llamadas a proveedores externos.
+ *
+ * El consumo de cuota gratuita lo marca el reloj, no los usuarios: con la caché
+ * por coordenadas, 500 visitas a la misma playa cuestan lo mismo que una. Así que
+ * la palanca real es refrescar menos cuando el dato no le importa a nadie.
+ *
+ *  ×1  franja de playa (11:00–21:00) en temporada (jun–sep)
+ *  ×4  resto del día en temporada
+ *  ×12 fuera de temporada (oct–may): la app apenas se usa
+ */
+export function ttlFactor(now: Date = new Date()): number {
+  const { hour, month } = madridNow(now);
+  const enTemporada = month >= 6 && month <= 9;
+  if (!enTemporada) return 12;
+  return hour >= 11 && hour < 21 ? 1 : 4;
+}
+
 export const Config = {
   get(): AppConfig {
     return loadConfig();
+  },
+  /**
+   * TTL para datos de AHORA: observación actual y precipitación en curso. Es
+   * `CACHE_TTL_SECONDS` escalado por `ttlFactor()`.
+   *
+   * Es el que manda la frescura de "¿está lloviendo?", así que se mantiene corto
+   * a propósito aunque cueste cuota: un nowcast de hace media hora no sirve.
+   */
+  providerTtlSeconds(): number {
+    return loadConfig().cacheTtlSeconds * ttlFactor();
+  },
+  /** Ventana en la que un valor caducado se sigue sirviendo mientras se refresca. */
+  providerStaleTtlSeconds(): number {
+    return Config.providerTtlSeconds() * 6;
+  },
+  /**
+   * TTL para PREVISIONES (forecast de OpenWeather, playas de AEMET, scraper web).
+   *
+   * AEMET publica la previsión de playa un par de veces al día, así que pedirla
+   * cada 5 minutos como si fuera una observación gastaba miles de llamadas
+   * diarias para recibir exactamente los mismos bytes. Se acota entre 30 min y
+   * 6 h: ni tan corto que malgaste cuota, ni tan largo que un aviso de AEMET
+   * tarde en aparecer.
+   */
+  forecastTtlSeconds(): number {
+    const escalado = Config.providerTtlSeconds() * 6;
+    return Math.min(Math.max(escalado, 1800), 21600);
+  },
+  /** Ventana stale de las previsiones: sobrevive a una caída larga de AEMET. */
+  forecastStaleTtlSeconds(): number {
+    return Config.forecastTtlSeconds() * 4;
   },
   port(): number {
     return loadConfig().port;
