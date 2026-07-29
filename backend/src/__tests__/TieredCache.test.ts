@@ -100,7 +100,12 @@ describe('TieredCache', () => {
     expect(l2.sets).toBe(0);
   });
 
-  it('un L2 caído no rompe nada: se recalcula y se sirve igual', async () => {
+  it('un L2 que lanza no rompe la petición ni deja rechazos sin manejar', async () => {
+    // El store real nunca lanza (se lo traga todo), pero el L2 es un punto de
+    // extensión: si la siguiente implementación lanza, la escritura en segundo
+    // plano no debe ni arrastrar la petición ni tumbar el proceso. En Node una
+    // promesa rechazada sin manejar termina el proceso, así que este test vigila
+    // las dos cosas.
     const l2Roto: L2Store = {
       get: async () => {
         throw new Error('Upstash caído');
@@ -109,16 +114,22 @@ describe('TieredCache', () => {
         throw new Error('Upstash caído');
       },
     };
-    // El store real nunca lanza, pero si alguien mete uno que sí lo haga,
-    // la caché no debe arrastrar la petición del usuario.
-    const cache = new TieredCache({
-      get: async () => undefined,
-      set: l2Roto.set,
-    });
+    const cache = new TieredCache(l2Roto);
 
-    await expect(
-      cache.getOrSetStale('details:3902401', 60, 600, async () => ({ ok: true })),
-    ).resolves.toEqual({ ok: true });
+    const rechazos: unknown[] = [];
+    const capturar = (r: unknown) => rechazos.push(r);
+    process.on('unhandledRejection', capturar);
+    try {
+      await expect(
+        cache.getOrSetStale('details:3902401', 60, 600, async () => ({ ok: true })),
+      ).resolves.toEqual({ ok: true });
+
+      // Dar tiempo a que un rechazo no manejado aflore antes de comprobar.
+      await new Promise((r) => setTimeout(r, 10));
+      expect(rechazos).toEqual([]);
+    } finally {
+      process.off('unhandledRejection', capturar);
+    }
   });
 
   it('la allowlist cubre las familias caras y solo esas', () => {

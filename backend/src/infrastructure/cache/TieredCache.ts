@@ -75,7 +75,16 @@ export class TieredCache extends InMemoryCache {
   ): Promise<void> {
     if (this.state(key) !== 'miss') return;
 
-    const hit = await this.l2.get<T>(key);
+    // El L2 es un acelerador, nunca una dependencia: si falla, se recalcula. El
+    // store actual ya se traga sus errores, pero el contrato se garantiza aquí
+    // para que no dependa de la implementación que haya detrás.
+    let hit: { value: T; at: number } | undefined;
+    try {
+      hit = await this.l2.get<T>(key);
+    } catch (e: any) {
+      debugLog('cache.l2.get.fail', { key, error: e?.message });
+      return;
+    }
     if (!hit) return;
 
     const edadSeg = (this.reloj() - hit.at) / 1000;
@@ -98,7 +107,11 @@ export class TieredCache extends InMemoryCache {
   ): () => Promise<T> {
     return async () => {
       const value = await compute();
-      void this.l2.set(key, value, ttlSeconds);
+      // No se espera a la escritura, pero SÍ se traga su fallo: una promesa
+      // rechazada sin manejar tumba el proceso de Node. El almacén actual nunca
+      // lanza, pero el L2 es un punto de extensión y este contrato no puede
+      // depender de que la siguiente implementación se acuerde.
+      void this.l2.set(key, value, ttlSeconds).catch(() => undefined);
       return value;
     };
   }
