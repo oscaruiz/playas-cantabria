@@ -87,7 +87,9 @@ API base URL configured via `REACT_APP_API_BASE_URL` env var (defaults to produc
 - `AEMET_API_KEY` — AEMET weather API key
 - `OPENWEATHER_API_KEY` — OpenWeatherMap API key
 - `CORS_ORIGIN` — allowed CORS origin (default `*`)
-- `CACHE_TTL_SECONDS` — cache TTL (default 300)
+- `CACHE_TTL_SECONDS` — TTL base de proveedores (default 1800), escalado por `ttlFactor()`
+- `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` — opcionales; activan la caché L2 que
+  sobrevive al dormido y a los despliegues de Render free
 
 ### Frontend
 - `REACT_APP_API_BASE_URL` — backend URL override
