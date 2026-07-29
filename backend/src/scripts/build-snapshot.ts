@@ -16,6 +16,8 @@ import path from 'path';
 import { DIContainer } from '../infrastructure/di/DIContainer';
 import { configureDependencies } from '../infrastructure/di/dependencies';
 import { GetFeaturedBeaches } from '../domain/use-cases/GetFeaturedBeaches';
+import { httpMetrics } from '../infrastructure/http/metrics';
+import { hostLimiter } from '../infrastructure/http/limiter';
 
 const DESTINO = path.resolve(process.cwd(), 'data/snapshot.json');
 
@@ -32,10 +34,32 @@ async function main(): Promise<void> {
 
   const conClima = resultado.resumenTodas.filter((r) => r.weather).length;
   const conBandera = resultado.resumenTodas.filter((r) => r.flag).length;
+  const conPrevision = resultado.resumenTodas.filter((r) => r.enrichment).length;
   console.log(
     `Listo en ${segundos}s — ${resultado.resumenTodas.length} playas, ${conClima} con clima, ` +
-      `${conBandera} con bandera, ${resultado.mejores.length} destacadas.`,
+      `${conBandera} con bandera, ${conPrevision} con previsión AEMET, ` +
+      `${resultado.mejores.length} destacadas.`,
   );
+
+  // Desglose por proveedor: sin esto, un "0 con previsión AEMET" no distingue
+  // entre clave mal puesta (4xx), límite de peticiones (429), bloqueo de la IP
+  // del runner (5xx/red) y enfriamiento por un 429 previo (0 peticiones).
+  console.log('\nPeticiones salientes por proveedor:');
+  for (const [host, c] of Object.entries(httpMetrics.snapshot().desdeArranque)) {
+    console.log(
+      `  ${host.padEnd(26)} total=${c.total} ok=${c.ok} 4xx=${c.clientError} ` +
+        `429=${c.rateLimited} 5xx=${c.serverError} red=${c.networkError}`,
+    );
+  }
+  const enfriados = Object.entries(hostLimiter.snapshot()).filter(
+    ([, v]) => v.enfriamientoMs > 0,
+  );
+  if (enfriados.length > 0) {
+    console.log(
+      'Hosts en enfriamiento por 429:',
+      enfriados.map(([h, v]) => `${h} (${Math.ceil(v.enfriamientoMs / 1000)}s)`).join(', '),
+    );
+  }
 
   // Sin clima el snapshot no aporta nada (típicamente: faltan las claves de API en
   // el entorno de CI). Se prefiere conservar el anterior antes que degradarlo.
