@@ -1,5 +1,7 @@
 import { Weather } from '../../domain/entities/Weather';
+import { SunshineObservation } from '../../domain/entities/Sunshine';
 import { ProviderError, WeatherProvider } from '../../domain/ports/WeatherProvider';
+import { SunshineProvider } from '../../domain/ports/SunshineProvider';
 import { http } from '../http/axiosClient';
 import { InMemoryCache, CacheKeys } from '../cache/InMemoryCache';
 import { Config } from '../config/config';
@@ -19,6 +21,7 @@ interface AemetObs {
   dv?: number;       // 🧭 Dirección viento (grados)
   vmax?: number;     // 💨 Velocidad máxima viento (m/s)
   prec?: number;     // 🌧️ Precipitación última hora (mm)
+  inso?: number;     // ☀️ Insolación: MINUTOS de sol de la última hora (0-60)
   ubi?: string;      // 📍 Ubicación
 }
 
@@ -50,6 +53,16 @@ function enEntornoDeCantabria(o: AemetObs): boolean {
   );
 }
 
+/**
+ * `inso` son MINUTOS de sol de la última hora. Se valida el rango en la frontera
+ * de parseo, no más adentro: si AEMET cambiase la unidad (a horas, o a tanto por
+ * ciento) los valores dejarían de caer en [0, 60] y preferimos quedarnos sin
+ * corrección antes que degradar el cielo con una escala que ya no es la nuestra.
+ */
+function esInsolacionUsable(inso: unknown): inso is number {
+  return typeof inso === 'number' && Number.isFinite(inso) && inso >= 0 && inso <= 60;
+}
+
 // ⏰ PARSER DE TIEMPO AEMET
 function parseAemetTime(fint: string): number {
   try {
@@ -64,13 +77,63 @@ function parseAemetTime(fint: string): number {
  * - Uses coords; in practice you may need to hit the "observacionconvencional" or "prediccion/especifica/playa" endpoints.
  * - This implementation focuses on shape + error handling + caching. Adjust endpoint parsing to your current AEMET integration.
  */
-export class AemetWeatherProvider implements WeatherProvider {
+export class AemetWeatherProvider implements WeatherProvider, SunshineProvider {
   private lastRaw: unknown = null;
 
   constructor(private readonly cache: InMemoryCache) {}
 
   getLastRaw() {
     return this.lastRaw;
+  }
+
+  /**
+   * Insolación observada de la estación útil más cercana.
+   *
+   * "Útil" excluye a la mayoría: de las ~69 estaciones del arco cantábrico solo
+   * unas 9 publican `inso`, y ninguna en la costa oriental (Castro-EDAR y Treto
+   * existen pero no lo miden). Por eso NO se puede reutilizar la estación que
+   * elige `getCurrentByCoords`: la más cercana casi nunca es una de las que
+   * miden sol.
+   *
+   * No lanza: sin candidata devuelve null y quien llame sigue con su dato.
+   */
+  async getSunshineNear(lat: number, lon: number): Promise<SunshineObservation[]> {
+    try {
+      const arr = await this.getObservacionesCached();
+      if (arr.length === 0) return [];
+
+      // El payload trae varias filas por estación (últimas horas). Nos quedamos
+      // con la más reciente de cada una que además traiga `inso` en rango: una
+      // fila recién publicada puede venir incompleta.
+      const porEstacion = new Map<string, AemetObs>();
+      for (const s of arr) {
+        if (!s.idema || typeof s.lat !== 'number' || typeof s.lon !== 'number') continue;
+        if (!esInsolacionUsable(s.inso)) continue;
+        const previa = porEstacion.get(s.idema);
+        if (!previa || (s.fint ?? '') > (previa.fint ?? '')) porEstacion.set(s.idema, s);
+      }
+      if (porEstacion.size === 0) return [];
+
+      // Solo las 3 más cercanas: la primera decide y las otras sirven de testigo.
+      // Devolver las nueve del arco cantábrico no aporta y agranda el objeto que
+      // acaba en el diagnóstico.
+      return [...porEstacion.values()]
+        .map((s) => {
+          const insoMin = s.inso as number;
+          return {
+            insoMin,
+            fraccion: insoMin / 60,
+            distanciaKm: haversineSq(lat, lon, s.lat!, s.lon!),
+            idema: s.idema as string,
+            ubicacion: s.ubi ?? null,
+            observadoEn: s.fint ? parseAemetTime(s.fint) : Date.now(),
+          };
+        })
+        .sort((a, b) => a.distanciaKm - b.distanciaKm)
+        .slice(0, 3);
+    } catch {
+      return [];
+    }
   }
 
   async getCurrentByCoords(lat: number, lon: number): Promise<Weather> {

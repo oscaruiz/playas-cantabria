@@ -153,6 +153,44 @@ function madridNow(now: Date): { hour: number; month: number } {
   return { hour: get('hour'), month: get('month') };
 }
 
+function franjaYTemporada(now: Date): { enTemporada: boolean; enFranja: boolean } {
+  const { hour, month } = madridNow(now);
+  return {
+    enTemporada: month >= 6 && month <= 9,
+    enFranja: hour >= 11 && hour < 21,
+  };
+}
+
+/**
+ * ¿Estamos en la franja de playa (11:00–21:00 de Madrid) de temporada?
+ *
+ * Comparte definición con `ttlFactor` a propósito: es la misma idea de "ahora
+ * mismo hay gente mirando la playa". La usa el corrector de cielo, que solo debe
+ * actuar de día y de tarde.
+ */
+export function enFranjaDePlaya(now: Date = new Date()): boolean {
+  const { enTemporada, enFranja } = franjaYTemporada(now);
+  return enTemporada && enFranja;
+}
+
+export type ModoCorreccionCielo = 'off' | 'shadow' | 'on';
+
+/**
+ * Modo del corrector de cielo por insolación observada.
+ *
+ *  shadow  calcula y cuenta lo que HARÍA, pero devuelve el dato sin tocar (por defecto)
+ *  on      aplica la corrección
+ *  off     ni siquiera la calcula
+ *
+ * Se lee de `process.env` en cada llamada en vez de pasar por `loadConfig()`: no
+ * es un secreto ni viaja en la runtime config de Firebase, y así se puede
+ * cambiar en un test sin invalidar la config cacheada del proceso.
+ */
+export function skyCorrectionMode(): ModoCorreccionCielo {
+  const v = (process.env.SKY_CORRECTION ?? '').trim().toLowerCase();
+  return v === 'on' || v === 'off' ? v : 'shadow';
+}
+
 /**
  * Multiplicador de TTL para las llamadas a proveedores externos.
  *
@@ -165,10 +203,9 @@ function madridNow(now: Date): { hour: number; month: number } {
  *  ×12 fuera de temporada (oct–may): la app apenas se usa
  */
 export function ttlFactor(now: Date = new Date()): number {
-  const { hour, month } = madridNow(now);
-  const enTemporada = month >= 6 && month <= 9;
+  const { enTemporada, enFranja } = franjaYTemporada(now);
   if (!enTemporada) return 12;
-  return hour >= 11 && hour < 21 ? 1 : 4;
+  return enFranja ? 1 : 4;
 }
 
 export const Config = {

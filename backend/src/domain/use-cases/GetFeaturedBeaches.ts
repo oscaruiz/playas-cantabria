@@ -8,8 +8,11 @@ import { BeachRepository } from '../ports/BeachRepository';
 import { WeatherProvider } from '../ports/WeatherProvider';
 import { FlagProvider } from '../ports/FlagProvider';
 import { resolveFlagForStations } from '../services/flagAggregation';
+import { SunshineProvider } from '../ports/SunshineProvider';
+import { SunshineObservation } from '../entities/Sunshine';
+import { corregirCieloObservado } from '../../application/services/skyCorrectionRunner';
 import { InMemoryCache, CacheKeys } from '../../infrastructure/cache/InMemoryCache';
-import { Config } from '../../infrastructure/config/config';
+import { Config, skyCorrectionMode } from '../../infrastructure/config/config';
 import { AemetBeachForecastProvider, AemetBeachForecast } from '../../infrastructure/providers/AemetBeachForecastProvider';
 import {
   ForecastEnrichment,
@@ -42,6 +45,11 @@ export class GetFeaturedBeaches {
     private readonly aemetForecast: AemetBeachForecastProvider,
     private readonly cache: InMemoryCache,
     private readonly rainNowcast: GetRainNowcast,
+    /**
+     * Opcional a propósito: sin él, el corrector de cielo simplemente no corre y
+     * el listado se comporta exactamente como antes.
+     */
+    private readonly sunshine?: SunshineProvider,
   ) {}
 
   async execute(topN = 5): Promise<FeaturedBeachesFullResult> {
@@ -145,17 +153,37 @@ export class GetFeaturedBeaches {
     enrichment: ForecastEnrichment | null;
     rain: RainNowcast | null;
   }> {
-    const [weather, flag, enrichment, rain] = await Promise.all([
+    const [weather, flag, enrichment, rain, sol] = await Promise.all([
       this.getWeatherRace(beach.latitude, beach.longitude),
       this.getFlagForBeach(beach),
       // Las playas sin ficha AEMET (código sintético) no deben provocar una
       // llamada AEMET que siempre daría 404: se omite la enriquecedora.
       beach.sinAemet ? Promise.resolve(null) : this.getForecastEnrichment(beach.aemetCode),
       this.getRainSafe(beach.latitude, beach.longitude),
+      this.getSunshineSafe(beach.latitude, beach.longitude),
     ]);
 
-    return { beach, weather, flag, enrichment, rain };
+    return {
+      beach,
+      // Se corrige el objeto Weather en el origen y no al pintar: descripción,
+      // icono, razón del ranking y puntuación salen todos de aquí, así que
+      // corrigiéndolo antes no pueden acabar contradiciéndose entre sí.
+      weather: corregirCieloObservado(beach.name, weather, sol, rain?.status === 'raining'),
+      flag,
+      enrichment,
+      rain,
+    };
   }
+
+  private async getSunshineSafe(lat: number, lon: number): Promise<SunshineObservation[]> {
+    if (!this.sunshine || skyCorrectionMode() === 'off') return [];
+    try {
+      return await this.sunshine.getSunshineNear(lat, lon);
+    } catch {
+      return [];
+    }
+  }
+
 
   private async getRainSafe(lat: number, lon: number): Promise<RainNowcast | null> {
     try {

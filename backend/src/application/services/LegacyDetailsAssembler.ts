@@ -15,7 +15,10 @@ import { buildRainForecastSignal, textosRestantesHoy } from '../../domain/use-ca
 import type { RainNowcast } from '../../domain/entities/RainNowcast';
 import type { BeachFullForecast } from '../../domain/entities/BeachForecast';
 import { CacheKeys, InMemoryCache } from '../../infrastructure/cache/InMemoryCache';
-import { Config } from '../../infrastructure/config/config';
+import { Config, skyCorrectionMode } from '../../infrastructure/config/config';
+import type { SunshineObservation } from '../../domain/entities/Sunshine';
+import { SunshineProvider } from '../../domain/ports/SunshineProvider';
+import { corregirCieloObservado } from './skyCorrectionRunner';
 
 /**
  * Legacy details assembler — fallback chain:
@@ -32,7 +35,10 @@ export class LegacyDetailsAssembler {
     private readonly openWeather: OpenWeatherWeatherProvider,
     private readonly rainNowcast: GetRainNowcast,
     private readonly cache?: InMemoryCache,
+    /** Opcional: sin él el corrector de cielo no corre y el detalle no cambia. */
+    private readonly sunshine?: SunshineProvider,
   ) {}
+
 
   // -----------------------------------------------------------------------
   // Icon mapping
@@ -246,6 +252,12 @@ export class LegacyDetailsAssembler {
     const tomorrowPromise = this.openWeather
       .getTomorrowByCoords(details.beach.latitude, details.beach.longitude)
       .catch(() => null);
+    const solPromise =
+      this.sunshine && skyCorrectionMode() !== 'off'
+        ? this.sunshine
+            .getSunshineNear(details.beach.latitude, details.beach.longitude)
+            .catch(() => [] as SunshineObservation[])
+        : Promise.resolve([] as SunshineObservation[]);
 
     // Step 1.5: "Ahora" en tiempo real para HOY (observación, no previsión).
     // El cielo debe venir de OpenWeather current (real); `details.weather` puede
@@ -254,7 +266,12 @@ export class LegacyDetailsAssembler {
     try {
       const now = await currentPromise;
       if (!now) throw new Error('Current weather unavailable');
-      base.tiempoActual = LegacyDetailsMapper.mapTiempoActual(now);
+      // Corrección de cielo por insolación observada. Va ANTES del mapper para
+      // que el titular del detalle y el del listado salgan del mismo criterio.
+      const [sol, lluvia] = await Promise.all([solPromise, rainPromise]);
+      const conCieloReal =
+        corregirCieloObservado(details.beach.name, now, sol, lluvia?.status === 'raining') ?? now;
+      base.tiempoActual = LegacyDetailsMapper.mapTiempoActual(conCieloReal);
     } catch {
       base.tiempoActual =
         details.weather && details.weather.source === 'OpenWeather'

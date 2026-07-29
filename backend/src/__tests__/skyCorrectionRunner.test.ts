@@ -1,0 +1,111 @@
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { corregirCieloObservado } from '../application/services/skyCorrectionRunner';
+import { skyCorrectionMetrics } from '../infrastructure/observability/skyCorrectionMetrics';
+import { Weather } from '../domain/entities/Weather';
+import { SunshineObservation } from '../domain/entities/Sunshine';
+
+/** 29-jul 12:00 UTC = 14:00 de Madrid: dentro de la franja de playa. */
+const EN_FRANJA = Date.parse('2026-07-29T12:00:00.000Z');
+/** 29-jul 04:00 UTC = 06:00 de Madrid: fuera. */
+const FUERA_DE_FRANJA = Date.parse('2026-07-29T04:00:00.000Z');
+
+const DESPEJADO: Weather = {
+  source: 'OpenWeather',
+  timestamp: EN_FRANJA,
+  temperatureC: 25.7,
+  description: 'cielo claro',
+  icon: '01d',
+  conditionCode: 800,
+  precipitationMm: null,
+  windSpeedMs: 3,
+  windDirectionDeg: 310,
+  humidityPct: 79,
+  pressureHPa: 1018,
+};
+
+const SIN_SOL: SunshineObservation[] = [
+  {
+    insoMin: 0,
+    fraccion: 0,
+    distanciaKm: 5,
+    idema: '1111X',
+    ubicacion: 'SANTANDER CMT',
+    observadoEn: EN_FRANJA - 10 * 60 * 1000,
+  },
+];
+
+const original = process.env.SKY_CORRECTION;
+
+beforeEach(() => skyCorrectionMetrics.reset());
+afterEach(() => {
+  if (original === undefined) delete process.env.SKY_CORRECTION;
+  else process.env.SKY_CORRECTION = original;
+});
+
+describe('corregirCieloObservado — modos', () => {
+  it('shadow: NO cambia la salida, pero sí la registra', () => {
+    process.env.SKY_CORRECTION = 'shadow';
+    const res = corregirCieloObservado('Sardinero', DESPEJADO, SIN_SOL, false, EN_FRANJA);
+
+    expect(res).toBe(DESPEJADO); // mismísimo objeto: la API no se entera
+    const snap = skyCorrectionMetrics.snapshot();
+    expect(snap.motivos).toEqual({ corregido: 1 });
+    expect(snap.corregidas.map((c) => c.playa)).toEqual(['Sardinero']);
+  });
+
+  it('shadow es el modo por defecto si la env no está puesta', () => {
+    delete process.env.SKY_CORRECTION;
+    expect(corregirCieloObservado('Sardinero', DESPEJADO, SIN_SOL, false, EN_FRANJA)).toBe(
+      DESPEJADO,
+    );
+  });
+
+  it('on: aplica la corrección', () => {
+    process.env.SKY_CORRECTION = 'on';
+    const res = corregirCieloObservado('Sardinero', DESPEJADO, SIN_SOL, false, EN_FRANJA);
+
+    expect(res?.description).toBe('muy nuboso');
+    expect(res?.icon).toBe('04d');
+    expect(res?.source).toBe('OpenWeather');
+    expect(res?.temperatureC).toBe(DESPEJADO.temperatureC);
+  });
+
+  it('off: ni calcula ni registra', () => {
+    process.env.SKY_CORRECTION = 'off';
+    const res = corregirCieloObservado('Sardinero', DESPEJADO, SIN_SOL, false, EN_FRANJA);
+
+    expect(res).toBe(DESPEJADO);
+    expect(skyCorrectionMetrics.snapshot().total).toBe(0);
+  });
+
+  it('un valor raro en la env cae a shadow, no a on', () => {
+    // Encender el corrector debe ser deliberado: cualquier cosa que no sea
+    // exactamente "on" deja la salida intacta.
+    process.env.SKY_CORRECTION = 'ON_PLEASE';
+    expect(corregirCieloObservado('Sardinero', DESPEJADO, SIN_SOL, false, EN_FRANJA)).toBe(
+      DESPEJADO,
+    );
+  });
+});
+
+describe('corregirCieloObservado — franja horaria', () => {
+  it('fuera de la franja de playa no corrige ni con on', () => {
+    process.env.SKY_CORRECTION = 'on';
+    const res = corregirCieloObservado('Sardinero', DESPEJADO, SIN_SOL, false, FUERA_DE_FRANJA);
+
+    expect(res).toBe(DESPEJADO);
+    expect(skyCorrectionMetrics.snapshot().motivos).toEqual({ 'fuera-de-franja': 1 });
+  });
+});
+
+describe('corregirCieloObservado — sin datos', () => {
+  it('sin weather devuelve null sin romper', () => {
+    process.env.SKY_CORRECTION = 'on';
+    expect(corregirCieloObservado('Sardinero', null, SIN_SOL, false, EN_FRANJA)).toBeNull();
+  });
+
+  it('sin observaciones deja el dato del modelo intacto', () => {
+    process.env.SKY_CORRECTION = 'on';
+    expect(corregirCieloObservado('Sardinero', DESPEJADO, [], false, EN_FRANJA)).toBe(DESPEJADO);
+  });
+});
