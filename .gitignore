@@ -43,8 +43,11 @@ backend/config/.env.tmp
 .claude/
 .agents/
 skills-lock.json
+.tokensave/
 
 # Local scratch & test artifacts (Playwright runs, planning notes, screenshots)
 .playwright-mcp/
 plans/
 /*.png
+.mcp.json
+.gitignore
