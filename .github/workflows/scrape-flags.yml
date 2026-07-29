@@ -76,7 +76,10 @@ jobs:
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
             git add data/flags.json
-            [[ -f data/snapshot.json ]] && git add data/snapshot.json
+            # `if`, no `[[ ... ]] && ...`: con `set -e` (el shell de Actions) un
+            # `&&` que evalúa a falso aborta el step, y entonces ni las banderas
+            # se commitearían. El snapshot puede no existir si faltan las claves.
+            if [[ -f data/snapshot.json ]]; then git add data/snapshot.json; fi
             git commit -m "chore(flags): actualizar banderas Cruz Roja [skip ci]"
             git push
           else
