@@ -1,25 +1,25 @@
 /**
- * CARACTERIZACIÓN — CONGELADO.
+ * CHARACTERIZATION — FROZEN.
  *
- * Fija el comportamiento ACTUAL de `getPlayas()`: la carrera de 2,5 s contra el
- * JSON local, la caché de 5 min, la deduplicación de peticiones en vuelo y la
- * garantía de que NUNCA rechaza.
+ * Pins down the CURRENT behaviour of `getPlayas()`: the 2.5 s race against the
+ * local JSON, the 5 min cache, the deduplication of in-flight requests and the
+ * guarantee that it NEVER rejects.
  *
- * Está escrito contra la firma pública (`getPlayas(options)`) a propósito: en F2
- * la implementación se muda a `core/application/use-cases/getBeaches.ts` y
- * `services/api.ts` queda como shim, y este fichero debe seguir pasando SIN
- * TOCARLO. Si hay que editarlo, es que el refactor cambió comportamiento.
+ * It is written against the public signature (`getPlayas(options)`) on purpose:
+ * in F2 the implementation moves to `core/application/use-cases/getBeaches.ts`
+ * and `services/api.ts` is left as a shim, and this file must keep passing
+ * WITHOUT TOUCHING IT. If it has to be edited, the refactor changed behaviour.
  *
- * Cada test recarga el módulo (`jest.resetModules()`) porque `services/api.ts`
- * guarda la caché y las peticiones en vuelo en variables de módulo. Esa
- * necesidad es, en sí misma, la documentación del problema que F2 arregla.
+ * Each test reloads the module (`jest.resetModules()`) because `services/api.ts`
+ * keeps the cache and the in-flight requests in module variables. That need is,
+ * in itself, the documentation of the problem that F2 fixes.
  */
 
 import { waitFor } from '@testing-library/react';
 import { installFetchMock, restoreFetch, route, flushMicrotasks } from '../http/fakeFetch';
 import { beachesResponse } from '../fixtures/beaches';
 
-/** Solo `/api/beaches`, sin capturar `/api/beaches/featured` ni los detalles. */
+/** Only `/api/beaches`, without catching `/api/beaches/featured` or the details. */
 const BEACHES = /\/api\/beaches$/;
 
 const TTL_MS = 5 * 60 * 1000;
@@ -29,11 +29,12 @@ async function loadApi() {
   return import('../../services/api');
 }
 
-// Aislamiento entre tests: `getPlayas` guarda en localStorage el último listado
-// REAL del backend y lo prefiere al JSON del build como fallback. Sin limpiar,
-// el listado que deja un test contamina el fallback del siguiente. Lo que estos
-// tests fijan es el camino "no hay copia guardada" → JSON del build; el camino
-// con copia guardada vive en api.getBeaches.persistencia.test.ts.
+// Isolation between tests: `getPlayas` saves the last REAL backend listing in
+// localStorage and prefers it over the build's JSON as a fallback. Without
+// clearing, the listing one test leaves behind contaminates the next one's
+// fallback. What these tests pin down is the "there is no saved copy" path →
+// the build's JSON; the path with a saved copy lives in
+// api.getBeaches.persistencia.test.ts.
 beforeEach(() => {
   localStorage.clear();
 });
@@ -53,8 +54,8 @@ describe('getPlayas — carrera contra el fallback local', () => {
     const result = await getPlayas({ timeoutMs: 50, onBackendData });
 
     expect(result).toEqual(beachesResponse);
-    // Si el backend gana la carrera nadie ha visto datos de fallback, así que
-    // no hay nada que "actualizar" y el callback no debe dispararse.
+    // If the backend wins the race nobody has seen fallback data, so there is
+    // nothing to "update" and the callback must not fire.
     expect(onBackendData).not.toHaveBeenCalled();
   });
 
@@ -65,7 +66,7 @@ describe('getPlayas — carrera contra el fallback local', () => {
 
     const result = await getPlayas({ timeoutMs: 20, onBackendData });
 
-    // El fallback es `src/data/beaches.json` entero, no el fixture.
+    // The fallback is the whole `src/data/beaches.json`, not the fixture.
     expect(result).toHaveLength(46);
     expect(result[0]).toHaveProperty('codigo');
   });
@@ -83,7 +84,7 @@ describe('getPlayas — carrera contra el fallback local', () => {
 
   it('usa 2500 ms como timeout por defecto', async () => {
     jest.useFakeTimers();
-    // El backend no contesta nunca dentro de la ventana observada.
+    // The backend never answers within the observed window.
     installFetchMock([route(BEACHES, { json: beachesResponse, delayMs: 60_000 })]);
     const { getPlayas } = await loadApi();
 

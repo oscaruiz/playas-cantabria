@@ -1,31 +1,31 @@
 /**
- * CARACTERIZACIÓN — CONGELADO.
+ * CHARACTERIZATION — FROZEN.
  *
- * Este fichero vivía en `known-issues/` con un diagnóstico equivocado. Queda aquí
- * la versión correcta, ya con el arreglo aplicado.
+ * This file used to live in `known-issues/` with a mistaken diagnosis. What
+ * remains here is the correct version, with the fix already applied.
  *
- * El defecto era una INCONSISTENCIA entre los dos orígenes de datos, no una
- * ausencia permanente del badge:
+ * The defect was an INCONSISTENCY between the two data sources, not a permanent
+ * absence of the badge:
  *
- *  - `src/data/beaches.json` (el fallback local) es el fichero CRUDO del
- *    repositorio: 32 de las 46 playas solo traen `cruzRojaStations` y no traen
- *    `idCruzRoja`.
- *  - El backend sí deriva el id del primer puesto
- *    (`JsonBeachRepository.mapToEntity`), así que por la API esas 32 llegan con
- *    `idCruzRoja > 0`. Verificado contra el desplegado: 42 de 46 con id, y
- *    La Concha con `idCruzRoja: 373`.
+ *  - `src/data/beaches.json` (the local fallback) is the RAW file from the
+ *    repository: 32 of the 46 beaches only carry `cruzRojaStations` and do not
+ *    carry `idCruzRoja`.
+ *  - The backend does derive the id from the first station
+ *    (`JsonBeachRepository.mapToEntity`), so through the API those 32 arrive
+ *    with `idCruzRoja > 0`. Verified against the deployed one: 42 of 46 with an
+ *    id, and La Concha with `idCruzRoja: 373`.
  *
- * Como la interfaz solo miraba `idCruzRoja`, el badge salía con el backend y
- * faltaba durante la ventana de 2,5 s del arranque en frío (y toda la caída, si
- * la había): 32 badges aparecían de golpe al llegar `onBackendData`.
+ * Since the interface only looked at `idCruzRoja`, the badge showed up with the
+ * backend and was missing during the 2.5 s cold start window (and the whole
+ * outage, if there was one): 32 badges appeared all at once when
+ * `onBackendData` arrived.
  *
- * El arreglo es `vigilanciaDisponible()`, que mira las dos fuentes. La propiedad
- * que fija este fichero es la EQUIVALENCIA entre ambos caminos.
+ * The fix is `vigilanciaDisponible()`, which looks at both sources. The property
+ * this file pins down is the EQUIVALENCE between both paths.
  *
- * EL ORDEN DE LOS TESTS IMPORTA: `services/api.ts` cachea 5 min en una variable
- * de módulo y solo escribe en caso de éxito, así que los casos de backend caído
- * van ANTES del único que responde bien. Desaparece en F2, cuando la caché sea
- * inyectable.
+ * TEST ORDER MATTERS: `services/api.ts` caches 5 min in a module variable and
+ * only writes on success, so the backend-down cases go BEFORE the only one that
+ * responds well. It goes away in F2, once the cache is injectable.
  */
 
 import React from 'react';
@@ -70,8 +70,8 @@ it('el JSON empaquetado reparte la vigilancia entre dos campos distintos', () =>
     (p) => (p.idCruzRoja ?? 0) === 0 && (p.cruzRojaStations?.length ?? 0) > 0,
   );
 
-  // Invariante sobre la salida de `sync-beaches`: si el backend cambiara el
-  // reparto, este test avisa antes de que se note en la interfaz.
+  // Invariant over the output of `sync-beaches`: if the backend changed the
+  // split, this test warns before it shows up in the interface.
   expect(playas).toHaveLength(46);
   expect(conId).toHaveLength(10);
   expect(soloConPuestos).toHaveLength(32);
@@ -85,10 +85,10 @@ it('con el backend caído, La Concha sigue mostrando el badge', async () => {
   ]);
 
   const { container } = renderWithProviders(<PlayasList />, { route: '/playas' });
-  // 46 playas: se está pintando el JSON local, sin `idCruzRoja` para esta playa.
+  // 46 beaches: the local JSON is being rendered, without `idCruzRoja` for this beach.
   await screen.findByText('46 playas');
 
-  // Esta es la aserción que fallaba antes del arreglo.
+  // This is the assertion that failed before the fix.
   expect(badgeDe(container, 'La Concha')).not.toBeNull();
 });
 
@@ -101,13 +101,13 @@ it('las playas sin ninguna fuente de vigilancia no muestran badge', async () => 
   const { container } = renderWithProviders(<PlayasList />, { route: '/playas' });
   await screen.findByText('46 playas');
 
-  // Cuatro playas reales no tienen ni id ni puestos.
+  // Four real beaches have neither an id nor stations.
   expect(badgeDe(container, 'La Arena')).toBeNull();
   expect(badgeDe(container, 'Ostende')).toBeNull();
 });
 
-// Va el último: es el único que responde bien y por tanto el único que llena la
-// caché de módulo de `services/api.ts` (ver cabecera).
+// It goes last: it is the only one that responds well and therefore the only one
+// that fills the module cache of `services/api.ts` (see the header).
 it('con datos del backend, La Concha muestra el badge', async () => {
   installFetchMock([
     route(FEATURED, { json: featuredResponse }),
@@ -117,6 +117,6 @@ it('con datos del backend, La Concha muestra el badge', async () => {
   const { container } = renderWithProviders(<PlayasList />, { route: '/playas' });
   await screen.findByText('7 playas');
 
-  // El DTO trae idCruzRoja 373 y además los dos puestos.
+  // The DTO carries idCruzRoja 373 and also both stations.
   expect(badgeDe(container, 'La Concha')).not.toBeNull();
 });

@@ -51,7 +51,7 @@ describe('IdiomaContext', () => {
   });
 
   it('sin idioma guardado detecta el del navegador', () => {
-    // jsdom expone navigator.language = 'en-US'
+    // jsdom exposes navigator.language = 'en-US'
     expect(detectarIdiomaInicial()).toBe('en');
     localStorage.setItem('app_idioma', 'es');
     expect(detectarIdiomaInicial()).toBe('es');

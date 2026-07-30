@@ -10,11 +10,11 @@ export const cantabria: RegionConfig = {
   observationBbox: { latMin: 42.5, latMax: 43.8, lonMin: -5.2, lonMax: -2.8 },
 
   catalogRules: {
-    // Rango geográfico razonable de Cantabria (con un pequeño margen).
+    // Reasonable geographic range for Cantabria (with a small margin).
     bbox: { latMin: 43.2, latMax: 43.65, lonMin: -4.9, lonMax: -3.0 },
     regionName: 'Cantabria',
-    // "La Concha de Santander" no debe existir: fue un alta errónea histórica
-    // (la Concha real con puesto de Cruz Roja es la de Suances).
+    // "La Concha de Santander" must not exist: it was a historical bad entry
+    // (the real Concha with a Cruz Roja station is the one in Suances).
     forbiddenBeaches: [{ municipio: 'santander', nombre: /^(la )?concha( de santander)?$/ }],
   },
 

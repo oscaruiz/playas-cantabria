@@ -1,12 +1,13 @@
 /**
- * CARACTERIZACIÓN — CONGELADO.
+ * CHARACTERIZATION — FROZEN.
  *
- * Caso en que ninguna playa llega al umbral de 60 puntos: no hay nada que
- * presidir la home y sale el mensaje de "sin destacadas". Fichero aparte porque
- * necesita su propio payload de `/featured` y la caché es de módulo.
+ * Case where no beach reaches the 60 point threshold: there is nothing to
+ * preside over the home and the "sin destacadas" message shows up. Separate file
+ * because it needs its own `/featured` payload and the cache is module-level.
  *
- * Este test es el que fija que el umbral de "recomendada" es 60 y no 59: el
- * fixture incluye una playa con 59 y aun así la sección sale vacía.
+ * This test is the one that pins down that the "recomendada" threshold is 60 and
+ * not 59: the fixture includes a beach with 59 and the section still comes out
+ * empty.
  */
 
 import React from 'react';
@@ -21,7 +22,7 @@ import { featuredLaSalve, featuredBerria, featuredSomo } from '../fixtures/featu
 const FEATURED = '/api/beaches/featured';
 const BEACHES = /\/api\/beaches$/;
 
-/** La mejor puntúa 59: justo por debajo del corte. */
+/** The best one scores 59: just below the cut. */
 const sinDestacadas: FeaturedBeachesResponse = {
   timestamp: Date.parse('2026-07-27T10:00:00.000Z'),
   playas: [],
@@ -45,6 +46,6 @@ it('muestra el aviso de "sin destacadas" cuando ninguna playa llega a 60', async
   await screen.findByText('Hoy no hay playas destacadas — consulta el listado completo');
   expect(container.querySelector('.hp-hero-card')).toBeNull();
   expect(container.querySelectorAll('.hp-alt-row')).toHaveLength(0);
-  // La sección "revisar" sí se pinta: no depende del umbral.
+  // The "revisar" section is rendered: it does not depend on the threshold.
   expect(screen.getByText('Mejor revisar antes de ir')).toBeInTheDocument();
 });

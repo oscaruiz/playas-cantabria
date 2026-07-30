@@ -1,30 +1,30 @@
 /**
- * Doble de `fetch` para tests, sin dependencias.
+ * A `fetch` double for tests, with no dependencies.
  *
- * Se escribió a mano en lugar de usar MSW porque react-scripts 5 fija jest 27,
- * que no resuelve los `exports` map de msw@2, y msw@1 (EOL) pelea con
- * `jest.useFakeTimers()` — justo lo que necesitan los tests de la carrera de
- * 2.5 s y del TTL de caché. La API imita la forma de MSW para que migrar más
- * adelante (tras pasar a Vite) sea mecánico.
+ * It was written by hand instead of using MSW because react-scripts 5 pins jest 27,
+ * which does not resolve msw@2's `exports` map, and msw@1 (EOL) fights with
+ * `jest.useFakeTimers()` — exactly what the tests for the 2.5 s race and the
+ * cache TTL need. The API mimics MSW's shape so that migrating later
+ * (after moving to Vite) is mechanical.
  *
- * IMPORTANTE: CRA activa `resetMocks: true`, así que `installFetchMock()` debe
- * llamarse dentro de un `beforeEach`, nunca en el cuerpo del `describe`.
+ * IMPORTANT: CRA enables `resetMocks: true`, so `installFetchMock()` must be
+ * called inside a `beforeEach`, never in the body of the `describe`.
  */
 
 type Matcher = string | RegExp | ((url: string) => boolean);
 
 export interface RouteSpec {
-  /** Cuerpo que devolverá `response.json()`. */
+  /** Body that `response.json()` will return. */
   json?: unknown;
-  /** Por defecto 200. */
+  /** Defaults to 200. */
   status?: number;
-  /** Retrasa la respuesta con `setTimeout` (compatible con fake timers). */
+  /** Delays the response with `setTimeout` (compatible with fake timers). */
   delayMs?: number;
-  /** Rechaza la promesa de `fetch`, como haría un fallo de red. */
+  /** Rejects the `fetch` promise, as a network failure would. */
   networkError?: string | boolean;
 }
 
-/** Un `RouteSpec` fijo, o una función que lo produce (posiblemente async). */
+/** A fixed `RouteSpec`, or a function that produces one (possibly async). */
 type SpecSource = RouteSpec | (() => RouteSpec | Promise<RouteSpec>);
 
 export interface Route {
@@ -42,7 +42,7 @@ export interface Deferred<T> {
   reject: (reason?: unknown) => void;
 }
 
-/** Permite a un test decidir *cuándo* llega una respuesta, no solo cuánto tarda. */
+/** Lets a test decide *when* a response arrives, not just how long it takes. */
 export function deferred<T = RouteSpec>(): Deferred<T> {
   let resolve!: (value: T) => void;
   let reject!: (reason?: unknown) => void;
@@ -78,8 +78,8 @@ let installed = false;
 export type FetchMock = jest.Mock<Promise<Response>, [input: RequestInfo | URL, init?: RequestInit]>;
 
 /**
- * Sustituye `globalThis.fetch`. La primera ruta que casa gana; una URL sin ruta
- * que case hace fallar el test con un mensaje explícito en vez de colgarse.
+ * Replaces `globalThis.fetch`. The first route that matches wins; a URL with no
+ * matching route fails the test with an explicit message instead of hanging.
  */
 export function installFetchMock(routes: Route[]): FetchMock {
   if (!installed) {
@@ -128,11 +128,11 @@ export function restoreFetch(): void {
 }
 
 /**
- * Vacía la cola de microtareas. Necesario tras `jest.advanceTimersByTime()`,
- * porque jest 27 no tiene `advanceTimersByTimeAsync`. Las cadenas que hay que
- * drenar (incluido el `import()` dinámico del fallback, que babel convierte en
- * `Promise.resolve().then(require)`) son solo microtareas, así que basta con
- * ceder el turno varias veces.
+ * Drains the microtask queue. Needed after `jest.advanceTimersByTime()`,
+ * because jest 27 does not have `advanceTimersByTimeAsync`. The chains that have
+ * to be drained (including the fallback's dynamic `import()`, which babel turns into
+ * `Promise.resolve().then(require)`) are only microtasks, so it is enough to
+ * yield the turn several times.
  */
 export async function flushMicrotasks(times = 20): Promise<void> {
   for (let i = 0; i < times; i += 1) {

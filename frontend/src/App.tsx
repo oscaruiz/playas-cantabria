@@ -12,11 +12,11 @@ import PlayaDetallePage from './pages/PlayaDetalle';
 import MapaPage from './pages/MapaPage';
 import { IdiomaProvider } from './i18n/IdiomaContext';
 
-// Las rutas se importan de forma estatica a proposito: IonRouterOutlet mantiene
-// su propia pila de vistas y no tolera que un Suspense ancestro lo desmonte
-// mientras carga un chunk. Al remontarse, el ViewStacks de IonReactRouter (que
-// vive por encima) queda apuntando a nodos muertos y la navegacion se rompe con
-// pantalla en blanco. Para dividir el bundle, hacerlo DENTRO de una pagina.
+// Routes are imported statically on purpose: IonRouterOutlet keeps
+// its own view stack and does not tolerate an ancestor Suspense unmounting it
+// while a chunk loads. On remounting, the ViewStacks of IonReactRouter (which
+// lives above it) is left pointing at dead nodes and navigation breaks with a
+// blank screen. To split the bundle, do it INSIDE a page.
 
 /* Ionic core styles */
 import '@ionic/react/css/core.css';

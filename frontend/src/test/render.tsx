@@ -4,21 +4,21 @@ import { MemoryRouter, Route } from 'react-router-dom';
 import { IdiomaProvider, Idioma } from '../i18n/IdiomaContext';
 
 interface RenderOptions {
-  /** Entrada inicial del router, con query string si hace falta. */
+  /** Initial router entry, with a query string if needed. */
   route?: string;
-  /** Patrón de ruta, necesario cuando la página lee `useParams` (p. ej. `/playas/:codigo`). */
+  /** Route pattern, needed when the page reads `useParams` (e.g. `/playas/:codigo`). */
   path?: string;
-  /** Idioma inicial. Se escribe en localStorage ANTES de montar el provider. */
+  /** Initial language. It is written to localStorage BEFORE mounting the provider. */
   idioma?: Idioma;
 }
 
 /**
- * Monta un componente con los mismos providers que la app: idioma y router.
+ * Mounts a component with the same providers as the app: language and router.
  *
- * No usa `IonReactRouter` a propósito. Las páginas solo necesitan el router de
- * React Router v5 (`useHistory`/`useParams`/`useLocation`); montar el outlet de
- * Ionic añadiría la pila de vistas, que no aporta nada en jsdom y sí bastante
- * ruido.
+ * It deliberately does not use `IonReactRouter`. The pages only need the
+ * React Router v5 router (`useHistory`/`useParams`/`useLocation`); mounting Ionic's
+ * outlet would add the view stack, which contributes nothing in jsdom and quite a
+ * lot of noise.
  */
 export function renderWithProviders(
   ui: React.ReactElement,

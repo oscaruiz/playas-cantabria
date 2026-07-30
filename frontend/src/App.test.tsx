@@ -4,8 +4,8 @@ import { installFetchMock, restoreFetch, route } from './test/http/fakeFetch';
 import { beachesResponse } from './test/fixtures/beaches';
 import { featuredResponse } from './test/fixtures/featured';
 
-// Sin este doble el smoke test llamaba de verdad a la URL de producción de
-// Render — desde CI incluido. Pasaba solo porque la aserción es síncrona.
+// Without this test double the smoke test actually called the Render production
+// URL — including from CI. It only passed because the assertion is synchronous.
 beforeEach(() => {
   Object.defineProperty(navigator, 'geolocation', { configurable: true, value: undefined });
   installFetchMock([

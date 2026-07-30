@@ -1,13 +1,13 @@
 /**
- * CARACTERIZACIÓN — CONGELADO.
+ * CHARACTERIZATION — FROZEN.
  *
- * Fija `getDetallePlaya()`. Lo importante aquí es lo que NO hace: a diferencia
- * de `getPlayas`, no tiene timeout, ni fallback local, ni caché, y SÍ rechaza
- * cuando el backend contesta mal. Con un Render frío eso significa un spinner
- * indefinido en `/playas/:codigo`.
+ * Pins down `getDetallePlaya()`. What matters here is what it does NOT do:
+ * unlike `getPlayas`, it has no timeout, no local fallback and no cache, and it
+ * DOES reject when the backend answers badly. With a cold Render that means an
+ * indefinite spinner on `/playas/:codigo`.
  *
- * Añadir timeout o fallback aquí sería un cambio de comportamiento, no un
- * refactor: está apuntado como arreglo señalizado de F5, con su propio commit.
+ * Adding a timeout or a fallback here would be a behaviour change, not a
+ * refactor: it is noted down as a flagged F5 fix, with its own commit.
  */
 
 import { installFetchMock, restoreFetch, route } from '../http/fakeFetch';

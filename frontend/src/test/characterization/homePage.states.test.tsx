@@ -1,18 +1,18 @@
 /**
- * CARACTERIZACIÓN — CONGELADO.
+ * CHARACTERIZATION — FROZEN.
  *
- * Estados de carga, error y reintento de `HomePage`. Fichero aparte porque cada
- * test necesita una respuesta distinta de `/featured` y la caché de 5 min de
- * `services/api.ts` vive en variables de módulo.
+ * Loading, error and retry states of `HomePage`. Separate file because each test
+ * needs a different response from `/featured` and the 5 min cache in
+ * `services/api.ts` lives in module variables.
  *
- * EL ORDEN DE LOS TESTS IMPORTA, y esa es justamente la deuda que F2 salda:
- * una respuesta correcta llena la caché para los 5 min siguientes, así que los
- * casos que necesitan un fallo tienen que ir ANTES del único que termina bien.
- * Cuando la caché sea inyectable, esta dependencia desaparece.
+ * TEST ORDER MATTERS, and that is precisely the debt F2 pays off: a successful
+ * response fills the cache for the next 5 min, so the cases that need a failure
+ * have to go BEFORE the only one that ends well. Once the cache is injectable,
+ * this dependency disappears.
  *
- * Detalle que queda fijado: el error solo puede venir de `/featured`. La lista
- * de playas (`getPlayas`) nunca rechaza, así que el contador se pinta igual
- * aunque el backend esté caído.
+ * Detail that gets pinned down: the error can only come from `/featured`. The
+ * beach list (`getPlayas`) never rejects, so the counter is rendered all the
+ * same even when the backend is down.
  */
 
 import React from 'react';
@@ -47,9 +47,9 @@ describe('HomePage — estados', () => {
 
     expect(screen.getByText('Buscando las mejores playas cerca de ti...')).toBeInTheDocument();
 
-    // Se suelta la petición: si se dejara colgada, `featuredRequest` quedaría
-    // ocupado y contaminaría el resto del fichero. Se rechaza (y no se resuelve)
-    // para no llenar la caché.
+    // The request is released: if it were left hanging, `featuredRequest` would
+    // stay busy and contaminate the rest of the file. It is rejected (and not
+    // resolved) so as not to fill the cache.
     pending.reject(new Error('backend caído'));
 
     await screen.findByText('No se pudieron cargar las condiciones actuales');
@@ -68,7 +68,7 @@ describe('HomePage — estados', () => {
 
     await screen.findByText('No se pudieron cargar las condiciones actuales');
     expect(screen.getByText('Reintentar')).toBeInTheDocument();
-    // El listado sí llegó: el contador se pinta pese al error de featured.
+    // The listing did arrive: the counter is rendered despite the featured error.
     expect(await screen.findByText('7 playas')).toBeInTheDocument();
   });
 

@@ -1,21 +1,21 @@
 /**
- * Ayudas de tiempo para los tests de caracterización.
+ * Time helpers for the characterization tests.
  *
- * El detalle de playa mezcla dos relojes: las reglas de bandera van siempre en
- * `Europe/Madrid` vía `Intl` (independientes de la TZ del runner), mientras que
- * `dayTitle`, `isToday` y `getTideStatus` usan la hora LOCAL del dispositivo.
- * Como CI corre en UTC y las máquinas de desarrollo en Madrid, cualquier test
- * que dependa de la hora local tiene que fijarla explícitamente en lugar de
- * confiar en un instante UTC concreto.
+ * The beach detail mixes two clocks: the flag rules always run in
+ * `Europe/Madrid` via `Intl` (independent of the runner's TZ), whereas
+ * `dayTitle`, `isToday` and `getTideStatus` use the device's LOCAL time.
+ * Since CI runs in UTC and development machines in Madrid, any test
+ * that depends on local time has to pin it explicitly instead of
+ * relying on a specific UTC instant.
  */
 
 /**
- * Instante que corresponde a las 12:00 LOCALES del día indicado.
+ * Instant corresponding to 12:00 LOCAL time on the given day.
  *
- * Fijar el mediodía local (y no un instante UTC) es lo que hace deterministas
- * los tests de mareas: `getTideStatus` compara contra `getHours()`, así que con
- * mediodía local siempre hay margen de sobra a ambos lados del día para colocar
- * una marea anterior y otra posterior.
+ * Pinning local noon (and not a UTC instant) is what makes the tide tests
+ * deterministic: `getTideStatus` compares against `getHours()`, so with
+ * local noon there is always plenty of margin on both sides of the day to place
+ * a previous tide and a later one.
  */
 export function localNoon(isoDate: string): Date {
   const [year, month, day] = isoDate.split('-').map(Number);

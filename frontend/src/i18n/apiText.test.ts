@@ -128,7 +128,7 @@ describe('viento compuesto', () => {
   });
 
   it('da lo mismo lleve o no el prefijo "viento" que añade razonLegible', () => {
-    // La home y la lista pasan por razonLegible; el detalle no.
+    // The home and the list go through razonLegible; the detail does not.
     expect(tr('viento flojo del noreste')).toBe('light wind from the northeast');
     expect(tr('flojo del noreste')).toBe('light wind from the northeast');
   });
@@ -227,7 +227,7 @@ describe('entradas nuevas de las tablas', () => {
   });
 
   it('traduce el "cielo claro" de OpenWeather, no solo el de AEMET', () => {
-    // `tiempoActual.cielo` viene de OpenWeather y usa otra palabra que AEMET.
+    // `tiempoActual.cielo` comes from OpenWeather and uses a different word than AEMET.
     expect(tr('Cielo claro')).toBe('Clear sky');
     expect(tr('Cielo despejado')).toBe('Clear sky');
   });
@@ -246,9 +246,9 @@ describe('integridad de las tablas', () => {
       }
     }
 
-    // 'fresco' es a la vez nivel de viento y sensación térmica; gana la
-    // sensación por el orden del spread. Cualquier otra colisión sería un bug:
-    // la última tabla ensombrecería a la anterior en silencio.
+    // 'fresco' is both a wind level and a thermal sensation; sensation
+    // wins due to the spread order. Any other collision would be a bug:
+    // the last table would silently shadow the previous one.
     expect(colisiones).toEqual(['fresco (MAPA_VIENTO vs MAPA_SENSACION)']);
   });
 });

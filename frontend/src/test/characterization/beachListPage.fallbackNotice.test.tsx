@@ -1,13 +1,13 @@
 /**
- * CARACTERIZACIÓN — CONGELADO.
+ * CHARACTERIZATION — FROZEN.
  *
- * El aviso de datos locales de `PlayasList`. Sustituye al estado de error que
- * existía antes y que era inalcanzable: `getPlayas` nunca rechaza, así que con
- * el backend caído el usuario veía el listado completo sin ninguna pista de que
- * era una copia de build-time.
+ * The local data notice of `PlayasList`. It replaces the error state that
+ * existed before and that was unreachable: `getPlayas` never rejects, so with
+ * the backend down the user saw the full listing without any hint that it
+ * was a build-time copy.
  *
- * Cada test avanza el reloj más de 5 min para que la caché de módulo de
- * `services/api.ts` no impida ejercitar la ruta HTTP declarada.
+ * Each test advances the clock by more than 5 min so that the module cache of
+ * `services/api.ts` does not prevent exercising the declared HTTP route.
  */
 
 import React from 'react';
@@ -46,7 +46,7 @@ it('avisa cuando el backend está caído, y sigue mostrando el listado', async (
   await screen.findByText('46 playas');
   const aviso = screen.getByText(AVISO);
   expect(aviso).toBeInTheDocument();
-  // `role="status"` para que los lectores de pantalla lo anuncien sin robar foco.
+  // `role="status"` so that screen readers announce it without stealing focus.
   expect(aviso.closest('[role="status"]')).not.toBeNull();
 });
 
@@ -73,11 +73,11 @@ it('el aviso desaparece si el backend acaba respondiendo', async () => {
 
   renderWithProviders(<PlayasList />, { route: '/playas' });
 
-  // Pasados los 2,5 s por defecto se sirve el JSON local y sale el aviso.
+  // After the default 2.5 s the local JSON is served and the notice shows up.
   await screen.findByText('46 playas', undefined, { timeout: 4000 });
   expect(screen.getByText(AVISO)).toBeInTheDocument();
 
-  // Y cuando por fin contesta el backend, se sustituyen datos y aviso.
+  // And when the backend finally answers, both data and notice are replaced.
   tardio.resolve({ json: beachesResponse });
 
   await waitFor(() => expect(screen.getByText('7 playas')).toBeInTheDocument());

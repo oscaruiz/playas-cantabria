@@ -1,13 +1,13 @@
 /**
- * CARACTERIZACIÓN — CONGELADO.
+ * CHARACTERIZATION — FROZEN.
  *
- * Fija `useUserLocation()`: caché en localStorage con 5 min de validez, la
- * distinción entre "denegada" (cualquier error) y "bloqueada" (`code === 1`,
- * permiso denegado por el usuario) — que es lo que decide cuál de los dos
- * banners sale en la home — y el reintento.
+ * Pins down `useUserLocation()`: localStorage cache valid for 5 min, the
+ * distinction between "denied" (any error) and "blocked" (`code === 1`,
+ * permission denied by the user) — which is what decides which of the two
+ * banners shows up on the home — and the retry.
  *
- * En F2 la lectura de `navigator.geolocation` y de `localStorage` pasa detrás de
- * `core/infrastructure/geolocation`. La API del hook no cambia.
+ * In F2 the reading of `navigator.geolocation` and of `localStorage` moves
+ * behind `core/infrastructure/geolocation`. The hook's API does not change.
  */
 
 import { act, renderHook } from '@testing-library/react';
@@ -21,7 +21,7 @@ type ErrorFn = (error: { code: number }) => void;
 
 let getCurrentPosition: jest.Mock;
 
-/** Guarda los callbacks de la última llamada para dispararlos desde el test. */
+/** Keeps the callbacks of the last call so the test can fire them. */
 function lastCallbacks(): { success: SuccessFn; failure: ErrorFn } {
   const call = getCurrentPosition.mock.calls[getCurrentPosition.mock.calls.length - 1];
   return { success: call[0], failure: call[1] };
@@ -47,7 +47,7 @@ describe('useUserLocation — caché', () => {
 
     expect(result.current.userLocation).toEqual([43.4, -3.8]);
     expect(result.current.locationLoading).toBe(false);
-    // Aun con caché válida se vuelve a preguntar al navegador para refrescarla.
+    // Even with a valid cache the browser is asked again to refresh it.
     expect(getCurrentPosition).toHaveBeenCalledTimes(1);
   });
 

@@ -1,33 +1,33 @@
 /**
- * Diccionario base en español. Es la fuente de verdad de las claves:
- * `ClaveTexto` se infiere de aquí y en.ts debe cubrirlas todas (lo
- * garantiza el compilador vía `satisfies`).
+ * Base dictionary in Spanish. It is the source of truth for the keys:
+ * `ClaveTexto` is inferred from here and en.ts must cover them all (the
+ * compiler guarantees it via `satisfies`).
  *
- * Interpolación: los huecos se escriben como {nombre} y se rellenan
- * con el segundo argumento de t(). Las claves con sufijo _one/_other
- * son formas plurales y se resuelven con tPlural().
+ * Interpolation: placeholders are written as {nombre} and are filled
+ * with the second argument of t(). Keys with the _one/_other suffix
+ * are plural forms and are resolved with tPlural().
  */
 export const es = {
   // ---- App / global ----
   'app.titulo': 'Playas de Cantabria',
   'app.tituloDocumento': 'Playas Cantabria',
 
-  // ---- Navegación inferior ----
+  // ---- Bottom navigation ----
   'nav.principal': 'Navegación principal',
   'nav.inicio': 'Inicio',
   'nav.playas': 'Playas',
   'nav.mapa': 'Mapa',
 
-  // ---- Selector de idioma ----
+  // ---- Language selector ----
   'selector.idioma': 'Idioma',
 
-  // ---- Comunes ----
+  // ---- Common ----
   'comun.verDetalleDe': 'Ver detalle de {nombre}',
   'comun.aKm': 'a {km} km',
   'comun.noDisponible': 'No disponible',
   'comun.cruzRoja': 'Cruz Roja',
 
-  // ---- Tiempo relativo ----
+  // ---- Relative time ----
   'tiempo.ahoraMismo': 'actualizado ahora mismo',
   'tiempo.haceMin': 'actualizado hace {n} min',
   'tiempo.haceHoras': 'actualizado hace {n}h',
@@ -59,7 +59,7 @@ export const es = {
   'home.revisarAntes': 'Mejor revisar antes de ir',
   'home.banderaAria': 'Bandera {bandera}',
 
-  // ---- Lista de playas ----
+  // ---- Beach list ----
   'lista.subtitulo': 'Consulta el estado de las playas',
   'lista.placeholder': 'Buscar playa o municipio...',
   'lista.buscarAria': 'Buscar playa o municipio',
@@ -76,7 +76,7 @@ export const es = {
   'lista.datosLocales': 'Sin conexión: mostrando datos guardados, puede que estén desactualizados',
   'lista.datosNoDisponibles': 'No se pudieron cargar las playas ni los datos guardados',
 
-  // ---- Mapa ----
+  // ---- Map ----
   'mapa.subtitulo': 'Explora las playas en el mapa',
   'mapa.municipio': 'Municipio:',
   'mapa.vigilada': 'Vigilada por Cruz Roja',
@@ -92,13 +92,13 @@ export const es = {
   'mapa.leyendaMalas': 'Desaconsejada',
   'mapa.leyendaBandera': 'Bandera Cruz Roja izada',
 
-  // ---- Niveles de viento (derivados de vientoMs) ----
+  // ---- Wind levels (derived from vientoMs) ----
   'viento.sinViento': 'sin viento',
   'viento.brisaSuave': 'brisa suave',
   'viento.moderado': 'viento moderado',
   'viento.fuerte': 'viento fuerte',
 
-  // ---- Bandera (Cruz Roja) ----
+  // ---- Flag (Cruz Roja) ----
   'bandera.roja': 'Bandera Roja',
   'bandera.amarilla': 'Bandera Amarilla',
   'bandera.verde': 'Bandera Verde',
@@ -106,12 +106,12 @@ export const es = {
   'bandera.fueraDeHorario': 'Fuera de horario',
   'bandera.ultimaRegistrada': 'Última bandera registrada: {bandera}',
 
-  // ---- Fechas relativas ----
+  // ---- Relative dates ----
   'fecha.hoy': 'Hoy',
   'fecha.manana': 'Mañana',
   'fecha.pasadoManana': 'Pasado mañana',
 
-  // ---- Detalle de playa ----
+  // ---- Beach detail ----
   'detalle.titulo': 'Detalle',
   'detalle.volver': 'Volver',
   'detalle.puntuacion': 'Puntuación de hoy',
@@ -169,13 +169,13 @@ export const es = {
   'detalle.zonaAvisos': 'Zona de avisos: {zona}',
   'detalle.datosMeteo': 'Datos meteorológicos: {fuente}',
 
-  // ---- Mareas ----
+  // ---- Tides ----
   'marea.subiendo': 'Subiendo',
   'marea.bajando': 'Bajando',
   'marea.pleamar': 'Pleamar',
   'marea.bajamar': 'Bajamar',
 
-  // ---- Cruz Roja (tarjeta) ----
+  // ---- Cruz Roja (card) ----
   'cruzroja.vigilanciaCobertura': 'Vigilancia y cobertura',
   'cruzroja.sinInfo': 'Información de Cruz Roja aún no disponible',
   'cruzroja.banderaActual': 'Bandera actual',
@@ -184,13 +184,13 @@ export const es = {
   'cruzroja.horario': 'Horario',
   'cruzroja.ultimaActualizacion': 'Última actualización',
 
-  // ---- Webcam (tarjeta de detalle) ----
+  // ---- Webcam (detail card) ----
   'webcam.enDirecto': 'Webcam en directo',
   'webcam.vistaPanoramica': 'Vista panorámica de la zona',
   'webcam.cercana': 'Webcam cercana',
   'webcam.abrir': 'Abrir webcam',
 
-  // ---- Atributos de playa (claves alineadas con ATTR_CONFIG) ----
+  // ---- Beach attributes (keys aligned with ATTR_CONFIG) ----
   'attr.duchas': 'Duchas',
   'attr.aseos': 'Aseos',
   'attr.parking': 'Parking',
@@ -206,5 +206,5 @@ export const es = {
 
 export type ClaveTexto = keyof typeof es;
 
-/** Bases válidas para tPlural(): deben existir `${base}_one` y `${base}_other`. */
+/** Valid bases for tPlural(): `${base}_one` and `${base}_other` must exist. */
 export type BasePlural = 'lista.contador' | 'home.playasBadge';

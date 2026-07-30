@@ -1,22 +1,22 @@
 /**
- * CARACTERIZACIÓN — CONGELADO.
+ * CHARACTERIZATION — FROZEN.
  *
- * Fija `PlayaDetalle` (ruta `/playas/:codigo`), que hoy son 1052 líneas con 16
- * componentes declarados dentro. Es la página que más se mueve en F4, así que
- * es donde más importa tener el comportamiento clavado.
+ * Pins down `PlayaDetalle` (route `/playas/:codigo`), which today is 1052 lines
+ * with 16 components declared inside it. It is the page that moves the most in
+ * F4, so it is where nailing down the behaviour matters most.
  *
- * Sobre los relojes: la página mezcla dos.
- *  - Las pestañas de día y el estado de la marea usan la hora LOCAL del
- *    dispositivo, así que esos tests fijan el reloj con `localNoon()` (mediodía
- *    local), lo que los hace válidos en CI (UTC) y en Madrid por igual.
- *  - Las reglas de bandera usan `Europe/Madrid` vía `Intl`, así que sus tests
- *    fijan instantes UTC absolutos y no dependen de la TZ del runner.
- * Por eso los `describe` de bandera montan su propio reloj y no asertan sobre
- * las pestañas, y viceversa.
+ * About the clocks: the page mixes two.
+ *  - The day tabs and the tide status use the device's LOCAL time, so those
+ *    tests pin the clock with `localNoon()` (local noon), which makes them
+ *    valid in CI (UTC) and in Madrid alike.
+ *  - The flag rules use `Europe/Madrid` via `Intl`, so their tests pin
+ *    absolute UTC instants and do not depend on the runner's TZ.
+ * That is why the flag `describe`s set up their own clock and do not assert on
+ * the tabs, and vice versa.
  *
- * `getDetallePlaya` no cachea, así que aquí sí se pueden usar payloads distintos
- * en cada test. La única caché en juego es la de `/featured`, y todos los tests
- * comparten el mismo fixture.
+ * `getDetallePlaya` does not cache, so here different payloads can be used in
+ * each test. The only cache in play is the `/featured` one, and all the tests
+ * share the same fixture.
  */
 
 import React from 'react';
@@ -36,7 +36,7 @@ import { localNoon } from '../time';
 const FEATURED = '/api/beaches/featured';
 const DETAILS = /\/api\/beaches\/[^/]+\/details$/;
 
-const MEDIODIA = localNoon('2026-07-27'); // lunes
+const MEDIODIA = localNoon('2026-07-27'); // Monday
 
 function mockDetalle(detalle: PlayaDetalle | (() => RouteSpec | Promise<RouteSpec>)) {
   installFetchMock([
@@ -46,9 +46,9 @@ function mockDetalle(detalle: PlayaDetalle | (() => RouteSpec | Promise<RouteSpe
 }
 
 /**
- * Síncrono a propósito: cada test decide a qué esperar. Un helper `async` que
- * no se aguarda deja renders en vuelo que React acaba aplicando después del
- * teardown de jsdom.
+ * Synchronous on purpose: each test decides what to wait for. An `async` helper
+ * that is not awaited leaves renders in flight that React ends up applying
+ * after the jsdom teardown.
  */
 function renderDetalle(codigo = '3908503') {
   return renderWithProviders(<PlayaDetallePage />, {
@@ -97,7 +97,7 @@ describe('PlayaDetalle — previsión AEMET', () => {
     await screen.findByText('Hoy');
 
     expect(container.querySelector('.forecast-hero-temp')).toHaveTextContent('21°');
-    // La línea "Máx." solo sale si la observada no supera a la máxima.
+    // The "Máx." line only shows up if the observed one does not exceed the maximum.
     expect(container.querySelector('.forecast-hero-max')).toHaveTextContent('Máx. 26°');
     expect(container.querySelector('.forecast-hero-agua')).toHaveTextContent('Agua 19°C');
   });
@@ -120,11 +120,11 @@ describe('PlayaDetalle — previsión AEMET', () => {
     );
 
     const uv = container.querySelector('.uv-value');
-    // El prefijo "Índice ultravioleta" se recorta antes de mostrar el nivel.
+    // The "Índice ultravioleta" prefix is trimmed before showing the level.
     expect(uv).toHaveTextContent('10 — Muy alto');
     expect(uv).toHaveClass('uv-very-high');
 
-    // aviso.nivel 3 → amarillo
+    // aviso.nivel 3 → yellow
     expect(container.querySelector('.aviso-yellow')).toHaveTextContent(
       'Aviso amarillo por oleaje',
     );
@@ -143,7 +143,7 @@ describe('PlayaDetalle — previsión AEMET', () => {
       '09:00',
       '14:00',
     ]);
-    // El próximo evento es una pleamar → la marea sube.
+    // The next event is a high tide → the tide is rising.
     expect(container.querySelector('.tide-status')).toHaveTextContent('Subiendo');
     expect(container.querySelector('.tide-status')).toHaveClass('tide-status-rising');
   });
@@ -154,7 +154,7 @@ describe('PlayaDetalle — previsión AEMET', () => {
 
     expect(container.querySelector('.tides-source')).toHaveTextContent('Puerto de Santander');
     expect(container.querySelector('.tides-source')?.textContent).not.toContain('*');
-    // AEMET_HTML se presenta como AEMET.
+    // AEMET_HTML is presented as AEMET.
     expect(container.querySelector('.source-label')).toHaveTextContent(
       'Datos meteorológicos: AEMET',
     );
@@ -175,7 +175,7 @@ describe('PlayaDetalle — previsión AEMET', () => {
 
     fireEvent.click(screen.getByText('Mañana', { selector: '.day-tab-title' }));
 
-    // Sin observación real para un día futuro: manda temperaturaMaxima (28).
+    // No real observation for a future day: temperaturaMaxima (28) rules.
     expect(container.querySelector('.forecast-hero-temp')).toHaveTextContent('28°');
     expect(container.querySelector('.forecast-hero-max')).toBeNull();
     expect(container.querySelector('.halfday-detail')).not.toHaveClass('single');
@@ -196,7 +196,7 @@ describe('PlayaDetalle — previsión AEMET', () => {
 // ---------------------------------------------------------------------------
 
 describe('PlayaDetalle — badges de lluvia', () => {
-  /** Clona el fixture AEMET cambiando solo la señal de lluvia. */
+  /** Clones the AEMET fixture changing only the rain signal. */
   function conLluvia(lluvia: LluviaActual): PlayaDetalle {
     const detalle = buildAemetDetail(MEDIODIA);
     const tiempoActual = detalle.tiempoActual;
@@ -226,9 +226,9 @@ describe('PlayaDetalle — badges de lluvia', () => {
     expect(container.querySelector('.forecast-hero-lluvia')).toHaveTextContent(
       'Lloviendo ahora · 1.3 mm',
     );
-    // Nunca dos badges: la previsión se calla mientras llueve.
+    // Never two badges: the forecast keeps quiet while it is raining.
     expect(container.querySelector('.forecast-hero-lluvia-prevista')).toBeNull();
-    // Y el emoji pasa a lluvia aunque el cielo diga "despejado".
+    // And the emoji switches to rain even if the sky says "despejado".
     expect(container.querySelector('.forecast-hero-icon-emoji')).toHaveTextContent('🌧️');
   });
 
@@ -247,7 +247,7 @@ describe('PlayaDetalle — badges de lluvia', () => {
     const { container } = renderDetalle();
     await screen.findByText('Hoy');
 
-    // 16:00Z = 18:00 en Madrid.
+    // 16:00Z = 18:00 in Madrid.
     expect(container.querySelector('.forecast-hero-lluvia-prevista')).toHaveTextContent(
       'Lluvia prevista hacia las 18:00',
     );
@@ -296,7 +296,7 @@ describe('PlayaDetalle — playas sin ficha AEMET', () => {
     const { container } = renderDetalle('3905201');
     await screen.findByText('La Arnía');
 
-    // uvIndex 6 → "Alto" según la escala OMS que aplica el frontend.
+    // uvIndex 6 → "Alto" according to the WHO scale that the frontend applies.
     const uv = container.querySelector('.uv-value');
     expect(uv).toHaveTextContent('6 — Alto');
     expect(uv).toHaveClass('uv-high');
@@ -316,7 +316,7 @@ describe('PlayaDetalle — playas sin ficha AEMET', () => {
 
 describe('PlayaDetalle — bandera de Cruz Roja', () => {
   it('dentro de horario y con captura fresca pinta el color pleno', async () => {
-    // 12:00Z = 14:00 en Madrid, dentro de 11:00-20:00.
+    // 12:00Z = 14:00 in Madrid, within 11:00-20:00.
     const ahora = new Date('2026-07-27T12:00:00.000Z');
     jest.useFakeTimers().setSystemTime(ahora);
     mockDetalle(buildAemetDetail(ahora));
@@ -332,7 +332,7 @@ describe('PlayaDetalle — bandera de Cruz Roja', () => {
   });
 
   it('fuera de horario enseña la última registrada, atenuada y fechada', async () => {
-    // 05:00Z = 07:00 en Madrid, antes de abrir. Captura a las 19:30 de ayer.
+    // 05:00Z = 07:00 in Madrid, before opening. Capture at 19:30 yesterday.
     jest.useFakeTimers().setSystemTime(new Date('2026-07-28T05:00:00.000Z'));
     mockDetalle(buildOutOfHoursDetail());
 
@@ -465,7 +465,7 @@ describe('PlayaDetalle — información de la playa', () => {
 
     expect(screen.getByText('Submarinismo')).toBeInTheDocument();
     expect(screen.getByText('Duchas')).toBeInTheDocument();
-    // `aseos: false` no debe aparecer.
+    // `aseos: false` must not appear.
     expect(screen.queryByText('Aseos')).not.toBeInTheDocument();
   });
 

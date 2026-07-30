@@ -10,27 +10,27 @@ const DICCIONARIOS: Record<Idioma, Record<ClaveTexto, string>> = { es, en };
 
 type Vars = Record<string, string | number>;
 
-/** Firma de t(), útil para helpers que la reciben como parámetro. */
+/** Signature of t(), useful for helpers that receive it as a parameter. */
 export type TraducirFn = (clave: ClaveTexto, vars?: Vars) => string;
 
 interface IdiomaContextValue {
   idioma: Idioma;
   setIdioma: (idioma: Idioma) => void;
-  /** Traduce una clave, con interpolación de {variables}. */
+  /** Translates a key, with {variables} interpolation. */
   t: TraducirFn;
-  /** Resuelve la forma plural (`_one`/`_other`) según count. */
+  /** Resolves the plural form (`_one`/`_other`) according to count. */
   tPlural: (base: BasePlural, count: number) => string;
 }
 
 const IdiomaContext = createContext<IdiomaContextValue | null>(null);
 
-/** Idioma guardado, o el del navegador la primera vez. */
+/** Saved language, or the browser's the first time. */
 export function detectarIdiomaInicial(): Idioma {
   try {
     const guardado = localStorage.getItem(IDIOMA_KEY);
     if (guardado === 'es' || guardado === 'en') return guardado;
   } catch {
-    /* localStorage no disponible */
+    /* localStorage not available */
   }
   return navigator.language?.toLowerCase().startsWith('en') ? 'en' : 'es';
 }
@@ -51,7 +51,7 @@ export const IdiomaProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     try {
       localStorage.setItem(IDIOMA_KEY, idioma);
     } catch {
-      /* localStorage no disponible */
+      /* localStorage not available */
     }
   }, [idioma]);
 

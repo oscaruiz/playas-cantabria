@@ -22,15 +22,15 @@ export function limpiarTexto(texto: string | null | undefined): string {
   return texto.replace(/\uFFFD/g, 'e');
 }
 
-/** Normaliza para b\u00FAsqueda: min\u00FAsculas + sin tildes (Arn\u00EDa \u2192 arnia). */
+/** Normalizes for search: lowercase + no accents (Arn\u00EDa \u2192 arnia). */
 export function normalizarBusqueda(texto: string): string {
   return texto.toLowerCase().normalize('NFD').replace(/\p{M}/gu, '');
 }
 
 /**
- * \u00BFLa playa coincide con el t\u00E9rmino de b\u00FAsqueda? Busca (sin distinguir tildes) en
- * nombre, municipio y alias, de modo que un nombre can\u00F3nico o un alias (top\u00F3nimo,
- * sector o nombre de puesto de Cruz Roja) encuentre la playa sin duplicar resultados.
+ * Does the beach match the search term? Searches (ignoring accents) in
+ * `nombre`, `municipio` and `alias`, so that a canonical name or an alias (place name,
+ * sector or Cruz Roja station name) finds the beach without duplicating results.
  */
 export function coincidePlaya(
   p: { nombre: string; municipio: string; alias?: string[] },
@@ -59,7 +59,7 @@ export function isFlagAvailable(cruzRoja?: { bandera?: string }): boolean {
 
 export type EstadoBandera = 'color' | 'fueraDeHorario' | 'sinDatos';
 
-/** Minutos transcurridos del día en hora de Madrid (robusto a la TZ del dispositivo). */
+/** Minutes elapsed in the day in Madrid time (robust to the device's TZ). */
 function minutosMadrid(fecha: Date): number {
   const hhmm = new Intl.DateTimeFormat('en-GB', {
     timeZone: 'Europe/Madrid',
@@ -71,7 +71,7 @@ function minutosMadrid(fecha: Date): number {
   return h * 60 + m;
 }
 
-/** Fecha "YYYY-MM-DD" en Madrid, para comparar con la cobertura de temporada. */
+/** "YYYY-MM-DD" date in Madrid, to compare against the season coverage. */
 export function fechaMadrid(fecha: Date): string {
   return new Intl.DateTimeFormat('en-CA', {
     timeZone: 'Europe/Madrid',
@@ -81,19 +81,19 @@ export function fechaMadrid(fecha: Date): string {
   }).format(fecha); // en-CA → "YYYY-MM-DD"
 }
 
-/** Convierte "DD-MM-YYYY" (formato Cruz Roja) a "YYYY-MM-DD"; null si no parsea. */
+/** Converts "DD-MM-YYYY" (Cruz Roja format) to "YYYY-MM-DD"; null if it doesn't parse. */
 function isoDesdeDDMMYYYY(fecha?: string | null): string | null {
   if (!fecha) return null;
   const m = fecha.match(/(\d{2})-(\d{2})-(\d{4})/);
   return m ? `${m[3]}-${m[2]}-${m[1]}` : null;
 }
 
-/** Ventana de frescura: una captura de hace más de esto ya no se muestra. */
-const MAX_EDAD_BANDERA_MS = 24 * 60 * 60 * 1000; // 24h — espejo de flagVigencia.ts
+/** Freshness window: a capture older than this is no longer shown. */
+const MAX_EDAD_BANDERA_MS = 24 * 60 * 60 * 1000; // 24h — mirror of flagVigencia.ts
 
 /**
- * ¿La captura de la bandera (ISO) es reciente (≤24h)?
- * Si el ISO no parsea, se asume fresca (lenient) para no ocultar datos buenos.
+ * Is the flag capture (ISO) recent (≤24h)?
+ * If the ISO doesn't parse, it is assumed fresh (lenient) so as not to hide good data.
  */
 export function esInfoReciente(iso: string, ahora: Date = new Date()): boolean {
   const ms = new Date(iso).getTime();
@@ -102,8 +102,8 @@ export function esInfoReciente(iso: string, ahora: Date = new Date()): boolean {
 }
 
 /**
- * ¿Estamos dentro del horario (y temporada) de vigilancia, en hora de Madrid?
- * Devuelve null si no hay datos de horario para decidir.
+ * Are we within the lifeguard hours (and season), in Madrid time?
+ * Returns null if there is no schedule data to decide.
  */
 export function dentroDeHorario(
   cruzRoja?: { horario?: string | null; coberturaDesde?: string | null; coberturaHasta?: string | null },
@@ -113,7 +113,7 @@ export function dentroDeHorario(
   const m = cruzRoja.horario.match(/(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})/);
   if (!m) return null;
 
-  // Fuera de temporada (cobertura) → no hay servicio aunque sea media tarde.
+  // Out of season (coverage) → no service even if it's mid-afternoon.
   const hoy = fechaMadrid(ahora);
   const desde = isoDesdeDDMMYYYY(cruzRoja.coberturaDesde);
   const hasta = isoDesdeDDMMYYYY(cruzRoja.coberturaHasta);
@@ -127,16 +127,16 @@ export function dentroDeHorario(
 }
 
 /**
- * Estado a mostrar para la bandera de Cruz Roja:
- *  - 'color'          → bandera real izada y vigente (verde/amarilla/roja)
- *  - 'fueraDeHorario' → fuera del horario/temporada de vigilancia
- *  - 'sinDatos'       → dentro del horario pero sin bandera fresca (sin captura
- *                       reciente o sin horario conocido)
+ * State to display for the Cruz Roja flag:
+ *  - 'color'          → real flag hoisted and current (green/yellow/red)
+ *  - 'fueraDeHorario' → outside the lifeguard hours/season
+ *  - 'sinDatos'       → within hours but without a fresh flag (no recent
+ *                       capture or no known schedule)
  *
- * La bandera solo se pinta con color si es VIGENTE: dentro de horario/temporada Y
- * con dato reciente (≤24h). Un color de una captura más antigua ya no refleja lo
- * que ondea ahora → no se muestra.
- * ESPEJO del backend: misma regla en `application/mappers/flagVigencia.ts`.
+ * The flag is only painted with color if it is CURRENT: within hours/season AND
+ * with recent data (≤24h). A color from an older capture no longer reflects what
+ * is flying now → it is not shown.
+ * MIRROR of the backend: same rule in `application/mappers/flagVigencia.ts`.
  */
 export function estadoBandera(
   cruzRoja?: { bandera?: string; horario?: string | null; coberturaDesde?: string | null; coberturaHasta?: string | null; ultimaActualizacion?: string | null },
@@ -150,19 +150,19 @@ export function estadoBandera(
   return 'sinDatos';
 }
 
-/** Antigüedad máxima de la última bandera registrada: la jornada de vigilancia actual o la anterior. */
+/** Maximum age of the last recorded flag: the current lifeguard day or the previous one. */
 const MAX_EDAD_ULTIMA_BANDERA_MS = 36 * 60 * 60 * 1000; // 36h
 
 /**
- * Última bandera registrada, para enseñarla FUERA de horario (cuando ya no hay
- * bandera vigente que pintar). Devuelve el momento en el que como muy tarde
- * ondeaba: Cruz Roja mantiene su ficha publicada toda la noche, así que una
- * captura posterior al cierre se acota al cierre de esa jornada — nunca decimos
- * "hace 2 minutos" de madrugada.
+ * Last recorded flag, to show it OUTSIDE lifeguard hours (when there is no longer
+ * a current flag to paint). Returns the latest moment it could have been
+ * flying: Cruz Roja keeps its page published all night, so a
+ * capture after closing is clamped to that day's closing time — we never say
+ * "2 minutes ago" in the early morning.
  *
- * null si no hay color, si seguimos dentro de horario, si no se conoce el
- * horario, si el registro cae fuera de la temporada de cobertura o si tiene más
- * de ~36h (entonces el detalle sigue mostrando "Fuera de horario" a secas).
+ * null if there is no color, if we are still within hours, if the schedule is
+ * unknown, if the record falls outside the coverage season, or if it is older
+ * than ~36h (then the detail keeps showing plain "Fuera de horario").
  */
 export function ultimaBanderaRegistrada(
   cruzRoja?: {
@@ -184,15 +184,15 @@ export function ultimaBanderaRegistrada(
   const ini = +m[1] * 60 + +m[2];
   const fin = +m[3] * 60 + +m[4];
 
-  // Acotar la captura al cierre de la jornada de vigilancia a la que pertenece.
+  // Clamp the capture to the closing of the lifeguard day it belongs to.
   const capturaMin = minutosMadrid(captura);
   let registrada = captura.getTime();
-  if (capturaMin > fin) registrada -= (capturaMin - fin) * 60000; // cerró ese mismo día
-  else if (capturaMin < ini) registrada -= (capturaMin + 1440 - fin) * 60000; // cerró el día anterior
+  if (capturaMin > fin) registrada -= (capturaMin - fin) * 60000; // closed that same day
+  else if (capturaMin < ini) registrada -= (capturaMin + 1440 - fin) * 60000; // closed the previous day
 
   if (ahora.getTime() - registrada > MAX_EDAD_ULTIMA_BANDERA_MS) return null;
 
-  // Un registro fuera de la temporada de cobertura no corresponde a vigilancia real.
+  // A record outside the coverage season does not correspond to real lifeguarding.
   const dia = fechaMadrid(new Date(registrada));
   const desde = isoDesdeDDMMYYYY(cruzRoja?.coberturaDesde);
   const hasta = isoDesdeDDMMYYYY(cruzRoja?.coberturaHasta);
@@ -201,7 +201,7 @@ export function ultimaBanderaRegistrada(
   return { bandera: cruzRoja!.bandera!, registradaIso: new Date(registrada).toISOString() };
 }
 
-/** ¿La playa tiene una webcam mostrable? (existe y no está desactivada). */
+/** Does the beach have a showable webcam? (it exists and is not deactivated). */
 export function webcamDisponible(
   webcam?: { estado?: 'activa' | 'desactivada' } | null
 ): boolean {
@@ -209,16 +209,16 @@ export function webcamDisponible(
 }
 
 /**
- * ¿La playa tiene vigilancia de Cruz Roja? Mira primero los puestos y después el
- * `idCruzRoja` de compatibilidad.
+ * Does the beach have Cruz Roja lifeguarding? Looks first at the stations and then at the
+ * compatibility `idCruzRoja`.
  *
- * Hay que consultar las DOS fuentes porque `src/data/beaches.json` (el fallback
- * local) es el fichero crudo del repositorio, no el DTO: 32 de las 46 playas
- * solo traen `cruzRojaStations`. El backend sí deriva un `idCruzRoja` a partir
- * del primer puesto con id (`JsonBeachRepository.mapToEntity`), así que mirando
- * solo ese campo el badge aparecía con backend y desaparecía con el fallback.
+ * BOTH sources must be consulted because `src/data/beaches.json` (the local
+ * fallback) is the raw repository file, not the DTO: 32 of the 46 beaches
+ * only carry `cruzRojaStations`. The backend does derive an `idCruzRoja` from
+ * the first station with an id (`JsonBeachRepository.mapToEntity`), so looking
+ * only at that field the badge appeared with the backend and disappeared with the fallback.
  *
- * ESPEJO del backend: mismo orden de preferencia que
+ * MIRROR of the backend: same order of preference as
  * `domain/services/flagAggregation.ts` → `resolveFlagForStations`.
  */
 export function vigilanciaDisponible(
@@ -234,9 +234,9 @@ export function vigilanciaDisponible(
 export type CoberturaWebcam = 'exacta' | 'compartida' | 'cercana';
 
 /**
- * Clave i18n del título/etiqueta de una webcam según su cobertura. La etiqueta es
- * la señal honesta al usuario: una cámara compartida o cercana NUNCA se presenta
- * como exacta. Devuelve una `ClaveTexto` para pasarla a `t()`.
+ * i18n key for a webcam's title/label according to its coverage. The label is
+ * the honest signal to the user: a shared or nearby camera is NEVER presented
+ * as exact. Returns a `ClaveTexto` to pass to `t()`.
  */
 export function claveCoberturaWebcam(cobertura: CoberturaWebcam): ClaveTexto {
   switch (cobertura) {
@@ -251,8 +251,8 @@ export function claveCoberturaWebcam(cobertura: CoberturaWebcam): ClaveTexto {
 }
 
 /**
- * "actualizado hace X" (min / horas / días) a partir de un ISO o epoch ms.
- * Devuelve '' si no parsea. Reutiliza las claves i18n `tiempo.*`.
+ * "updated X ago" (min / hours / days) from an ISO or epoch ms.
+ * Returns '' if it doesn't parse. Reuses the `tiempo.*` i18n keys.
  */
 export function formatearHaceTiempo(input: string | number, t: TraducirFn): string {
   const ms = typeof input === 'number' ? input : new Date(input).getTime();
@@ -270,7 +270,7 @@ export function capitalizar(s: string | null | undefined): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-/** Glifo de olas para "surf" (no existe en Ionicons) \u2014 mismo formato data-URI que ionicons */
+/** Waves glyph for "surf" (doesn't exist in Ionicons) \u2014 same data-URI format as ionicons */
 const olasIcon =
   "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><path d='M48 192c48-44 112-44 160 0s112 44 160 0 88-38 96-42' fill='none' stroke='currentColor' stroke-width='32' stroke-linecap='round'/><path d='M48 320c48-44 112-44 160 0s112 44 160 0 88-38 96-42' fill='none' stroke='currentColor' stroke-width='32' stroke-linecap='round'/></svg>";
 
@@ -297,9 +297,9 @@ export function getActiveAttrs(atributos?: Record<string, boolean | undefined> |
 }
 
 /**
- * ¿Hay lluvia activa ahora? Prioridad: señal estructurada del backend
- * (`lluvia.estado`, multi-fuente) → mm observados → regex sobre el texto
- * del cielo (fallback para backends antiguos sin el campo).
+ * Is there active rain right now? Priority: structured signal from the backend
+ * (`lluvia.estado`, multi-source) → observed mm → regex over the sky
+ * text (fallback for old backends without the field).
  */
 export function esLluviaActiva(
   tiempoActual?: {
@@ -316,7 +316,7 @@ export function esLluviaActiva(
   return /lluvia|llovizna|chubasc|tormenta/.test(c);
 }
 
-/** Hora "HH:MM" en Europe/Madrid a partir de un ISO; null si no parsea. */
+/** "HH:MM" time in Europe/Madrid from an ISO; null if it doesn't parse. */
 export function horaLocalMadrid(iso: string | null | undefined): string | null {
   if (!iso) return null;
   const fecha = new Date(iso);
@@ -330,8 +330,8 @@ export function horaLocalMadrid(iso: string | null | undefined): string | null {
 }
 
 /**
- * Lluvia PREVISTA a mostrar. Devuelve null si ya está lloviendo (el badge de
- * lluvia activa tiene prioridad — nunca dos badges a la vez) o si no hay señal.
+ * FORECAST rain to display. Returns null if it is already raining (the active
+ * rain badge has priority — never two badges at once) or if there is no signal.
  */
 export function lluviaPrevista(
   tiempoActual?: {
@@ -349,22 +349,22 @@ export function emojiCielo(cielo: string | null): string {
   if (!cielo) return '\u26C5';
   const c = cielo.toLowerCase();
 
-  // El tiempo significativo va PRIMERO. AEMET mete la cobertura y la
-  // precipitación en la misma cadena ("Cubierto con lluvia", "Intervalos
-  // nubosos con lluvia escasa"), así que mirando antes la nubosidad la lluvia
-  // no salía nunca: esas dos daban nube y sol respectivamente.
-  // 'torment', no 'tormenta', para que entre también "chubascos tormentosos".
+  // Significant weather goes FIRST. AEMET puts cloud cover and
+  // precipitation in the same string ("Cubierto con lluvia", "Intervalos
+  // nubosos con lluvia escasa"), so checking cloudiness first meant rain
+  // never showed: those two gave cloud and sun respectively.
+  // 'torment', not 'tormenta', so that "chubascos tormentosos" also matches.
   if (/torment|el[eé]ctrica|rayos/.test(c)) return '\u26C8\uFE0F';
   if (/nieve|nevada|aguanieve/.test(c)) return '\u{1F328}\uFE0F';
   if (/lluvia|llovizna|chubascos/.test(c)) return '\u{1F327}\uFE0F';
   if (/niebla|bruma|neblina/.test(c)) return '\u{1F32B}\uFE0F';
 
-  // Cobertura, de menos a más. Los parciales van ANTES que el despejado para
-  // que el 'soleado' de "parcialmente soleado" no se lo lleve.
+  // Cloud cover, from least to most. Partials go BEFORE clear so
+  // that the 'soleado' in "parcialmente soleado" doesn't take it.
   if (/poco nuboso|intervalos|parcial|nubes dispersas|algo de nubes/.test(c)) return '\u{1F324}\uFE0F';
-  // "cielo claro" es el despejado de OpenWeather (01x); AEMET dice "despejado".
+  // "cielo claro" is OpenWeather's clear sky (01x); AEMET says "despejado".
   if (/despejado|soleado|claro/.test(c)) return '\u2600\uFE0F';
-  // "nubes" a secas es el cubierto de OpenWeather (04x); las dispersas ya se han filtrado arriba.
+  // Plain "nubes" is OpenWeather's overcast (04x); scattered ones have already been filtered above.
   if (/muy nuboso|cubierto|nubes/.test(c)) return '\u2601\uFE0F';
   if (/nuboso|nublado/.test(c)) return '\u26C5';
   return '\u26C5';

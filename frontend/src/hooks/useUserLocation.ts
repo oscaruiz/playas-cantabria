@@ -30,7 +30,7 @@ function cacheLocation(coords: [number, number]) {
   try {
     const entry: CachedLocation = { coords, timestamp: Date.now() };
     localStorage.setItem(CACHE_KEY, JSON.stringify(entry));
-  } catch { /* localStorage lleno o no disponible */ }
+  } catch { /* localStorage full or unavailable */ }
 }
 
 export interface UserLocationResult {

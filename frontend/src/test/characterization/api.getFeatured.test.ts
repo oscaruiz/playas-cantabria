@@ -1,13 +1,13 @@
 /**
- * CARACTERIZACIÓN — CONGELADO.
+ * CHARACTERIZATION — FROZEN.
  *
- * Fija `getFeaturedBeaches()`: misma caché de 5 min y misma deduplicación que
- * `getPlayas` pero implementadas por separado (F2 las unifica en `ttlCache` /
- * `inFlight`), con la diferencia de que aquí SÍ existe `{ force: true }` para
- * saltarse la caché — es lo que usa el botón de reintento de la home.
+ * Pins down `getFeaturedBeaches()`: same 5 min cache and same deduplication as
+ * `getPlayas` but implemented separately (F2 unifies them into `ttlCache` /
+ * `inFlight`), with the difference that here `{ force: true }` DOES exist to
+ * skip the cache — it is what the home's retry button uses.
  *
- * Nota: el backend manda `Cache-Control: max-age=60` para este endpoint, pero
- * el cliente aplica 300 s igualmente. Queda fijado como está.
+ * Note: the backend sends `Cache-Control: max-age=60` for this endpoint, but
+ * the client applies 300 s anyway. It is pinned down as it is.
  */
 
 import { installFetchMock, restoreFetch, route } from '../http/fakeFetch';

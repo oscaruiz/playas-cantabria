@@ -1,18 +1,18 @@
 import type { FeaturedBeach, FeaturedBeachesResponse } from '../../services/api';
 
 /**
- * Respuesta de `GET /api/beaches/featured`.
+ * Response of `GET /api/beaches/featured`.
  *
- * Las puntuaciones están elegidas a caballo de los tres cortes que hoy existen
- * en el código, que NO coinciden entre sí:
- *   - `ScoreBadge.tramo`      → alta ≥ 60, media ≥ 40
+ * The scores are chosen to straddle the three cutoffs that exist in the
+ * code today, which do NOT match each other:
+ *   - `ScoreBadge.tramo`      → high ≥ 60, medium ≥ 40
  *   - `MapaPage.markerStatus` → good ≥ 60, medium ≥ 35
- *   - `HomePage`              → "recomendada" ≥ 60
- * Por eso hay playas con 82, 71, 60, 59, 40, 38 y 34: cada una cae en un lado
- * distinto de al menos uno de los cortes. Ver `scoreBands` en el plan de F1.
+ *   - `HomePage`              → "recommended" ≥ 60
+ * That is why there are beaches with 82, 71, 60, 59, 40, 38 and 34: each falls on a
+ * different side of at least one of the cutoffs. See `scoreBands` in the F1 plan.
  *
- * `elSardinero` lleva `vientoMs: 11.2`, por encima del umbral de 8 m/s que
- * dispara el badge de aviso en el mapa y en el popup.
+ * `elSardinero` carries `vientoMs: 11.2`, above the 8 m/s threshold that
+ * triggers the warning badge on the map and in the popup.
  */
 
 const base = {
@@ -51,7 +51,7 @@ export const featuredElSardinero: FeaturedBeach = {
   razonRanking: 'nubes dispersas, viento fuerte',
 };
 
-/** Justo EN el corte de 60: recomendada, `--good` en el mapa, tramo alto. */
+/** Exactly AT the 60 cutoff: recommended, `--good` on the map, high band. */
 export const featuredLaArnia: FeaturedBeach = {
   ...base,
   nombre: 'La Arnía',
@@ -66,7 +66,7 @@ export const featuredLaArnia: FeaturedBeach = {
   razonRanking: 'cielo despejado, sin datos de bandera',
 };
 
-/** Justo POR DEBAJO de 60: fuera de "recomendadas", `--medium` en el mapa. */
+/** Just BELOW 60: outside "recommended", `--medium` on the map. */
 export const featuredLaSalve: FeaturedBeach = {
   ...base,
   nombre: 'La Salvé',
@@ -82,7 +82,7 @@ export const featuredLaSalve: FeaturedBeach = {
   razonRanking: 'nubes, viento moderado',
 };
 
-/** En el corte de 40 de `ScoreBadge`, por encima del 35 de `MapaPage`. */
+/** At `ScoreBadge`'s 40 cutoff, above `MapaPage`'s 35. */
 export const featuredBerria: FeaturedBeach = {
   ...base,
   nombre: 'Berria',
@@ -99,7 +99,7 @@ export const featuredBerria: FeaturedBeach = {
   motivoBaja: 'bandera roja',
 };
 
-/** Entre los dos cortes bajos (35 ≤ 38 < 40): `--medium` en mapa, tramo bajo en badge. */
+/** Between the two low cutoffs (35 ≤ 38 < 40): `--medium` on the map, low band on the badge. */
 export const featuredSomo: FeaturedBeach = {
   ...base,
   nombre: 'Somo',
@@ -116,7 +116,7 @@ export const featuredSomo: FeaturedBeach = {
   motivoBaja: 'lluvia',
 };
 
-/** Por debajo de ambos cortes bajos: `--bad` en el mapa. */
+/** Below both low cutoffs: `--bad` on the map. */
 export const featuredLangre: FeaturedBeach = {
   ...base,
   nombre: 'Langre',
@@ -144,16 +144,16 @@ export const resumenTodas: FeaturedBeach[] = [
 ];
 
 /**
- * Fixture aparte para la nota "priorizada por cercanía" y el chip ⭐ "mejor
- * puntuación", que solo aparecen cuando la playa que preside NO es la de mayor
- * puntuación cruda.
+ * Separate fixture for the "prioritized by proximity" note and the ⭐ "best
+ * score" chip, which only appear when the presiding beach is NOT the one with the
+ * highest raw score.
  *
- * Con la geografía real de Cantabria eso no llega a pasar: la penalización por
- * distancia está capada en 25 puntos (62,5 km) y las playas del fixture están
- * demasiado juntas para abrir esa brecha. Aquí se fuerza a propósito: `Lejana`
- * puntúa 90 pero está a ~120 km (penalización al tope, 65 ajustado) y `Cercana`
- * puntúa 70 a 0 km (70 ajustado), así que preside `Cercana` teniendo `Lejana`
- * más puntos.
+ * With Cantabria's real geography that never actually happens: the distance
+ * penalty is capped at 25 points (62.5 km) and the fixture's beaches are
+ * too close together to open that gap. Here it is forced on purpose: `Lejana`
+ * scores 90 but is ~120 km away (penalty at the cap, 65 adjusted) and `Cercana`
+ * scores 70 at 0 km (70 adjusted), so `Cercana` presides even though `Lejana`
+ * has more points.
  */
 export const proximityCercana: FeaturedBeach = {
   ...base,

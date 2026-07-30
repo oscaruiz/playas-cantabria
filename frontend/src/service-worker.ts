@@ -70,22 +70,22 @@ registerRoute(
   })
 );
 
-// Respuestas del backend de playas (otro origen: Render).
+// Responses from the beaches backend (different origin: Render).
 //
-// NetworkFirst con timeout corto: se intenta el dato fresco, pero si el backend
-// está dormido —Render free duerme el proceso a los 15 min y tarda decenas de
-// segundos en despertar— se sirve la última respuesta cacheada en vez de dejar
-// al usuario mirando un spinner. Efecto secundario buscado: la app sigue siendo
-// útil en la playa con mala cobertura, y las revisitas no gastan cuota de las
-// APIs gratuitas.
+// NetworkFirst with a short timeout: fresh data is attempted, but if the backend
+// is asleep —Render free puts the process to sleep after 15 min and takes tens of
+// seconds to wake up— the last cached response is served instead of leaving
+// the user staring at a spinner. Intended side effect: the app remains
+// useful at the beach with poor coverage, and revisits don't spend quota of the
+// free APIs.
 registerRoute(
   ({ url }) => url.pathname.startsWith('/api/beaches'),
   new NetworkFirst({
     cacheName: 'api-playas',
     networkTimeoutSeconds: 3,
     plugins: [
-      // Solo se cachean respuestas completas: una 5xx del backend no debe
-      // quedarse pegada como si fuera el dato bueno.
+      // Only complete responses are cached: a 5xx from the backend must not
+      // get stuck as if it were the good data.
       new CacheableResponsePlugin({ statuses: [200] }),
       new ExpirationPlugin({ maxEntries: 60, maxAgeSeconds: 24 * 60 * 60 }),
     ],

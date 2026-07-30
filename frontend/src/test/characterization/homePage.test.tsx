@@ -1,16 +1,16 @@
 /**
- * CARACTERIZACIÓN — CONGELADO.
+ * CHARACTERIZATION — FROZEN.
  *
- * Fija `HomePage` (ruta `/`): qué playa preside, cuántas alternativas salen, los
- * badges de la cabecera, la sección "Cerca de ti" y los banners de ubicación.
+ * Pins down `HomePage` (route `/`): which beach presides, how many alternatives
+ * show up, the header badges, the "Cerca de ti" section and the location banners.
  *
- * Todos los tests comparten el mismo fixture de featured, así que la caché de
- * 5 min de `services/api.ts` es inofensiva. Los estados de carga, error y vacío
- * necesitan payloads distintos y viven en `homePage.states.test.tsx` y
- * `homePage.empty.test.tsx` (un registro de módulos por fichero).
+ * Every test shares the same featured fixture, so the 5 min cache in
+ * `services/api.ts` is harmless. The loading, error and empty states need
+ * different payloads and live in `homePage.states.test.tsx` and
+ * `homePage.empty.test.tsx` (one module registry per file).
  *
- * `Date.now` se fija 30 min después del `timestamp` del fixture para que el
- * badge "actualizado hace 30 min" sea determinista.
+ * `Date.now` is pinned 30 min after the fixture's `timestamp` so that the
+ * "actualizado hace 30 min" badge is deterministic.
  */
 
 import React from 'react';
@@ -40,7 +40,7 @@ function setGeolocation(mode: GeoMode, coords: [number, number] = [43.42, -3.43]
             if (mode === 'granted') success({ coords: { latitude: coords[0], longitude: coords[1] } });
             else if (mode === 'blocked') failure({ code: 1 });
             else if (mode === 'denied') failure({ code: 2 });
-            // 'pending': no llama a nadie — deja el hook en carga.
+            // 'pending': calls no one — leaves the hook loading.
           },
         };
 
@@ -91,7 +91,7 @@ describe('HomePage — sin ubicación', () => {
     await renderHome();
 
     expect(screen.getByText('21° media')).toBeInTheDocument();
-    // El contador viene de getPlayas (7 en el fixture), no de featured.
+    // The counter comes from getPlayas (7 in the fixture), not from featured.
     expect(screen.getByText('7 playas')).toBeInTheDocument();
     expect(screen.getByText('actualizado hace 30 min')).toBeInTheDocument();
   });
@@ -104,7 +104,7 @@ describe('HomePage — sin ubicación', () => {
     expect(hero.querySelector('.hp-hero-temp')).toHaveTextContent('22°');
     expect(hero.querySelector('.hp-flag-dot')).toHaveClass('hp-flag-green');
     expect(hero).toHaveTextContent('Bandera Verde');
-    // vientoMs 3.1 cae en el tramo "brisa suave" (3 <= ms < 6).
+    // vientoMs 3.1 falls in the "brisa suave" band (3 <= ms < 6).
     expect(hero).toHaveTextContent('brisa suave');
   });
 
@@ -134,8 +134,8 @@ describe('HomePage — sin ubicación', () => {
     await renderHome();
 
     fireEvent.click(screen.getByText('Ver detalles'));
-    // MemoryRouter no expone la URL; basta con que el click no rompa y el
-    // botón exista con su aria-label correcto.
+    // MemoryRouter does not expose the URL; it is enough that the click does not
+    // break and that the button exists with its correct aria-label.
     expect(screen.getByLabelText('Ver detalle de La Concha')).toBeInTheDocument();
   });
 });
@@ -162,7 +162,7 @@ describe('HomePage — con ubicación', () => {
 
     expect(screen.getByText('Playas más cerca de ti')).toBeInTheDocument();
     expect(names(container, '.hp-nearest-name')).toEqual(['La Salvé', 'Berria', 'Langre']);
-    // Ojo: sale Berria (40) aunque no sea "recomendada" — cercanía, no puntuación.
+    // Careful: Berria (40) shows up even though it is not "recomendada" — proximity, not score.
     expect(container.querySelector('.hp-nearest-sub')).toHaveTextContent('Laredo · a 2 km');
   });
 

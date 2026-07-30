@@ -1,15 +1,15 @@
 /**
- * CARACTERIZACIÓN — CONGELADO.
+ * CHARACTERIZATION — FROZEN.
  *
- * Fija `PlayasList` (ruta `/playas`): búsqueda normalizada, el combobox de
- * sugerencias con su navegación por teclado, los dos criterios de orden y los
- * badges de la tarjeta.
+ * Pins down `PlayasList` (route `/playas`): normalized search, the suggestions
+ * combobox with its keyboard navigation, the two sort criteria and the card
+ * badges.
  *
- * Todos los tests comparten el mismo fixture a propósito: `services/api.ts`
- * cachea en variables de módulo durante 5 min, así que dentro de un mismo
- * fichero la segunda llamada ya no toca la red. Los estados de carga y error,
- * que necesitan la caché vacía, viven en `beachListPage.states.test.tsx`
- * (cada fichero de test estrena registro de módulos).
+ * All the tests share the same fixture on purpose: `services/api.ts` caches in
+ * module variables for 5 min, so within one and the same file the second call
+ * no longer touches the network. The loading and error states, which need the
+ * cache empty, live in `beachListPage.states.test.tsx`
+ * (each test file gets a brand-new module registry).
  */
 
 import React from 'react';
@@ -35,7 +35,7 @@ function setGeolocation(coords: [number, number] | null) {
   });
 }
 
-/** Nombres de las tarjetas, en el orden en que se pintan. */
+/** Card names, in the order in which they are painted. */
 function cardNames(container: HTMLElement): string[] {
   return Array.from(container.querySelectorAll('.beach-card-name')).map(
     (el) => el.textContent ?? '',
@@ -87,7 +87,7 @@ describe('PlayasList — listado', () => {
     expect(within(laConcha as HTMLElement).getByText('22°')).toBeInTheDocument();
     expect(laConcha.querySelector('.beach-card-sky')).toHaveTextContent('☀️');
 
-    // La Maruca no está en el fixture de featured: ni emoji ni temperatura.
+    // La Maruca is not in the featured fixture: neither emoji nor temperature.
     const laMaruca = container.querySelectorAll('.beach-card')[3];
     expect(laMaruca.querySelector('.beach-card-sky')).toBeNull();
     expect(laMaruca.querySelector('.beach-card-temp')).toBeNull();
@@ -159,7 +159,7 @@ describe('PlayasList — sugerencias', () => {
 
   it('corta en 5 sugerencias aunque haya más coincidencias', async () => {
     await typeSearch('la');
-    // "la" casa con 6 playas (ver fixture), pero solo se listan 5.
+    // "la" matches 6 beaches (see fixture), but only 5 are listed.
     expect(screen.getAllByRole('option')).toHaveLength(5);
   });
 
@@ -214,7 +214,7 @@ describe('PlayasList — sugerencias', () => {
     expect(screen.getByRole('listbox')).toBeInTheDocument();
 
     fireEvent.blur(input);
-    // El cierre es diferido para que un click en una sugerencia llegue antes.
+    // The close is deferred so that a click on a suggestion arrives first.
     expect(screen.getByRole('listbox')).toBeInTheDocument();
 
     await waitFor(() => expect(screen.queryByRole('listbox')).not.toBeInTheDocument());
@@ -235,12 +235,12 @@ describe('PlayasList — badges de la tarjeta', () => {
     const byName = (nombre: string) =>
       cards.find((c) => c.querySelector('.beach-card-name')?.textContent === nombre) as HTMLElement;
 
-    // Laredo trae idCruzRoja: 310; El Sardinero, 101.
+    // Laredo carries idCruzRoja: 310; El Sardinero, 101.
     expect(byName('Laredo').querySelector('.badge-vigilada')).not.toBeNull();
     expect(byName('El Sardinero').querySelector('.badge-vigilada')).not.toBeNull();
-    // La Concha tiene dos puestos: vigilada venga como venga el idCruzRoja.
+    // La Concha has two posts: watched no matter how the idCruzRoja comes in.
     expect(byName('La Concha').querySelector('.badge-vigilada')).not.toBeNull();
-    // La Arnía no tiene ni id ni puestos: es el caso negativo real.
+    // La Arnía has neither id nor posts: it is the real negative case.
     expect(byName('La Arnía').querySelector('.badge-vigilada')).toBeNull();
   });
 
@@ -251,7 +251,7 @@ describe('PlayasList — badges de la tarjeta', () => {
       cards.find((c) => c.querySelector('.beach-card-name')?.textContent === nombre) as HTMLElement;
 
     expect(byName('La Concha').querySelector('.badge-webcam')).not.toBeNull();
-    // La Salvé tiene webcam con estado 'desactivada'.
+    // La Salvé has a webcam with status 'desactivada'.
     expect(byName('La Salvé').querySelector('.badge-webcam')).toBeNull();
   });
 
@@ -261,7 +261,7 @@ describe('PlayasList — badges de la tarjeta', () => {
       (c) => c.querySelector('.beach-card-name')?.textContent === 'La Concha',
     ) as HTMLElement;
 
-    // La Concha tiene 6 atributos activos en el fixture.
+    // La Concha has 6 active attributes in the fixture.
     expect(laConcha.querySelectorAll('.beach-attr-mini')).toHaveLength(4);
   });
 });
@@ -273,7 +273,7 @@ describe('PlayasList — orden por cercanía', () => {
   });
 
   it('ordena por distancia y muestra los km cuando hay ubicación', async () => {
-    setGeolocation([43.42, -3.43]); // junto a Laredo
+    setGeolocation([43.42, -3.43]); // next to Laredo
     const { container } = await renderList();
 
     fireEvent.click(screen.getByLabelText('Ordenar por cercanía'));

@@ -1,22 +1,22 @@
 import type { Playa } from '../../services/api';
 
 /**
- * Respuesta de `GET /api/beaches`, recortada a los casos que importan.
+ * Response of `GET /api/beaches`, trimmed to the cases that matter.
  *
- * Cada entrada está elegida para ejercitar una rama concreta:
- *  - `laConcha`     — dos `cruzRojaStations` (el caso mayoritario: 32 de 46 playas
- *                     reales). Tiene webcam activa y alias.
- *  - `elSardinero`  — `idCruzRoja` explícito en el dato de origen (10 de 46). Sin webcam.
- *  - `laArnia`      — `sinAemet`, así que su detalle llega sin `prediccionCompleta`.
- *                     Con alias sin tilde para probar la búsqueda normalizada.
- *  - `laSalve`      — webcam `desactivada`, que debe ocultar el badge.
+ * Each entry is chosen to exercise a specific branch:
+ *  - `laConcha`     — two `cruzRojaStations` (the majority case: 32 of 46 real
+ *                     beaches). Has an active webcam and aliases.
+ *  - `elSardinero`  — explicit `idCruzRoja` in the source data (10 of 46). No webcam.
+ *  - `laArnia`      — `sinAemet`, so its detail arrives without `prediccionCompleta`.
+ *                     With an accent-less alias to test normalized search.
+ *  - `laSalve`      — `desactivada` webcam, which must hide the badge.
  *
- * OJO: esta es la forma del **DTO del backend**, que NO coincide con el JSON en
- * disco de `src/data/beaches.json`. La diferencia que importa es `idCruzRoja`:
- * el backend lo deriva del primer puesto con id (`JsonBeachRepository`), así que
- * La Concha sale por la API con `idCruzRoja: 373` — verificado con
- * `curl https://playas-cantabria.onrender.com/api/beaches` — mientras que en el
- * fichero crudo ese campo directamente no existe. Ver
+ * CAREFUL: this is the shape of the **backend DTO**, which does NOT match the JSON on
+ * disk in `src/data/beaches.json`. The difference that matters is `idCruzRoja`:
+ * the backend derives it from the first station with an id (`JsonBeachRepository`), so
+ * La Concha comes out of the API with `idCruzRoja: 373` — verified with
+ * `curl https://playas-cantabria.onrender.com/api/beaches` — while in the
+ * raw file that field simply does not exist. See
  * `characterization/lifeguardedStations.test.ts`.
  */
 
@@ -26,7 +26,7 @@ export const laConcha: Playa = {
   codigo: '3908503',
   lat: 43.43553526584305,
   lon: -4.0427976710155225,
-  // Derivado por el backend del primer puesto con id; en el JSON crudo no existe.
+  // Derived by the backend from the first station with an id; it does not exist in the raw JSON.
   idCruzRoja: 373,
   cruzRojaStations: [
     { id: 373, nombreFuente: 'LA CONCHA I SUANCES' },
@@ -139,9 +139,9 @@ export const laSalve: Playa = {
 };
 
 /**
- * Las tres siguientes existen solo para que la búsqueda "la" devuelva 6
- * resultados y se pueda comprobar el tope de 5 sugerencias. `langre` comparte
- * código con `featuredLangre`, así que además llega con datos de clima.
+ * The next three exist only so that searching "la" returns 6
+ * results and the cap of 5 suggestions can be verified. `langre` shares
+ * its code with `featuredLangre`, so it also arrives with weather data.
  */
 export const laMaruca: Playa = {
   nombre: 'La Maruca',

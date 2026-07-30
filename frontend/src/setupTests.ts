@@ -15,17 +15,17 @@ window.matchMedia = window.matchMedia || function() {
   };
 };
 
-// jsdom expone navigator.language = 'en-US'; fijamos español para que los
-// tests que aserten texto en español no dependan de la detección de idioma.
-// (Los tests de i18n hacen localStorage.clear() cuando necesitan probarla.)
+// jsdom exposes navigator.language = 'en-US'; we pin Spanish so that
+// tests asserting Spanish text don't depend on language detection.
+// (The i18n tests do localStorage.clear() when they need to test it.)
 beforeEach(() => {
   localStorage.setItem('app_idioma', 'es');
 });
 
-// @testing-library/react 13 llama a `act` desde react-dom/test-utils, que
-// React 18.3 marca como obsoleto. Es ruido de librería, no del código de la
-// app, y ensucia cada render. Se filtra SOLO ese mensaje: cualquier otro
-// console.error sigue viéndose.
+// @testing-library/react 13 calls `act` from react-dom/test-utils, which
+// React 18.3 marks as deprecated. It's library noise, not from the app's
+// code, and it pollutes every render. ONLY that message is filtered: any other
+// console.error remains visible.
 const errorOriginal = console.error;
 // eslint-disable-next-line no-console
 console.error = (...args: unknown[]) => {

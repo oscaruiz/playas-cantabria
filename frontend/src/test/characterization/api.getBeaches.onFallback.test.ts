@@ -1,14 +1,15 @@
 /**
- * CARACTERIZACIÓN — CONGELADO.
+ * CHARACTERIZATION — FROZEN.
  *
- * Fija el callback `onFallback` de `getPlayas()`, que es la señal de "esto que
- * te devuelvo NO viene del backend". Va en un fichero aparte de
- * `api.getBeaches.test.ts` para que aquel siga intacto: la firma pública y el
- * valor resuelto no cambian, `onFallback` es puramente aditivo.
+ * Pins down the `onFallback` callback of `getPlayas()`, which is the signal for
+ * "what I am returning to you does NOT come from the backend". It lives in a
+ * file separate from `api.getBeaches.test.ts` so that the latter stays intact:
+ * the public signature and the resolved value do not change, `onFallback` is
+ * purely additive.
  *
- * Lo que importa es la asimetría entre los dos caminos que sirven datos locales:
- *  - por TIMEOUT, el backend todavía puede llegar → `onBackendData` retira el aviso
- *  - por FALLO de la petición, no llegará nunca → el aviso se queda
+ * What matters is the asymmetry between the two paths that serve local data:
+ *  - by TIMEOUT, the backend can still arrive → `onBackendData` removes the notice
+ *  - by request FAILURE, it will never arrive → the notice stays
  */
 
 import { waitFor } from '@testing-library/react';
@@ -22,8 +23,8 @@ async function loadApi() {
   return import('../../services/api');
 }
 
-// Ver nota en api.getBeaches.test.ts: el listado real que guarda un test en
-// localStorage sería el fallback del siguiente.
+// See the note in api.getBeaches.test.ts: the real listing that one test saves
+// in localStorage would be the next one's fallback.
 beforeEach(() => {
   localStorage.clear();
 });
@@ -55,7 +56,7 @@ describe('getPlayas — señal de datos locales', () => {
 
     expect(result).toHaveLength(46);
     expect(onFallback).toHaveBeenCalledTimes(1);
-    // El aviso se emite ANTES de que llegue el backend.
+    // The notice is emitted BEFORE the backend arrives.
     expect(onBackendData).not.toHaveBeenCalled();
 
     await waitFor(() => expect(onBackendData).toHaveBeenCalledTimes(1));

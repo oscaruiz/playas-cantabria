@@ -1,19 +1,20 @@
 /**
- * CARACTERIZACIÓN — CONGELADO.
+ * CHARACTERIZATION — FROZEN.
  *
- * El backend habla SOLO español. El inglés se produce en cliente por dos vías
- * distintas, y el refactor debe conservar las dos:
+ * The backend speaks ONLY Spanish. English is produced on the client through two
+ * different routes, and the refactor must preserve both:
  *
- *  1. `t('clave')` para el texto propio de la app (`es.ts` / `en.ts`).
- *  2. `traducirTextoApi(textoCrudo, idioma)` para el contenido que llega del
- *     backend, mediante las tablas de `apiText.ts`.
+ *  1. `t('clave')` for the app's own text (`es.ts` / `en.ts`).
+ *  2. `traducirTextoApi(textoCrudo, idioma)` for the content that arrives from
+ *     the backend, through the tables in `apiText.ts`.
  *
- * De ahí la regla de F3/F4: las cadenas españolas crudas viajan hasta la hoja y
- * solo se traducen al pintar. Un view model que tradujese en el mapper rompería
- * `emojiCielo` y `windSpeedLevel`, que hacen regex sobre ese mismo español.
+ * Hence the F3/F4 rule: the raw Spanish strings travel all the way down to the
+ * leaf and are only translated when painting. A view model that translated in
+ * the mapper would break `emojiCielo` and `windSpeedLevel`, which run regexes
+ * over that very same Spanish.
  *
- * También queda fijado que la traducción de contenido falla EN SILENCIO: un
- * fragmento que no esté en las tablas sale en español sin aviso.
+ * It is also pinned down that content translation fails SILENTLY: a fragment
+ * that is not in the tables comes out in Spanish without warning.
  */
 
 import React from 'react';
@@ -30,7 +31,7 @@ const FEATURED = '/api/beaches/featured';
 const BEACHES = /\/api\/beaches$/;
 const DETAILS = /\/api\/beaches\/[^/]+\/details$/;
 
-const AHORA = new Date('2026-07-27T12:00:00.000Z'); // 14:00 en Madrid
+const AHORA = new Date('2026-07-27T12:00:00.000Z'); // 14:00 in Madrid
 
 beforeEach(() => {
   Object.defineProperty(navigator, 'geolocation', { configurable: true, value: undefined });
@@ -53,7 +54,7 @@ describe('i18n — texto propio de la app', () => {
 
     expect(screen.getByText('7 beaches')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('Search beach or municipality...')).toBeInTheDocument();
-    // Los nombres propios NO se traducen.
+    // Proper names are NOT translated.
     expect(screen.getByText('La Concha')).toBeInTheDocument();
   });
 });
@@ -71,12 +72,12 @@ describe('i18n — contenido que viene del backend', () => {
     });
     await screen.findByText('Swimming conditions (per Red Cross)');
 
-    // t() — texto de la app
+    // t() — app text
     expect(screen.getByText('Tides')).toBeInTheDocument();
     expect(container.querySelector('.flag-value')).toHaveTextContent('Green Flag');
     expect(container.querySelector('.tide-status')).toHaveTextContent('Rising');
 
-    // traducirTextoApi() — contenido del backend, respetando la mayúscula inicial
+    // traducirTextoApi() — backend content, respecting the initial capital letter
     expect(container.querySelector('.forecast-hero-sky')).toHaveTextContent('Clear sky');
     expect(screen.getByText('Type').nextElementSibling).toHaveTextContent('Urban');
     expect(screen.getByText('Sand').nextElementSibling).toHaveTextContent('Golden sand');
@@ -91,8 +92,8 @@ describe('i18n — contenido que viene del backend', () => {
     });
     await screen.findByText('Swimming conditions (per Red Cross)');
 
-    // "flojo del noreste" no es una clave de tabla: se traduce partiéndolo en
-    // intensidad + dirección. Antes salía en español.
+    // "flojo del noreste" is not a table key: it is translated by splitting it
+    // into intensity + direction. Before, it came out in Spanish.
     expect(container.querySelector('.wind-turbine-wrap')).toHaveTextContent(
       'Light wind from the northeast',
     );
@@ -106,9 +107,10 @@ describe('i18n — contenido que viene del backend', () => {
     });
     await screen.findByText('Swimming conditions (per Red Cross)');
 
-    // La propiedad sigue siendo la misma y sigue congelada: lo desconocido pasa
-    // en español, sin aviso. Los avisos de litoral son prosa libre de AEMET y no
-    // están en ninguna tabla — y el partidor de viento tampoco debe tocarlos.
+    // The property is still the same and still frozen: what is unknown passes
+    // through in Spanish, without warning. The coastal warnings are free prose
+    // from AEMET and are not in any table — and the wind splitter must not
+    // touch them either.
     expect(container.querySelector('.aviso-yellow')).toHaveTextContent(
       'Aviso amarillo por oleaje',
     );

@@ -13,12 +13,12 @@ root.render(
   </React.StrictMode>
 );
 
-// Service worker activo: cachea el bundle y las respuestas de /api/beaches
-// (NetworkFirst con timeout de 3 s). Así una revisita no depende de que el
-// backend en Render esté despierto ni gasta cuota de las APIs gratuitas.
+// Active service worker: caches the bundle and the /api/beaches responses
+// (NetworkFirst with a 3 s timeout). That way a revisit does not depend on the
+// Render backend being awake nor spends quota of the free APIs.
 //
-// onUpdate: al detectar un build nuevo se activa de inmediato y se recarga una
-// vez, para que nadie se quede clavado en una versión vieja del bundle.
+// onUpdate: when a new build is detected it activates immediately and reloads
+// once, so nobody gets stuck on an old version of the bundle.
 serviceWorkerRegistration.register({
   onUpdate: (registration) => {
     const esperando = registration.waiting;

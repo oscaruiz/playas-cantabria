@@ -1,21 +1,21 @@
 import type { PlayaDetalle, PrediccionDia } from '../../services/api';
 
 /**
- * Fixtures de `GET /api/beaches/:codigo/details`.
+ * Fixtures for `GET /api/beaches/:codigo/details`.
  *
- * Son FACTORÍAS, no constantes, porque el detalle mezcla dos relojes distintos y
- * hay que poder fijar los dos:
+ * They are FACTORIES, not constants, because the detail mixes two different clocks and
+ * both need to be pinned:
  *
- *  - Las reglas de bandera (`estadoBandera`, `ultimaBanderaRegistrada`) usan
- *    `Intl` con `Europe/Madrid`, así que son independientes de la TZ del runner.
- *    Para esas se pasan instantes ISO absolutos.
- *  - `dayTitle`, `isToday`, `getTideStatus` y `ClimaHero` usan la hora LOCAL del
- *    dispositivo (`getDate()`, `getHours()`). Para esas se derivan las fechas y
- *    las horas de marea del `now` local que reciba la factoría, de modo que el
- *    test valga igual en CI (UTC) que en un portátil en Madrid.
+ *  - The flag rules (`estadoBandera`, `ultimaBanderaRegistrada`) use
+ *    `Intl` with `Europe/Madrid`, so they are independent of the runner's TZ.
+ *    For those, absolute ISO instants are passed.
+ *  - `dayTitle`, `isToday`, `getTideStatus` and `ClimaHero` use the device's
+ *    LOCAL time (`getDate()`, `getHours()`). For those, the dates and
+ *    tide times are derived from the local `now` the factory receives, so the
+ *    test holds equally in CI (UTC) and on a laptop in Madrid.
  *
- * Ver `localNoon()` en `src/test/time.ts` para fijar un `now` que sea mediodía
- * local, que es lo que mantiene deterministas las mareas.
+ * See `localNoon()` in `src/test/time.ts` to pin a `now` that is local
+ * noon, which is what keeps the tides deterministic.
  */
 
 const DIAS_ES = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
@@ -26,7 +26,7 @@ function addDays(date: Date, days: number): Date {
   return next;
 }
 
-/** Formato del scraper HTML de AEMET: "domingo 05". */
+/** AEMET HTML scraper format: "domingo 05". */
 function aemetFecha(date: Date): string {
   return `${DIAS_ES[date.getDay()]} ${String(date.getDate()).padStart(2, '0')}`;
 }
@@ -37,29 +37,29 @@ function hhmm(minutesOfDay: number): string {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 }
 
-/** Horario y temporada de vigilancia usados por todas las factorías. */
+/** Surveillance schedule and season used by all factories. */
 export const HORARIO = '11:00 - 20:00';
 export const COBERTURA_DESDE = '15-06-2026';
 export const COBERTURA_HASTA = '15-09-2026';
 
 /**
- * Detalle con ficha AEMET completa: 3 días, desglose mañana/tarde, avisos,
- * mareas y observación en tiempo real.
+ * Detail with a full AEMET sheet: 3 days, morning/afternoon breakdown, warnings,
+ * tides and real-time observation.
  *
- * Detalles deliberados:
- *  - El día 0 tiene `manana` con los tres campos a null → `HalfDayDetail` debe
- *    renderizarse con la clase `single` y sin el bloque "Mañana".
- *  - `tiempoActual.cielo` ("cielo despejado") DIFIERE de `dias[0].tarde.cielo`
- *    ("intervalos nubosos") para poder comprobar que el hero de hoy prioriza la
- *    observación real sobre la previsión.
- *  - `indiceUV: 10` cae en `uv-very-high` y `nivelUV` lleva el prefijo que el
- *    componente debe recortar ("Índice ultravioleta Muy alto" → "Muy alto").
- *  - `temperaturaActual` (21) < `temperaturaMaxima` (26) → debe salir la línea "Máx.".
+ * Deliberate details:
+ *  - Day 0 has `manana` with all three fields set to null → `HalfDayDetail` must
+ *    render with the `single` class and without the "Mañana" block.
+ *  - `tiempoActual.cielo` ("cielo despejado") DIFFERS from `dias[0].tarde.cielo`
+ *    ("intervalos nubosos") in order to verify that today's hero prioritizes the
+ *    real observation over the forecast.
+ *  - `indiceUV: 10` falls in `uv-very-high` and `nivelUV` carries the prefix the
+ *    component must trim ("Índice ultravioleta Muy alto" → "Muy alto").
+ *  - `temperaturaActual` (21) < `temperaturaMaxima` (26) → the "Máx." line must appear.
  */
 export function buildAemetDetail(now: Date): PlayaDetalle {
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
-  // Marea anterior 3 h atrás y siguiente 2 h por delante: el próximo evento es
-  // pleamar, así que el estado debe ser "Subiendo" sea cual sea la TZ.
+  // Previous tide 3 h behind and next one 2 h ahead: the next event is
+  // `pleamar`, so the status must be "Subiendo" whatever the TZ.
   const bajamarPasada = hhmm(Math.max(0, nowMinutes - 180));
   const pleamarProxima = hhmm(Math.min(1439, nowMinutes + 120));
 
@@ -112,7 +112,7 @@ export function buildAemetDetail(now: Date): PlayaDetalle {
       coberturaDesde: COBERTURA_DESDE,
       coberturaHasta: COBERTURA_HASTA,
       horario: HORARIO,
-      // 30 min antes de `now` → fresca (<24 h).
+      // 30 min before `now` → fresh (<24 h).
       ultimaActualizacion: new Date(now.getTime() - 30 * 60 * 1000).toISOString(),
     },
     prediccionCompleta: {
@@ -123,7 +123,7 @@ export function buildAemetDetail(now: Date): PlayaDetalle {
       dias: [
         {
           fecha: aemetFecha(now),
-          // Sin datos de mañana: fuerza el layout `single`.
+          // No morning data: forces the `single` layout.
           manana: { cielo: null, iconoCielo: null, viento: null, oleaje: null },
           tarde: {
             cielo: 'intervalos nubosos',
@@ -191,13 +191,13 @@ export function buildAemetDetail(now: Date): PlayaDetalle {
 }
 
 /**
- * Detalle SIN ficha AEMET (`prediccionCompleta` ausente): la página cae a
- * `ClimaHero` con los datos de `clima`.
+ * Detail WITHOUT an AEMET sheet (`prediccionCompleta` absent): the page falls back to
+ * `ClimaHero` with the `clima` data.
  *
- * `manana` va a null porque es lo que el backend emite SIEMPRE hoy
- * (`LegacyDetailsMapper.mapClima` fija `manana: null`), aunque el tipo del
- * frontend lo declare obligatorio. Sin `manana` no debe aparecer el selector
- * de días.
+ * `manana` is set to null because that is what the backend ALWAYS emits today
+ * (`LegacyDetailsMapper.mapClima` sets `manana: null`), even though the
+ * frontend type declares it required. Without `manana` the day selector
+ * must not appear.
  */
 export function buildOpenWeatherDetail(now: Date): PlayaDetalle {
   return {
@@ -236,21 +236,21 @@ export function buildOpenWeatherDetail(now: Date): PlayaDetalle {
         uvIndex: 6,
         icon: '13',
       },
-      // El backend siempre manda null aquí; el tipo del frontend lo declara
-      // obligatorio y no nulable, de ahí el cast. Es exactamente la deriva de
-      // contrato que F1 corrige en `domain/beach/types.ts`.
+      // The backend always sends null here; the frontend type declares it
+      // required and non-nullable, hence the cast. It is exactly the contract
+      // drift that F1 fixes in `domain/beach/types.ts`.
       manana: null as unknown as PrediccionDia,
     },
   };
 }
 
 /**
- * Fuera del horario de vigilancia, con una captura de la jornada anterior que
- * SÍ debe mostrarse como "última bandera registrada" (color atenuado).
+ * Outside surveillance hours, with a capture from the previous day that
+ * SHOULD be shown as "last registered flag" (dimmed color).
  *
- * Pensado para un `now` de 2026-07-28T05:00:00Z = 07:00 en Madrid (antes de las
- * 11:00), con la captura a las 19:30 de Madrid del día 27: dentro del horario de
- * esa jornada, hace ~11,5 h (< 36 h) y dentro de la temporada de cobertura.
+ * Designed for a `now` of 2026-07-28T05:00:00Z = 07:00 in Madrid (before
+ * 11:00), with the capture at 19:30 Madrid time on the 27th: within that day's
+ * schedule, ~11.5 h ago (< 36 h) and within the coverage season.
  */
 export function buildOutOfHoursDetail(): PlayaDetalle {
   return {
@@ -264,16 +264,16 @@ export function buildOutOfHoursDetail(): PlayaDetalle {
       coberturaDesde: COBERTURA_DESDE,
       coberturaHasta: COBERTURA_HASTA,
       horario: HORARIO,
-      ultimaActualizacion: '2026-07-27T17:30:00.000Z', // 19:30 en Madrid
+      ultimaActualizacion: '2026-07-27T17:30:00.000Z', // 19:30 in Madrid
     },
   };
 }
 
 /**
- * Bandera negra. El backend la emite, pero `flagColorClass` la manda a
- * 'unknown' e `isFlagAvailable` la descarta, así que hoy se pinta como "sin
- * datos" y no existe la clave `bandera.negra`.
- * Ver `known-issues/blackFlag.test.tsx`.
+ * Black flag. The backend emits it, but `flagColorClass` sends it to
+ * 'unknown' and `isFlagAvailable` discards it, so today it is painted as "no
+ * data" and the `bandera.negra` key does not exist.
+ * See `known-issues/blackFlag.test.tsx`.
  */
 export function buildBlackFlagDetail(now: Date): PlayaDetalle {
   return {

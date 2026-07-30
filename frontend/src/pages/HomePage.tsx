@@ -302,8 +302,8 @@ const HomePage: React.FC = () => {
     return rankearPlayas(pool, userLocation);
   }, [featured, userLocation]);
 
-  // Alternativa mostrada con mayor puntuación cruda que la hero (si existe):
-  // activa la nota "priorizada por cercanía" y el chip "mejor puntuación"
+  // Displayed alternative with a higher raw score than the hero (if any):
+  // enables the "prioritized by proximity" note and the "best score" chip
   const codigoMejorPuntuacion = useMemo(
     () => (userLocation ? codigoMejorPuntuacionNoHero(sortedFeatured) : null),
     [sortedFeatured, userLocation]
@@ -330,7 +330,7 @@ const HomePage: React.FC = () => {
       .slice(0, 3);
   }, [featured, userLocation]);
 
-  // La mejor playa del ranking preside la página; el resto son alternativas
+  // The best-ranked beach presides over the page; the rest are alternatives
   const mejorPlaya = sortedFeatured.length > 0 ? sortedFeatured[0] : null;
   const alternativas = sortedFeatured.slice(1, 5);
 

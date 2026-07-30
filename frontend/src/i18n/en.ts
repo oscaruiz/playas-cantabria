@@ -1,31 +1,31 @@
 import type { ClaveTexto } from './es';
 
 /**
- * Diccionario en inglés. `satisfies` obliga a cubrir exactamente las
- * mismas claves que es.ts: una clave de menos o de más es error de
- * compilación.
+ * English dictionary. `satisfies` forces covering exactly the
+ * same keys as es.ts: one key too few or too many is a compilation
+ * error.
  */
 export const en = {
   // ---- App / global ----
   'app.titulo': 'Cantabria Beaches',
   'app.tituloDocumento': 'Cantabria Beaches',
 
-  // ---- Navegación inferior ----
+  // ---- Bottom navigation ----
   'nav.principal': 'Main navigation',
   'nav.inicio': 'Home',
   'nav.playas': 'Beaches',
   'nav.mapa': 'Map',
 
-  // ---- Selector de idioma ----
+  // ---- Language selector ----
   'selector.idioma': 'Language',
 
-  // ---- Comunes ----
+  // ---- Common ----
   'comun.verDetalleDe': 'View details for {nombre}',
   'comun.aKm': '{km} km away',
   'comun.noDisponible': 'Not available',
   'comun.cruzRoja': 'Red Cross',
 
-  // ---- Tiempo relativo ----
+  // ---- Relative time ----
   'tiempo.ahoraMismo': 'updated just now',
   'tiempo.haceMin': 'updated {n} min ago',
   'tiempo.haceHoras': 'updated {n}h ago',
@@ -57,7 +57,7 @@ export const en = {
   'home.revisarAntes': 'Better check before you go',
   'home.banderaAria': '{bandera} flag',
 
-  // ---- Lista de playas ----
+  // ---- Beach list ----
   'lista.subtitulo': 'Check beach conditions',
   'lista.placeholder': 'Search beach or municipality...',
   'lista.buscarAria': 'Search beach or municipality',
@@ -74,7 +74,7 @@ export const en = {
   'lista.datosLocales': 'Offline: showing saved data, it may be out of date',
   'lista.datosNoDisponibles': 'Could not load beaches or saved data',
 
-  // ---- Mapa ----
+  // ---- Map ----
   'mapa.subtitulo': 'Explore the beaches on the map',
   'mapa.municipio': 'Municipality:',
   'mapa.vigilada': 'Supervised by the Red Cross',
@@ -90,13 +90,13 @@ export const en = {
   'mapa.leyendaMalas': 'Not advised',
   'mapa.leyendaBandera': 'Red Cross flag hoisted',
 
-  // ---- Niveles de viento ----
+  // ---- Wind levels ----
   'viento.sinViento': 'no wind',
   'viento.brisaSuave': 'gentle breeze',
   'viento.moderado': 'moderate wind',
   'viento.fuerte': 'strong wind',
 
-  // ---- Bandera (Cruz Roja) ----
+  // ---- Flag (Cruz Roja) ----
   'bandera.roja': 'Red Flag',
   'bandera.amarilla': 'Yellow Flag',
   'bandera.verde': 'Green Flag',
@@ -104,12 +104,12 @@ export const en = {
   'bandera.fueraDeHorario': 'Outside hours',
   'bandera.ultimaRegistrada': 'Last recorded flag: {bandera}',
 
-  // ---- Fechas relativas ----
+  // ---- Relative dates ----
   'fecha.hoy': 'Today',
   'fecha.manana': 'Tomorrow',
   'fecha.pasadoManana': 'Day after tomorrow',
 
-  // ---- Detalle de playa ----
+  // ---- Beach detail ----
   'detalle.titulo': 'Detail',
   'detalle.volver': 'Back',
   'detalle.puntuacion': "Today's score",
@@ -167,13 +167,13 @@ export const en = {
   'detalle.zonaAvisos': 'Warning zone: {zona}',
   'detalle.datosMeteo': 'Weather data: {fuente}',
 
-  // ---- Mareas ----
+  // ---- Tides ----
   'marea.subiendo': 'Rising',
   'marea.bajando': 'Falling',
   'marea.pleamar': 'High tide',
   'marea.bajamar': 'Low tide',
 
-  // ---- Cruz Roja (tarjeta) ----
+  // ---- Cruz Roja (card) ----
   'cruzroja.vigilanciaCobertura': 'Lifeguard service and coverage',
   'cruzroja.sinInfo': 'Red Cross information not available yet',
   'cruzroja.banderaActual': 'Current flag',
@@ -188,7 +188,7 @@ export const en = {
   'webcam.cercana': 'Nearby webcam',
   'webcam.abrir': 'Open webcam',
 
-  // ---- Atributos de playa ----
+  // ---- Beach attributes ----
   'attr.duchas': 'Showers',
   'attr.aseos': 'Toilets',
   'attr.parking': 'Parking',

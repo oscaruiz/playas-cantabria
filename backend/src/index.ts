@@ -6,12 +6,12 @@ function wireProcessGuards() {
   process.on('unhandledRejection', (reason) => {
     // eslint-disable-next-line no-console
     console.error('[process] Unhandled promise rejection:', reason);
-    // No salimos; dejamos el proceso vivo para que Express responda con 5xx
+    // We do not exit; the process stays alive so Express can answer with 5xx
   });
   process.on('uncaughtException', (err) => {
     // eslint-disable-next-line no-console
     console.error('[process] Uncaught exception:', err);
-    // No salimos; podríamos hacer graceful restart si usamos un PM2 / supervisor
+    // We do not exit; a graceful restart would be possible under PM2 / a supervisor
   });
 }
 

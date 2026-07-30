@@ -1,11 +1,11 @@
 import type { Idioma } from './IdiomaContext';
 
 /**
- * Nombres de días/meses y formato de fecha por idioma. Sustituye a los
- * arrays DIAS_SEMANA/MESES que vivían en PlayaDetalle.tsx.
+ * Day/month names and date formatting per language. Replaces the
+ * DIAS_SEMANA/MESES arrays that used to live in PlayaDetalle.tsx.
  *
- * El API (AEMET) devuelve fechas como "domingo 05" (nombre en español)
- * o ISO "2026-04-06".
+ * The API (AEMET) returns dates like "domingo 05" (name in Spanish)
+ * or ISO "2026-04-06".
  */
 
 const DIAS: Record<Idioma, string[]> = {
@@ -18,7 +18,7 @@ const MESES: Record<Idioma, string[]> = {
   en: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
 };
 
-// Nombre de día del API (español, minúsculas, sin tildes opcionales) → índice
+// Day name from the API (Spanish, lowercase, accents optional) → index
 const INDICE_DIA_API: Record<string, number> = {
   'domingo': 0,
   'lunes': 1,
@@ -39,7 +39,7 @@ export function nombreMes(indice: number, idioma: Idioma): string {
   return MESES[idioma][indice] ?? '';
 }
 
-/** Traduce el nombre de día que viene del API ("domingo" → "Sunday"). */
+/** Translates the day name coming from the API ("domingo" → "Sunday"). */
 export function traducirNombreDiaApi(nombre: string, idioma: Idioma): string | null {
   const indice = INDICE_DIA_API[nombre.toLowerCase().trim()];
   if (indice === undefined) return null;
@@ -47,8 +47,8 @@ export function traducirNombreDiaApi(nombre: string, idioma: Idioma): string | n
 }
 
 /**
- * Fecha corta legible: es → "Domingo 5 de junio" | en → "Sunday, June 5".
- * `nombreDiaTexto` ya debe venir en el idioma destino y capitalizado.
+ * Readable short date: es → "Domingo 5 de junio" | en → "Sunday, June 5".
+ * `nombreDiaTexto` must already come in the target language and capitalized.
  */
 export function formatearFechaCorta(nombreDiaTexto: string, diaMes: number, mesIndice: number, idioma: Idioma): string {
   if (idioma === 'en') {

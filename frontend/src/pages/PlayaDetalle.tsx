@@ -77,7 +77,7 @@ function dayTitle(fecha: string, t: TraducirFn, idioma: Idioma): string {
   if (dayNum === manana.getDate()) return t('fecha.manana');
   if (dayNum === pasado.getDate()) return t('fecha.pasadoManana');
 
-  // Fecha fuera del rango — extraer nombre del día del string (español, del API)
+  // Date out of range — extract the day name from the string (Spanish, from the API)
   const nombreDiaApi = fecha.split(/\s/)[0];
   const traducido = traducirNombreDiaApi(nombreDiaApi, idioma);
   return capitalizar(traducido ?? nombreDiaApi) || fecha;
@@ -87,7 +87,7 @@ function daySubtitle(fecha: string, idioma: Idioma): string {
   const dayNum = parseDayOfMonth(fecha);
   if (dayNum < 0) return '';
 
-  // Formato AEMET tipo "domingo 05" — nombre del string + día + mes actual
+  // AEMET format like "domingo 05" — name from the string + day + current month
   const nombreDiaApi = fecha.split(/\s/)[0];
   if (nombreDiaApi && /^[a-z\u00e1-\u00fa]/i.test(nombreDiaApi)) {
     const now = new Date();
@@ -110,7 +110,7 @@ function hasHalfDayData(h: HalfDayDTO): boolean {
 
 // ---- Sub-components ----
 
-/** "Registrada hoy / ayer / el <fecha> a las HH:MM" — momento en hora de Madrid. */
+/** "Registered today / yesterday / on <date> at HH:MM" — moment in Madrid time. */
 function textoRegistrada(iso: string, t: TraducirFn, idioma: Idioma): string {
   const hora = horaLocalMadrid(iso);
   if (!hora) return '';
@@ -131,17 +131,17 @@ function textoRegistrada(iso: string, t: TraducirFn, idioma: Idioma): string {
 const FlagBanner: React.FC<{ cruzRoja?: PlayaDetalleData['cruzRoja'] }> = ({ cruzRoja }) => {
   const { t, idioma } = useIdioma();
   const estado = estadoBandera(cruzRoja);
-  // 'sinDatos' (dentro de horario aún sin captura, transitorio): no mostramos banner.
+  // 'sinDatos' (within hours but no capture yet, transient): we show no banner.
   if (estado === 'sinDatos') {
     return null;
   }
 
-  // Fuera de horario no hay bandera vigente, pero sí se enseña la última registrada
-  // (color atenuado + cuándo ondeaba) siempre que siga siendo informativa.
+  // Outside of hours there is no flag in force, but the last registered one is shown
+  // (dimmed color + when it was flying) as long as it remains informative.
   const ultima = estado === 'fueraDeHorario' ? ultimaBanderaRegistrada(cruzRoja) : null;
 
-  // El color pleno solo es para la bandera vigente ('color'); sin bandera que
-  // mostrar, banderín neutro aunque haya un color guardado.
+  // Full color is only for the flag in force ('color'); with no flag to
+  // show, neutral pennant even if a color is stored.
   const colorClass = estado === 'color'
     ? flagColorClass(cruzRoja!.bandera)
     : ultima
@@ -190,7 +190,7 @@ function uvColorClass(uv: number): string {
   return 'uv-very-high';
 }
 
-// ---- Day Selector (tabs editoriales con subrayado) ----
+// ---- Day Selector (editorial tabs with underline) ----
 
 const DaySelector: React.FC<{
   fechas: string[];
@@ -230,8 +230,8 @@ function windSpeedLevel(text: string): number {
 }
 
 /**
- * Duración (segundos) de la animación por nivel de viento. Nivel 0 (calma) no
- * se para del todo: gira muy lento para que el molino se vea "vivo" y no roto.
+ * Duration (seconds) of the animation per wind level. Level 0 (calm) does not
+ * stop entirely: it spins very slowly so the turbine looks "alive" and not broken.
  */
 const WIND_DURATIONS = [7, 4, 2, 1, 0.5];
 
@@ -295,10 +295,10 @@ const ForecastHero: React.FC<{
   tiempoActual?: PlayaDetalleData['tiempoActual'];
 }> = ({ dia, climaActual, tiempoActual }) => {
   const { t, idioma } = useIdioma();
-  // skyText/viento/oleaje son el español crudo del API: emojiCielo y
-  // windSpeedLevel hacen regex sobre él — traducir solo al mostrar.
-  // Para HOY priorizamos la observación real ("ahora") sobre la previsión de
-  // la tarde; así el titular deja de contradecir al desglose mañana/tarde.
+  // skyText/viento/oleaje are the raw Spanish from the API: emojiCielo and
+  // windSpeedLevel run regexes over it — translate only when displaying.
+  // For TODAY we prioritize the real observation ("now") over the afternoon
+  // forecast; that way the headline stops contradicting the morning/afternoon breakdown.
   const skyText = capitalizar(tiempoActual?.cielo ?? dia.tarde.cielo ?? dia.manana.cielo ?? '');
   const viento = capitalizar(dia.tarde.viento ?? dia.manana.viento ?? '');
   const oleaje = capitalizar(dia.tarde.oleaje ?? dia.manana.oleaje ?? '');
@@ -308,12 +308,12 @@ const ForecastHero: React.FC<{
   const showMax = climaActual != null && dia.temperaturaMaxima != null && climaActual <= dia.temperaturaMaxima;
   const wLevel = viento ? windSpeedLevel(viento) : 1;
 
-  // Lluvia detectada AHORA (señal multi-fuente del backend). `tiempoActual`
-  // solo llega cuando el día seleccionado es HOY, así que el badge no se
-  // muestra en días futuros.
+  // Rain detected NOW (multi-source signal from the backend). `tiempoActual`
+  // only arrives when the selected day is TODAY, so the badge is not
+  // shown on future days.
   const lloviendo = esLluviaActiva(tiempoActual);
   const mmLluvia = tiempoActual?.lluvia?.mm ?? tiempoActual?.precipitacionMm ?? null;
-  // Lluvia PREVISTA (próximas horas). Null si ya llueve: nunca dos badges.
+  // FORECAST rain (next few hours). Null if it is already raining: never two badges.
   const prevista = lluviaPrevista(tiempoActual);
   const horaPrevista = horaLocalMadrid(prevista?.desdeIso);
 
@@ -353,13 +353,13 @@ const ForecastHero: React.FC<{
   );
 };
 
-// ---- Clima Hero (playas sin ficha AEMET: mismo estilo, datos de `clima`) ----
+// ---- Clima Hero (beaches without an AEMET sheet: same style, data from `clima`) ----
 
 /**
- * Nivel UV (etiqueta traducible) derivado del índice, escala OMS. OpenWeather
- * solo da el número, así que sintetizamos la etiqueta para que `DailyStats`
- * muestre "10 — Muy alto" como en las playas con ficha AEMET. Claves alineadas
- * con `MAPA_UV` de `i18n/apiText.ts`.
+ * UV level (translatable label) derived from the index, WHO scale. OpenWeather
+ * only gives the number, so we synthesize the label so that `DailyStats`
+ * shows "10 — Muy alto" as on beaches with an AEMET sheet. Keys aligned
+ * with `MAPA_UV` from `i18n/apiText.ts`.
  */
 function nivelUVDesdeIndice(uv: number): string {
   if (uv <= 2) return 'Bajo';
@@ -370,12 +370,12 @@ function nivelUVDesdeIndice(uv: number): string {
 }
 
 /**
- * Adapta un día de `clima` (OpenWeather) al shape que consume `ForecastHero`.
- * Solo interesa el titular (cielo/temp/agua/viento/oleaje); no hay desglose
- * mañana/tarde ni avisos, así que ambos medios días llevan el mismo resumen.
- * `esHoy`: sin máxima diaria en OpenWeather, la temp principal de hoy es la
- * observación real (`temperaturaActual`), así que dejamos `temperaturaMaxima`
- * a null para no pintar una línea "Máx" duplicada.
+ * Adapts a `clima` (OpenWeather) day to the shape consumed by `ForecastHero`.
+ * Only the headline matters (sky/temp/water/wind/waves); there is no
+ * morning/afternoon breakdown or warnings, so both half-days carry the same summary.
+ * `esHoy`: with no daily maximum in OpenWeather, today's main temp is the
+ * real observation (`temperaturaActual`), so we leave `temperaturaMaxima`
+ * as null to avoid painting a duplicated "Max" line.
  */
 function climaDiaAPrediccion(d: PrediccionDia, fecha: string, esHoy: boolean): DiaPrediccionDTO {
   const medio: HalfDayDTO = { cielo: d.summary, iconoCielo: null, viento: d.wind, oleaje: d.waves };
@@ -393,10 +393,10 @@ function climaDiaAPrediccion(d: PrediccionDia, fecha: string, esHoy: boolean): D
 }
 
 /**
- * Cabecera meteorológica para playas SIN ficha AEMET (`prediccionCompleta`
- * nula, p. ej. código sintético). Reutiliza el hero con selector Hoy/Mañana a
- * partir de `clima`, omitiendo el desglose "Previsión AEMET" y las mareas, que
- * esta fuente no aporta.
+ * Weather header for beaches WITHOUT an AEMET sheet (`prediccionCompleta`
+ * null, e.g. synthetic code). Reuses the hero with the Today/Tomorrow selector
+ * built from `clima`, omitting the "Previsión AEMET" breakdown and the tides, which
+ * this source does not provide.
  */
 const ClimaHero: React.FC<{
   clima: NonNullable<PlayaDetalleData['clima']>;
@@ -484,8 +484,8 @@ const DailyStats: React.FC<{ dia: DiaPrediccionDTO; embedded?: boolean }> = ({ d
   const hasAny = dia.sensacionTermica || dia.indiceUV != null || (dia.aviso && dia.aviso.descripcion);
   if (!hasAny) return null;
 
-  // `embedded`: se renderiza dentro de la tarjeta "Previsión meteorológica AEMET",
-  // por lo que omite su propio envoltorio `.detail-card` (evita card dentro de card).
+  // `embedded`: rendered inside the "Previsión meteorológica AEMET" card,
+  // so it omits its own `.detail-card` wrapper (avoids a card inside a card).
   const body = (
     <div className={`daily-stats-body${embedded ? ' daily-stats-embedded' : ''}`}>
         {dia.sensacionTermica && (
@@ -535,10 +535,10 @@ function getTideStatus(
   const now = new Date();
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
 
-  // Buscar entre qué dos eventos estamos
+  // Find which two events we are between
   for (let i = 0; i < entries.length; i++) {
     if (nowMinutes < entries[i].minutes) {
-      // Estamos antes de este evento → la marea se dirige hacia él
+      // We are before this event → the tide is heading toward it
       const next = entries[i];
       if (next.type === 'pleamar') {
         return { clave: 'marea.subiendo', className: 'tide-status-rising' };
@@ -548,7 +548,7 @@ function getTideStatus(
     }
   }
 
-  // Después del último evento del día: si el último fue pleamar → bajando, y viceversa
+  // After the day's last event: if the last one was `pleamar` → falling, and vice versa
   const last = entries[entries.length - 1];
   if (last.type === 'pleamar') {
     return { clave: 'marea.bajando', className: 'tide-status-falling' };
@@ -564,7 +564,7 @@ const TidesSection: React.FC<{
   const { t } = useIdioma();
   if (marea.pleamar.length === 0 && marea.bajamar.length === 0) return null;
 
-  // Combinar y ordenar por hora
+  // Combine and sort by time
   const entries = [
     ...marea.pleamar.map((t) => ({ time: t, type: 'pleamar' as const, minutes: parseTimeMinutes(t) })),
     ...marea.bajamar.map((t) => ({ time: t, type: 'bajamar' as const, minutes: parseTimeMinutes(t) })),
@@ -710,7 +710,7 @@ const CruzRojaCard: React.FC<{ cruzRoja?: PlayaDetalleData['cruzRoja'] }> = ({ c
   const { t, idioma } = useIdioma();
   const estado = estadoBandera(cruzRoja);
   const hasData = estado === 'color';
-  // Tambi\u00E9n se puede desplegar fuera de horario para ver cobertura/horario.
+  // It can also be expanded outside of hours to see coverage/schedule.
   const expandable = estado !== 'sinDatos';
   const [expanded, setExpanded] = useState(hasData);
 
@@ -791,9 +791,9 @@ const CruzRojaCard: React.FC<{ cruzRoja?: PlayaDetalleData['cruzRoja'] }> = ({ c
 // ---- Webcam Card ----
 
 /**
- * Webcam de la playa como ENLACE externo (nunca embebido). El título muestra la
- * cobertura (exacta / panorámica compartida / cercana) para no inducir a error.
- * Se oculta por completo si no hay webcam o está desactivada.
+ * Beach webcam as an external LINK (never embedded). The title shows the
+ * coverage (exact / shared panoramic / nearby) so as not to mislead.
+ * Hidden entirely if there is no webcam or it is disabled.
  */
 export const WebcamCard: React.FC<{ webcam?: PlayaDetalleData['webcam'] }> = ({ webcam }) => {
   const { t } = useIdioma();
@@ -816,10 +816,10 @@ export const WebcamCard: React.FC<{ webcam?: PlayaDetalleData['webcam'] }> = ({ 
 
 // ---- Main Page ----
 
-// Factores del cálculo de la puntuación (grosso modo, sin detalles técnicos),
-// ordenados por el peso aproximado que tienen en la nota. Cada texto es
-// "Concepto: descripción" y se pinta como fila etiqueta/valor (patrón de la
-// sección "Información de la playa").
+// Factors of the score calculation (roughly, no technical details),
+// ordered by the approximate weight they carry in the grade. Each text is
+// "Concept: description" and is painted as a label/value row (pattern of the
+// "Información de la playa" section).
 const SCORE_ROWS: ClaveTexto[] = [
   'detalle.scoreInfo.sol',
   'detalle.scoreInfo.temp',
@@ -838,8 +838,8 @@ const PlayaDetallePage: React.FC = () => {
   const [datos, setDatos] = useState<PlayaDetalleData | null>(null);
   const [error, setError] = useState(false);
   const [scoreInfoOpen, setScoreInfoOpen] = useState(false);
-  // Puntuación del ranking (endpoint featured). Se pide EN PARALELO y es opcional:
-  // el detalle se pinta sin esperarla, y si falla/tarda simplemente no se muestra.
+  // Ranking score (featured endpoint). Requested IN PARALLEL and optional:
+  // the detail is painted without waiting for it, and if it fails/is slow it is simply not shown.
   const [puntuada, setPuntuada] = useState<FeaturedBeach | null>(null);
 
   useEffect(() => {
@@ -854,7 +854,7 @@ const PlayaDetallePage: React.FC = () => {
       .then((res) => {
         if (activo) setPuntuada(res.resumenTodas.find((b) => b.codigo === codigo) ?? null);
       })
-      .catch(() => { /* no bloqueante: sin puntuación */ });
+      .catch(() => { /* non-blocking: no score */ });
     return () => { activo = false; };
   }, [codigo]);
 

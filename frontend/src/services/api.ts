@@ -4,7 +4,7 @@ const PLAYAS_FALLBACK_TIMEOUT_MS = 2500;
 const CLIENT_CACHE_TTL_MS = 5 * 60 * 1000;
 
 const CLAVE_PLAYAS_GUARDADAS = 'playas:ultimoListado';
-/** Pasado un día, la copia guardada deja de ser mejor que el JSON del build. */
+/** After a day, the saved copy stops being better than the build's JSON. */
 const EDAD_MAXIMA_GUARDADAS_MS = 24 * 60 * 60 * 1000;
 
 let fallbackPromise: Promise<Playa[]> | null = null;
@@ -12,10 +12,10 @@ let playasRequest: Promise<Playa[]> | null = null;
 let playasCache: { value: Playa[]; expiresAt: number } | null = null;
 
 /**
- * Guarda el último listado REAL del backend. `data/beaches.json` es una foto del
- * momento del build, así que una respuesta de ayer del backend siempre es mejor
- * fallback que esa copia. Escribir en localStorage puede fallar (modo privado,
- * cuota llena): nunca debe romper la petición.
+ * Saves the last REAL listing from the backend. `data/beaches.json` is a snapshot
+ * from build time, so a backend response from yesterday is always a better
+ * fallback than that copy. Writing to localStorage can fail (private mode,
+ * quota full): it must never break the request.
  */
 function guardarPlayas(data: Playa[]): void {
   if (data.length === 0) return;
@@ -25,7 +25,7 @@ function guardarPlayas(data: Playa[]): void {
       JSON.stringify({ guardadoEn: Date.now(), playas: data }),
     );
   } catch {
-    // sin persistencia: se seguirá usando el JSON del build
+    // no persistence: the build's JSON will keep being used
   }
 }
 
@@ -80,18 +80,18 @@ type GetPlayasOptions = {
   timeoutMs?: number;
   onBackendData?: (data: Playa[]) => void;
   /**
-   * Se llama (como mucho una vez) cuando se devuelven los datos locales en vez
-   * de los del backend, para poder avisar al usuario de que no son frescos.
+   * Called (at most once) when the local data is returned instead of the
+   * backend's, so the user can be warned that it is not fresh.
    *
-   * Hay dos caminos y solo uno se recupera: si saltó el timeout, el backend
-   * todavía puede llegar y disparar `onBackendData`; si falló la petición, no
-   * llegará nunca.
+   * There are two paths and only one recovers: if the timeout fired, the backend
+   * may still arrive and trigger `onBackendData`; if the request failed, it
+   * will never arrive.
    */
   onFallback?: () => void;
   /**
-   * Se llama si tampoco se puede cargar la copia local. `getPlayas` conserva su
-   * contrato de no rechazar y devuelve [], pero la UI puede distinguir este
-   * fallo de una búsqueda legítimamente vacía.
+   * Called if the local copy cannot be loaded either. `getPlayas` keeps its
+   * contract of not rejecting and returns [], but the UI can distinguish this
+   * failure from a legitimately empty search.
    */
   onFallbackUnavailable?: () => void;
 };
@@ -131,9 +131,9 @@ export async function getPlayas(options: GetPlayasOptions = {}): Promise<Playa[]
     timeoutId = setTimeout(() => {
       didReturnFallback = true;
       onFallback?.();
-      // El segundo argumento evita que un fallo al cargar el JSON deje esta
-      // promesa colgada para siempre (spinner infinito): getPlayas resuelve
-      // SIEMPRE, que es el contrato del que dependen las tres páginas.
+      // The second argument prevents a failure loading the JSON from leaving this
+      // promise hanging forever (infinite spinner): getPlayas resolves
+      // ALWAYS, which is the contract the three pages depend on.
       loadFallbackOrEmpty().then(resolve);
     }, timeoutMs);
   });
@@ -154,7 +154,7 @@ export async function getPlayas(options: GetPlayasOptions = {}): Promise<Playa[]
 }
 
 // ------------------------------
-// Modelos base
+// Base models
 // ------------------------------
 export interface PlayaAtributos {
   [key: string]: boolean | undefined;
@@ -204,7 +204,7 @@ export interface Playa {
 }
 
 // ------------------------------
-// Datos de Cruz Roja
+// Cruz Roja data
 // ------------------------------
 export interface DatosCruzRoja {
   bandera?: string;
@@ -215,7 +215,7 @@ export interface DatosCruzRoja {
 }
 
 // ------------------------------
-// Predicción de AEMET
+// AEMET forecast
 // ------------------------------
 export interface PrediccionAEMETDia {
   estadoCielo: {
@@ -258,7 +258,7 @@ export interface DatosAEMET {
 }
 
 // ------------------------------
-// Predicción del Tiempo
+// Weather forecast
 // ------------------------------
 export interface PrediccionDia {
   summary: string;
@@ -279,7 +279,7 @@ export interface DatosClima {
 }
 
 // ------------------------------
-// Predicción completa (AEMET web scraper)
+// Full forecast (AEMET web scraper)
 // ------------------------------
 export interface HalfDayDTO {
   cielo: string | null;
@@ -310,15 +310,15 @@ export interface PrediccionCompletaDTO {
 }
 
 // ------------------------------
-// Tiempo real "ahora" (observación, con prioridad sobre la previsión)
+// Real-time "now" weather (observation, with priority over the forecast)
 // ------------------------------
 /**
- * Señal agregada "¿está lloviendo ahora?" (multi-fuente en backend:
- * OpenWeather + pluviómetro AEMET + Open-Meteo). Campo aditivo.
+ * Aggregated "is it raining now?" signal (multi-source in the backend:
+ * OpenWeather + AEMET rain gauge + Open-Meteo). Additive field.
  */
-/** Lluvia PREVISTA (próximas ~6h Open-Meteo ∪ texto AEMET restante de hoy). */
+/** FORECAST rain (next ~6h Open-Meteo ∪ AEMET text for the rest of today). */
 export interface LluviaPrevista {
-  /** ISO del primer tramo con precipitación; null si la señal es solo textual (AEMET). */
+  /** ISO of the first interval with precipitation; null if the signal is textual only (AEMET). */
   desdeIso: string | null;
   mm: number | null;
   fuentes: string[];
@@ -327,7 +327,7 @@ export interface LluviaPrevista {
 export interface LluviaActual {
   estado: 'lloviendo' | 'sin_lluvia' | 'desconocido';
   mm: number | null;
-  /** true = solo el pluviómetro AEMET disparó la señal (llovió en la última hora). */
+  /** true = only the AEMET rain gauge triggered the signal (it rained in the last hour). */
   ultimaHora: boolean;
   fuentes: string[];
   timestamp: string;
@@ -345,13 +345,13 @@ export interface TiempoActual {
 }
 
 // ------------------------------
-// Detalle de Playa
+// Beach detail
 // ------------------------------
 
 /**
- * Webcam de una playa (dato editorial estático). `cobertura` distingue si enfoca
- * exactamente esta playa, una panorámica compartida o una playa cercana. Solo se
- * ofrece como enlace externo (no se embebe).
+ * A beach's webcam (static editorial data). `cobertura` distinguishes whether it points
+ * exactly at this beach, at a shared panorama, or at a nearby beach. It is only
+ * offered as an external link (not embedded).
  */
 export interface WebcamPlaya {
   url: string;
@@ -377,19 +377,19 @@ export interface PlayaDetalle {
   submarinismo?: boolean | null;
   temperaturaActual?: number | null;
 
-  // Observación en tiempo real para HOY (cielo/temp/lluvia reales)
+  // Real-time observation for TODAY (actual sky/temp/rain)
   tiempoActual?: TiempoActual | null;
 
-  // Datos meteorológicos estandarizados
+  // Standardized weather data
   clima?: DatosClima;
 
-  // Puede no venir
+  // May be absent
   cruzRoja?: DatosCruzRoja;
 
-  // Predicción enriquecida (3 días, mareas, avisos)
+  // Enriched forecast (3 days, tides, warnings)
   prediccionCompleta?: PrediccionCompletaDTO;
 
-  // Webcam de la playa (puede no venir). Solo enlace externo.
+  // Beach webcam (may be absent). External link only.
   webcam?: WebcamPlaya | null;
 }
 
@@ -401,7 +401,7 @@ export async function getDetallePlaya(codigo: string): Promise<PlayaDetalle> {
 }
 
 // ------------------------------
-// Playas destacadas (featured)
+// Featured beaches
 // ------------------------------
 export interface FeaturedBeach {
   nombre: string;

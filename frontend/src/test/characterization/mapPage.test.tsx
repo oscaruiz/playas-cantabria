@@ -1,19 +1,19 @@
 /**
- * CARACTERIZACIÓN — CONGELADO.
+ * CHARACTERIZATION — FROZEN.
  *
- * Fija `MapaPage`: qué playas llegan al mapa y en qué orden, cómo se decide el
- * icono de cada marcador y qué se ve en el popup.
+ * Pins down `MapaPage`: which beaches make it to the map and in what order, how
+ * each marker's icon is decided and what is seen in the popup.
  *
- * `react-leaflet` se sustituye por un doble: Leaflet necesita medir el DOM y no
- * funciona en jsdom. `leaflet` en cambio NO se mockea, porque `getBeachIcon`
- * construye un `L.DivIcon` de verdad y lo interesante es justo el HTML que
- * genera — que hoy se arma concatenando cadenas (la superficie XSS que F4
- * cierra pasando el marcador a React).
+ * `react-leaflet` is replaced by a double: Leaflet needs to measure the DOM and
+ * does not work in jsdom. `leaflet`, on the other hand, is NOT mocked, because
+ * `getBeachIcon` builds a real `L.DivIcon` and what matters is precisely the
+ * HTML it generates — which today is assembled by concatenating strings (the XSS
+ * surface that F4 closes by handing the marker over to React).
  *
- * Los dos umbrales de `markerStatus` (60 y 35) se fijan con puntuaciones
- * exactamente en el corte y justo por debajo. Ojo: ese 35 NO coincide con el 40
- * de `ScoreBadge.tramo`. La divergencia es real y está anotada como arreglo
- * señalizado de F5; aquí se congela tal cual.
+ * The two `markerStatus` thresholds (60 and 35) are pinned down with scores
+ * exactly at the cut and just below it. Careful: that 35 does NOT match the 40
+ * in `ScoreBadge.tramo`. The divergence is real and is noted as a flagged F5
+ * fix; here it is frozen as is.
  */
 
 import React from 'react';
@@ -41,8 +41,8 @@ jest.mock('react-leaflet', () => {
         { children }: { children?: React.ReactNode },
         ref: React.Ref<unknown>,
       ) => {
-        // react-leaflet entrega la instancia del mapa por ref; el doble entrega
-        // `mockMapa` en un efecto para respetar el orden hijo→padre.
+        // react-leaflet hands over the map instance through a ref; the double
+        // hands over `mockMapa` in an effect to respect the child→parent order.
         ReactMock.useEffect(() => {
           if (typeof ref === 'function') ref(mockMapa);
           else if (ref) (ref as React.MutableRefObject<unknown>).current = mockMapa;
@@ -74,9 +74,9 @@ jest.mock('react-leaflet', () => {
   };
 });
 
-// ---- Fixtures locales ----------------------------------------------------
-// Se declaran aquí (y no en test/fixtures) porque existen para clavar los
-// umbrales 60/35 de `markerStatus`, que solo usa esta página.
+// ---- Local fixtures ------------------------------------------------------
+// They are declared here (and not in test/fixtures) because they exist to nail
+// down the 60/35 thresholds of `markerStatus`, which only this page uses.
 
 const clima = {
   descripcionClima: 'cielo despejado',
@@ -130,7 +130,7 @@ const featuredMapa: FeaturedBeachesResponse = {
   ],
 };
 
-/** `lon` creciente al revés a propósito: la página debe reordenar de oeste a este. */
+/** `lon` increasing the wrong way on purpose: the page must reorder from west to east. */
 function playa(nombre: string, codigo: string, lon: number, extra: Partial<Playa> = {}): Playa {
   return { nombre, municipio: 'Cantabria', codigo, lat: 43.4, lon, idCruzRoja: 0, ...extra };
 }
@@ -146,7 +146,7 @@ const playasMapa: Playa[] = [
     idCruzRoja: 42,
     webcam: { url: 'https://example.test/w', cobertura: 'exacta' },
   }),
-  // Coordenadas inválidas: no debe llegar al mapa.
+  // Invalid coordinates: it must not make it to the map.
   playa('SinCoordenadas', 'C-NULL', 0, { lat: 0 }),
 ];
 

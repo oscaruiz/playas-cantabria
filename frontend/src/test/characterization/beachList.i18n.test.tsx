@@ -1,16 +1,16 @@
 /**
- * CARACTERIZACIÓN — CONGELADO.
+ * CHARACTERIZATION — FROZEN.
  *
- * Este fichero vivía en `known-issues/` fijando dos fugas de traducción de
- * `PlayasList`. Queda aquí ya invertido, con el arreglo aplicado:
+ * This file used to live in `known-issues/`, pinning down two translation leaks
+ * in `PlayasList`. It stays here now inverted, with the fix applied:
  *
- *  1. La distancia se escribía a mano (`· a {km} km`) en vez de usar
- *     `t('comun.aKm')`, que es lo que hacen HomePage y PlayaDetalle.
- *  2. El tooltip de los atributos usaba `ATTR_CONFIG.label`, escrito en español
- *     a pelo. PlayaDetalle ya hacía lo correcto con `t('attr.' + key)`.
+ *  1. The distance was written by hand (`· a {km} km`) instead of using
+ *     `t('comun.aKm')`, which is what HomePage and PlayaDetalle do.
+ *  2. The attributes' tooltip used `ATTR_CONFIG.label`, written in raw Spanish.
+ *     PlayaDetalle was already doing the right thing with `t('attr.' + key)`.
  *
- * Se comprueban los dos idiomas: el arreglo tenía que traducir sin romper el
- * español, que era lo que se veía bien antes.
+ * Both languages are checked: the fix had to translate without breaking the
+ * Spanish, which was what looked right before.
  */
 
 import React from 'react';

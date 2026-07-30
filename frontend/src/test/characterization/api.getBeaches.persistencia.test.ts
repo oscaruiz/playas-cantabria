@@ -1,10 +1,10 @@
 /**
- * Copia local del último listado REAL del backend.
+ * Local copy of the last REAL listing from the backend.
  *
- * `data/beaches.json` es una foto del momento del build, así que una respuesta
- * de ayer del backend siempre es mejor fallback. Importa sobre todo con el
- * backend dormido: Render free duerme el proceso a los 15 min y tarda decenas de
- * segundos en despertar, muy por encima del timeout de 2,5 s.
+ * `data/beaches.json` is a snapshot taken at build time, so yesterday's backend
+ * response is always a better fallback. It matters above all with the backend
+ * asleep: Render free puts the process to sleep after 15 min and takes tens of
+ * seconds to wake up, well above the 2.5 s timeout.
  */
 
 import { installFetchMock, restoreFetch, route } from '../http/fakeFetch';
@@ -45,7 +45,7 @@ describe('getPlayas — persistencia del último listado', () => {
     const primeraVisita = await loadApi();
     await primeraVisita.getPlayas({ timeoutMs: 50 });
 
-    // Segunda visita con el backend caído: mismo almacenamiento, módulo nuevo.
+    // Second visit with the backend down: same storage, new module.
     restoreFetch();
     installFetchMock([route(BEACHES, { networkError: true })]);
     const segundaVisita = await loadApi();

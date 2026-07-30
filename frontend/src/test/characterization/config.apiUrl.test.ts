@@ -1,13 +1,13 @@
 /**
- * CARACTERIZACIÓN — CONGELADO.
+ * CHARACTERIZATION — FROZEN.
  *
- * Fija `resolveApiBaseUrl()` y `buildApiUrl()`. En F2 esta lógica se muda a
- * `core/infrastructure/http/{client,endpoints}.ts`; el contrato observable
- * (URL por defecto, normalización, rechazo de protocolos raros) no cambia.
+ * Pins down `resolveApiBaseUrl()` and `buildApiUrl()`. In F2 this logic moves to
+ * `core/infrastructure/http/{client,endpoints}.ts`; the observable contract
+ * (default URL, normalization, rejection of odd protocols) does not change.
  */
 
-// El fichero solo usa `import()` dinámico; sin este export no sería un módulo
-// y `isolatedModules` lo rechaza al compilar.
+// The file only uses dynamic `import()`; without this export it would not be a
+// module and `isolatedModules` rejects it at compile time.
 export {};
 
 const DEFAULT_URL = 'https://playas-cantabria.onrender.com';
@@ -27,8 +27,8 @@ const ORIGINAL = process.env.REACT_APP_API_BASE_URL;
 let warnSpy: jest.SpyInstance;
 
 beforeEach(() => {
-  // `resolveApiBaseUrl` avisa por consola con valores inválidos; es intencional
-  // y no debe ensuciar la salida de los tests.
+  // `resolveApiBaseUrl` warns on the console with invalid values; that is
+  // intentional and must not pollute the tests' output.
   warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
 });
 

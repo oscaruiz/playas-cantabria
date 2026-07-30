@@ -8,15 +8,15 @@ import {
   PlayaRankeable,
 } from './beachRanking';
 
-// Usuario fijo; las playas se colocan al norte a distancia exacta `d` km
-// (1 grado de latitud ≈ 111.32 km), así haversine ≈ d con error < 0.1%.
+// Fixed user; beaches are placed to the north at an exact distance `d` km
+// (1 degree of latitude ≈ 111.32 km), so haversine ≈ d with error < 0.1%.
 const USUARIO: [number, number] = [43.4, -3.8];
 
 function playa(codigo: string, nombre: string, puntuacion: number, distKm: number): PlayaRankeable {
   return { codigo, nombre, puntuacion, lat: USUARIO[0] + distKm / 111.32, lon: USUARIO[1] };
 }
 
-// Caso real que disparaba el ciclo del comparador antiguo
+// Real case that triggered the old comparator's cycle
 const MOGRO = playa('mogro', 'Mogro-Usil', 78, 15);
 const SARDINERO = playa('sardinero', 'Sardinero', 82, 30);
 const SOMO = playa('somo', 'Somo', 84, 33);
@@ -77,7 +77,7 @@ describe('rankearPlayas', () => {
   });
 
   it('mismo score ajustado con cruda distinta → gana la cruda mayor', () => {
-    // 80@10km → 76 ajustado; 76@0km → 76 ajustado
+    // 80@10km → 76 adjusted; 76@0km → 76 adjusted
     const pool = [playa('cerca', 'Cerca', 76, 0), playa('lejos', 'Lejos', 80, 10)];
     expect(rankearPlayas(pool, USUARIO).map((p) => p.codigo)).toEqual(['lejos', 'cerca']);
   });

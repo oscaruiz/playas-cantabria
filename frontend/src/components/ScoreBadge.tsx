@@ -4,7 +4,7 @@ import './ScoreBadge.css';
 
 type Tramo = 'alta' | 'media' | 'baja';
 
-/** Tramo de color de la puntuación (alineado con el umbral 60 de "recomendadas"). */
+/** Color band of the score (aligned with the 60 threshold of "recomendadas"). */
 function tramo(p: number): Tramo {
   if (p >= 60) return 'alta';
   if (p >= 40) return 'media';
@@ -13,14 +13,14 @@ function tramo(p: number): Tramo {
 
 interface ScoreBadgeProps {
   puntuacion: number;
-  /** 'sm' para listas/tarjetas, 'lg' para la cabecera del detalle. */
+  /** 'sm' for lists/cards, 'lg' for the detail header. */
   size?: 'sm' | 'lg';
   className?: string;
 }
 
 /**
- * Badge compacto con la puntuación (0-100) de una playa, coloreado por tramo.
- * Fuente única de la puntuación: el ranking del backend (endpoint featured).
+ * Compact badge with a beach's score (0-100), colored by band.
+ * Single source of the score: the backend ranking (featured endpoint).
  */
 const ScoreBadge: React.FC<ScoreBadgeProps> = ({ puntuacion, size = 'sm', className }) => {
   const { t } = useIdioma();

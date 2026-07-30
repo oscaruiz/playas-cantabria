@@ -144,7 +144,7 @@ const MapaPage: React.FC = () => {
     }
   }, [location.search, playas]);
 
-  // Cuando llega la ubicación tras pulsar "localizarme", centrar el mapa en ella.
+  // When the location arrives after tapping "locate me", center the map on it.
   useEffect(() => {
     if (locateRequested && userLocation && mapRef.current) {
       mapRef.current.flyTo(userLocation, 14, { duration: 0.8 });
@@ -152,7 +152,7 @@ const MapaPage: React.FC = () => {
     }
   }, [locateRequested, userLocation]);
 
-  // Si el usuario deniega el permiso, dejar de esperar (para el spinner del botón).
+  // If the user denies the permission, stop waiting (for the button's spinner).
   useEffect(() => {
     if (locationDenied) setLocateRequested(false);
   }, [locationDenied]);

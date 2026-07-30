@@ -5,8 +5,8 @@ import './SelectorIdioma.css';
 const IDIOMAS: Idioma[] = ['es', 'en'];
 
 /**
- * Píldora ES/EN para las cabeceras. El stopPropagation es necesario:
- * las cabeceras sticky recargan la página al hacer click.
+ * ES/EN pill for the headers. The stopPropagation is necessary:
+ * the sticky headers reload the page on click.
  */
 const SelectorIdioma: React.FC = () => {
   const { idioma, setIdioma, t } = useIdioma();

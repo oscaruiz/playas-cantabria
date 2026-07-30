@@ -1,8 +1,8 @@
 /**
- * Ranking de playas destacadas para la Home: combina la puntuación del
- * backend (que no conoce la ubicación del usuario) con la distancia
- * calculada en cliente, mediante una clave de ordenación única y por
- * tanto transitiva (a diferencia del comparador por pares anterior).
+ * Ranking of featured beaches for the Home: combines the backend's
+ * score (which doesn't know the user's location) with the distance
+ * computed on the client, using a single sort key that is therefore
+ * transitive (unlike the previous pairwise comparator).
  */
 
 export function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -17,19 +17,19 @@ export function haversineKm(lat1: number, lon1: number, lat2: number, lon2: numb
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-// Calibración: una playa cercana puede presidir sobre otra con más puntos
-// (78@15km gana a 84@33km), pero el tope evita que la distancia domine:
-// a partir de 62.5 km todas penalizan igual y decide la puntuación cruda.
+// Calibration: a nearby beach can lead over another with more points
+// (78@15km beats 84@33km), but the cap prevents distance from dominating:
+// from 62.5 km on they all get penalized equally and the raw score decides.
 export const PENALIZACION_PTS_POR_KM = 0.4;
 export const PENALIZACION_MAX_PTS = 25;
 
-/** Score interno de ordenación. NUNCA se muestra en UI (la UI enseña siempre la puntuación cruda). */
+/** Internal sort score. NEVER shown in the UI (the UI always displays the raw score). */
 export function scoreAjustado(puntuacion: number, distKm: number): number {
   if (!Number.isFinite(distKm)) return puntuacion;
   return puntuacion - Math.min(distKm * PENALIZACION_PTS_POR_KM, PENALIZACION_MAX_PTS);
 }
 
-/** Subconjunto estructural de FeaturedBeach — lo mínimo que necesita el ranking. */
+/** Structural subset of FeaturedBeach — the minimum the ranking needs. */
 export interface PlayaRankeable {
   codigo: string;
   nombre: string;
@@ -43,9 +43,9 @@ function compararDesempate(a: PlayaRankeable, b: PlayaRankeable): number {
 }
 
 /**
- * Ordena el pool de forma transitiva y determinista. Con ubicación, por
- * score ajustado por distancia desc; sin ella, por puntuación cruda desc.
- * Desempates: puntuación desc, luego nombre. No muta el array de entrada.
+ * Sorts the pool transitively and deterministically. With a location, by
+ * distance-adjusted score desc; without it, by raw score desc.
+ * Tiebreakers: score desc, then name. Does not mutate the input array.
  */
 export function rankearPlayas<T extends PlayaRankeable>(
   pool: T[],
@@ -67,10 +67,10 @@ export function rankearPlayas<T extends PlayaRankeable>(
 }
 
 /**
- * Código de la playa mostrada (no-hero) con mayor puntuación cruda, SOLO si
- * supera estrictamente a la hero; null si la hero ya es (o empata con) la
- * máxima. Sirve a la vez para activar la nota "priorizada por cercanía" del
- * hero y el chip "mejor puntuación" en esa alternativa.
+ * Code of the displayed (non-hero) beach with the highest raw score, ONLY if
+ * it strictly beats the hero; null if the hero already is (or ties with) the
+ * maximum. Serves both to enable the hero's "priorizada por cercanía" note
+ * and the "mejor puntuación" chip on that alternative.
  */
 export function codigoMejorPuntuacionNoHero(ordenadas: PlayaRankeable[]): string | null {
   if (ordenadas.length < 2) return null;

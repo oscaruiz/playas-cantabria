@@ -15,7 +15,7 @@ import {
   emojiCielo,
 } from './beachHelpers';
 
-// Durante la temporada de baño, Madrid es CEST (UTC+2): UTC + 2h = hora Madrid.
+// During the bathing season, Madrid is CEST (UTC+2): UTC + 2h = Madrid time.
 const cruzRoja = {
   horario: '11:30 - 19:30',
   coberturaDesde: '12-06-2026',
@@ -24,22 +24,22 @@ const cruzRoja = {
 
 describe('dentroDeHorario', () => {
   it('true dentro del horario (hora de Madrid)', () => {
-    // 12:00 UTC = 14:00 Madrid → dentro de 11:30-19:30
+    // 12:00 UTC = 14:00 Madrid → within 11:30-19:30
     expect(dentroDeHorario(cruzRoja, new Date('2026-06-22T12:00:00Z'))).toBe(true);
   });
 
   it('false antes del izado de las 11:30', () => {
-    // 08:00 UTC = 10:00 Madrid → antes de 11:30
+    // 08:00 UTC = 10:00 Madrid → before 11:30
     expect(dentroDeHorario(cruzRoja, new Date('2026-06-22T08:00:00Z'))).toBe(false);
   });
 
   it('false tras el cierre de las 19:30', () => {
-    // 18:00 UTC = 20:00 Madrid → después de 19:30
+    // 18:00 UTC = 20:00 Madrid → after 19:30
     expect(dentroDeHorario(cruzRoja, new Date('2026-06-22T18:00:00Z'))).toBe(false);
   });
 
   it('false fuera de temporada aunque sea media tarde', () => {
-    // 1 oct 14:00 Madrid → después de coberturaHasta (15-09)
+    // Oct 1 14:00 Madrid → after coberturaHasta (15-09)
     expect(dentroDeHorario(cruzRoja, new Date('2026-10-01T12:00:00Z'))).toBe(false);
   });
 
@@ -80,8 +80,8 @@ describe('estadoBandera', () => {
   });
 
   it("'color' con bandera de ayer tarde vista hoy a mediodía (≤24h, franja mañanera)", () => {
-    // Regresión: el cron capturó verde ayer 18:35 Madrid (16:35Z); hoy a las 11:45
-    // Madrid (09:45Z) es lo más fresco disponible y estamos en horario → se muestra.
+    // Regression: the cron captured green yesterday 18:35 Madrid (16:35Z); today at 11:45
+    // Madrid (09:45Z) it is the freshest available and we are within hours → it is shown.
     expect(
       estadoBandera(
         { ...cruzRoja, bandera: 'Verde', ultimaActualizacion: '2026-06-21T16:35:00Z' },
@@ -94,7 +94,7 @@ describe('estadoBandera', () => {
     expect(
       estadoBandera(
         { ...cruzRoja, bandera: 'Verde', ultimaActualizacion: '2026-06-21T09:00:00Z' },
-        new Date('2026-06-22T12:00:00Z') // 27h después
+        new Date('2026-06-22T12:00:00Z') // 27h later
       )
     ).toBe('sinDatos');
   });
@@ -113,8 +113,8 @@ describe('ultimaBanderaRegistrada', () => {
   const verde = { ...cruzRoja, bandera: 'Verde' };
 
   it('acota la captura posterior al cierre a las 19:30 de ese mismo día', () => {
-    // Scrapeada a las 23:00 Madrid (21:00Z): Cruz Roja sigue publicando la ficha,
-    // pero la bandera dejó de ondear a las 19:30 → esa es la hora que se enseña.
+    // Scraped at 23:00 Madrid (21:00Z): Cruz Roja keeps publishing the page,
+    // but the flag stopped flying at 19:30 → that is the time that gets shown.
     const r = ultimaBanderaRegistrada(
       { ...verde, ultimaActualizacion: '2026-06-22T21:00:00Z' },
       new Date('2026-06-22T21:05:00Z')
@@ -124,7 +124,7 @@ describe('ultimaBanderaRegistrada', () => {
   });
 
   it('antes del izado, la última bandera es la del cierre de ayer', () => {
-    // 09:00 Madrid (07:00Z), captura de esa madrugada → cerró ayer a las 19:30.
+    // 09:00 Madrid (07:00Z), capture from that early morning → closed yesterday at 19:30.
     const r = ultimaBanderaRegistrada(
       { ...verde, ultimaActualizacion: '2026-06-22T05:00:00Z' },
       new Date('2026-06-22T07:00:00Z')
@@ -135,7 +135,7 @@ describe('ultimaBanderaRegistrada', () => {
   it('conserva la hora exacta si la captura fue dentro del horario', () => {
     const r = ultimaBanderaRegistrada(
       { ...verde, ultimaActualizacion: '2026-06-22T16:00:00Z' }, // 18:00 Madrid
-      new Date('2026-06-22T18:00:00Z') // 20:00 Madrid, ya cerrado
+      new Date('2026-06-22T18:00:00Z') // 20:00 Madrid, already closed
     );
     expect(r?.registradaIso).toBe('2026-06-22T16:00:00.000Z');
   });
@@ -152,8 +152,8 @@ describe('ultimaBanderaRegistrada', () => {
   it('null si el registro tiene más de 36h', () => {
     expect(
       ultimaBanderaRegistrada(
-        { ...verde, ultimaActualizacion: '2026-06-20T16:00:00Z' }, // 18:00 Madrid del día 20
-        new Date('2026-06-22T07:00:00Z') // 09:00 Madrid del 22 → 39h
+        { ...verde, ultimaActualizacion: '2026-06-20T16:00:00Z' }, // 18:00 Madrid on the 20th
+        new Date('2026-06-22T07:00:00Z') // 09:00 Madrid on the 22nd → 39h
       )
     ).toBeNull();
   });
@@ -162,7 +162,7 @@ describe('ultimaBanderaRegistrada', () => {
     expect(
       ultimaBanderaRegistrada(
         { ...verde, ultimaActualizacion: '2026-09-16T16:00:00Z' },
-        new Date('2026-09-16T18:00:00Z') // ya pasó coberturaHasta (15-09)
+        new Date('2026-09-16T18:00:00Z') // coberturaHasta (15-09) already passed
       )
     ).toBeNull();
     expect(
@@ -175,7 +175,7 @@ describe('ultimaBanderaRegistrada', () => {
 });
 
 describe('esInfoReciente', () => {
-  const ahora = new Date('2026-06-22T12:00:00Z'); // 14:00 Madrid, día 22
+  const ahora = new Date('2026-06-22T12:00:00Z'); // 14:00 Madrid, on the 22nd
 
   it('true si la captura tiene ≤24h', () => {
     expect(esInfoReciente('2026-06-22T09:00:00Z', ahora)).toBe(true); // 3h
@@ -233,7 +233,7 @@ describe('esLluviaActiva', () => {
   });
 
   it('la señal estructurada "sin_lluvia" es autoritativa (ignora el regex del cielo)', () => {
-    // El nowcast agrega ya todas las fuentes; si dice seco, no contradecirlo.
+    // The nowcast already aggregates all the sources; if it says dry, don't contradict it.
     expect(
       esLluviaActiva({ cielo: 'muy nuboso', precipitacionMm: 0, lluvia: { estado: 'sin_lluvia' } })
     ).toBe(false);
@@ -340,12 +340,12 @@ describe('vigilanciaDisponible', () => {
   });
 
   it('detecta los puestos aunque no haya idCruzRoja', () => {
-    // Caso de La Concha en el JSON crudo del fallback: solo puestos.
+    // Case of La Concha in the fallback's raw JSON: stations only.
     expect(vigilanciaDisponible({ cruzRojaStations: [{ id: 373 }, { id: 820 }] })).toBe(true);
   });
 
   it('detecta los puestos aunque el idCruzRoja venga a 0', () => {
-    // Caso del DTO cuando el backend no pudo derivar el id.
+    // Case of the DTO when the backend could not derive the id.
     expect(vigilanciaDisponible({ idCruzRoja: 0, cruzRojaStations: [{ id: 373 }] })).toBe(true);
   });
 
@@ -366,8 +366,8 @@ describe('vigilanciaDisponible', () => {
 });
 
 describe('emojiCielo', () => {
-  // Los emojis se escriben escapados, igual que en beachHelpers.ts, para que
-  // el fichero no dependa de cómo represente cada editor los modificadores.
+  // The emojis are written escaped, just like in beachHelpers.ts, so that
+  // the file doesn't depend on how each editor represents the modifiers.
   const SOL = '\u2600\uFE0F';
   const SOL_NUBE = '\u{1F324}\uFE0F';
   const NUBE_SOL = '\u26C5';
@@ -378,7 +378,7 @@ describe('emojiCielo', () => {
   const NIEBLA = '\u{1F32B}\uFE0F';
 
   it('da sol para el despejado de las dos fuentes', () => {
-    // OpenWeather dice "cielo claro" (01x) donde AEMET dice "despejado".
+    // OpenWeather says "cielo claro" (01x) where AEMET says "despejado".
     expect(emojiCielo('cielo claro')).toBe(SOL);
     expect(emojiCielo('Despejado')).toBe(SOL);
     expect(emojiCielo('cielo despejado')).toBe(SOL);
@@ -390,21 +390,21 @@ describe('emojiCielo', () => {
     expect(emojiCielo('Intervalos nubosos')).toBe(SOL_NUBE);
     expect(emojiCielo('nubes dispersas')).toBe(SOL_NUBE);
     expect(emojiCielo('algo de nubes')).toBe(SOL_NUBE);
-    // 'parcial' gana a 'soleado', que si no se lo llevaría entero.
+    // 'parcial' beats 'soleado', which would otherwise take it entirely.
     expect(emojiCielo('parcialmente soleado')).toBe(SOL_NUBE);
   });
 
   it('distingue el cubierto del nuboso', () => {
     expect(emojiCielo('muy nuboso')).toBe(NUBES);
     expect(emojiCielo('cubierto')).toBe(NUBES);
-    // 'nubes' a secas es el 04x de OpenWeather, que es cubierto.
+    // Plain 'nubes' is OpenWeather's 04x, which is overcast.
     expect(emojiCielo('nubes')).toBe(NUBES);
     expect(emojiCielo('nuboso')).toBe(NUBE_SOL);
     expect(emojiCielo('cielo nublado')).toBe(NUBE_SOL);
   });
 
   it('la precipitación gana a la cobertura en los estados combinados de AEMET', () => {
-    // Antes salía la nube o el sol y la lluvia se perdía por completo.
+    // Before, the cloud or the sun came out and the rain got lost entirely.
     expect(emojiCielo('Cubierto con lluvia')).toBe(LLUVIA);
     expect(emojiCielo('Cubierto con lluvia escasa')).toBe(LLUVIA);
     expect(emojiCielo('Intervalos nubosos con lluvia')).toBe(LLUVIA);
@@ -418,7 +418,7 @@ describe('emojiCielo', () => {
     expect(emojiCielo('llovizna')).toBe(LLUVIA);
     expect(emojiCielo('chubascos')).toBe(LLUVIA);
     expect(emojiCielo('tormenta')).toBe(TORMENTA);
-    // 'tormentosos' no contiene 'tormenta'; por eso el patrón es 'torment'.
+    // 'tormentosos' does not contain 'tormenta'; that's why the pattern is 'torment'.
     expect(emojiCielo('chubascos tormentosos')).toBe(TORMENTA);
     expect(emojiCielo('nieve')).toBe(NIEVE);
     expect(emojiCielo('niebla')).toBe(NIEBLA);

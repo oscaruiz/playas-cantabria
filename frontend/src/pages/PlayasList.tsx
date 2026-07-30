@@ -44,8 +44,8 @@ const PlayasList: React.FC = () => {
   const [weatherMap, setWeatherMap] = useState<Map<string, FeaturedBeach>>(new Map());
   const [filtro, setFiltro] = useState('');
   const [orden, setOrden] = useState<OrdenMode>('az');
-  // No hay estado de error: `getPlayas` nunca rechaza, siempre cae al JSON
-  // local. Lo que sí hay que contar es que los datos no son frescos.
+  // There is no error state: `getPlayas` never rejects, it always falls back to the local
+  // JSON. What does need to be conveyed is that the data is not fresh.
   const [esFallback, setEsFallback] = useState(false);
   const [datosNoDisponibles, setDatosNoDisponibles] = useState(false);
   const { t, tPlural, idioma } = useIdioma();
@@ -217,7 +217,7 @@ const PlayasList: React.FC = () => {
           )}
         </div>
 
-        {/* Datos locales (backend no disponible) */}
+        {/* Local data (backend unavailable) */}
         {esFallback && (
           <div className="home-fallback" role="status">
             <p style={{ margin: 0 }}>{t('lista.datosLocales')}</p>

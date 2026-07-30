@@ -1,19 +1,19 @@
 /**
- * CARACTERIZACIÓN — CONGELADO.
+ * CHARACTERIZATION — FROZEN.
  *
- * Estados de carga y error de `PlayasList`. Van en su propio fichero porque
- * necesitan la caché de `services/api.ts` vacía, y jest solo estrena el
- * registro de módulos entre ficheros, no entre tests.
+ * Loading and error states of `PlayasList`. They go in their own file because
+ * they need the `services/api.ts` cache empty, and jest only starts a fresh
+ * module registry between files, not between tests.
  *
- * Hallazgo que este fichero dejó fijado: **el estado de error era inalcanzable**.
- * `getPlayas()` nunca rechaza (cae al JSON local ante cualquier fallo), así que
- * el `.catch(() => setError(true))` de la página solo se habría disparado si
- * fallase el propio `import()` del JSON empaquetado. Con el backend caído el
- * usuario ve el listado completo, no un error.
+ * Finding that this file pinned down: **the error state was unreachable**.
+ * `getPlayas()` never rejects (it falls back to the local JSON on any failure),
+ * so the page's `.catch(() => setError(true))` would only have fired if the
+ * `import()` of the bundled JSON itself failed. With the backend down the
+ * user sees the full listing, not an error.
  *
- * Esa rama muerta ya se ha eliminado, y en su lugar hay un aviso de datos
- * locales: ver `beachListPage.fallbackNotice.test.tsx`. Los tests de aquí siguen
- * valiendo tal cual, porque comprueban que el mensaje de error NO aparece.
+ * That dead branch has already been removed, and in its place there is a local
+ * data notice: see `beachListPage.fallbackNotice.test.tsx`. The tests here are
+ * still valid as they are, because they check that the error message does NOT appear.
  */
 
 import React from 'react';
@@ -42,11 +42,11 @@ describe('PlayasList — estados', () => {
     expect(screen.getByText('Cargando playas...')).toBeInTheDocument();
     expect(screen.queryByText('No se pudieron cargar las playas')).not.toBeInTheDocument();
 
-    // Hay que dejar que la petición termine: `services/api.ts` guarda la
-    // petición en vuelo en una variable de módulo y solo la limpia en el
-    // `.finally`. Si se deja colgada, el siguiente test de este fichero
-    // reutilizaría esa promesa eterna. Al soltarla se comprueba además que el
-    // spinner da paso al listado.
+    // The request has to be allowed to finish: `services/api.ts` stores the
+    // in-flight request in a module variable and only clears it in the
+    // `.finally`. If it is left hanging, the next test in this file would
+    // reuse that eternal promise. Releasing it also checks that the
+    // spinner gives way to the listing.
     pending.reject(new Error('backend caído'));
 
     await waitFor(() => expect(screen.getByText('46 playas')).toBeInTheDocument());
@@ -61,7 +61,7 @@ describe('PlayasList — estados', () => {
 
     renderWithProviders(<PlayasList />, { route: '/playas' });
 
-    // 46 playas: el fichero `src/data/beaches.json` completo.
+    // 46 beaches: the complete `src/data/beaches.json` file.
     await waitFor(() => expect(screen.getByText('46 playas')).toBeInTheDocument());
     expect(screen.queryByText('No se pudieron cargar las playas')).not.toBeInTheDocument();
   });
