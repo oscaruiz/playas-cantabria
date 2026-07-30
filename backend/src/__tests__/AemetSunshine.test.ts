@@ -8,9 +8,9 @@ afterEach(() => vi.restoreAllMocks());
 const FINT = '2026-07-29T10:00:00+0000';
 
 /**
- * Estaciones reales del arco cantábrico. Lo importante: Castro-EDAR y Treto
- * EXISTEN y están en la costa oriental, pero no publican `inso`. Es el motivo por
- * el que no vale reutilizar la estación que elige `getCurrentByCoords`.
+ * Real stations of the Cantabrian arc. The important thing: Castro-EDAR and Treto
+ * EXIST and are on the eastern coast, but do not publish `inso`. That is the reason
+ * why reusing the station chosen by `getCurrentByCoords` does not work.
  */
 const OBSERVACIONES = [
   { idema: '1111X', ubi: 'SANTANDER CMT', lat: 43.491, lon: -3.8, fint: FINT, ta: 22.6, inso: 31.9 },
@@ -34,13 +34,13 @@ function provider() {
 describe('AemetWeatherProvider.getSunshineNear', () => {
   it('ignora las estaciones sin insolación aunque sean las más cercanas', async () => {
     mockAemet(OBSERVACIONES);
-    // Playa de Castro Urdiales: la estación pegada (Castro-EDAR) no mide sol.
+    // Castro Urdiales beach: the station right next to it (Castro-EDAR) does not measure sunshine.
     const res = await provider().getSunshineNear(43.38, -3.22);
 
     expect(res.map((o) => o.idema)).not.toContain('1096');
     expect(res.map((o) => o.idema)).not.toContain('1082');
-    // La más cercana CON insolación está en Santander, a casi 50 km: por eso las
-    // playas de Castro son las peor cubiertas y necesitan un segundo testigo.
+    // The closest one WITH sunshine data is in Santander, almost 50 km away: that is why
+    // the Castro beaches are the worst covered and need a second witness.
     expect(res[0].idema).toBe('1111X');
     expect(res[0].distanciaKm).toBeGreaterThan(40);
   });
@@ -77,8 +77,8 @@ describe('AemetWeatherProvider.getSunshineNear', () => {
   });
 
   it('se queda con la fila más reciente de cada estación', async () => {
-    // El payload trae varias horas por estación; una fila recién publicada puede
-    // venir incompleta, así que solo cuentan las que traen `inso`.
+    // The payload carries several hours per station; a freshly published row can
+    // come in incomplete, so only the ones carrying `inso` count.
     mockAemet([
       { idema: '1111X', ubi: 'SANTANDER CMT', lat: 43.491, lon: -3.8, fint: '2026-07-29T08:00:00+0000', inso: 0 },
       { idema: '1111X', ubi: 'SANTANDER CMT', lat: 43.491, lon: -3.8, fint: FINT, inso: 31.9 },

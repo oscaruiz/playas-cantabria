@@ -2,14 +2,14 @@ import { http } from '../http/axiosClient';
 import { debugLog } from '../utils/debug';
 
 /**
- * Almacén L2 sobre la API REST de Upstash Redis (plan gratuito: 10k comandos/día).
+ * L2 store on top of the Upstash Redis REST API (free plan: 10k commands/day).
  *
- * Se usa REST y no un cliente Redis a propósito: cero dependencias nuevas, cero
- * sockets persistentes que mantener vivos en un proceso que Render duerme cada
- * 15 minutos.
+ * REST is used instead of a Redis client on purpose: zero new dependencies, zero
+ * persistent sockets to keep alive in a process that Render puts to sleep every
+ * 15 minutes.
  *
- * REGLA: esta capa NUNCA lanza ni bloquea la respuesta. Si Upstash no está
- * configurado o falla, la app se comporta exactamente como con solo memoria.
+ * RULE: this layer NEVER throws or blocks the response. If Upstash is not
+ * configured or fails, the app behaves exactly as with memory only.
  */
 
 export interface L2Store {
@@ -17,14 +17,14 @@ export interface L2Store {
   set<T>(key: string, value: T, ttlSeconds: number): Promise<void>;
 }
 
-/** Sobre con marca de tiempo: sin ella no se puede saber si el valor sigue fresco. */
+/** Envelope with a timestamp: without it there is no way to know whether the value is still fresh. */
 interface Envelope<T> {
   v: T;
   at: number;
 }
 
 const TIMEOUT_MS = 1500;
-/** Redis rechaza valores enormes y el plan gratuito los cobra caros. */
+/** Redis rejects huge values and the free plan charges dearly for them. */
 const MAX_BYTES = 400_000;
 
 export class UpstashRedisStore implements L2Store {
@@ -34,7 +34,7 @@ export class UpstashRedisStore implements L2Store {
     private readonly now: () => number = () => Date.now(),
   ) {}
 
-  /** Devuelve el store configurado, o undefined si faltan las variables de entorno. */
+  /** Returns the configured store, or undefined if the environment variables are missing. */
   static fromEnv(): UpstashRedisStore | undefined {
     const url = process.env.UPSTASH_REDIS_REST_URL;
     const token = process.env.UPSTASH_REDIS_REST_TOKEN;

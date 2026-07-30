@@ -4,8 +4,8 @@ import { load } from 'cheerio';
 import type { Agent } from 'http';
 import { http, BROWSER_HEADERS } from '../http/axiosClient';
 
-// https-proxy-agent expone sus tipos vía "exports" map, incompatible con el
-// moduleResolution:node de este tsconfig. Se carga por require (any) + shim de tipos.
+// https-proxy-agent exposes its types via "exports" map, incompatible with the
+// moduleResolution:node of this tsconfig. Loaded via require (any) + type shim.
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { HttpsProxyAgent } = require('https-proxy-agent') as {
   HttpsProxyAgent: new (url: string) => Agent;
@@ -24,24 +24,24 @@ import { Config } from '../config/config';
 export class RedCrossFlagProvider implements FlagProvider {
   private readonly base = 'https://www.cruzroja.es/appjv/consPlayas';
 
-  // cruzroja.es (WAF F5) devuelve 403 a cualquier IP de datacenter (Render US y EU).
-  // Para sortearlo se enruta SOLO esta petición por un proxy residencial / scraping-API
-  // si se define SCRAPER_PROXY_URL (p. ej. http://user:pass@host:puerto). Sin la env,
-  // va directo (y en prod seguirá dando 403, degradando a null sin romper nada).
+  // cruzroja.es (WAF F5) returns 403 to any datacenter IP (Render US and EU).
+  // To get around it, ONLY this request is routed through a residential proxy / scraping-API
+  // if SCRAPER_PROXY_URL is defined (e.g. http://user:pass@host:puerto). Without the env,
+  // it goes direct (and in prod will keep returning 403, degrading to null without breaking anything).
   private readonly proxyAgent = process.env.SCRAPER_PROXY_URL
     ? new HttpsProxyAgent(process.env.SCRAPER_PROXY_URL)
     : undefined;
 
-  // Banderas pre-scrapeadas (por la GitHub Action / script local desde IP no
-  // bloqueada) y commiteadas en data/flags.json. Es la fuente PRIMARIA en prod,
-  // donde el scrape en vivo da 403. Si una playa no está en el fichero, se cae al
-  // scrape en vivo (que funciona en local).
+  // Pre-scraped flags (by the GitHub Action / local script from a non-blocked
+  // IP) and committed in data/flags.json. It is the PRIMARY source in prod,
+  // where the live scrape returns 403. If a beach is not in the file, we fall
+  // back to the live scrape (which works locally).
   private fileFlags: Map<number, FlagStatus> | null = null;
 
-  // Cortacircuitos del scrape en vivo. cruzroja.es responde en 10-12s y bloquea
-  // por WAF a las IPs de datacenter: con 69 puestos, reintentar en cada petición
-  // secuestra el único proceso (0,1 CPU en Render free) sin obtener nada. Tras
-  // varios fallos seguidos se deja de intentar un rato y se sirve flags.json.
+  // Circuit breaker for the live scrape. cruzroja.es responds in 10-12s and its
+  // WAF blocks datacenter IPs: with 69 stations, retrying on every request
+  // hijacks the single process (0.1 CPU on Render free) without getting anything.
+  // After several consecutive failures we stop trying for a while and serve flags.json.
   private fallosSeguidos = 0;
   private abiertoHasta = 0;
   private static readonly FALLOS_PARA_ABRIR = 3;
@@ -50,7 +50,7 @@ export class RedCrossFlagProvider implements FlagProvider {
   private get circuitoAbierto(): boolean {
     if (this.abiertoHasta === 0) return false;
     if (Date.now() >= this.abiertoHasta) {
-      // Medio abierto: se deja pasar un intento para autocurarse.
+      // Half-open: let one attempt through to self-heal.
       this.abiertoHasta = 0;
       this.fallosSeguidos = 0;
       return false;
@@ -100,13 +100,13 @@ export class RedCrossFlagProvider implements FlagProvider {
         });
       }
     } catch {
-      // sin fichero → mapa vacío → se usará el scrape en vivo
+      // no file → empty map → the live scrape will be used
     }
     this.fileFlags = map;
     return map;
   }
 
-  /** Config común del POST a Cruz Roja (cabeceras + proxy opcional). */
+  /** Common config for the POST to Cruz Roja (headers + optional proxy). */
   private postOptions(timeout: number, raw = false) {
     return {
       headers: {
@@ -117,8 +117,8 @@ export class RedCrossFlagProvider implements FlagProvider {
         Referer: `${this.base}/listaPlayas.do`
       },
       timeout,
-      // Cuando hay proxy: usar su agente y desactivar el manejo de proxy de axios.
-      // rejectUnauthorized:false tolera scraping-APIs que hacen MITM de TLS.
+      // When there is a proxy: use its agent and disable axios's proxy handling.
+      // rejectUnauthorized:false tolerates scraping-APIs that do TLS MITM.
       ...(this.proxyAgent ? { httpsAgent: this.proxyAgent, proxy: false as const } : {}),
       ...(raw ? { validateStatus: () => true, transformResponse: (d: unknown) => d } : {})
     };
@@ -140,30 +140,30 @@ export class RedCrossFlagProvider implements FlagProvider {
   async getFlagByRedCrossId(redCrossId: number): Promise<FlagStatus | null> {
     if (!redCrossId || redCrossId <= 0) return null;
 
-    // Fuente primaria: banderas pre-scrapeadas (data/flags.json), pero SOLO si la
-    // entrada trae color real. Una entrada sin color (p.ej. el cron scrapeó antes
-    // del izado de las 11:30 y guardó "No hay información") NO debe tapar el scrape
-    // en vivo, que en prod normalmente sí devuelve la bandera ya izada.
+    // Primary source: pre-scraped flags (data/flags.json), but ONLY if the
+    // entry carries a real color. An entry without color (e.g. the cron scraped
+    // before the 11:30 flag hoisting and stored "No hay información") must NOT shadow
+    // the live scrape, which in prod usually does return the already-hoisted flag.
     const fromFile = (await this.loadFileFlags()).get(redCrossId);
     if (fromFile?.color) return fromFile;
 
-    // Scrape en vivo (cacheado). Si trae color real, es la verdad más fresca.
+    // Live scrape (cached). If it carries a real color, it is the freshest truth.
     const live = await this.fetchLiveCached(redCrossId);
     if (live?.color) return live;
 
-    // Sin color por ninguna vía: el fichero (con su cobertura/horario) es mejor que
-    // nada; si tampoco hay fichero, lo que diera el live; y si no, null.
+    // No color through any path: the file (with its coverage/schedule) is better than
+    // nothing; if there is no file either, whatever the live scrape gave; and otherwise, null.
     return fromFile ?? live ?? null;
   }
 
-  /** Scrape en vivo con cache y reintento. Nunca lanza: devuelve null si falla. */
+  /** Live scrape with cache and retry. Never throws: returns null on failure. */
   private async fetchLiveCached(redCrossId: number): Promise<FlagStatus | null> {
-    // La ficha responde 200 con "No hay información" mientras no hay bandera izada
-    // (antes de las 11:30, y en muchas playas buena parte del día). Eso es una
-    // respuesta VÁLIDA, así que se cacheaba igual que un color: 24h. Resultado: la
-    // playa se quedaba sin bandera el resto del día aunque se izara cinco minutos
-    // después, y encima tapaba al fichero. Sin color se vuelve a mirar pronto.
-    const TTL_CON_COLOR = 86400; // la bandera ya izada no suele cambiar
+    // The beach page responds 200 with "No hay información" while no flag is hoisted
+    // (before 11:30, and on many beaches a good part of the day). That is a
+    // VALID response, so it used to be cached just like a color: 24h. Result: the
+    // beach was left without a flag for the rest of the day even if it was hoisted five
+    // minutes later, and it shadowed the file on top of that. Without color we re-check soon.
+    const TTL_CON_COLOR = 86400; // an already-hoisted flag rarely changes
     const TTL_SIN_COLOR = 300;
     const key = CacheKeys.flagByRedCrossId(redCrossId);
 
@@ -173,10 +173,10 @@ export class RedCrossFlagProvider implements FlagProvider {
     if (this.circuitoAbierto) return null;
 
     try {
-      // El catch externo devuelve null SIN cachear: cruzroja.es es lento e
-      // inestable (respuestas de 10-12s y 503 intermitentes tras su WAF F5), así
-      // que un fallo no debe quedar cacheado 24h — se reintenta en la siguiente
-      // petición y se autocura cuando la web responde.
+      // The outer catch returns null WITHOUT caching: cruzroja.es is slow and
+      // unstable (10-12s responses and intermittent 503s behind its WAF F5), so
+      // a failure must not stay cached for 24h — it is retried on the next
+      // request and self-heals when the site responds.
       const status = await this.cache.getOrSet(key, TTL_SIN_COLOR, async () => {
         const maxAttempts = 2;
         let lastErr: unknown;
@@ -195,9 +195,9 @@ export class RedCrossFlagProvider implements FlagProvider {
         throw lastErr ?? new Error('cruzroja: sin respuesta');
       });
 
-      // El TTL largo se aplica SOLO justo después de calcular, nunca al servir de
-      // caché (por eso el `get` de arriba sale antes): si se renovara en cada
-      // petición, una bandera con color no caducaría nunca mientras haya tráfico.
+      // The long TTL is applied ONLY right after computing, never when serving from
+      // cache (that's why the `get` above returns early): if it were renewed on every
+      // request, a flag with color would never expire as long as there is traffic.
       if (status?.color) this.cache.set(key, status, TTL_CON_COLOR);
       this.anotarResultadoLive(true);
       return status;
@@ -216,10 +216,10 @@ export class RedCrossFlagProvider implements FlagProvider {
 
     const $ = load(resp.data as string);
 
-    // Bandera (texto alt de la imagen)
+    // Flag (alt text of the image)
     const banderaImgAlt = $('#listaFicha img[alt]').attr('alt')?.trim();
 
-    // Campos adyacentes
+    // Adjacent fields
     const coberturaDesde =
       $('li:contains("Cobertura desde")').next().text().trim() || null;
     const coberturaHasta =
@@ -242,9 +242,9 @@ export class RedCrossFlagProvider implements FlagProvider {
   }
 
   /**
-   * Diagnóstico (no cacheado, no lanza): hace UNA petición a cruzroja.es y
-   * devuelve el estado HTTP/tiempo/error reales. Sirve para ver desde el servidor
-   * (Render) por qué falla en producción (403/bloqueo vs 503 vs timeout vs 200).
+   * Diagnostic (not cached, does not throw): makes ONE request to cruzroja.es and
+   * returns the real HTTP status/time/error. Useful to see from the server
+   * (Render) why it fails in production (403/block vs 503 vs timeout vs 200).
    */
   async probe(redCrossId: number): Promise<{
     httpStatus: number | null;

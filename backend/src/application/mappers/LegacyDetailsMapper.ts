@@ -24,19 +24,19 @@ export type ClimaDTO = {
 };
 
 /**
- * Observación en tiempo real ("ahora") para HOY. Separada de `clima`/`prediccionCompleta`
- * (que son PREVISIÓN AEMET): este bloque refleja el estado real actual del cielo,
- * temperatura y precipitación, con prioridad sobre la previsión en la tarjeta resumen.
+ * Real-time observation ("now") for TODAY. Separate from `clima`/`prediccionCompleta`
+ * (which are AEMET FORECAST): this block reflects the actual current state of the sky,
+ * temperature and precipitation, taking priority over the forecast in the summary card.
  */
 /**
- * Señal agregada "¿está lloviendo ahora?" (multi-fuente: OpenWeather,
- * pluviómetro AEMET, Open-Meteo). Campo aditivo dentro de `tiempoActual`.
+ * Aggregated "is it raining now?" signal (multi-source: OpenWeather,
+ * AEMET rain gauge, Open-Meteo). Additive field inside `tiempoActual`.
  */
-/** Lluvia PREVISTA (próximas ~6h Open-Meteo ∪ texto AEMET restante de hoy). */
+/** FORECAST rain (next ~6h from Open-Meteo ∪ remaining AEMET text for today). */
 export type LluviaPrevistaDTO = {
-  /** ISO del primer tramo de 15 min con precipitación; null si la señal es solo textual (AEMET). */
+  /** ISO of the first 15-min slot with precipitation; null if the signal is text-only (AEMET). */
   desdeIso: string | null;
-  /** Máximo mm por tramo previsto. */
+  /** Maximum mm per forecast slot. */
   mm: number | null;
   fuentes: string[];
 };
@@ -44,7 +44,7 @@ export type LluviaPrevistaDTO = {
 export type LluviaDTO = {
   estado: 'lloviendo' | 'sin_lluvia' | 'desconocido';
   mm: number | null;
-  /** true = solo el pluviómetro AEMET disparó la señal (llovió en la última hora). */
+  /** true = only the AEMET rain gauge triggered the signal (it rained in the last hour). */
   ultimaHora: boolean;
   fuentes: string[];
   timestamp: string;
@@ -119,14 +119,14 @@ export class LegacyDetailsMapper {
     return {
       ...this.mapBeach(beach),
       temperaturaActual: weather?.temperatureC ?? null,
-      tiempoActual: null, // poblado por LegacyDetailsAssembler desde OpenWeather current
+      tiempoActual: null, // populated by LegacyDetailsAssembler from OpenWeather current
       clima: weather ? this.mapClima(weather) : null,
       cruzRoja: flag ? this.mapCruzRoja(flag) : null,
       prediccionCompleta: null,
     };
   }
 
-  /** Mapea la señal agregada de lluvia al DTO (valores en español). */
+  /** Maps the aggregated rain signal to the DTO (Spanish values). */
   static mapLluvia(r: RainNowcast): LluviaDTO {
     const estado =
       r.status === 'raining' ? 'lloviendo' : r.status === 'dry' ? 'sin_lluvia' : 'desconocido';
@@ -139,7 +139,7 @@ export class LegacyDetailsMapper {
     };
   }
 
-  /** Mapea la señal de lluvia prevista al DTO. */
+  /** Maps the forecast rain signal to the DTO. */
   static mapLluviaPrevista(s: RainForecastSignal): LluviaPrevistaDTO {
     return {
       desdeIso: s.firstAt != null ? new Date(s.firstAt).toISOString() : null,
@@ -148,7 +148,7 @@ export class LegacyDetailsMapper {
     };
   }
 
-  /** Mapea una observación actual (OpenWeather current) al bloque "tiempo real" de HOY. */
+  /** Maps a current observation (OpenWeather current) to TODAY's "real time" block. */
   static mapTiempoActual(w: Weather): TiempoActualDTO {
     return {
       cielo: w.description ?? null,

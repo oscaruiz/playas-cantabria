@@ -30,10 +30,10 @@ const TIDES_CACHE_TTL = 43200; // 12 hours — tides are astronomical, barely ch
 // ---------------------------------------------------------------------------
 
 /**
- * Trim whitespace y non-breaking spaces (\u00a0). Adem\u00e1s normaliza el centinela
- * "nd" (no disponible) de AEMET a null: AEMET lo emite en cielo/viento/oleaje/etc.
- * cuando a\u00fan no ha publicado la previsi\u00f3n del d\u00eda (t\u00edpico a primera hora). Sin esto,
- * el literal "nd" se colaba a la UI en vez de tratarse como "sin dato".
+ * Trim whitespace and non-breaking spaces (\u00a0). It also normalizes AEMET's
+ * "nd" (no disponible) sentinel to null: AEMET emits it in sky/wind/waves/etc.
+ * when it has not yet published the day's forecast (typical early in the morning). Without this,
+ * the literal "nd" leaked into the UI instead of being treated as "no data".
  */
 export function clean(text: string | undefined | null): string | null {
   if (text == null) return null;
@@ -68,9 +68,9 @@ export class AemetBeachWebScraper {
 
   async getBeachForecast(codigo: string): Promise<BeachFullForecast> {
     const cacheKey = `aemet:web:${codigo}`;
-    // El scraping de aemet.es no gasta cuota de API pero sí CPU (cheerio) y
-    // expone la IP de Render a bloqueos. Es una PREVISIÓN (3 días, mareas,
-    // avisos), así que va con el TTL largo, nunca por debajo del de la web.
+    // Scraping aemet.es spends no API quota but does spend CPU (cheerio) and
+    // exposes Render's IP to blocks. It is a FORECAST (3 days, tides,
+    // warnings), so it goes with the long TTL, never below the website's.
     const ttl = Math.max(CACHE_TTL, Config.forecastTtlSeconds());
     return this.cache.getOrSetStale(cacheKey, ttl, Config.forecastStaleTtlSeconds(), async () => {
       // 1. Try HTML first (has mareas, avisos, UV level)

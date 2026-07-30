@@ -2,9 +2,9 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { ttlFactor, Config } from '../infrastructure/config/config';
 
 /**
- * El factor se calcula en hora de Madrid (Render corre en UTC) y decide cuánta
- * cuota gratuita se gasta al día. Las fechas van en UTC explícito para que el
- * test no dependa de la zona horaria de la máquina.
+ * The factor is computed in Madrid time (Render runs in UTC) and decides how much
+ * free quota is spent per day. The dates are in explicit UTC so that the
+ * test does not depend on the machine's time zone.
  */
 describe('ttlFactor — TTL adaptativo por hora y temporada', () => {
   it('no alarga el TTL en la franja de playa de temporada (12:00 Madrid, julio)', () => {
@@ -32,9 +32,9 @@ describe('ttlFactor — TTL adaptativo por hora y temporada', () => {
 });
 
 /**
- * Las previsiones (AEMET publica la de playa un par de veces al día) no deben
- * refrescarse al ritmo del nowcast de lluvia: era la mayor fuente de llamadas
- * desperdiciadas con CACHE_TTL_SECONDS=300.
+ * Forecasts (AEMET publishes the beach one a couple of times per day) must not
+ * be refreshed at the pace of the rain nowcast: it was the biggest source of
+ * wasted calls with CACHE_TTL_SECONDS=300.
  */
 describe('forecastTtlSeconds — TTL largo para previsiones', () => {
   const original = process.env.CACHE_TTL_SECONDS;

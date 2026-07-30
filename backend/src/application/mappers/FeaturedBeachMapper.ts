@@ -28,7 +28,7 @@ export class FeaturedBeachMapper {
     resumenTodas: FeaturedBeachResult[],
     timestamp: number,
   ): FeaturedBeachesResponseDTO {
-    // "Ahora" único para toda la respuesta: decide qué banderas siguen vigentes.
+    // A single "now" for the whole response: it decides which flags are still current.
     const ahora = new Date(timestamp);
     return {
       timestamp,
@@ -46,11 +46,11 @@ export class FeaturedBeachMapper {
       lat: r.beach.latitude,
       lon: r.beach.longitude,
       temperatura: r.weather?.temperatureC ?? r.enrichment?.temperatureC ?? null,
-      // Preferir la observación real (OpenWeather current) sobre la previsión
-      // AEMET, para que el texto coincida con icono/temperatura (también
-      // observación) y con el `tiempoActual` del detalle. La descripción de la
-      // observación AEMET es sintética (temp/humedad), por eso solo se confía en
-      // OpenWeather; si no, se cae a la previsión.
+      // Prefer the real observation (OpenWeather current) over the AEMET
+      // forecast, so the text matches the icon/temperature (also observation)
+      // and the `tiempoActual` of the detail. The AEMET observation description
+      // is synthetic (temp/humidity), which is why only OpenWeather is trusted;
+      // otherwise it falls back to the forecast.
       descripcionClima:
         (r.weather?.source === 'OpenWeather' ? r.weather.description : null) ??
         r.enrichment?.summary ??
@@ -58,8 +58,9 @@ export class FeaturedBeachMapper {
         null,
       iconoClima: r.weather?.icon ?? null,
       vientoMs: r.weather?.windSpeedMs ?? null,
-      // Solo se muestra la bandera si sigue vigente (dentro de horario/temporada
-      // y con dato de hoy); si no, el color guardado no refleja lo que ondea.
+      // The flag is only shown if it is still current (within schedule/season
+      // and with today's data); otherwise the stored color does not reflect
+      // what is actually flying.
       bandera:
         r.flag?.color && esBanderaVigente(r.flag, ahora)
           ? (FLAG_COLOR_ES[r.flag.color] ?? null)

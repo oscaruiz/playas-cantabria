@@ -1,19 +1,20 @@
 import { FlagStatus, FlagColor, FlagRef, FlagStation } from '../entities/Flag';
 
 /**
- * Regla de agregación de banderas para una playa con VARIOS puestos de socorrismo.
+ * Flag aggregation rule for a beach with SEVERAL lifeguard stations.
  *
- * Determinista y CONSERVADORA: se muestra la bandera MÁS RESTRICTIVA de entre los
- * puestos que tienen color real izado. Severidad (mayor = más restrictiva):
- *   negra (4) > roja (3) > amarilla (2) > verde (1)
+ * Deterministic and CONSERVATIVE: the MOST RESTRICTIVE flag among the stations
+ * with an actual color hoisted is shown. Severity (higher = more restrictive):
+ *   black (4) > red (3) > yellow (2) > green (1)
  *
- * Principios:
- *  - Un puesto SIN color (sin cobertura / "no hay información") NO cuenta como
- *    verde: no puede rebajar ni "aprobar" la bandera. Simplemente no aporta color.
- *  - Los estados individuales se conservan por el llamador si los necesita; esta
- *    función solo decide la bandera agregada a mostrar.
- *  - Si NINGÚN puesto tiene color, se devuelve el primer estado con
- *    cobertura/horario (mejor que nada), o null si no hay ninguno.
+ * Principles:
+ *  - A station WITHOUT a color (no coverage / "no hay información") does NOT
+ *    count as green: it cannot lower nor "approve" the flag. It simply
+ *    contributes no color.
+ *  - Individual states are kept by the caller if it needs them; this function
+ *    only decides the aggregated flag to display.
+ *  - If NO station has a color, the first state with coverage/schedule is
+ *    returned (better than nothing), or null if there is none.
  */
 const SEVERITY: Record<Exclude<FlagColor, 'unknown'>, number> = {
   green: 1,
@@ -32,12 +33,12 @@ export function aggregateFlags(flags: Array<FlagStatus | null>): FlagStatus | nu
   );
 
   if (withColor.length === 0) {
-    // Ningún puesto con bandera izada: devolver el estado más informativo
-    // (con cobertura/horario) para conservar la información de vigilancia.
+    // No station with a hoisted flag: return the most informative state
+    // (with coverage/schedule) to preserve the surveillance information.
     return present.find((f) => f.coverageFrom || f.schedule) ?? present[0];
   }
 
-  // Puesto con la bandera más restrictiva (desempate: el más reciente).
+  // Station with the most restrictive flag (tiebreaker: the most recent one).
   return withColor.reduce((worst, cur) => {
     const dSev = SEVERITY[cur.color] - SEVERITY[worst.color];
     if (dSev > 0) return cur;
@@ -47,10 +48,10 @@ export function aggregateFlags(flags: Array<FlagStatus | null>): FlagStatus | nu
 }
 
 /**
- * Resuelve la bandera de una playa a partir de sus puestos:
- *  - varios puestos con referencia → consulta todos (getFlag, ya seguro) y agrega.
- *  - si no, usa la referencia primaria `flagRef` (camino legado de bandera única).
- * `getFlag` debe ser una función que NO lanza (devuelve null ante fallo).
+ * Resolves a beach's flag from its stations:
+ *  - several stations with a reference → queries all of them (getFlag, already safe) and aggregates.
+ *  - otherwise, uses the primary reference `flagRef` (legacy single-flag path).
+ * `getFlag` must be a function that does NOT throw (returns null on failure).
  */
 export async function resolveFlagForStations(
   primaryRef: FlagRef | undefined,

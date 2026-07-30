@@ -11,20 +11,20 @@ import { InMemoryCache } from '../../infrastructure/cache/InMemoryCache';
 import { Config } from '../../infrastructure/config/config';
 
 // ---------------------------------------------------------------------------
-// Detección por fuente (helpers puros, exportados para test)
+// Per-source detection (pure helpers, exported for test)
 // ---------------------------------------------------------------------------
 
-/** Códigos OpenWeather que indican precipitación activa: 2xx tormenta,
- *  3xx llovizna, 5xx lluvia (6xx nieve no aplica a "lluvia" pero también
- *  es precipitación y arruina el día de playa igual). */
+/** OpenWeather codes indicating active precipitation: 2xx storm,
+ *  3xx drizzle, 5xx rain (6xx snow does not apply to "rain" but is also
+ *  precipitation and ruins the beach day all the same). */
 export function isOpenWeatherPrecipitating(w: Weather): boolean {
   const code = w.conditionCode ?? null;
   if (code != null && code >= 200 && code < 700) return true;
   return (w.precipitationMm ?? 0) > 0;
 }
 
-/** Códigos WMO de precipitación activa: 51-67 llovizna/lluvia,
- *  71-77/85-86 nieve, 80-82 chubascos, 95-99 tormenta. */
+/** WMO codes for active precipitation: 51-67 drizzle/rain,
+ *  71-77/85-86 snow, 80-82 showers, 95-99 storm. */
 export const WMO_PRECIP = (code: number): boolean =>
   (code >= 51 && code <= 67) ||
   (code >= 71 && code <= 77) ||
@@ -38,15 +38,15 @@ export function isOpenMeteoPrecipitating(p: PrecipitationNow): boolean {
   return p.weatherCode != null && WMO_PRECIP(p.weatherCode);
 }
 
-/** El pluviómetro AEMET reporta acumulado de la última hora: señal real
- *  pero retardada (publica con ~1h de desfase). */
+/** The AEMET rain gauge reports the accumulation over the last hour: a real
+ *  but delayed signal (published with ~1h lag). */
 export function isAemetPrecipitating(w: Weather): boolean {
   return (w.precipitationMm ?? 0) > 0;
 }
 
 /**
- * Previsión de precipitación en los tramos minutely_15 de Open-Meteo.
- * Devuelve null si la fuente no trajo tramos (payload antiguo o incompleto).
+ * Precipitation forecast from Open-Meteo's minutely_15 slots.
+ * Returns null if the source brought no slots (old or incomplete payload).
  */
 export function computeUpcoming(p: PrecipitationNow): RainUpcoming | null {
   const slots = p.upcomingSlots;
@@ -74,17 +74,17 @@ export function computeUpcoming(p: PrecipitationNow): RainUpcoming | null {
 }
 
 // ---------------------------------------------------------------------------
-// Caso de uso
+// Use case
 // ---------------------------------------------------------------------------
 
 /**
- * Agrega la señal "¿está lloviendo ahora?" de tres fuentes gratuitas.
- * Regla: `raining` si CUALQUIER fuente detecta precipitación activa;
- * `dry` si al menos una respondió y ninguna detecta; `unknown` solo si
- * fallan todas. Una fuente caída nunca rompe (allSettled).
+ * Aggregates the "is it raining now?" signal from three free sources.
+ * Rule: `raining` if ANY source detects active precipitation;
+ * `dry` if at least one responded and none detects it; `unknown` only if
+ * all of them fail. A source being down never breaks anything (allSettled).
  *
- * Cacheado por coordenadas para que detalle y destacadas compartan
- * resultado (las llamadas subyacentes ya están cacheadas además).
+ * Cached by coordinates so that detail and featured share the result
+ * (the underlying calls are cached as well).
  */
 export class GetRainNowcast {
   constructor(

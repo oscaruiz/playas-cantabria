@@ -1,8 +1,8 @@
 /**
- * Señal agregada de "¿está lloviendo ahora?" combinando varias fuentes
- * gratuitas (OpenWeather condition code, pluviómetro AEMET, Open-Meteo).
- * El dominio usa valores en inglés (patrón FlagColor 'green' → DTO 'Verde');
- * el mapeo a 'lloviendo'/'sin_lluvia'/'desconocido' vive en el DTO.
+ * Aggregated "is it raining now?" signal combining several free sources
+ * (OpenWeather condition code, AEMET rain gauge, Open-Meteo).
+ * The domain uses English values (FlagColor pattern 'green' → DTO 'Verde');
+ * the mapping to 'lloviendo'/'sin_lluvia'/'desconocido' lives in the DTO.
  */
 
 export type RainNowcastStatus = 'raining' | 'dry' | 'unknown';
@@ -11,69 +11,69 @@ export type RainSourceName = 'OpenWeather' | 'AEMET' | 'OpenMeteo';
 
 export interface RainSourceSignal {
   source: RainSourceName;
-  /** Esta fuente detecta precipitación activa. */
+  /** This source detects active precipitation. */
   precipitating: boolean;
   precipitationMm: number | null;
-  /** true = acumulado de la última hora (pluviómetro AEMET): señal más
-   *  débil/retardada que una observación de condición actual. */
+  /** true = accumulated over the last hour (AEMET rain gauge): a weaker /
+   *  more delayed signal than a current-condition observation. */
   lastHour: boolean;
-  /** Unix epoch (ms) del dato de la fuente. */
+  /** Unix epoch (ms) of the source's data. */
   timestamp: number;
 }
 
-/** Un tramo de 15 min de la previsión minutely_15 de Open-Meteo. */
+/** A 15-min slot from Open-Meteo's minutely_15 forecast. */
 export interface PrecipitationSlot {
-  /** Unix epoch (ms) del inicio del tramo (UTC). */
+  /** Unix epoch (ms) of the slot start (UTC). */
   timestamp: number;
   precipitationMm: number | null;
-  /** Código WMO previsto para el tramo. */
+  /** Forecast WMO code for the slot. */
   weatherCode: number | null;
 }
 
-/** Señal de precipitación prevista en las próximas horas (Open-Meteo). */
+/** Signal of precipitation forecast for the next few hours (Open-Meteo). */
 export interface RainUpcoming {
   expected: boolean;
-  /** Unix epoch (ms) del primer tramo con precipitación (null si expected=false). */
+  /** Unix epoch (ms) of the first slot with precipitation (null if expected=false). */
   firstAt: number | null;
-  /** Máximo mm de un tramo con precipitación. */
+  /** Maximum mm of a slot with precipitation. */
   mmMax: number | null;
 }
 
 export interface RainNowcast {
   status: RainNowcastStatus;
-  /** Máximo de los mm reportados por las fuentes (null si ninguna reporta). */
+  /** Maximum of the mm reported by the sources (null if none reports). */
   precipitationMm: number | null;
-  /** true si SOLO el pluviómetro AEMET disparó la señal de lluvia. */
+  /** true if ONLY the AEMET rain gauge triggered the rain signal. */
   lastHourOnly: boolean;
-  /** Solo fuentes que respondieron (las caídas no aparecen). */
+  /** Only sources that responded (the ones that were down do not appear). */
   sources: RainSourceSignal[];
-  /** Unix epoch (ms) de la agregación. */
+  /** Unix epoch (ms) of the aggregation. */
   timestamp: number;
-  /** Previsión de precipitación próximas ~6h (null si Open-Meteo no respondió). */
+  /** Precipitation forecast for the next ~6h (null if Open-Meteo did not respond). */
   upcoming?: RainUpcoming | null;
-  /** UV máximo hoy/mañana de Open-Meteo (null si no respondió). */
+  /** Max UV today/tomorrow from Open-Meteo (null if it did not respond). */
   uvIndexMax?: UvIndexMax | null;
 }
 
-/** Observación cruda de precipitación actual de Open-Meteo. */
+/** Raw current-precipitation observation from Open-Meteo. */
 export interface PrecipitationNow {
   source: 'OpenMeteo';
-  /** Unix epoch (ms) del dato. */
+  /** Unix epoch (ms) of the data. */
   timestamp: number;
-  /** current.precipitation (mm, suma de lluvia/chubascos/nieve). */
+  /** current.precipitation (mm, sum of rain/showers/snow). */
   precipitationMm: number | null;
   rainMm: number | null;
   showersMm: number | null;
-  /** Código WMO de condición actual (51-67, 80-82, 95-99 = precipitación). */
+  /** WMO code of the current condition (51-67, 80-82, 95-99 = precipitation). */
   weatherCode: number | null;
-  /** Tramos de 15 min de las próximas ~6h (minutely_15). Vacío si la API no los trae. */
+  /** 15-min slots for the next ~6h (minutely_15). Empty if the API does not return them. */
   upcomingSlots?: PrecipitationSlot[];
-  /** UV máximo previsto para hoy y mañana (`daily.uv_index_max`), en la MISMA
-   *  petición que la precipitación: sustituye a la llamada muerta de One Call. */
+  /** Forecast max UV for today and tomorrow (`daily.uv_index_max`), in the SAME
+   *  request as the precipitation: replaces the dead One Call request. */
   uvIndexMax?: UvIndexMax | null;
 }
 
-/** UV máximo diario (hoy / mañana). */
+/** Daily max UV (today / tomorrow). */
 export interface UvIndexMax {
   today: number | null;
   tomorrow: number | null;

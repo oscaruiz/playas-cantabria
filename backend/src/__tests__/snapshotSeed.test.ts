@@ -22,7 +22,7 @@ afterEach(() => {
     try {
       fs.rmSync(path.dirname(temporales.pop() as string), { recursive: true, force: true });
     } catch {
-      /* limpieza best-effort */
+      /* best-effort cleanup */
     }
   }
 });
@@ -36,7 +36,7 @@ describe('sembrarDesdeSnapshot', () => {
     const cache = new InMemoryCache();
 
     expect(sembrarDesdeSnapshot(cache, ruta)).toBe(true);
-    // 'stale', no 'fresh': el dato es de hace un rato y no se disfraza de nuevo.
+    // 'stale', not 'fresh': the data is from a while ago and does not masquerade as new.
     expect(cache.state(CacheKeys.featuredBeaches)).toBe('stale');
   });
 
@@ -58,7 +58,7 @@ describe('sembrarDesdeSnapshot', () => {
 
   it('no rompe el arranque si el fichero está corrupto o incompleto', () => {
     const cache = new InMemoryCache();
-    const corrupto = escribirSnapshot({ generatedAt: new Date().toISOString() }); // sin featured
+    const corrupto = escribirSnapshot({ generatedAt: new Date().toISOString() }); // no featured
     expect(sembrarDesdeSnapshot(cache, corrupto)).toBe(false);
   });
 

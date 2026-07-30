@@ -1,7 +1,7 @@
-// Verificación manual del GetRainNowcast (providers en vivo):
+// Manual check of GetRainNowcast (live providers):
 //   npx tsx src/scripts/test-rain-live.ts [lat] [lon]
-// Sin argumentos compara Cóbreces con Mumbai (monzón: llovizna casi segura),
-// para ver el camino positivo sin esperar lluvia en Cantabria.
+// With no arguments it compares Cóbreces with Mumbai (monsoon: drizzle almost
+// guaranteed), to exercise the positive path without waiting for rain in Cantabria.
 import 'dotenv/config';
 import { createContainer } from '../infrastructure/di';
 import type { GetRainNowcast } from '../domain/use-cases/GetRainNowcast';

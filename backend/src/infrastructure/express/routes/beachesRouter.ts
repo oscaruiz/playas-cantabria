@@ -74,7 +74,7 @@ export function createBeachesRouter(deps: BeachesRoutesDeps): Router {
     }
   });
 
-  // GET /api/beaches/:id/details  -> devuelve el JSON LEGADO
+  // GET /api/beaches/:id/details  -> returns the LEGACY JSON
   router.get('/:id/details', async (req: Request, res: Response, next: NextFunction) => {
     const startedAt = performance.now();
     try {

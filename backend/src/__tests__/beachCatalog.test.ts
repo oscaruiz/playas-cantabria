@@ -16,8 +16,8 @@ describe('Catálogo de playas — integridad', () => {
   });
 
   it('no hay ids de Cruz Roja duplicados entre playas (el 373 pre-existente ya está corregido)', () => {
-    // El id 373 (LA CONCHA I SUANCES) estaba mal asignado a Mogro-Usil; ya se
-    // corrigió a MOGRO=376. No debe quedar ningún id compartido entre playas.
+    // The id 373 (LA CONCHA I SUANCES) was wrongly assigned to Mogro-Usil; it has
+    // already been corrected to MOGRO=376. No id must remain shared between beaches.
     const { warnings } = validateBeachCatalog(backend, activeRegion.catalogRules);
     expect(warnings).toEqual([]);
   });
@@ -36,8 +36,8 @@ describe('Catálogo de playas — integridad', () => {
 });
 
 describe('Catálogo de playas — altas nuevas (nombres + ids explícitos)', () => {
-  // Comprobación explícita: no basta con el total; se exige que cada alta exista
-  // con su nombre, municipio e id interno (codigo) concretos.
+  // Explicit check: the total is not enough; each addition is required to exist
+  // with its specific name, municipality and internal id (codigo).
   const NUEVAS: Array<{ nombre: string; municipio: string; codigo: string }> = [
     { nombre: 'Bikinis', municipio: 'Santander', codigo: '3907590' },
     { nombre: 'El Camello', municipio: 'Santander', codigo: '3907591' },

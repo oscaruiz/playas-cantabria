@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { esBanderaVigente } from '../application/mappers/flagVigencia';
 import { FlagStatus } from '../domain/entities/Flag';
 
-// Verano en Madrid = UTC+2. Todas las fechas dentro de la temporada 12-06..15-09.
+// Summer in Madrid = UTC+2. All dates within the 12-06..15-09 season.
 const base: Omit<FlagStatus, 'timestamp'> = {
   color: 'green',
   message: 'Verde',
@@ -29,9 +29,9 @@ describe('esBanderaVigente', () => {
   });
 
   it('vigente: dato de ayer tarde visto hoy a mediodía (≤24h, franja mañanera)', () => {
-    // Regresión: el cron capturó ayer 18:35 Madrid (16:35Z); hoy a las 11:45
-    // Madrid (09:45Z) es lo más fresco disponible → debe mostrarse.
-    const ahora = new Date('2026-07-10T09:45:00Z'); // 11:45 Madrid, dentro de horario
+    // Regression: the cron captured yesterday 18:35 Madrid (16:35Z); today at 11:45
+    // Madrid (09:45Z) it is the freshest available → it must be shown.
+    const ahora = new Date('2026-07-10T09:45:00Z'); // 11:45 Madrid, within schedule
     expect(esBanderaVigente(flag('2026-07-09T16:35:00Z'), ahora)).toBe(true);
   });
 
@@ -41,7 +41,7 @@ describe('esBanderaVigente', () => {
   });
 
   it('no vigente: fuera de temporada', () => {
-    const ahora = new Date('2026-09-20T13:00:00Z'); // 15:00 Madrid, tras coverageTo
+    const ahora = new Date('2026-09-20T13:00:00Z'); // 15:00 Madrid, after coverageTo
     expect(esBanderaVigente(flag('2026-09-20T09:00:00Z'), ahora)).toBe(false);
   });
 

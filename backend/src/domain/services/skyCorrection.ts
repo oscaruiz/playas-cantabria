@@ -2,22 +2,23 @@ import { Weather } from '../entities/Weather';
 import { SunshineObservation } from '../entities/Sunshine';
 
 /**
- * Corrige el cielo del modelo cuando la insolación OBSERVADA lo desmiente.
+ * Corrects the model's sky when the OBSERVED sunshine contradicts it.
  *
- * El caso que lo motiva: el 29-jul, con toda la costa cubierta, OpenWeather
- * devolvía `id 800` y `clouds.all: 0` para las 46 playas y la app pintaba
- * "Sol, 26°" y ☀️. No fallaba el mapeo: fallaba la fuente. Y no valía cruzarla
- * con otro modelo, porque Open-Meteo, met.no y la previsión de playas de AEMET
- * comparten el punto ciego (una capa de estratos marinos cabe dentro de una
- * celda de su rejilla). La insolación de las estaciones es la única señal que
- * no viene de un modelo: ese día marcó 0 minutos de sol de 05:00 a 08:00 UTC.
+ * The motivating case: on 29-jul, with the whole coast overcast, OpenWeather
+ * returned `id 800` and `clouds.all: 0` for the 46 beaches and the app showed
+ * "Sol, 26°" and ☀️. The mapping wasn't failing: the source was. And
+ * cross-checking against another model was no use, because Open-Meteo, met.no
+ * and AEMET's beach forecast share the blind spot (a marine stratus layer fits
+ * inside a cell of their grid). Station sunshine is the only signal that does
+ * not come from a model: that day it recorded 0 minutes of sun from 05:00 to
+ * 08:00 UTC.
  *
- * Módulo PURO a propósito: sin HTTP, sin caché, sin config y sin reloj propio.
- * Todo lo que decide entra por parámetro, así que las guardas se pueden probar
- * exhaustivamente sin levantar nada. Mismo patrón que `flagAggregation.ts`.
+ * PURE module on purpose: no HTTP, no cache, no config and no clock of its own.
+ * Everything it decides on comes in as a parameter, so the guards can be tested
+ * exhaustively without spinning anything up. Same pattern as `flagAggregation.ts`.
  */
 
-/** Cielo al que se puede degradar, con su icono en la escala de OpenWeather. */
+/** Sky level it can be downgraded to, with its icon on the OpenWeather scale. */
 const NIVELES = {
   dispersas: { descripcion: 'nubes dispersas', icono: '03d', severidad: 2 },
   muyNuboso: { descripcion: 'muy nuboso', icono: '04d', severidad: 3 },
@@ -26,32 +27,32 @@ const NIVELES = {
 export type NivelCorregido = keyof typeof NIVELES;
 
 /**
- * Severidad del cielo que dice el modelo, en la escala de iconos de OpenWeather.
- * Solo se mapean los cielos "sin fenómeno": lluvia, tormenta, nieve y niebla se
- * quedan fuera a propósito, y al no estar en la tabla nunca se corrigen (ver
- * guarda `modelo-ya-nublado`). Un icono de lluvia debe mandar siempre.
+ * Severity of the sky the model reports, on the OpenWeather icon scale.
+ * Only "no-phenomenon" skies are mapped: rain, storm, snow and fog are left
+ * out on purpose, and since they are not in the table they are never corrected
+ * (see the `modelo-ya-nublado` guard). A rain icon must always win.
  */
 const SEVERIDAD_MODELO: Record<string, number> = {
-  '01d': 0, '01n': 0, // despejado
-  '02d': 1, '02n': 1, // algo de nubes
-  '03d': 2, '03n': 2, // nubes dispersas
-  '04d': 3, '04n': 3, // cubierto
+  '01d': 0, '01n': 0, // clear
+  '02d': 1, '02n': 1, // a few clouds
+  '03d': 2, '03n': 2, // scattered clouds
+  '04d': 3, '04n': 3, // overcast
 };
 
-/** Más allá de esto la estación ya no dice nada útil sobre esa playa. */
+/** Beyond this the station no longer says anything useful about that beach. */
 const MAX_KM = 40;
-/** Por debajo de esto basta una estación; por encima hacen falta dos. */
+/** Below this one station is enough; above it two are required. */
 const KM_SIN_CORROBORAR = 30;
 /**
- * La observación de AEMET es horaria, pero `getOrSetStale` puede servir el
- * payload hasta 3 h (TTL ×6) si AEMET se cae. Sin esta guarda podríamos marcar
- * "nublado" con una observación de hace tres horas.
+ * The AEMET observation is hourly, but `getOrSetStale` can serve the payload
+ * for up to 3 h (TTL ×6) if AEMET goes down. Without this guard we could mark
+ * "nublado" based on a three-hour-old observation.
  */
 const FRESCURA_MAX_MS = 2 * 60 * 60 * 1000;
 
-/** Por debajo de 1/4 de hora de sol el cielo está tapado de verdad. */
+/** Below 1/4 of an hour of sun the sky is genuinely covered. */
 const UMBRAL_MUY_NUBOSO = 0.25;
-/** Por encima de 3/4 la mañana es soleada y no hay nada que corregir. */
+/** Above 3/4 the morning is sunny and there is nothing to correct. */
 const UMBRAL_SIN_TOCAR = 0.75;
 
 export type MotivoDecision =
@@ -67,10 +68,10 @@ export type MotivoDecision =
   | 'sol-suficiente';
 
 export interface ContextoCorreccion {
-  /** Solo se corrige de día/tarde. Ver nota en la guarda correspondiente. */
+  /** Only corrected during day/afternoon. See note in the corresponding guard. */
   enFranjaDePlaya: boolean;
   ahora: number;
-  /** Señal de lluvia externa (nowcast); la del propio `weather` ya se mira. */
+  /** External rain signal (nowcast); the one in `weather` itself is already checked. */
   lloviendo?: boolean;
 }
 
@@ -78,13 +79,13 @@ export interface DecisionCielo {
   aplicar: boolean;
   motivo: MotivoDecision;
   nivel?: NivelCorregido;
-  /** Datos para el diagnóstico en modo sombra. */
+  /** Data for shadow-mode diagnostics. */
   idema?: string;
   distanciaKm?: number;
   fraccion?: number;
 }
 
-/** Nivel al que degradaría esa fracción de sol, o null si no hay que tocar nada. */
+/** Level that sun fraction would downgrade to, or null if nothing needs touching. */
 function nivelPara(fraccion: number): NivelCorregido | null {
   if (fraccion < UMBRAL_MUY_NUBOSO) return 'muyNuboso';
   if (fraccion <= UMBRAL_SIN_TOCAR) return 'dispersas';
@@ -92,15 +93,16 @@ function nivelPara(fraccion: number): NivelCorregido | null {
 }
 
 function modeloDiceLluvia(weather: Weather): boolean {
-  // 2xx tormenta, 3xx llovizna, 5xx lluvia, 6xx nieve en la escala de OpenWeather.
+  // 2xx storm, 3xx drizzle, 5xx rain, 6xx snow on the OpenWeather scale.
   const c = weather.conditionCode;
   if (typeof c === 'number' && c >= 200 && c < 700) return true;
   return typeof weather.precipitationMm === 'number' && weather.precipitationMm > 0;
 }
 
 /**
- * Decide SIN aplicar nada. Separado de `aplicarCorreccionCielo` para que el modo
- * sombra pueda registrar exactamente lo que habría hecho sin tocar la respuesta.
+ * Decides WITHOUT applying anything. Separated from `aplicarCorreccionCielo` so
+ * that shadow mode can record exactly what it would have done without touching
+ * the response.
  */
 export function decidirCorreccionCielo(
   weather: Weather | null,
@@ -109,14 +111,14 @@ export function decidirCorreccionCielo(
 ): DecisionCielo {
   if (!weather) return { aplicar: false, motivo: 'sin-weather' };
 
-  // 1. Solo día y tarde. Además de que es lo único que le importa a la app,
-  // esto elimina el peor caso límite: en la hora que contiene el amanecer la
-  // insolación sale baja aunque el cielo esté impecable, simplemente porque el
-  // sol estuvo bajo el horizonte parte de esa hora. Empezando a las 11:00 de
-  // Madrid eso no puede pasar.
+  // 1. Day and afternoon only. Besides being the only thing the app cares
+  // about, this removes the worst edge case: in the hour containing sunrise the
+  // sunshine reading comes out low even if the sky is spotless, simply because
+  // the sun was below the horizon for part of that hour. Starting at 11:00
+  // Madrid time that cannot happen.
   if (!ctx.enFranjaDePlaya) return { aplicar: false, motivo: 'fuera-de-franja' };
 
-  // Vienen ordenadas por distancia: la primera decide, el resto son testigos.
+  // They arrive sorted by distance: the first one decides, the rest are witnesses.
   const observacion = observaciones[0];
   if (!observacion) return { aplicar: false, motivo: 'sin-observacion' };
 
@@ -126,36 +128,36 @@ export function decidirCorreccionCielo(
     fraccion: observacion.fraccion,
   };
 
-  // 2. Frescura (ver FRESCURA_MAX_MS).
+  // 2. Freshness (see FRESCURA_MAX_MS).
   if (ctx.ahora - observacion.observadoEn > FRESCURA_MAX_MS) {
     return { aplicar: false, motivo: 'observacion-vieja', ...base };
   }
 
-  // 3. Lluvia: manda el icono de lluvia, no lo pisamos con uno de nubes.
+  // 3. Rain: the rain icon wins, we do not overwrite it with a clouds one.
   if (ctx.lloviendo || modeloDiceLluvia(weather)) {
     return { aplicar: false, motivo: 'lloviendo', ...base };
   }
 
-  // 4. Distancia.
+  // 4. Distance.
   if (observacion.distanciaKm > MAX_KM) {
     return { aplicar: false, motivo: 'estacion-lejos', ...base };
   }
 
-  // 5. Sol suficiente: no corregimos, y tampoco "mejoramos" un cielo nublado.
-  // El fallo documentado siempre va en un sentido —los modelos se comen el
-  // estrato, no se inventan nubes— así que la corrección es de una dirección.
+  // 5. Enough sun: we do not correct, and we do not "improve" a cloudy sky
+  // either. The documented failure always goes one way —the models swallow the
+  // stratus, they do not invent clouds— so the correction is one-directional.
   const nivel = nivelPara(observacion.fraccion);
   if (!nivel) return { aplicar: false, motivo: 'sol-suficiente', ...base };
 
-  // 6. Entre 30 y 40 km hace falta un segundo testigo. Una capa de estratos es
-  // una banda larga y coherente a lo largo de la costa, así que si de verdad
-  // está tapado habrá más de una estación viéndolo; exigir dos evita corregir
-  // media provincia por un sensor sucio o averiado.
+  // 6. Between 30 and 40 km a second witness is required. A stratus layer is a
+  // long, coherent band along the coast, so if it really is covered more than
+  // one station will be seeing it; requiring two avoids correcting half the
+  // province because of a dirty or broken sensor.
   if (observacion.distanciaKm > KM_SIN_CORROBORAR) {
-    // El testigo tiene que ver AL MENOS tanta nube como la estación principal.
-    // Con un simple "que no esté despejado" no bastaba: una estación con 44 de
-    // los 60 minutos de sol habría validado un "muy nuboso", que es justo lo
-    // contrario de lo que confirma.
+    // The witness has to see AT LEAST as much cloud as the main station.
+    // A simple "not clear" was not enough: a station with 44 of the 60 minutes
+    // of sun would have validated a "muy nuboso", which is exactly the opposite
+    // of what it confirms.
     const corrobora = observaciones.some((o) => {
       if (o.idema === observacion.idema) return false;
       if (ctx.ahora - o.observadoEn > FRESCURA_MAX_MS) return false;
@@ -165,8 +167,8 @@ export function decidirCorreccionCielo(
     if (!corrobora) return { aplicar: false, motivo: 'sin-segundo-testigo', ...base };
   }
 
-  // 7. Solo a peor. Si el modelo ya dice algo igual o más nublado, o si dice un
-  // fenómeno que no está en la tabla (lluvia, niebla, nieve), no se toca.
+  // 7. Downgrade only. If the model already reports something equally or more
+  // cloudy, or a phenomenon not in the table (rain, fog, snow), leave it alone.
   const severidadModelo = weather.icon ? SEVERIDAD_MODELO[weather.icon] : undefined;
   if (severidadModelo === undefined || severidadModelo >= NIVELES[nivel].severidad) {
     return { aplicar: false, motivo: 'modelo-ya-nublado', ...base };
@@ -176,12 +178,12 @@ export function decidirCorreccionCielo(
 }
 
 /**
- * Devuelve una copia del `Weather` con el cielo degradado. Se conservan
- * temperatura, viento, humedad y presión: solo se discute el cielo.
+ * Returns a copy of the `Weather` with the sky downgraded. Temperature, wind,
+ * humidity and pressure are preserved: only the sky is disputed.
  *
- * `source` se mantiene INTACTO a propósito: `buildRankingReason` en BeachScorer
- * solo usa la descripción si `source === 'OpenWeather'`, así que cambiarlo aquí
- * dejaría la razón del ranking sin la parte del cielo.
+ * `source` is kept INTACT on purpose: `buildRankingReason` in BeachScorer only
+ * uses the description if `source === 'OpenWeather'`, so changing it here would
+ * leave the ranking reason without the sky part.
  */
 export function aplicarCorreccionCielo(weather: Weather, decision: DecisionCielo): Weather {
   if (!decision.aplicar || !decision.nivel) return weather;

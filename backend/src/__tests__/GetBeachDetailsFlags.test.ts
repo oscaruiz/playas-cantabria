@@ -47,8 +47,8 @@ describe('GetBeachDetails — banderas multi-puesto', () => {
     const uc = new GetBeachDetails(repoWith(beach), weatherStub, weatherStub, flags, null);
     const details = await uc.execute(beach.id);
 
-    expect(spy).toHaveBeenCalledTimes(3); // consulta TODOS los puestos
-    expect(details.flag?.color).toBe('red'); // la más restrictiva
+    expect(spy).toHaveBeenCalledTimes(3); // queries ALL the stations
+    expect(details.flag?.color).toBe('red'); // the most restrictive one
   });
 
   it('ignora puestos sin referencia (pendientes) y no rompe', async () => {

@@ -11,9 +11,9 @@ import type { RainNowcast } from '../domain/entities/RainNowcast';
 import type { BeachFullForecast } from '../domain/entities/BeachForecast';
 
 // ---------------------------------------------------------------------------
-// Fixtures — payload tipo Cóbreces: la MAÑANA y la TARDE de HOY discrepan.
-// Es justo el caso del bug: el héroe "Hoy" antes titulaba con la TARDE
-// ("Despejado") mientras el bloque MAÑANA mostraba "Muy nuboso".
+// Fixtures — Cóbreces-like payload: TODAY's MORNING and AFTERNOON disagree.
+// It is exactly the bug case: the "Hoy" hero used to headline with the AFTERNOON
+// ("Despejado") while the MORNING block showed "Muy nuboso".
 // ---------------------------------------------------------------------------
 
 const COBRECES: Beach = {
@@ -100,7 +100,7 @@ function buildAssembler(opts: {
   const openWeather = {
     getCurrentByCoords: async () =>
       typeof opts.owCurrent === 'function' ? opts.owCurrent() : opts.owCurrent,
-    // Las enriquecimientos posteriores no son relevantes para este test: fallan suave.
+    // The later enrichments are not relevant for this test: they fail softly.
     getTomorrowByCoords: async () => {
       throw new Error('skip');
     },
@@ -136,8 +136,8 @@ describe('LegacyDetailsAssembler — coherencia resumen vs desglose y "ahora" re
     const hoy = result.prediccionCompleta?.dias[0];
     expect(hoy?.manana.cielo).toBe('Muy nuboso');
     expect(hoy?.tarde.cielo).toBe('Despejado');
-    // El héroe antiguo titulaba con `tarde.cielo` → "Despejado", contradiciendo
-    // al bloque MAÑANA ("Muy nuboso"). Ambos salen del MISMO objeto/petición.
+    // The old hero headlined with `tarde.cielo` → "Despejado", contradicting
+    // the MORNING block ("Muy nuboso"). Both come from the SAME object/request.
     expect(hoy?.manana.cielo).not.toBe(hoy?.tarde.cielo);
   });
 
@@ -154,9 +154,9 @@ describe('LegacyDetailsAssembler — coherencia resumen vs desglose y "ahora" re
     expect(result.tiempoActual?.cielo).toBe('lluvia ligera');
     expect(result.tiempoActual?.precipitacionMm).toBe(0.5);
     expect(result.tiempoActual?.fuente).toBe('OpenWeather');
-    expect(result.tiempoActual?.icono).toBe(200); // '10d' → lluvia
+    expect(result.tiempoActual?.icono).toBe(200); // '10d' → rain
 
-    // La previsión AEMET (desglose) permanece intacta como tramos futuros.
+    // The AEMET forecast (breakdown) remains intact as future segments.
     expect(result.prediccionCompleta?.dias[0].tarde.cielo).toBe('Despejado');
   });
 
@@ -184,7 +184,7 @@ describe('LegacyDetailsAssembler — coherencia resumen vs desglose y "ahora" re
     expect(result.tiempoActual?.lluvia?.mm).toBe(0.8);
     expect(result.tiempoActual?.lluvia?.ultimaHora).toBe(false);
     expect(result.tiempoActual?.lluvia?.fuentes).toEqual(['OpenMeteo', 'OpenWeather']);
-    // Campos preexistentes intactos (contrato aditivo).
+    // Pre-existing fields intact (additive contract).
     expect(result.tiempoActual?.cielo).toBe('lluvia ligera');
     expect(result.tiempoActual?.precipitacionMm).toBe(0.5);
     expect(result.tiempoActual?.fuente).toBe('OpenWeather');
@@ -195,7 +195,7 @@ describe('LegacyDetailsAssembler — coherencia resumen vs desglose y "ahora" re
       details: { beach: COBRECES, weather: makeOwCurrent(), flag: null, tides: null },
       forecast: makeForecast(),
       owCurrent: makeOwCurrent(),
-      // sin opts.rain → el fake lanza, como un provider caído
+      // no opts.rain → the fake throws, like a downed provider
     });
 
     const result = await assembler.assemble(COBRECES.id);
@@ -219,7 +219,7 @@ describe('LegacyDetailsAssembler — coherencia resumen vs desglose y "ahora" re
     };
     const assembler = buildAssembler({
       details: { beach: COBRECES, weather: makeOwCurrent(), flag: null, tides: null },
-      forecast: makeForecast(), // sin texto de lluvia: solo dispara Open-Meteo
+      forecast: makeForecast(), // no rain text: only Open-Meteo triggers
       owCurrent: makeOwCurrent(),
       rain,
     });
@@ -241,7 +241,7 @@ describe('LegacyDetailsAssembler — coherencia resumen vs desglose y "ahora" re
       details: { beach: COBRECES, weather: makeOwCurrent(), flag: null, tides: null },
       forecast,
       owCurrent: makeOwCurrent(),
-      // sin opts.rain → el nowcast lanza; solo queda el texto AEMET
+      // no opts.rain → the nowcast throws; only the AEMET text remains
     });
 
     const result = await assembler.assemble(COBRECES.id);
@@ -284,9 +284,9 @@ describe('LegacyDetailsAssembler — coherencia resumen vs desglose y "ahora" re
       execute: async () => ({ beach: beachSinAemet, weather: makeOwCurrent(), flag: null, tides: null }),
     } as unknown as GetBeachDetails;
     const aemetScraper = {
-      // getBeachForecast es la petición de red que NO debe dispararse en sinAemet.
+      // getBeachForecast is the network request that must NOT fire for sinAemet.
       getBeachForecast: async () => { scraperCalls++; throw new Error('no debería llamarse'); },
-      // getCachedTides es una lectura de caché en memoria (sin red) → permitida.
+      // getCachedTides is an in-memory cache read (no network) → allowed.
       getCachedTides: () => null,
     } as unknown as AemetBeachWebScraper;
     const aemetPlayas = {
@@ -305,7 +305,7 @@ describe('LegacyDetailsAssembler — coherencia resumen vs desglose y "ahora" re
 
     expect(scraperCalls).toBe(0);
     expect(playasCalls).toBe(0);
-    // Sigue funcionando: clima por OpenWeather, sin previsión AEMET falseada.
+    // Still works: weather via OpenWeather, no faked AEMET forecast.
     expect(result.clima).not.toBeNull();
     expect(result.prediccionCompleta).toBeNull();
   });
@@ -326,7 +326,7 @@ describe('LegacyDetailsAssembler — coherencia resumen vs desglose y "ahora" re
   });
 
   it('rellena cielo/viento/oleaje vacíos de AEMET ("nd") con OpenWeather, sin pisar lo que AEMET sí trae', async () => {
-    // AEMET hoy: cielo/viento/oleaje vacíos (nd→null) pero con temperatura real.
+    // AEMET today: sky/wind/waves empty (nd→null) but with real temperature.
     const forecast: BeachFullForecast = {
       source: 'AEMET_XML',
       elaboration: '2026-07-24T06:00:00',
@@ -334,8 +334,8 @@ describe('LegacyDetailsAssembler — coherencia resumen vs desglose y "ahora" re
       days: [
         {
           date: 'viernes 24',
-          morning: half(), // todo null (nd)
-          afternoon: half({ skyDescription: 'Despejado' }), // AEMET SÍ trae la tarde
+          morning: half(), // all null (nd)
+          afternoon: half({ skyDescription: 'Despejado' }), // AEMET DOES carry the afternoon
           maxTemperatureC: 24,
           thermalSensation: null,
           waterTemperatureC: 24,
@@ -360,13 +360,13 @@ describe('LegacyDetailsAssembler — coherencia resumen vs desglose y "ahora" re
     });
 
     const dia = (await assembler.assemble(COBRECES.id)).prediccionCompleta!.dias[0];
-    // Mañana estaba vacía → se rellena con OpenWeather (capitalizado).
+    // Morning was empty → it is filled in with OpenWeather (capitalized).
     expect(dia.manana.cielo).toBe('Nubes dispersas');
     expect(dia.manana.viento).toBe('moderado'); // guessWind(8 m/s)
     expect(dia.manana.oleaje).toBe('agitado'); // wavesFromWind(8 m/s = 28.8 km/h)
-    // Tarde la trae AEMET → NO se pisa.
+    // Afternoon comes from AEMET → NOT overwritten.
     expect(dia.tarde.cielo).toBe('Despejado');
-    // Datos numéricos de AEMET intactos.
+    // AEMET numeric data intact.
     expect(dia.temperaturaMaxima).toBe(24);
     expect(dia.temperaturaAgua).toBe(24);
     expect(dia.indiceUV).toBe(7);

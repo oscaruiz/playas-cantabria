@@ -35,7 +35,7 @@ export class LegacyDetailsAssembler {
     private readonly openWeather: OpenWeatherWeatherProvider,
     private readonly rainNowcast: GetRainNowcast,
     private readonly cache?: InMemoryCache,
-    /** Opcional: sin él el corrector de cielo no corre y el detalle no cambia. */
+    /** Optional: without it the sky corrector does not run and the detail does not change. */
     private readonly sunshine?: SunshineProvider,
   ) {}
 
@@ -88,9 +88,9 @@ export class LegacyDetailsAssembler {
   }
 
   /**
-   * Rellena los campos de un medio día (mañana/tarde) que AEMET dejó vacíos, con la
-   * previsión de OpenWeather. Nunca pisa un valor de AEMET existente. El oleaje se
-   * estima del viento (OpenWeather no da oleaje), coherente con la tarjeta resumen.
+   * Fills in the fields of a half-day (morning/afternoon) that AEMET left empty,
+   * using the OpenWeather forecast. Never overwrites an existing AEMET value. Waves
+   * are estimated from wind (OpenWeather has no waves), consistent with the summary card.
    */
   private rellenarMedioDia(
     half: { cielo: string | null; iconoCielo: number | null; viento: string | null; oleaje: string | null },
@@ -259,15 +259,15 @@ export class LegacyDetailsAssembler {
             .catch(() => [] as SunshineObservation[])
         : Promise.resolve([] as SunshineObservation[]);
 
-    // Step 1.5: "Ahora" en tiempo real para HOY (observación, no previsión).
-    // El cielo debe venir de OpenWeather current (real); `details.weather` puede
-    // ser AEMET-observación, cuya descripción de cielo es sintética (temp/humedad).
-    // La llamada está cacheada (misma clave que el hedge) → sin coste extra.
+    // Step 1.5: Real-time "now" for TODAY (observation, not forecast).
+    // The sky must come from OpenWeather current (real); `details.weather` may
+    // be an AEMET observation, whose sky description is synthetic (temp/humidity).
+    // The call is cached (same key as the hedge) → no extra cost.
     try {
       const now = await currentPromise;
       if (!now) throw new Error('Current weather unavailable');
-      // Corrección de cielo por insolación observada. Va ANTES del mapper para
-      // que el titular del detalle y el del listado salgan del mismo criterio.
+      // Sky correction from observed sunshine. Goes BEFORE the mapper so the
+      // detail headline and the listing headline come from the same criterion.
       const [sol, lluvia] = await Promise.all([solPromise, rainPromise]);
       const conCieloReal =
         corregirCieloObservado(details.beach.name, now, sol, lluvia?.status === 'raining') ?? now;
@@ -279,9 +279,9 @@ export class LegacyDetailsAssembler {
           : null;
     }
 
-    // Step 1.6: Señal agregada de lluvia (multi-fuente: OpenWeather + AEMET
-    // pluviómetro + Open-Meteo). Los modelos de un solo proveedor pierden
-    // llovizna costera hiperlocal; se cruza con más fuentes. Campo aditivo.
+    // Step 1.6: Aggregated rain signal (multi-source: OpenWeather + AEMET
+    // rain gauge + Open-Meteo). Single-provider models miss hyperlocal
+    // coastal drizzle; it is cross-checked with more sources. Additive field.
     let rainSignal: RainNowcast | null = null;
     try {
       rainSignal = await rainPromise;
@@ -292,25 +292,25 @@ export class LegacyDetailsAssembler {
         };
       }
     } catch {
-      // sin señal de lluvia estructurada; el resto del endpoint no se ve afectado
+      // no structured rain signal; the rest of the endpoint is unaffected
     }
 
     // Step 2: Try scraper (Layer 1 — richest source).
-    // Las playas sin ficha AEMET (código sintético) no deben provocar llamadas
-    // AEMET que siempre darían 404: se omite el scraper y la API de playas.
+    // Beaches without an AEMET page (synthetic code) must not trigger AEMET
+    // calls that would always 404: the scraper and the beaches API are skipped.
     const forecast: BeachFullForecast | null = await forecastPromise;
 
-    // Step 2.5: Lluvia PREVISTA — previsión numérica Open-Meteo (próximas 6h,
-    // viene en el nowcast del Step 1.6) ∪ texto AEMET del tramo restante de
-    // hoy (necesita el forecast del Step 2). Campo aditivo dentro de lluvia.
+    // Step 2.5: FORECAST rain — Open-Meteo numeric forecast (next 6h, comes
+    // in the Step 1.6 nowcast) ∪ AEMET text for the remaining part of today
+    // (needs the Step 2 forecast). Additive field inside `lluvia`.
     try {
       const señal = buildRainForecastSignal(
         rainSignal,
         textosRestantesHoy(forecast?.days[0] ?? null),
       );
       if (señal?.expected && base.tiempoActual) {
-        // Si el nowcast cayó pero el texto AEMET avisa, sintetizar el
-        // contenedor `lluvia` para poder colgar la previsión.
+        // If the nowcast went down but the AEMET text warns, synthesize the
+        // `lluvia` container so the forecast can be attached.
         const lluviaBase: LluviaDTO = base.tiempoActual.lluvia ?? {
           estado: 'desconocido',
           mm: null,
@@ -324,7 +324,7 @@ export class LegacyDetailsAssembler {
         };
       }
     } catch {
-      // aditivo: nunca rompe el endpoint
+      // additive: it never breaks the endpoint
     }
 
     // Step 3: Build clima (backward-compatible)
@@ -332,7 +332,7 @@ export class LegacyDetailsAssembler {
       // Layer 1: scraper succeeded
       base.clima = this.buildClimaFromForecast(forecast);
     } else {
-      // Layer 2: AEMET Playas API (se omite en playas sin ficha AEMET)
+      // Layer 2: AEMET Playas API (skipped for beaches without an AEMET page)
       try {
         if (details.beach.aemetCode && !details.beach.sinAemet) {
           const playa = await this.aemetPlayas.getByBeachCode(details.beach.aemetCode);
@@ -389,10 +389,10 @@ export class LegacyDetailsAssembler {
       // forecast failed -> keep current value
     }
 
-    // Step 5: UV. Prioridad: AEMET (ya en clima) → Open-Meteo (viene GRATIS en el
-    // nowcast del Step 1.6, misma petición) → estimación por nubosidad. La antigua
-    // llamada a OpenWeather One Call 2.5 se retiró: el endpoint está muerto y solo
-    // gastaba cuota para acabar siempre aquí abajo.
+    // Step 5: UV. Priority: AEMET (already in clima) → Open-Meteo (comes for FREE
+    // in the Step 1.6 nowcast, same request) → estimate from cloudiness. The old
+    // OpenWeather One Call 2.5 request was removed: the endpoint is dead and only
+    // burned quota to always end up down here anyway.
     if (base.clima) {
       let hoyUv: number | null = base.clima.hoy.uvIndex ?? null;
       let mananaUv: number | null = base.clima.manana ? base.clima.manana.uvIndex ?? null : null;
@@ -450,9 +450,9 @@ export class LegacyDetailsAssembler {
     // Step 8: prediccionCompleta (only when scraper succeeded)
     base.prediccionCompleta = forecast ? this.mapForecastToDTO(forecast) : null;
 
-    // Step 8.5: rellenar cielo/viento/oleaje que AEMET dejó vacíos ("nd") con
-    // OpenWeather (fuente gratuita). Solo se llama si hay huecos → sin coste cuando
-    // AEMET está completa. Oleaje se estima del viento (igual que la tarjeta resumen).
+    // Step 8.5: fill in sky/wind/waves that AEMET left empty ("nd") with
+    // OpenWeather (free source). Only called if there are gaps → no cost when
+    // AEMET is complete. Waves are estimated from wind (same as the summary card).
     if (base.prediccionCompleta && base.prediccionCompleta.dias.length > 0) {
       const hayHuecos = base.prediccionCompleta.dias.some((d) =>
         [d.manana, d.tarde].some((h) => h.cielo == null || h.viento == null || h.oleaje == null),
@@ -473,7 +473,7 @@ export class LegacyDetailsAssembler {
             })),
           };
         } catch {
-          // OpenWeather no disponible: la previsión se queda como está (con huecos)
+          // OpenWeather unavailable: the forecast stays as is (with gaps)
         }
       }
     }
@@ -496,11 +496,12 @@ export class LegacyDetailsAssembler {
       }
     }
 
-    // Un prediccionCompleta sin días ni mareas no aporta nada y además falsea la
-    // fuente meteorológica en la UI: en playas sin ficha AEMET (p. ej. código
-    // sintético), el fallback HTML del scraper devuelve un objeto vacío con
-    // fuente 'AEMET_HTML'. Se anula para que el detalle refleje la fuente real
-    // (`clima`, normalmente OpenWeather) en vez de etiquetar AEMET falsamente.
+    // A `prediccionCompleta` with no days and no tides adds nothing and also
+    // misrepresents the weather source in the UI: on beaches without an AEMET
+    // page (e.g. synthetic code), the scraper's HTML fallback returns an empty
+    // object with source 'AEMET_HTML'. It is nulled out so the detail reflects
+    // the real source (`clima`, normally OpenWeather) instead of falsely
+    // labeling AEMET.
     if (
       base.prediccionCompleta &&
       base.prediccionCompleta.dias.length === 0 &&

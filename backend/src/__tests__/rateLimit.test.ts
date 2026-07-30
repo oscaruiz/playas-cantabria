@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { rateLimit } from '../infrastructure/express/middlewares/rateLimit';
 
-/** Doble mínimo de req/res para ejercitar el middleware sin levantar Express. */
+/** Minimal req/res double to exercise the middleware without spinning up Express. */
 function ejecutar(middleware: ReturnType<typeof rateLimit>, ip: string) {
   const cabeceras: Record<string, string> = {};
   let estado: number | null = null;
@@ -47,7 +47,7 @@ describe('rateLimit', () => {
     ejecutar(mw, '1.2.3.4');
     expect(ejecutar(mw, '1.2.3.4').estado).toBe(429);
 
-    // Otro usuario, cupo intacto.
+    // Another user, quota intact.
     expect(ejecutar(mw, '5.6.7.8').siguiente).toBe(true);
   });
 

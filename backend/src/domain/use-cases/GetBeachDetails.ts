@@ -69,9 +69,10 @@ export class GetBeachDetails {
   }
 
   /**
-   * Bandera de la playa. Si tiene varios puestos (con referencia conocida),
-   * consulta todos en paralelo y agrega con la regla conservadora (la más
-   * restrictiva). Si no, usa la referencia única (camino de las 20 legadas).
+   * Beach flag. If it has several stations (with a known reference), it
+   * queries them all in parallel and aggregates with the conservative rule
+   * (the most restrictive). Otherwise, it uses the single reference (path of
+   * the 20 legacy beaches).
    */
   private getFlagForBeach(beach: Beach): Promise<FlagStatus | null> {
     return resolveFlagForStations(beach.flagRef, beach.flagStations, (ref) =>

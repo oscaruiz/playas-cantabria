@@ -5,15 +5,15 @@ import { enFranjaDePlaya, skyCorrectionMode } from '../../infrastructure/config/
 import { skyCorrectionMetrics } from '../../infrastructure/observability/skyCorrectionMetrics';
 
 /**
- * Aplica (o solo registra) la corrección de cielo por insolación observada.
+ * Applies (or only records) the sky correction from observed sunshine.
  *
- * Vive aquí y no en cada llamante porque el listado y el detalle deben usar
- * EXACTAMENTE el mismo criterio: si divergen, la tarjeta y la cabecera de la
- * misma playa acabarían diciendo cosas distintas. La decisión en sí es pura y
- * está en `domain/services/skyCorrection`; esto solo le pone reloj, modo y
- * contadores.
+ * It lives here and not in each caller because the listing and the detail must
+ * use EXACTLY the same criterion: if they diverge, the card and the header of
+ * the same beach would end up saying different things. The decision itself is
+ * pure and lives in `domain/services/skyCorrection`; this only adds clock, mode
+ * and counters.
  *
- * En modo `shadow` decide y cuenta, pero devuelve el `Weather` sin tocar.
+ * In `shadow` mode it decides and counts, but returns the `Weather` untouched.
  */
 export function corregirCieloObservado(
   playa: string,

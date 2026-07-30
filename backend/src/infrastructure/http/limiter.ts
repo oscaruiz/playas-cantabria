@@ -1,30 +1,30 @@
 /**
- * Límite de concurrencia y enfriamiento por 429, por host de destino.
+ * Concurrency limit and 429 cooldown, per destination host.
  *
- * El techo real de la app no es la CPU sino las cuotas gratuitas: OpenWeather
- * corta a 60 llamadas/minuto. `/api/beaches/featured` ya limita su fan-out a 6
- * playas a la vez, pero `/details` no tenía techo: diez usuarios en diez playas
- * distintas podían disparar decenas de llamadas en segundos y comerse el límite,
- * dejando la app sin datos para todos.
+ * The app's real ceiling is not the CPU but the free quotas: OpenWeather
+ * cuts off at 60 calls/minute. `/api/beaches/featured` already limits its fan-out to 6
+ * beaches at a time, but `/details` had no ceiling: ten users on ten different
+ * beaches could fire dozens of calls in seconds and eat up the limit,
+ * leaving the app without data for everyone.
  *
- * Encolar no hace daño: con stale-while-revalidate el usuario recibe el valor
- * anterior mientras el refresco espera turno.
+ * Queueing does no harm: with stale-while-revalidate the user receives the
+ * previous value while the refresh waits its turn.
  */
 
 const LIMITES: Record<string, number> = {
   'api.openweathermap.org': 4,
-  // AEMET OpenData limita POR CLAVE, no por IP, y con poca tolerancia a ráfagas:
-  // en el primer arranque en producción, 40 peticiones (20 playas x meta+datos)
-  // se saldaron con 14 correctas y 6 rechazadas con 429, y el enfriamiento cortó
-  // el resto. Serializadas tardan unos segundos más, pero ese fan-out siempre
-  // ocurre en segundo plano (refresco de /featured), así que no lo espera nadie.
+  // AEMET OpenData limits PER KEY, not per IP, and with little tolerance for bursts:
+  // on the first production startup, 40 requests (20 beaches x meta+data)
+  // ended with 14 successful and 6 rejected with 429, and the cooldown cut off
+  // the rest. Serialized they take a few seconds longer, but that fan-out always
+  // happens in the background (/featured refresh), so nobody waits for it.
   'opendata.aemet.es': 1,
   'www.aemet.es': 3,
   'api.open-meteo.com': 4,
   'www.cruzroja.es': 3,
 };
 
-/** Enfriamiento por defecto si el 429 no trae Retry-After. */
+/** Default cooldown if the 429 carries no Retry-After. */
 const ENFRIAMIENTO_POR_DEFECTO_MS = 60_000;
 const ENFRIAMIENTO_MAXIMO_MS = 600_000;
 
@@ -42,7 +42,7 @@ export class HostLimiter {
     return this.limites[host] ?? Number.POSITIVE_INFINITY;
   }
 
-  /** Milisegundos que faltan para poder volver a llamar a este host (0 = ya). */
+  /** Milliseconds left before this host can be called again (0 = now). */
   enfriamientoRestanteMs(host: string): number {
     const hasta = this.enfriadoHasta.get(host);
     if (hasta == null) return 0;
@@ -54,7 +54,7 @@ export class HostLimiter {
     return restante;
   }
 
-  /** Tras un 429: nadie vuelve a llamar a ese host hasta que pase el Retry-After. */
+  /** After a 429: nobody calls that host again until the Retry-After passes. */
   registrar429(host: string, retryAfter: string | number | undefined): void {
     const segundos = typeof retryAfter === 'string' ? Number(retryAfter) : retryAfter;
     const ms =

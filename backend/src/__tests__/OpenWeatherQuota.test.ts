@@ -4,9 +4,9 @@ import { InMemoryCache } from '../infrastructure/cache/InMemoryCache';
 import { http } from '../infrastructure/http/axiosClient';
 
 /**
- * La cuota gratuita de OpenWeather (60 llamadas/min) es el techo real de la app.
- * Estos tests fijan el contrato de AHORRO: una playa no puede costar más de dos
- * peticiones por TTL (observación actual + forecast), pase lo que pase.
+ * The OpenWeather free quota (60 calls/min) is the app's real ceiling.
+ * These tests pin down the SAVINGS contract: a beach cannot cost more than two
+ * requests per TTL (current observation + forecast), no matter what.
  */
 
 const HORA = 3600;
@@ -21,7 +21,7 @@ function forecastSlot(iso: string, opts: { clouds?: number; temp?: number } = {}
   };
 }
 
-/** 5 días de slots cada 3 h a partir de ahora, como devuelve /data/2.5/forecast. */
+/** 5 days of slots every 3 h starting now, as returned by /data/2.5/forecast. */
 function forecastPayload() {
   const base = Date.now();
   const list = Array.from({ length: 40 }, (_, i) =>
@@ -87,8 +87,8 @@ describe('OpenWeatherWeatherProvider — consumo de cuota', () => {
 
     const clouds = await provider.getCloudinessTodayAndTomorrow(43.4, -4.2);
 
-    expect(clouds.today).toBe(33); // clouds.all de /weather
-    expect(clouds.tomorrow).toBe(40); // clouds.all del slot elegido de /forecast
+    expect(clouds.today).toBe(33); // clouds.all from /weather
+    expect(clouds.tomorrow).toBe(40); // clouds.all from the chosen /forecast slot
   });
 
   it('no propaga el fallo de /forecast si la observación actual respondió', async () => {

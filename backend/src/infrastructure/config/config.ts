@@ -140,7 +140,7 @@ export function loadConfig(): AppConfig {
 }
 
 /**
- * Hora y mes en Europe/Madrid (Render corre en UTC, así que no vale getHours()).
+ * Hour and month in Europe/Madrid (Render runs in UTC, so getHours() won't do).
  */
 function madridNow(now: Date): { hour: number; month: number } {
   const parts = new Intl.DateTimeFormat('en-GB', {
@@ -162,11 +162,11 @@ function franjaYTemporada(now: Date): { enTemporada: boolean; enFranja: boolean 
 }
 
 /**
- * ¿Estamos en la franja de playa (11:00–21:00 de Madrid) de temporada?
+ * Are we in the in-season beach window (11:00–21:00 Madrid time)?
  *
- * Comparte definición con `ttlFactor` a propósito: es la misma idea de "ahora
- * mismo hay gente mirando la playa". La usa el corrector de cielo, que solo debe
- * actuar de día y de tarde.
+ * Shares its definition with `ttlFactor` on purpose: it is the same idea of
+ * "right now there are people looking at the beach". Used by the sky corrector,
+ * which must only act during the day and afternoon.
  */
 export function enFranjaDePlaya(now: Date = new Date()): boolean {
   const { enTemporada, enFranja } = franjaYTemporada(now);
@@ -176,26 +176,26 @@ export function enFranjaDePlaya(now: Date = new Date()): boolean {
 export type ModoCorreccionCielo = 'off' | 'shadow' | 'on';
 
 /**
- * Modo del corrector de cielo por insolación observada.
+ * Mode of the sky corrector based on observed insolation.
  *
- *  on      aplica la corrección (POR DEFECTO)
- *  shadow  calcula y cuenta lo que haría, pero devuelve el dato sin tocar
- *  off     ni siquiera la calcula
+ *  on      applies the correction (DEFAULT)
+ *  shadow  computes and counts what it would do, but returns the data untouched
+ *  off     doesn't even compute it
  *
- * Nació en `shadow` para validarlo sin tocar producción. Se cambió a `on` el
- * 29-jul con la costa cubierta: el METAR de Santander daba OVC020 (cubierto
- * total) y la insolación 0 minutos en toda la costa, mientras los modelos
- * seguían diciendo despejado en las 46 playas. La validación en sombra dio 44
- * correcciones y 2 descartes, justo los previstos.
+ * It was born in `shadow` to validate it without touching production. Switched to `on` on
+ * 29-jul with the coast overcast: the Santander METAR gave OVC020 (fully
+ * overcast) and insolation was 0 minutes along the whole coast, while the models
+ * kept saying clear at the 46 beaches. The shadow validation gave 44
+ * corrections and 2 discards, exactly as expected.
  *
- * El defecto vive aquí y no en una variable del panel de Render a propósito:
- * así queda versionado, y el generador del snapshot en CI usa el mismo criterio
- * que el servidor (si divergen, la primera respuesta tras arrancar sale con el
- * cielo sin corregir hasta el primer refresco).
+ * The default lives here and not in a Render dashboard variable on purpose:
+ * that way it is versioned, and the snapshot generator in CI uses the same criterion
+ * as the server (if they diverge, the first response after startup comes out with the
+ * sky uncorrected until the first refresh).
  *
- * Se lee de `process.env` en cada llamada en vez de pasar por `loadConfig()`: no
- * es un secreto ni viaja en la runtime config de Firebase, y así se puede
- * cambiar en un test sin invalidar la config cacheada del proceso.
+ * It is read from `process.env` on every call instead of going through `loadConfig()`: it
+ * is not a secret and does not travel in the Firebase runtime config, and this way it can
+ * be changed in a test without invalidating the process's cached config.
  */
 export function skyCorrectionMode(): ModoCorreccionCielo {
   const v = (process.env.SKY_CORRECTION ?? '').trim().toLowerCase();
@@ -203,15 +203,15 @@ export function skyCorrectionMode(): ModoCorreccionCielo {
 }
 
 /**
- * Multiplicador de TTL para las llamadas a proveedores externos.
+ * TTL multiplier for calls to external providers.
  *
- * El consumo de cuota gratuita lo marca el reloj, no los usuarios: con la caché
- * por coordenadas, 500 visitas a la misma playa cuestan lo mismo que una. Así que
- * la palanca real es refrescar menos cuando el dato no le importa a nadie.
+ * Free-quota consumption is driven by the clock, not the users: with the
+ * per-coordinates cache, 500 visits to the same beach cost the same as one. So
+ * the real lever is refreshing less when nobody cares about the data.
  *
- *  ×1  franja de playa (11:00–21:00) en temporada (jun–sep)
- *  ×4  resto del día en temporada
- *  ×12 fuera de temporada (oct–may): la app apenas se usa
+ *  ×1  beach window (11:00–21:00) in season (jun–sep)
+ *  ×4  rest of the day in season
+ *  ×12 out of season (oct–may): the app is barely used
  */
 export function ttlFactor(now: Date = new Date()): number {
   const { enTemporada, enFranja } = franjaYTemporada(now);
@@ -224,33 +224,33 @@ export const Config = {
     return loadConfig();
   },
   /**
-   * TTL para datos de AHORA: observación actual y precipitación en curso. Es
-   * `CACHE_TTL_SECONDS` escalado por `ttlFactor()`.
+   * TTL for NOW data: current observation and ongoing precipitation. It is
+   * `CACHE_TTL_SECONDS` scaled by `ttlFactor()`.
    *
-   * Es el que manda la frescura de "¿está lloviendo?", así que se mantiene corto
-   * a propósito aunque cueste cuota: un nowcast de hace media hora no sirve.
+   * It is what drives the freshness of "is it raining?", so it is kept short
+   * on purpose even if it costs quota: a nowcast from half an hour ago is useless.
    */
   providerTtlSeconds(): number {
     return loadConfig().cacheTtlSeconds * ttlFactor();
   },
-  /** Ventana en la que un valor caducado se sigue sirviendo mientras se refresca. */
+  /** Window during which an expired value keeps being served while it refreshes. */
   providerStaleTtlSeconds(): number {
     return Config.providerTtlSeconds() * 6;
   },
   /**
-   * TTL para PREVISIONES (forecast de OpenWeather, playas de AEMET, scraper web).
+   * TTL for FORECASTS (OpenWeather forecast, AEMET beaches, web scraper).
    *
-   * AEMET publica la previsión de playa un par de veces al día, así que pedirla
-   * cada 5 minutos como si fuera una observación gastaba miles de llamadas
-   * diarias para recibir exactamente los mismos bytes. Se acota entre 30 min y
-   * 6 h: ni tan corto que malgaste cuota, ni tan largo que un aviso de AEMET
-   * tarde en aparecer.
+   * AEMET publishes the beach forecast a couple of times a day, so requesting it
+   * every 5 minutes as if it were an observation spent thousands of calls
+   * a day to receive exactly the same bytes. It is bounded between 30 min and
+   * 6 h: neither so short that it wastes quota, nor so long that an AEMET warning
+   * takes long to show up.
    */
   forecastTtlSeconds(): number {
     const escalado = Config.providerTtlSeconds() * 6;
     return Math.min(Math.max(escalado, 1800), 21600);
   },
-  /** Ventana stale de las previsiones: sobrevive a una caída larga de AEMET. */
+  /** Stale window for forecasts: survives a long AEMET outage. */
   forecastStaleTtlSeconds(): number {
     return Config.forecastTtlSeconds() * 4;
   },

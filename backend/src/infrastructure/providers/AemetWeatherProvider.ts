@@ -8,27 +8,27 @@ import { Config } from '../config/config';
 import { debugLog } from '../utils/debug';
 import { activeRegion } from '../../regions';
 
-// 🌤️ TIPOS DE AEMET
+// 🌤️ AEMET TYPES
 interface AemetObs {
-  idema?: string;    // ID estación
-  lat?: number;      // Latitud  
-  lon?: number;      // Longitud
+  idema?: string;    // Station ID
+  lat?: number;      // Latitude
+  lon?: number;      // Longitude
   fint?: string;     // "2025-08-13T12:00:00+0000"
-  ta?: number;       // 🌡️ Temperatura ambiente (°C)
-  hr?: number;       // 💧 Humedad relativa (%)
-  pres?: number;     // 📊 Presión (hPa)
-  pres_nmar?: number; // 📊 Presión nivel del mar (hPa)
-  vv?: number;       // 👁️ Visibilidad (km) - NO es velocidad viento
-  dv?: number;       // 🧭 Dirección viento (grados)
-  vmax?: number;     // 💨 Velocidad máxima viento (m/s)
-  prec?: number;     // 🌧️ Precipitación última hora (mm)
-  inso?: number;     // ☀️ Insolación: MINUTOS de sol de la última hora (0-60)
-  ubi?: string;      // 📍 Ubicación
+  ta?: number;       // 🌡️ Ambient temperature (°C)
+  hr?: number;       // 💧 Relative humidity (%)
+  pres?: number;     // 📊 Pressure (hPa)
+  pres_nmar?: number; // 📊 Sea-level pressure (hPa)
+  vv?: number;       // 👁️ Visibility (km) - NOT wind speed
+  dv?: number;       // 🧭 Wind direction (degrees)
+  vmax?: number;     // 💨 Maximum wind speed (m/s)
+  prec?: number;     // 🌧️ Precipitation last hour (mm)
+  inso?: number;     // ☀️ Insolation: MINUTES of sun in the last hour (0-60)
+  ubi?: string;      // 📍 Location
 }
 
-// 🧮 HAVERSINE FORMULA (distancia entre coordenadas)
+// 🧮 HAVERSINE FORMULA (distance between coordinates)
 function haversineSq(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 6371; // Radio tierra en km
+  const R = 6371; // Earth radius in km
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLon = (lon2 - lon1) * Math.PI / 180;
   const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
@@ -38,9 +38,9 @@ function haversineSq(lat1: number, lon1: number, lat2: number, lon2: number): nu
 }
 
 /**
- * Caja envolvente de la región activa, con margen (~40 km) para conservar
- * estaciones limítrofes de comunidades vecinas que a veces son la más
- * cercana a una playa del extremo del litoral. Valores en src/regions/.
+ * Bounding box of the active region, with a margin (~40 km) to keep
+ * border stations from neighboring regions that are sometimes the closest
+ * one to a beach at the far end of the coastline. Values in src/regions/.
  */
 const REGION_BBOX = activeRegion.observationBbox;
 
@@ -55,16 +55,16 @@ function enEntornoDeLaRegion(o: AemetObs): boolean {
 }
 
 /**
- * `inso` son MINUTOS de sol de la última hora. Se valida el rango en la frontera
- * de parseo, no más adentro: si AEMET cambiase la unidad (a horas, o a tanto por
- * ciento) los valores dejarían de caer en [0, 60] y preferimos quedarnos sin
- * corrección antes que degradar el cielo con una escala que ya no es la nuestra.
+ * `inso` is MINUTES of sun in the last hour. The range is validated at the
+ * parsing boundary, not further in: if AEMET changed the unit (to hours, or to
+ * a percentage) the values would stop falling in [0, 60] and we prefer going
+ * without correction over degrading the sky with a scale that is no longer ours.
  */
 function esInsolacionUsable(inso: unknown): inso is number {
   return typeof inso === 'number' && Number.isFinite(inso) && inso >= 0 && inso <= 60;
 }
 
-// ⏰ PARSER DE TIEMPO AEMET
+// ⏰ AEMET TIME PARSER
 function parseAemetTime(fint: string): number {
   try {
     return new Date(fint).getTime();
@@ -88,24 +88,24 @@ export class AemetWeatherProvider implements WeatherProvider, SunshineProvider {
   }
 
   /**
-   * Insolación observada de la estación útil más cercana.
+   * Observed insolation from the closest useful station.
    *
-   * "Útil" excluye a la mayoría: de las ~69 estaciones del arco cantábrico solo
-   * unas 9 publican `inso`, y ninguna en la costa oriental (Castro-EDAR y Treto
-   * existen pero no lo miden). Por eso NO se puede reutilizar la estación que
-   * elige `getCurrentByCoords`: la más cercana casi nunca es una de las que
-   * miden sol.
+   * "Useful" excludes most of them: of the ~69 stations of the Cantabrian arc only
+   * about 9 publish `inso`, and none on the eastern coast (Castro-EDAR and Treto
+   * exist but do not measure it). That is why the station chosen by
+   * `getCurrentByCoords` cannot be reused: the closest one is almost never one
+   * of those that measure sun.
    *
-   * No lanza: sin candidata devuelve null y quien llame sigue con su dato.
+   * Does not throw: without a candidate it returns null and the caller keeps its data.
    */
   async getSunshineNear(lat: number, lon: number): Promise<SunshineObservation[]> {
     try {
       const arr = await this.getObservacionesCached();
       if (arr.length === 0) return [];
 
-      // El payload trae varias filas por estación (últimas horas). Nos quedamos
-      // con la más reciente de cada una que además traiga `inso` en rango: una
-      // fila recién publicada puede venir incompleta.
+      // The payload carries several rows per station (last hours). We keep
+      // the most recent of each one that also carries `inso` in range: a
+      // freshly published row can come in incomplete.
       const porEstacion = new Map<string, AemetObs>();
       for (const s of arr) {
         if (!s.idema || typeof s.lat !== 'number' || typeof s.lon !== 'number') continue;
@@ -115,9 +115,9 @@ export class AemetWeatherProvider implements WeatherProvider, SunshineProvider {
       }
       if (porEstacion.size === 0) return [];
 
-      // Solo las 3 más cercanas: la primera decide y las otras sirven de testigo.
-      // Devolver las nueve del arco cantábrico no aporta y agranda el objeto que
-      // acaba en el diagnóstico.
+      // Only the 3 closest: the first one decides and the others serve as witnesses.
+      // Returning all nine of the Cantabrian arc adds nothing and enlarges the object
+      // that ends up in the diagnostic.
       return [...porEstacion.values()]
         .map((s) => {
           const insoMin = s.inso as number;
@@ -165,10 +165,10 @@ export class AemetWeatherProvider implements WeatherProvider, SunshineProvider {
           throw new ProviderError('AEMET', 'No station with coordinates found', 'NO_STATION');
         }
 
-        // El payload trae varias filas por estación (últimas horas, distinto
-        // fint). Ordenar las de la estación elegida de más reciente a más
-        // antigua y tomar, por campo, el primer valor numérico disponible
-        // (la fila más reciente puede venir incompleta).
+        // The payload carries several rows per station (last hours, different
+        // fint). Sort the chosen station's rows from most recent to oldest
+        // and take, per field, the first available numeric value
+        // (the most recent row can come in incomplete).
         const rows = best.idema
           ? arr
               .filter((s) => s.idema === best!.idema)
@@ -192,9 +192,9 @@ export class AemetWeatherProvider implements WeatherProvider, SunshineProvider {
           temperatureC: firstNumber((o) => o.ta),
           description: this.generateAemetDescription(latest),
           icon: this.generateAemetIcon(latest),
-          // prec: solo la fila más reciente (un acumulado antiguo daría falsos "lloviendo").
+          // prec: only the most recent row (an old accumulation would give false "raining").
           precipitationMm: typeof latest.prec === 'number' ? latest.prec : null,
-          windSpeedMs: firstNumber((o) => o.vmax), // ✅ CORREGIDO: vmax es velocidad viento
+          windSpeedMs: firstNumber((o) => o.vmax), // ✅ FIXED: vmax is wind speed
           windDirectionDeg: firstNumber((o) => o.dv),
           humidityPct: firstNumber((o) => o.hr),
           pressureHPa: pressure
@@ -209,12 +209,12 @@ export class AemetWeatherProvider implements WeatherProvider, SunshineProvider {
   }
 
   /**
-   * Descarga (o recupera de caché) el payload de observaciones bajo una clave
-   * única: una sola descarga por TTL sirve a todas las playas (antes cada playa
-   * re-descargaba todo el payload).
+   * Downloads (or retrieves from cache) the observations payload under a single
+   * key: one download per TTL serves all beaches (previously each beach
+   * re-downloaded the whole payload).
    *
-   * Se RECORTA a la región activa antes de cachear: AEMET devuelve todas las
-   * estaciones de España (decenas de MB) y el proceso vive en 512 MB de RAM.
+   * It is TRIMMED to the active region before caching: AEMET returns all the
+   * stations of Spain (tens of MB) and the process lives in 512 MB of RAM.
    */
   private async getObservacionesCached(): Promise<AemetObs[]> {
     const cfg = Config.get();
@@ -236,14 +236,14 @@ export class AemetWeatherProvider implements WeatherProvider, SunshineProvider {
       const arr = todas.filter(enEntornoDeLaRegion);
       this.lastRaw = arr;
       debugLog('aemet.obs', { totalEspana: todas.length, region: arr.length, muestra: arr.slice(0, 5) });
-      // Si el recorte deja el payload vacío (formato inesperado), mejor todas que
-      // ninguna: la playa se queda sin dato AEMET solo si de verdad no hay nada.
+      // If trimming leaves the payload empty (unexpected format), better all than
+      // none: the beach is left without AEMET data only if there truly is nothing.
       return arr.length > 0 ? arr : todas;
     });
   }
 
   /**
-   * 📝 Generar descripción basada en datos de AEMET
+   * 📝 Generate description based on AEMET data
    */
   private generateAemetDescription(obs: AemetObs): string | null {
     const temp = obs.ta;
@@ -253,20 +253,20 @@ export class AemetWeatherProvider implements WeatherProvider, SunshineProvider {
     if (typeof temp !== 'number') return null;
     
     let desc = '';
-    
-    // Temperatura
+
+    // Temperature
     if (temp < 10) desc += 'Frío';
     else if (temp < 20) desc += 'Templado';
     else if (temp < 30) desc += 'Cálido';
     else desc += 'Muy cálido';
     
-    // Humedad
+    // Humidity
     if (typeof humidity === 'number') {
       if (humidity > 80) desc += ' y húmedo';
       else if (humidity < 40) desc += ' y seco';
     }
     
-    // Presión (tendencia del tiempo)
+    // Pressure (weather trend)
     if (typeof pressure === 'number') {
       if (pressure > 1020) desc += ', tiempo estable';
       else if (pressure < 1000) desc += ', tiempo inestable';
@@ -276,7 +276,7 @@ export class AemetWeatherProvider implements WeatherProvider, SunshineProvider {
   }
 
   /**
-   * 🎨 Generar icono basado en datos de AEMET
+   * 🎨 Generate icon based on AEMET data
    */
   private generateAemetIcon(obs: AemetObs): string | null {
     const temp = obs.ta;
@@ -284,13 +284,13 @@ export class AemetWeatherProvider implements WeatherProvider, SunshineProvider {
     
     if (typeof temp !== 'number') return null;
     
-    // Lógica simple basada en temperatura y humedad
+    // Simple logic based on temperature and humidity
     if (typeof humidity === 'number' && humidity > 80) {
-      return '04d'; // Nublado/húmedo
+      return '04d'; // Cloudy/humid
     } else if (typeof humidity === 'number' && humidity < 40) {
-      return '01d'; // Despejado/seco
+      return '01d'; // Clear/dry
     } else {
-      return '02d'; // Parcialmente nublado
+      return '02d'; // Partly cloudy
     }
   }
 }

@@ -4,13 +4,13 @@ import { hostLimiter } from '../infrastructure/http/limiter';
 import { httpMetrics } from '../infrastructure/http/metrics';
 
 /**
- * Contrato del enfriamiento por 429, comprobado a través del cliente HTTP real
- * (interceptores incluidos), no del limitador aislado.
+ * Contract of the 429 cooldown, checked through the real HTTP client
+ * (interceptors included), not the limiter in isolation.
  *
- * Lo que se fija es el caso que falló en producción: en un fan-out, las
- * peticiones entran todas a la vez y esperan turno. Si el enfriamiento solo se
- * mirase al entrar, un 429 llegado a mitad de la ráfaga no frenaría a las que ya
- * están en la cola — y contra AEMET eso se tradujo en seis 429 en vez de uno.
+ * What gets pinned down is the case that failed in production: in a fan-out, the
+ * requests all come in at once and wait their turn. If the cooldown were only
+ * checked on entry, a 429 arriving mid-burst would not brake the ones already
+ * in the queue — and against AEMET that translated into six 429s instead of one.
  */
 
 const HOST_FALSO = 'https://opendata.aemet.es/opendata/api/prueba';
@@ -24,8 +24,8 @@ describe('cliente HTTP — enfriamiento tras un 429', () => {
   it('una ráfaga encolada se corta en cuanto la primera respuesta trae 429', async () => {
     let enviadas = 0;
 
-    // El adaptador es lo último que se ejecuta: contar aquí mide lo que DE VERDAD
-    // sale a la red, después de semáforo y enfriamiento.
+    // The adapter is the last thing to run: counting here measures what ACTUALLY
+    // goes out to the network, after semaphore and cooldown.
     const adapter = vi.fn(async (config: any) => {
       enviadas++;
       await new Promise((r) => setTimeout(r, 5));
@@ -40,8 +40,8 @@ describe('cliente HTTP — enfriamiento tras un 429', () => {
     );
 
     expect(resultados.every((r) => r.status === 'rejected')).toBe(true);
-    // Con concurrencia 1 para AEMET, solo la primera debería llegar a la red;
-    // las otras 19 mueren en el enfriamiento sin gastar cuota.
+    // With concurrency 1 for AEMET, only the first one should reach the network;
+    // the other 19 die in the cooldown without spending quota.
     expect(enviadas).toBe(1);
     expect(hostLimiter.enfriamientoRestanteMs('opendata.aemet.es')).toBeGreaterThan(0);
   });

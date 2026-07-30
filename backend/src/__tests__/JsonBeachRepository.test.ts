@@ -47,7 +47,7 @@ describe('JsonBeachRepository — derivación de FlagRefs', () => {
       { sourceName: 'SIN ID' },
       { ref: { provider: 'cruzroja', ref: 42 }, sourceId: 42, sourceName: 'ACTIVO' },
     ]);
-    // idCruzRoja explícito 0 → la ref primaria se deriva del primer puesto con id > 0
+    // explicit `idCruzRoja` 0 → the primary ref is derived from the first station with id > 0
     expect(multi?.flagRef).toEqual({ provider: 'cruzroja', ref: 42 });
   });
 

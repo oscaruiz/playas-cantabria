@@ -2,14 +2,13 @@ import type { RainNowcast } from '../entities/RainNowcast';
 import type { DayForecast } from '../entities/BeachForecast';
 
 /**
- * Señal combinada de "va a llover" (lluvia PREVISTA, no activa):
- *   - Open-Meteo: tramos minutely_15 de las próximas ~6h (numérico, da hora).
- *   - Texto AEMET: descripción del cielo del tramo restante de HOY
+ * Combined "it is going to rain" signal (FORECAST rain, not active):
+ *   - Open-Meteo: minutely_15 slots for the next ~6h (numeric, gives a time).
+ *   - AEMET text: sky description for the remaining part of TODAY
  *     ("Chubascos", "Intervalos nubosos con lluvia", ...).
- * Cualquiera de las dos dispara. Es un helper puro SIN caché: el texto AEMET
- * varía según el flujo (featured usa el summary del día; detalle usa los
- * medios-días del scraper) y no puede entrar en la caché por coordenadas
- * de GetRainNowcast.
+ * Either one triggers it. It is a pure helper WITHOUT cache: the AEMET text
+ * varies by flow (featured uses the day's summary; detail uses the scraper's
+ * half-days) and cannot go into GetRainNowcast's by-coordinates cache.
  */
 
 export const LLUVIA_TEXTO_RE = /lluvia|llovizna|chubasc|tormenta/i;
@@ -20,18 +19,18 @@ export function hayLluviaEnTexto(texto: string | null | undefined): boolean {
 
 export interface RainForecastSignal {
   expected: boolean;
-  /** Epoch ms del primer tramo con precipitación; null si la señal es solo textual (AEMET). */
+  /** Epoch ms of the first slot with precipitation; null if the signal is text-only (AEMET). */
   firstAt: number | null;
-  /** Máximo mm por tramo previsto (solo Open-Meteo). */
+  /** Maximum forecast mm per slot (Open-Meteo only). */
   mmMax: number | null;
-  /** Solo las fuentes que DISPARARON la señal. */
+  /** Only the sources that TRIGGERED the signal. */
   sources: Array<'OpenMeteo' | 'AEMET'>;
 }
 
 /**
- * Combina la previsión numérica del nowcast (rain.upcoming) con los textos
- * de previsión AEMET. Devuelve null si no hay señal alguna que evaluar
- * (Open-Meteo sin tramos Y ningún texto disponible).
+ * Combines the nowcast's numeric forecast (rain.upcoming) with the AEMET
+ * forecast texts. Returns null if there is no signal at all to evaluate
+ * (Open-Meteo without slots AND no text available).
  */
 export function buildRainForecastSignal(
   rain: RainNowcast | null | undefined,
@@ -56,20 +55,20 @@ export function buildRainForecastSignal(
   };
 }
 
-/** Hora (0-23) actual en Europe/Madrid, robusta a la TZ del servidor. */
+/** Current hour (0-23) in Europe/Madrid, robust to the server's TZ. */
 export function horaMadrid(ahora: Date = new Date()): number {
   const hh = new Intl.DateTimeFormat('en-GB', {
     timeZone: 'Europe/Madrid',
     hour: '2-digit',
     hour12: false,
   }).format(ahora);
-  return Number(hh) % 24; // Intl puede devolver "24" para medianoche
+  return Number(hh) % 24; // Intl may return "24" for midnight
 }
 
 /**
- * Textos de cielo de la parte RESTANTE de hoy: antes de las 14h (Madrid)
- * cuentan mañana y tarde; a partir de las 14h, solo la tarde. Así una lluvia
- * matinal ya pasada no penaliza una tarde despejada.
+ * Sky texts for the REMAINING part of today: before 14h (Madrid) both
+ * morning and afternoon count; from 14h on, only the afternoon. That way a
+ * morning rain that has already passed does not penalize a clear afternoon.
  */
 export function textosRestantesHoy(
   day: DayForecast | null | undefined,

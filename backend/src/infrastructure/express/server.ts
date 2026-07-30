@@ -38,10 +38,10 @@ export interface BuildDeps {
 export function buildExpressApp({ cache }: BuildDeps = {}): Express {
   const app = express();
 
-  // Render (y Firebase Functions) sirven detrás de un proxy: sin esto `req.ip`
-  // devuelve la IP del proxy para TODO el mundo y el límite por IP se convertiría
-  // en un límite global compartido. Se confía en un solo salto, no en toda la
-  // cadena de X-Forwarded-For, que un cliente puede falsificar.
+  // Render (and Firebase Functions) serve behind a proxy: without this `req.ip`
+  // returns the proxy's IP for EVERYONE and the per-IP limit would turn into
+  // a shared global limit. Only a single hop is trusted, not the whole
+  // X-Forwarded-For chain, which a client can forge.
   app.set('trust proxy', 1);
 
   // Middleware configuration
@@ -69,9 +69,9 @@ export function buildExpressApp({ cache }: BuildDeps = {}): Express {
   const getFeaturedBeaches = container.get<GetFeaturedBeaches>('getFeaturedBeaches');
   const legacyDetailsAssembler = container.get<LegacyDetailsAssembler>('legacyDetailsAssembler');
 
-  // Arranque en caliente: se siembra el agregado desde el snapshot de CI (como
-  // STALE) para que el primer usuario tras un despliegue o tras el dormido de
-  // Render no pague el fan-out completo a los proveedores.
+  // Warm start: the aggregate is seeded from the CI snapshot (as
+  // STALE) so that the first user after a deploy or after Render's sleep
+  // does not pay the full fan-out to the providers.
   sembrarDesdeSnapshot(container.get<InMemoryCache>('cache'));
 
   // Warm the aggregate without delaying server startup. Subsequent refreshes
@@ -82,8 +82,8 @@ export function buildExpressApp({ cache }: BuildDeps = {}): Express {
     }, 250);
   }
 
-  // Protege la cuota gratuita de los proveedores frente a scrapers ajenos.
-  // Una visita normal hace 2-3 peticiones; 60/min por IP no molesta a nadie real.
+  // Protects the providers' free quota against third-party scrapers.
+  // A normal visit makes 2-3 requests; 60/min per IP bothers no real user.
   app.use('/api', rateLimit({ ventanaMs: 60_000, maxPeticiones: 60 }));
 
   // Routes configuration
@@ -97,7 +97,7 @@ export function buildExpressApp({ cache }: BuildDeps = {}): Express {
     })
   );
 
-  // Diagnostics routes (ALWAYS on) — para depurar producción (Cruz Roja, commit vivo)
+  // Diagnostics routes (ALWAYS on) — for debugging production (Cruz Roja, live commit)
   app.use(
     '/api/_diag',
     createDiagRouter({

@@ -14,21 +14,22 @@ export interface BeachAttributes {
 }
 
 /**
- * Webcam asociada a una playa. Datos editoriales estáticos (viven en beaches.json).
- * `cobertura` distingue si la cámara enfoca exactamente esta playa, una panorámica
- * compartida por varias, o una playa cercana (nunca se presenta cercana como exacta).
- * Solo se ofrece como ENLACE externo — no se embebe (no se asumen permisos de iframe).
+ * Webcam associated with a beach. Static editorial data (lives in beaches.json).
+ * `cobertura` distinguishes whether the camera points exactly at this beach, at a
+ * panorama shared by several, or at a nearby beach (a nearby one is never
+ * presented as exact). Offered only as an external LINK — never embedded (iframe
+ * permissions are not assumed).
  */
 export interface Webcam {
   url: string;
   cobertura: 'exacta' | 'compartida' | 'cercana';
-  /** "desactivada" oculta la cámara sin borrar la entrada. Ausente = activa. */
+  /** "desactivada" hides the camera without deleting the entry. Absent = active. */
   estado?: 'activa' | 'desactivada';
 }
 
 /**
- * Sector diferenciado de una playa (p. ej. Somocuevas Oriental/Occidental,
- * Langre La Grande/La Pequeña). Metadato: NO se suman longitudes entre sectores.
+ * Distinct sector of a beach (e.g. Somocuevas Oriental/Occidental,
+ * Langre La Grande/La Pequeña). Metadata: lengths are NOT summed across sectors.
  */
 export interface BeachSector {
   nombre: string;
@@ -56,11 +57,11 @@ export interface Beach {
    * Complements `flagRef` without breaking single-flag consumers.
    */
   flagStations?: FlagStation[];
-  /** Nombres alternativos/topónimos/sectores para búsqueda y resolución de nombres. */
+  /** Alternative names/toponyms/sectors for search and name resolution. */
   alias?: string[];
-  /** Sectores diferenciados (metadato). No se suman longitudes entre sectores. */
+  /** Distinct sectors (metadata). Lengths are not summed across sectors. */
   sectores?: BeachSector[];
-  /** true si la playa no tiene ficha de previsión en AEMET (solo tiempo actual por coordenadas). */
+  /** true if the beach has no AEMET forecast page (only current weather by coordinates). */
   sinAemet?: boolean;
   attributes?: BeachAttributes;
   lengthM?: number;

@@ -395,7 +395,7 @@ describe('buildRankingReason', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Lluvia detectada ahora (RainNowcast) → tope amarillo + razones
+// Rain detected now (RainNowcast) → yellow cap + reasons
 // ---------------------------------------------------------------------------
 
 describe('computeBeachScore con lluvia detectada (RainNowcast)', () => {
@@ -473,7 +473,7 @@ describe('razones con lluvia detectada', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Lluvia PREVISTA (RainForecastSignal) → tope amarillo suave 59 + razones
+// FORECAST rain (RainForecastSignal) → soft yellow cap 59 + reasons
 // ---------------------------------------------------------------------------
 
 describe('computeBeachScore con lluvia prevista', () => {

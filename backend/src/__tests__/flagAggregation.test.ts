@@ -21,7 +21,7 @@ describe('aggregateFlags — regla conservadora (la más restrictiva)', () => {
   });
 
   it('un puesto SIN color no cuenta como verde ni rebaja la bandera', () => {
-    // Un puesto sin izar (sin color) junto a uno rojo → sigue siendo rojo.
+    // A station with no flag hoisted (no color) next to a red one → still red.
     const res = aggregateFlags([f(undefined, { message: 'No hay información' }), f('red')]);
     expect(res?.color).toBe('red');
   });

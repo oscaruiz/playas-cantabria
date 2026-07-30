@@ -21,9 +21,9 @@ import { AemetBeachWebScraper } from '../providers/AemetBeachWebScraper';
 import { OpenMeteoPrecipitationProvider } from '../providers/OpenMeteoPrecipitationProvider';
 
 /**
- * Caché de la app: con Upstash configurado (UPSTASH_REDIS_REST_URL/TOKEN) se usa
- * la de dos niveles, que sobrevive al dormido y a los despliegues de Render free.
- * Sin esas variables, exactamente la de siempre en memoria.
+ * The app's cache: with Upstash configured (UPSTASH_REDIS_REST_URL/TOKEN) the
+ * two-tier one is used, which survives sleep and Render free deploys.
+ * Without those variables, exactly the usual in-memory one.
  */
 function crearCache(): InMemoryCache {
   const l2 = UpstashRedisStore.fromEnv();
@@ -110,7 +110,7 @@ export function configureDependencies(container: DIContainer, overrides: { cache
       c.get('aemetBeachForecastProvider'),
       c.get('cache'),
       c.get('getRainNowcast'),
-      // Mismo objeto que 'aemetWeatherProvider': implementa también SunshineProvider.
+      // Same object as 'aemetWeatherProvider': it also implements SunshineProvider.
       c.get('aemetWeatherProvider'),
     )
   );

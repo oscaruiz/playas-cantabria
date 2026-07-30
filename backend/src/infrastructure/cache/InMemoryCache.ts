@@ -12,9 +12,9 @@ export class InMemoryCache {
   private store = new Map<string, CacheRecord<unknown>>();
   private inFlight = new Map<string, Promise<unknown>>();
   /**
-   * Aciertos/fallos por familia de clave (el prefijo hasta el primer ':').
-   * Solo se contabiliza desde getOrSet/getOrSetStale, que son las decisiones
-   * que determinan si se llama o no a un proveedor externo.
+   * Hits/misses per key family (the prefix up to the first ':').
+   * Only counted from getOrSet/getOrSetStale, which are the decisions
+   * that determine whether an external provider gets called or not.
    */
   private stats = new Map<string, CacheStats>();
   constructor(private readonly now: () => number = () => Date.now()) {}
@@ -26,7 +26,7 @@ export class InMemoryCache {
     this.stats.set(family, s);
   }
 
-  /** Instantánea para /api/_diag/metrics. */
+  /** Snapshot for /api/_diag/metrics. */
   snapshot(): { entradas: number; enVuelo: number; porFamilia: Record<string, CacheStats> } {
     return {
       entradas: this.store.size,
@@ -52,10 +52,10 @@ export class InMemoryCache {
   }
 
   /**
-   * Inserta un valor controlando por separado la ventana fresca y la stale.
-   * Con `freshTtlSeconds = 0` el valor entra ya como STALE: se sirve al instante
-   * y dispara un refresco en segundo plano. Es lo que permite arrancar en
-   * caliente desde un snapshot o desde la caché L2 sin fingir que el dato es nuevo.
+   * Inserts a value controlling the fresh and stale windows separately.
+   * With `freshTtlSeconds = 0` the value enters already as STALE: it is served instantly
+   * and triggers a background refresh. This is what allows warm-starting
+   * from a snapshot or from the L2 cache without pretending the data is new.
    */
   seed<T>(key: string, value: T, freshTtlSeconds: number, staleTtlSeconds: number): void {
     const now = this.now();

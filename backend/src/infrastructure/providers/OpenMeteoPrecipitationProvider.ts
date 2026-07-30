@@ -7,12 +7,12 @@ import { Config } from '../config/config';
 import { debugLog } from '../utils/debug';
 
 /**
- * Precipitación actual desde Open-Meteo (https://open-meteo.com):
- * gratuito, sin API key (free tier ~10k llamadas/día; 46 playas × TTL 1800s
- * ≈ 2,2k/día, y menos aún fuera de la franja de playa por el `ttlFactor`).
- * OJO: bajar CACHE_TTL_SECONDS a 300 dispararía el consumo a ~13k/día y
- * rompería la cuota. Complementa a OpenWeather para detectar lluvia que
- * los modelos de un solo proveedor pierden (llovizna costera hiperlocal).
+ * Current precipitation from Open-Meteo (https://open-meteo.com):
+ * free, no API key (free tier ~10k calls/day; 46 beaches × TTL 1800s
+ * ≈ 2.2k/day, and even less outside the beach window thanks to the `ttlFactor`).
+ * WARNING: lowering CACHE_TTL_SECONDS to 300 would shoot consumption up to ~13k/day and
+ * break the quota. Complements OpenWeather to detect rain that
+ * single-provider models miss (hyperlocal coastal drizzle).
  */
 export class OpenMeteoPrecipitationProvider implements PrecipitationNowProvider {
   private lastRaw: unknown = null;
@@ -33,11 +33,11 @@ export class OpenMeteoPrecipitationProvider implements PrecipitationNowProvider 
             latitude: lat,
             longitude: lon,
             current: 'precipitation,rain,showers,weather_code',
-            // Previsión próximas 6h (24 tramos de 15 min) en la MISMA llamada.
+            // Forecast for the next 6h (24 slots of 15 min) in the SAME call.
             minutely_15: 'precipitation,weather_code',
             forecast_minutely_15: 24,
-            // UV máximo de hoy y mañana, también en la misma llamada (coste 0):
-            // sustituye a OpenWeather One Call 2.5, que está retirado.
+            // Max UV for today and tomorrow, also in the same call (cost 0):
+            // replaces OpenWeather One Call 2.5, which is retired.
             daily: 'uv_index_max',
             forecast_days: 2,
             timezone: 'UTC'
@@ -50,7 +50,7 @@ export class OpenMeteoPrecipitationProvider implements PrecipitationNowProvider 
 
         const c = resp.data?.current ?? {};
         const num = (v: unknown): number | null => (typeof v === 'number' ? v : null);
-        // Los ISO de Open-Meteo llegan sin zona ("2026-07-15T19:00") en UTC.
+        // Open-Meteo's ISO strings arrive without zone ("2026-07-15T19:00") in UTC.
         const parseUtc = (iso: unknown): number | null => {
           if (typeof iso !== 'string') return null;
           const parsed = Date.parse(iso.endsWith('Z') ? iso : `${iso}Z`);
@@ -74,9 +74,9 @@ export class OpenMeteoPrecipitationProvider implements PrecipitationNowProvider 
           });
         }
 
-        // `timezone: UTC` hace que los días de `daily` sean días UTC. En España
-        // (UTC+1/+2) solo divergen las primeras horas de la madrugada, cuando el
-        // UV es 0 e irrelevante para una ficha de playa.
+        // `timezone: UTC` makes the `daily` days be UTC days. In Spain
+        // (UTC+1/+2) they only diverge during the first hours after midnight, when
+        // UV is 0 and irrelevant for a beach page.
         const uv: unknown[] = Array.isArray(resp.data?.daily?.uv_index_max)
           ? resp.data.daily.uv_index_max
           : [];

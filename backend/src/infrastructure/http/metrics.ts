@@ -1,9 +1,9 @@
 /**
- * Contadores de peticiones SALIENTES a proveedores externos.
+ * Counters of OUTGOING requests to external providers.
  *
- * Sin esto no hay forma de saber a qué distancia estamos de las cuotas gratuitas
- * (OpenWeather 60/min y 1M/mes, Open-Meteo 10k/día...): el consumo depende del
- * tráfico y de los TTL, no de una cifra fija. Se expone en /api/_diag/metrics.
+ * Without this there is no way to know how far we are from the free quotas
+ * (OpenWeather 60/min and 1M/month, Open-Meteo 10k/day...): consumption depends on
+ * traffic and TTLs, not on a fixed figure. Exposed at /api/_diag/metrics.
  */
 
 export interface HostCounters {
@@ -26,7 +26,7 @@ const EMPTY = (): HostCounters => ({
   lastAt: null,
 });
 
-/** Ventana horaria: se reinicia sola al cambiar de hora (sin timers). */
+/** Hourly window: resets itself when the hour changes (no timers). */
 interface Window {
   startedAt: number;
   byHost: Map<string, HostCounters>;
@@ -73,7 +73,7 @@ export class HttpMetrics {
     };
   }
 
-  /** Solo para tests. */
+  /** Tests only. */
   reset(): void {
     this.total.clear();
     this.hour = newWindow(this.now());
@@ -83,7 +83,7 @@ export class HttpMetrics {
 
 export const httpMetrics = new HttpMetrics();
 
-/** Host de una URL, tolerante a URLs relativas o inválidas. */
+/** Host of a URL, tolerant of relative or invalid URLs. */
 export function hostOf(url: string | undefined, base?: string): string {
   if (!url) return 'desconocido';
   try {

@@ -5,27 +5,27 @@ import { RainNowcast } from '../entities/RainNowcast';
 import { RainForecastSignal } from './RainForecast';
 
 /**
- * Tope de puntuación cuando se detecta lluvia ahora: <60 para que la playa
- * nunca sea "good" (verde) en mapa/Home, y ≥35 para que quede en el tramo
- * amarillo (medium) y no caiga a rojo solo por la lluvia.
+ * Score cap when rain is detected now: <60 so the beach is never "good"
+ * (green) on map/Home, and ≥35 so it stays in the yellow (medium) band and
+ * does not drop to red just because of the rain.
  */
 export const RAIN_SCORE_CAP = 55;
 
 /**
- * Tope cuando hay lluvia PREVISTA (próximas ~6h u hoy según AEMET) pero aún
- * no llueve: también amarillo (<60), pero por encima del tope de lluvia
- * activa → jerarquía lloviendo (55) < va a llover (59) < seco.
+ * Cap when rain is FORECAST (next ~6h or today per AEMET) but it is not yet
+ * raining: also yellow (<60), but above the active-rain cap → hierarchy
+ * raining (55) < going to rain (59) < dry.
  */
 export const RAIN_FORECAST_SCORE_CAP = 59;
 
-/** Fragmento humano para las razones cuando hay lluvia detectada. */
+/** Human-readable fragment for the reasons when rain is detected. */
 function rainReasonFragment(rain: RainNowcast | null | undefined): string | null {
   if (rain?.status !== 'raining') return null;
   return rain.lastHourOnly ? 'lluvia en la última hora' : 'lloviendo ahora';
 }
 
-/** Fragmento humano cuando hay lluvia prevista (sin hora: debe ser traducible
- *  por fragmento exacto en el cliente). */
+/** Human-readable fragment when rain is forecast (no time: it must be
+ *  translatable by exact fragment on the client). */
 function rainForecastReasonFragment(
   forecast: RainForecastSignal | null | undefined,
 ): string | null {
@@ -84,8 +84,8 @@ function skyScoreFromDescription(desc: string): number {
   const s = desc.toLowerCase();
   if (/(despejado|soleado)/.test(s)) return 25;
   if (/(poco\s*nuboso|intervalos|parcial|claro)/.test(s)) return 20;
-  // "nubes dispersas" (OpenWeather 03x, 25-50% de cobertura) antes que el
-  // genérico "nubes" (04x, cubierto), que sí es cielo nublado.
+  // "nubes dispersas" (OpenWeather 03x, 25-50% cover) before the generic
+  // "nubes" (04x, overcast), which is indeed a cloudy sky.
   if (/nubes\s*dispersas/.test(s)) return 16;
   if (/(nuboso|nublado|cubierto|muy nuboso|nubes)/.test(s)) return 10;
   if (/(lluvia|chubasc|llovizna)/.test(s)) return 0;
@@ -96,10 +96,10 @@ function skyScoreFromDescription(desc: string): number {
 }
 
 /**
- * Mapea una descripción de cielo (es) a una palabra corta para la "razón" del
- * ranking. Cubre los términos de AEMET (previsión) y de OpenWeather (observación,
- * p. ej. "cielo claro", "algo de nubes", "muy nuboso"). Devuelve null si no
- * reconoce el término (el llamante usará el texto crudo).
+ * Maps a sky description (es) to a short word for the ranking "reason".
+ * Covers AEMET terms (forecast) and OpenWeather terms (observation, e.g.
+ * "cielo claro", "algo de nubes", "muy nuboso"). Returns null if it does not
+ * recognize the term (the caller will use the raw text).
  */
 function skyWordFromDescription(desc: string): string | null {
   const s = desc.toLowerCase();
@@ -152,7 +152,7 @@ const FLAG_SCORE: Record<FlagColor, number> = {
 };
 
 export function computeFlagScore(flag: FlagStatus | null): number {
-  if (!flag || !flag.color) return 10; // sin cobertura CR → neutral
+  if (!flag || !flag.color) return 10; // no CR coverage → neutral
   return FLAG_SCORE[flag.color] ?? 10;
 }
 
@@ -299,13 +299,13 @@ export function computeBeachScore(
     + subScores.uv
     + subScores.datos;
 
-  // Lluvia PREVISTA (próximas horas): amarillo suave.
+  // FORECAST rain (next few hours): soft yellow.
   if (rainForecast?.expected) {
     score = Math.min(score, RAIN_FORECAST_SCORE_CAP);
   }
 
-  // Lluvia detectada ahora (señal multi-fuente): la playa nunca puede ser
-  // "buena", pase lo que pase con el resto de factores. Gana a la prevista.
+  // Rain detected now (multi-source signal): the beach can never be "good",
+  // no matter what happens with the other factors. It beats the forecast one.
   if (rain?.status === 'raining') {
     score = Math.min(score, RAIN_SCORE_CAP);
   }
@@ -327,12 +327,12 @@ export function buildRankingReason(
 ): string {
   const parts: string[] = [];
 
-  // La lluvia detectada ahora manda sobre la descripción del cielo (que
-  // puede seguir diciendo "nuboso" aunque esté lloviendo).
+  // Rain detected now takes precedence over the sky description (which may
+  // still say "nuboso" even though it is raining).
   const rainPart = rainReasonFragment(rain);
 
-  // Preferir la observación real (OpenWeather current) sobre la previsión AEMET,
-  // para que la "razón" coincida con el cielo de ahora (y con el detalle).
+  // Prefer the real observation (OpenWeather current) over the AEMET forecast,
+  // so the "reason" matches the current sky (and the detail view).
   const skyDesc =
     (weather?.source === 'OpenWeather' ? weather.description : null) ?? enrichment?.summary ?? null;
   const skyWord = skyDesc ? skyWordFromDescription(skyDesc) : null;
@@ -347,7 +347,7 @@ export function buildRankingReason(
   } else if (subScores.cielo >= 10) {
     parts.push('Nublado');
   } else if (skyDesc) {
-    // Texto no reconocido y cielo malo (lluvia/tormenta): mostrar el texto crudo.
+    // Unrecognized text and bad sky (rain/storm): show the raw text.
     parts.push(skyDesc.charAt(0).toUpperCase() + skyDesc.slice(1));
   }
 
@@ -370,7 +370,7 @@ export function buildRankingReason(
   if (flag?.color === 'green') parts.push('bandera verde');
   else if (flag?.color === 'yellow') parts.push('precauci\u00F3n');
 
-  // Lluvia prevista: solo si NO llueve ya y el cielo no dice ya lluvia/tormenta.
+  // Forecast rain: only if it is NOT already raining and the sky does not already say rain/storm.
   const forecastPart = rainPart ? null : rainForecastReasonFragment(rainForecast);
   if (forecastPart && skyWord !== 'Lluvia' && skyWord !== 'Tormenta') {
     parts.push(forecastPart);

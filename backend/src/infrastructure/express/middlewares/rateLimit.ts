@@ -1,15 +1,15 @@
 import { Request, Response, NextFunction } from 'express';
 
 /**
- * Límite de peticiones por IP (ventana fija, en memoria).
+ * Per-IP request limit (fixed window, in memory).
  *
- * No busca frenar a los usuarios —una visita normal hace un puñado de
- * peticiones— sino evitar que un scraper ajeno consuma la cuota gratuita de
- * OpenWeather/AEMET, que es compartida por todos y no se recupera hasta el mes
- * siguiente.
+ * It does not aim to slow down users —a normal visit makes a handful of
+ * requests— but to prevent a third-party scraper from consuming the free quota of
+ * OpenWeather/AEMET, which is shared by everyone and does not recover until the next
+ * month.
  *
- * Sin dependencias: un contador por IP basta para un solo proceso, que es
- * justo lo que hay en Render free.
+ * No dependencies: one counter per IP is enough for a single process, which is
+ * exactly what there is on Render free.
  */
 
 export interface RateLimitOptions {
@@ -30,7 +30,7 @@ export function rateLimit({
     const ahora = now();
     if (ahora - inicioVentana >= ventanaMs) {
       inicioVentana = ahora;
-      contadores = new Map(); // ventana nueva: se descarta el mapa entero
+      contadores = new Map(); // new window: the whole map is discarded
     }
 
     const ip = req.ip ?? req.socket?.remoteAddress ?? 'desconocida';

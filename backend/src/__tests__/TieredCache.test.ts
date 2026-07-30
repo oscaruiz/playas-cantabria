@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { TieredCache, esPersistible } from '../infrastructure/cache/TieredCache';
 import { L2Store } from '../infrastructure/cache/UpstashRedisStore';
 
-/** L2 de mentira, con contadores para comprobar el consumo de comandos. */
+/** Fake L2, with counters to check command consumption. */
 class L2Falso implements L2Store {
   gets = 0;
   sets = 0;
@@ -20,7 +20,7 @@ class L2Falso implements L2Store {
     this.store.set(key, { value, at: this.now() });
   }
 
-  /** Simula un valor que ya estaba en Redis antes de arrancar el proceso. */
+  /** Simulates a value that was already in Redis before the process started. */
   sembrar(key: string, value: unknown, at: number) {
     this.store.set(key, { value, at });
   }
@@ -57,9 +57,9 @@ describe('TieredCache', () => {
       return { v: 'nuevo' };
     });
 
-    // Se sirve el viejo al instante...
+    // The old one is served instantly...
     expect(valor).toEqual({ v: 'viejo' });
-    // ...y se dispara el recálculo en segundo plano.
+    // ...and the recomputation is triggered in the background.
     await esperarVaciadoDeCola();
     expect(llamadas).toBe(1);
   });
@@ -85,7 +85,7 @@ describe('TieredCache', () => {
       await cache.getOrSetStale('featured:beaches', 300, 3600, async () => ({ v: i }));
     }
 
-    expect(l2.gets).toBe(1); // solo el fallo inicial
+    expect(l2.gets).toBe(1); // only the initial miss
     expect(l2.sets).toBe(1);
   });
 
@@ -101,11 +101,11 @@ describe('TieredCache', () => {
   });
 
   it('un L2 que lanza no rompe la petición ni deja rechazos sin manejar', async () => {
-    // El store real nunca lanza (se lo traga todo), pero el L2 es un punto de
-    // extensión: si la siguiente implementación lanza, la escritura en segundo
-    // plano no debe ni arrastrar la petición ni tumbar el proceso. En Node una
-    // promesa rechazada sin manejar termina el proceso, así que este test vigila
-    // las dos cosas.
+    // The real store never throws (it swallows everything), but the L2 is an
+    // extension point: if the next implementation throws, the background write
+    // must neither drag the request down nor bring down the process. In Node an
+    // unhandled rejected promise terminates the process, so this test watches
+    // both things.
     const l2Roto: L2Store = {
       get: async () => {
         throw new Error('Upstash caído');
@@ -124,7 +124,7 @@ describe('TieredCache', () => {
         cache.getOrSetStale('details:3902401', 60, 600, async () => ({ ok: true })),
       ).resolves.toEqual({ ok: true });
 
-      // Dar tiempo a que un rechazo no manejado aflore antes de comprobar.
+      // Give time for an unhandled rejection to surface before checking.
       await new Promise((r) => setTimeout(r, 10));
       expect(rechazos).toEqual([]);
     } finally {

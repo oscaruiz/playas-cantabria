@@ -47,11 +47,11 @@ export interface BeachDTO {
   lat: number;
   lon: number;
   idCruzRoja: number;
-  /** Puestos de Cruz Roja (0, 1 o varios). Presente solo en playas multi-puesto. */
+  /** Red Cross stations (0, 1 or several). Present only on multi-station beaches. */
   cruzRojaStations?: CruzRojaStationDTO[];
-  /** Nombres alternativos/topónimos para búsqueda. */
+  /** Alternative names/toponyms for search. */
   alias?: string[];
-  /** Sectores diferenciados (metadato; no se suman longitudes). */
+  /** Distinct sectors (metadata; lengths are not summed). */
   sectores?: BeachSector[];
   sinAemet?: boolean;
   atributos?: BeachAttributesDTO;

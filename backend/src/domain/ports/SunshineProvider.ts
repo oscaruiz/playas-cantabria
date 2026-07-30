@@ -1,20 +1,20 @@
 import { SunshineObservation } from '../entities/Sunshine';
 
 /**
- * Port para fuentes de insolación observada por coordenadas (hoy: red de
- * estaciones de AEMET).
+ * Port for sources of observed sunshine by coordinates (today: AEMET's
+ * station network).
  *
- * Puerto aparte y estrecho a propósito, no un método más en `WeatherProvider`:
- * OpenWeather no publica insolación y no tendría cómo implementarlo.
+ * A separate, narrow port on purpose, not another method on `WeatherProvider`:
+ * OpenWeather does not publish sunshine and would have no way to implement it.
  */
 export interface SunshineProvider {
   /**
-   * Estaciones con insolación más cercanas al punto, ORDENADAS por distancia.
-   * Array vacío si no hay ninguna utilizable. Nunca lanza.
+   * Stations with sunshine data closest to the point, SORTED by distance.
+   * Empty array if none is usable. Never throws.
    *
-   * Devuelve varias y no solo la mejor porque para las playas lejanas hace falta
-   * un segundo testigo antes de fiarse: una capa de estratos la ven varias
-   * estaciones, un sensor averiado no.
+   * Returns several and not just the best one because for far-away beaches a
+   * second witness is needed before trusting it: a stratus layer is seen by
+   * several stations, a broken sensor is not.
    */
   getSunshineNear(lat: number, lon: number): Promise<SunshineObservation[]>;
 }

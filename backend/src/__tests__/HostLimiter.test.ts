@@ -25,7 +25,7 @@ describe('HostLimiter — techo de concurrencia por proveedor', () => {
     const limiter = new HostLimiter({ 'api.openweathermap.org': 1 });
     await limiter.adquirir('ejemplo.com');
     await limiter.adquirir('ejemplo.com');
-    // Si encolara, este await no resolvería nunca.
+    // If it queued, this await would never resolve.
     await expect(limiter.adquirir('ejemplo.com')).resolves.toBeUndefined();
   });
 

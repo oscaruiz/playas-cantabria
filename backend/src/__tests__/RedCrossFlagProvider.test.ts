@@ -6,7 +6,7 @@ import { RedCrossFlagProvider } from '../infrastructure/providers/RedCrossFlagPr
 import { InMemoryCache } from '../infrastructure/cache/InMemoryCache';
 import { http } from '../infrastructure/http/axiosClient';
 
-// HTML mínimo con la estructura que parsea el provider (ficha de playa Cruz Roja).
+// Minimal HTML with the structure the provider parses (Cruz Roja beach page).
 const FICHA_HTML = `
 <html><body>
   <div id="listaFicha">
@@ -19,7 +19,7 @@ const FICHA_HTML = `
   </div>
 </body></html>`;
 
-// Path inexistente para forzar el camino de scrape EN VIVO (sin fuente por fichero).
+// Nonexistent path to force the LIVE scrape path (no file source).
 const NO_FILE = 'data/__no_flags_fixture__.json';
 
 afterEach(() => vi.restoreAllMocks());
@@ -71,7 +71,7 @@ describe('RedCrossFlagProvider — scrape en vivo (fallback)', () => {
     const first = await provider.getFlagByRedCrossId(1127);
     expect(first).toBeNull();
 
-    // Como el fallo NO se cachea, la 2ª llamada vuelve a intentar (2+2 = 4 posts).
+    // Since the failure is NOT cached, the 2nd call tries again (2+2 = 4 posts).
     spy.mockResolvedValue({ data: FICHA_HTML } as any);
     const second = await provider.getFlagByRedCrossId(1127);
     expect(second?.color).toBe('green');
@@ -96,11 +96,11 @@ describe('RedCrossFlagProvider — fuente primaria por fichero (flags.json)', ()
 
     expect(status?.color).toBe('red');
     expect(status?.schedule).toBe('11:30 - 19:30');
-    expect(spy).not.toHaveBeenCalled(); // no scrape en vivo
+    expect(spy).not.toHaveBeenCalled(); // no live scrape
   });
 
   it('una entrada del fichero SIN color NO tapa el scrape en vivo (cron antes del izado)', async () => {
-    // Simula el bug: el cron scrapeó antes de las 11:30 y guardó "No hay información".
+    // Simulates the bug: the cron scraped before 11:30 and stored "No hay información".
     const dir = mkdtempSync(join(tmpdir(), 'flags-'));
     const file = join(dir, 'flags.json');
     writeFileSync(
@@ -115,8 +115,8 @@ describe('RedCrossFlagProvider — fuente primaria por fichero (flags.json)', ()
 
     const status = await provider.getFlagByRedCrossId(555);
 
-    expect(spy).toHaveBeenCalledTimes(1); // intenta el live al no haber color en fichero
-    expect(status?.color).toBe('green'); // usa la bandera real izada del scrape
+    expect(spy).toHaveBeenCalledTimes(1); // tries the live scrape since the file has no color
+    expect(status?.color).toBe('green'); // uses the real hoisted flag from the scrape
   });
 
   it('si el live falla y el fichero no tiene color, devuelve el fichero como último recurso', async () => {
@@ -136,13 +136,13 @@ describe('RedCrossFlagProvider — fuente primaria por fichero (flags.json)', ()
 
     expect(status).not.toBeNull();
     expect(status?.color).toBeUndefined();
-    expect(status?.coverageFrom).toBe('12-06-2026'); // conserva la cobertura del fichero
+    expect(status?.coverageFrom).toBe('12-06-2026'); // keeps the coverage from the file
     expect(status?.schedule).toBe('11:30 - 19:30');
   });
 });
 
-// Ficha real cuando aún no hay bandera izada: responde 200, con cobertura y
-// horario, pero el alt de la imagen no es un color.
+// Real page when no flag is hoisted yet: responds 200, with coverage and
+// schedule, but the image alt is not a color.
 const FICHA_SIN_BANDERA = `
 <html><body>
   <div id="listaFicha">
@@ -157,8 +157,8 @@ const FICHA_SIN_BANDERA = `
 
 describe('RedCrossFlagProvider — caché del scrape en vivo', () => {
   it('un resultado SIN color no se queda cacheado el resto del día', async () => {
-    // El bug: "No hay información" es un 200 válido, así que entraba en la caché
-    // de 24h y la playa se quedaba sin bandera aunque se izara minutos después.
+    // The bug: "No hay información" is a valid 200, so it entered the 24h cache
+    // and the beach was left without a flag even if it was hoisted minutes later.
     let ahora = Date.parse('2026-07-28T10:00:00.000Z');
     const cache = new InMemoryCache(() => ahora);
     const spy = vi.spyOn(http, 'post').mockResolvedValue({ data: FICHA_SIN_BANDERA } as any);
@@ -168,12 +168,12 @@ describe('RedCrossFlagProvider — caché del scrape en vivo', () => {
     expect(antes?.color).toBeUndefined();
     expect(spy).toHaveBeenCalledTimes(1);
 
-    // Dentro del TTL corto no se machaca a cruzroja.es.
+    // Within the short TTL, cruzroja.es is not hammered.
     ahora += 60_000;
     await provider.getFlagByRedCrossId(555);
     expect(spy).toHaveBeenCalledTimes(1);
 
-    // Pasado el TTL corto se vuelve a mirar, y para entonces ya está izada.
+    // Once the short TTL passes it checks again, and by then it is already hoisted.
     ahora += 5 * 60_000;
     spy.mockResolvedValue({ data: FICHA_HTML } as any);
     const despues = await provider.getFlagByRedCrossId(555);
@@ -202,8 +202,8 @@ describe('RedCrossFlagProvider — caché del scrape en vivo', () => {
     const provider = new RedCrossFlagProvider(cache, NO_FILE);
 
     await provider.getFlagByRedCrossId(555);
-    // Una lectura por hora durante 25h. Si cada una renovase la entrada, no se
-    // volvería a scrapear jamás y la bandera se quedaría congelada.
+    // One read per hour for 25h. If each one renewed the entry, it would
+    // never scrape again and the flag would stay frozen.
     for (let i = 0; i < 25; i++) {
       ahora += 60 * 60_000;
       await provider.getFlagByRedCrossId(555);

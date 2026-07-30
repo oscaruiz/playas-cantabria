@@ -30,7 +30,7 @@ export class AemetBeachForecastProvider {
     if (!cfg.aemetApiKey) throw new Error('Missing AEMET_API_KEY');
 
     const cacheKey = `aemet:beach:${codigo}`;
-    // AEMET publica esta previsión un par de veces al día: TTL de previsión.
+    // AEMET publishes this forecast a couple of times a day: forecast TTL.
     return this.cache.getOrSetStale(cacheKey, Config.forecastTtlSeconds(), Config.forecastStaleTtlSeconds(), async () => {
       const metaUrl = `https://opendata.aemet.es/opendata/api/prediccion/especifica/playa/${codigo}`;
       const meta = await http.get(metaUrl, {
@@ -47,7 +47,7 @@ export class AemetBeachForecastProvider {
         timeout: 7000,
       });
 
-      // decode latin1 → utf8 si hace falta
+      // decode latin1 → utf8 if needed
       let decoded = iconv.decode(Buffer.from(datosResp.data), 'latin1');
       if (decoded.includes('<html') || decoded.startsWith('<!DOCTYPE')) {
         throw new Error('AEMET playa: HTML received instead of JSON');
@@ -57,7 +57,7 @@ export class AemetBeachForecastProvider {
       try {
         parsed = JSON.parse(decoded);
       } catch {
-        // si en realidad ya venía en utf-8
+        // in case it actually came in utf-8 already
         decoded = Buffer.from(datosResp.data).toString('utf-8');
         parsed = JSON.parse(decoded);
       }

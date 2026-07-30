@@ -5,17 +5,17 @@ import { Config } from '../config/config';
 import { debugLog } from '../utils/debug';
 
 /**
- * Semilla de caché generada en CI (mismo patrón que data/flags.json).
+ * Cache seed generated in CI (same pattern as data/flags.json).
  *
- * Render free duerme el proceso a los 15 minutos: sin esto, el primer usuario
- * que despierta la app dispara el fan-out completo de /featured (~200 peticiones
- * a proveedores externos) y se come el timeout de 15 s del servidor.
+ * Render free puts the process to sleep after 15 minutes: without this, the first user
+ * who wakes the app up triggers the full /featured fan-out (~200 requests
+ * to external providers) and runs into the server's 15 s timeout.
  *
- * El valor se siembra como STALE a propósito: se sirve al instante y se refresca
- * en segundo plano. Nunca se hace pasar por recién calculado.
+ * The value is seeded as STALE on purpose: it is served instantly and refreshed
+ * in the background. It is never passed off as freshly computed.
  */
 
-/** Más allá de esto el snapshot ya no representa el día (banderas, lluvia). */
+/** Beyond this the snapshot no longer represents the day (flags, rain). */
 const EDAD_MAXIMA_MS = 6 * 60 * 60 * 1000;
 
 export interface SnapshotFile {

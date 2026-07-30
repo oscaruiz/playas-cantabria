@@ -1,14 +1,14 @@
 /**
- * Scrapea las banderas de Cruz Roja de todas las playas y escribe data/flags.json.
+ * Scrapes the Cruz Roja flags of every beach and writes data/flags.json.
  *
- * Pensado para ejecutarse:
- *  - en GitHub Actions (cron) → commitea flags.json que el backend sirve, o
- *  - en local (IP residencial española) como respaldo si Azure/GitHub está bloqueado.
+ * Meant to run:
+ *  - in GitHub Actions (cron) → commits the flags.json that the backend serves, or
+ *  - locally (Spanish residential IP) as a fallback if Azure/GitHub is blocked.
  *
- * cruzroja.es (WAF F5) devuelve 403 a IPs de datacenter. Este script imprime el
- * estado HTTP de cada playa para ver claramente si el entorno está bloqueado.
+ * cruzroja.es (WAF F5) returns 403 to datacenter IPs. This script prints the
+ * HTTP status of each beach to make it obvious whether the environment is blocked.
  *
- *   Uso: npm run scrape:flags   (cwd = backend/)
+ *   Usage: npm run scrape:flags   (cwd = backend/)
  */
 import fs from 'fs/promises';
 import path from 'path';
@@ -80,8 +80,8 @@ async function main() {
     cruzRojaStations?: Array<{ id?: number; nombreFuente: string }>;
   }>;
 
-  // Recolecta ids de la playa única (idCruzRoja) Y de todos los puestos
-  // (cruzRojaStations) de las playas multi-puesto.
+  // Collects ids from the single beach (`idCruzRoja`) AND from every station
+  // (`cruzRojaStations`) of the multi-station beaches.
   const ids = Array.from(
     new Set(
       beaches
@@ -123,9 +123,10 @@ async function main() {
     process.exit(1);
   }
 
-  // Si ninguna playa tiene color (todas "No hay información"), el scrape se ejecutó
-  // ANTES del izado (11:30 Madrid) o la web aún no lo refleja. Escribir esto pisaría
-  // el último flags.json bueno con "todo Desconocida" y dejaría la app sin banderas.
+  // If no beach has a color (all "No hay información"), the scrape ran BEFORE
+  // the hoisting (11:30 Madrid) or the site does not reflect it yet. Writing this
+  // would overwrite the last good flags.json with "all Desconocida" and leave the
+  // app without flags.
   if (colored === 0) {
     console.error(
       `\n⚠️  0 banderas con color (todas "No hay información"). Probablemente el scrape\n` +

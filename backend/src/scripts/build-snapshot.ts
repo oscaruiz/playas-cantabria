@@ -1,15 +1,15 @@
 /**
- * Genera data/snapshot.json: el agregado de /api/beaches/featured ya calculado.
+ * Generates data/snapshot.json: the /api/beaches/featured aggregate, precomputed.
  *
- * Pensado para ejecutarse en GitHub Actions junto al scrape de banderas. El
- * backend lo siembra al arrancar (como stale), de modo que el primer usuario tras
- * un despliegue o tras el dormido de Render free no dispara el fan-out completo
- * a los proveedores externos.
+ * Meant to run in GitHub Actions alongside the flag scrape. The backend seeds
+ * it on startup (as stale), so that the first user after a deployment or after
+ * the Render free sleep does not trigger the full fan-out to the external
+ * providers.
  *
- * Igual que scrape-flags.ts: si el cálculo sale vacío NO se sobrescribe el fichero
- * anterior — más vale un snapshot de hace unas horas que ninguno.
+ * Same as scrape-flags.ts: if the computation comes out empty the previous file
+ * is NOT overwritten — a snapshot from a few hours ago beats no snapshot.
  *
- *   Uso: npm run build:snapshot   (cwd = backend/)
+ *   Usage: npm run build:snapshot   (cwd = backend/)
  */
 import fs from 'fs/promises';
 import path from 'path';
@@ -41,9 +41,9 @@ async function main(): Promise<void> {
       `${resultado.mejores.length} destacadas.`,
   );
 
-  // Desglose por proveedor: sin esto, un "0 con previsión AEMET" no distingue
-  // entre clave mal puesta (4xx), límite de peticiones (429), bloqueo de la IP
-  // del runner (5xx/red) y enfriamiento por un 429 previo (0 peticiones).
+  // Breakdown per provider: without this, a "0 with AEMET forecast" does not
+  // distinguish between a wrong key (4xx), rate limiting (429), the runner's IP
+  // being blocked (5xx/network) and cooldown from a previous 429 (0 requests).
   console.log('\nPeticiones salientes por proveedor:');
   for (const [host, c] of Object.entries(httpMetrics.snapshot().desdeArranque)) {
     console.log(
@@ -61,8 +61,9 @@ async function main(): Promise<void> {
     );
   }
 
-  // Sin clima el snapshot no aporta nada (típicamente: faltan las claves de API en
-  // el entorno de CI). Se prefiere conservar el anterior antes que degradarlo.
+  // Without weather the snapshot adds nothing (typically: the API keys are
+  // missing in the CI environment). Keeping the previous one is preferred over
+  // degrading it.
   if (conClima === 0) {
     console.error('Ninguna playa trajo clima: NO se sobrescribe el snapshot anterior.');
     process.exitCode = 1;

@@ -1,24 +1,24 @@
 /**
- * Insolación OBSERVADA en una estación: minutos de sol registrados durante la
- * hora anterior.
+ * OBSERVED sunshine at a station: minutes of sun recorded during the previous
+ * hour.
  *
- * Es la única señal de cielo que tenemos que no sale de un modelo. Los modelos
- * (OpenWeather, Open-Meteo, met.no, la previsión de playas de AEMET) comparten
- * el mismo punto ciego: una capa de estratos marinos pegada a la costa cabe
- * entera dentro de una celda de su rejilla y desaparece. Que varios coincidan
- * en "despejado" no es corroboración, es el mismo error repetido.
+ * It is the only sky signal we have that does not come out of a model. The
+ * models (OpenWeather, Open-Meteo, met.no, AEMET's beach forecast) share the
+ * same blind spot: a marine stratus layer hugging the coast fits entirely
+ * inside a cell of their grid and disappears. Several of them agreeing on
+ * "clear" is not corroboration, it is the same error repeated.
  */
 export interface SunshineObservation {
-  /** Minutos de sol de la última hora, 0-60. */
+  /** Minutes of sun in the last hour, 0-60. */
   insoMin: number;
-  /** `insoMin / 60`, precalculado por comodidad de quien decide. */
+  /** `insoMin / 60`, precomputed for the decider's convenience. */
   fraccion: number;
-  /** Distancia de la estación a la playa consultada. */
+  /** Distance from the station to the queried beach. */
   distanciaKm: number;
-  /** Identificador AEMET de la estación (p. ej. "1111X"). */
+  /** AEMET identifier of the station (e.g. "1111X"). */
   idema: string;
-  /** Nombre legible, para el diagnóstico. */
+  /** Readable name, for diagnostics. */
   ubicacion: string | null;
-  /** Epoch (ms) de la observación (`fint`), NO de cuándo la descargamos. */
+  /** Epoch (ms) of the observation (`fint`), NOT of when we downloaded it. */
   observadoEn: number;
 }

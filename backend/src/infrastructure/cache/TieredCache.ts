@@ -3,22 +3,22 @@ import { L2Store } from './UpstashRedisStore';
 import { debugLog } from '../utils/debug';
 
 /**
- * Caché de dos niveles: memoria (L1) + almacén remoto opcional (L2).
+ * Two-tier cache: memory (L1) + optional remote store (L2).
  *
- * El problema que resuelve: en Render free el proceso se duerme a los 15 minutos
- * y cada despliegue lo reinicia, así que la caché en memoria se evapora y el
- * primer usuario paga el fan-out completo a todos los proveedores (~200
- * peticiones) contra un timeout de 15 s. El L2 sobrevive a eso.
+ * The problem it solves: on Render free the process falls asleep after 15 minutes
+ * and every deploy restarts it, so the in-memory cache evaporates and the
+ * first user pays the full fan-out to all providers (~200
+ * requests) against a 15 s timeout. The L2 survives that.
  *
- * Solo se persisten las claves CARAS (allowlist): el plan gratuito de Upstash da
- * 10k comandos/día y las claves por coordenadas de OpenWeather/Open-Meteo, que
- * son cientos, lo agotarían sin aportar gran cosa.
+ * Only the EXPENSIVE keys are persisted (allowlist): the Upstash free plan gives
+ * 10k commands/day and the per-coordinates keys of OpenWeather/Open-Meteo, which
+ * number in the hundreds, would exhaust it without contributing much.
  *
- * Es una subclase de InMemoryCache para que ningún proveedor tenga que cambiar:
- * se cablea en un único punto (dependencies.ts).
+ * It is a subclass of InMemoryCache so that no provider has to change:
+ * it is wired in a single place (dependencies.ts).
  */
 
-/** Familias de clave que merecen viajar al L2 (las de fan-out caro). */
+/** Key families worth traveling to the L2 (the expensive fan-out ones). */
 const PERSISTIBLES = ['featured:', 'details:', 'flag:', 'aemet:obs:'];
 
 export function esPersistible(key: string): boolean {
@@ -60,13 +60,13 @@ export class TieredCache extends InMemoryCache {
   }
 
   /**
-   * Solo se consulta el L2 cuando L1 NO tiene nada: es decir, en arranque en frío
-   * o tras un despliegue. Durante la vida normal del proceso el L2 no se toca, que
-   * es lo que mantiene el consumo dentro del plan gratuito.
+   * The L2 is only queried when L1 has NOTHING: that is, on cold start
+   * or after a deploy. During the normal life of the process the L2 is not touched, which
+   * is what keeps consumption within the free plan.
    *
-   * El valor se siembra con su vida RESTANTE, no con el TTL completo: un dato de
-   * hace 20 minutos entra como stale (se sirve al instante y se refresca detrás),
-   * nunca como recién traído.
+   * The value is seeded with its REMAINING life, not the full TTL: a piece of data
+   * from 20 minutes ago enters as stale (served instantly and refreshed behind),
+   * never as freshly fetched.
    */
   private async sembrarDesdeL2<T>(
     key: string,
@@ -75,9 +75,9 @@ export class TieredCache extends InMemoryCache {
   ): Promise<void> {
     if (this.state(key) !== 'miss') return;
 
-    // El L2 es un acelerador, nunca una dependencia: si falla, se recalcula. El
-    // store actual ya se traga sus errores, pero el contrato se garantiza aquí
-    // para que no dependa de la implementación que haya detrás.
+    // The L2 is an accelerator, never a dependency: if it fails, we recompute. The
+    // current store already swallows its errors, but the contract is guaranteed here
+    // so that it does not depend on whatever implementation sits behind.
     let hit: { value: T; at: number } | undefined;
     try {
       hit = await this.l2.get<T>(key);
@@ -88,7 +88,7 @@ export class TieredCache extends InMemoryCache {
     if (!hit) return;
 
     const edadSeg = (this.reloj() - hit.at) / 1000;
-    if (edadSeg >= staleTtlSeconds) return; // demasiado viejo para servirlo
+    if (edadSeg >= staleTtlSeconds) return; // too old to serve
 
     this.seed(
       key,
@@ -99,7 +99,7 @@ export class TieredCache extends InMemoryCache {
     debugLog('cache.l2.hit', { key, edadSeg: Math.round(edadSeg) });
   }
 
-  /** Write-through: lo que se calcula se guarda también en L2, sin esperar. */
+  /** Write-through: what gets computed is also stored in L2, without waiting. */
   private conEscrituraL2<T>(
     key: string,
     ttlSeconds: number,
@@ -107,10 +107,10 @@ export class TieredCache extends InMemoryCache {
   ): () => Promise<T> {
     return async () => {
       const value = await compute();
-      // No se espera a la escritura, pero SÍ se traga su fallo: una promesa
-      // rechazada sin manejar tumba el proceso de Node. El almacén actual nunca
-      // lanza, pero el L2 es un punto de extensión y este contrato no puede
-      // depender de que la siguiente implementación se acuerde.
+      // The write is not awaited, but its failure IS swallowed: an unhandled
+      // rejected promise brings down the Node process. The current store never
+      // throws, but the L2 is an extension point and this contract cannot
+      // depend on the next implementation remembering that.
       void this.l2.set(key, value, ttlSeconds).catch(() => undefined);
       return value;
     };

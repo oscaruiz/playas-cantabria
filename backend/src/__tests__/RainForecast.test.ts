@@ -43,7 +43,7 @@ function makeDay(morningSky: string | null, afternoonSky: string | null): DayFor
   };
 }
 
-// En julio Madrid es CEST (UTC+2): 09:00Z = 11:00 Madrid; 14:00Z = 16:00 Madrid.
+// In July Madrid is CEST (UTC+2): 09:00Z = 11:00 Madrid; 14:00Z = 16:00 Madrid.
 const MANANA_MADRID = new Date('2026-07-15T09:00:00Z');
 const TARDE_MADRID = new Date('2026-07-15T14:00:00Z');
 

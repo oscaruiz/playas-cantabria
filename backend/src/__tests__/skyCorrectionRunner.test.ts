@@ -4,9 +4,9 @@ import { skyCorrectionMetrics } from '../infrastructure/observability/skyCorrect
 import { Weather } from '../domain/entities/Weather';
 import { SunshineObservation } from '../domain/entities/Sunshine';
 
-/** 29-jul 12:00 UTC = 14:00 de Madrid: dentro de la franja de playa. */
+/** 29-jul 12:00 UTC = 14:00 Madrid time: inside the beach time slot. */
 const EN_FRANJA = Date.parse('2026-07-29T12:00:00.000Z');
-/** 29-jul 04:00 UTC = 06:00 de Madrid: fuera. */
+/** 29-jul 04:00 UTC = 06:00 Madrid time: outside. */
 const FUERA_DE_FRANJA = Date.parse('2026-07-29T04:00:00.000Z');
 
 const DESPEJADO: Weather = {
@@ -47,7 +47,7 @@ describe('corregirCieloObservado — modos', () => {
     process.env.SKY_CORRECTION = 'shadow';
     const res = corregirCieloObservado('Sardinero', DESPEJADO, SIN_SOL, false, EN_FRANJA);
 
-    expect(res).toBe(DESPEJADO); // mismísimo objeto: la API no se entera
+    expect(res).toBe(DESPEJADO); // the very same object: the API never notices
     const snap = skyCorrectionMetrics.snapshot();
     expect(snap.motivos).toEqual({ corregido: 1 });
     expect(snap.corregidas.map((c) => c.playa)).toEqual(['Sardinero']);
@@ -78,9 +78,9 @@ describe('corregirCieloObservado — modos', () => {
   });
 
   it('un valor raro en la env cae al defecto (on), no deja el corrector mudo', () => {
-    // Apagarlo tiene que ser deliberado: solo "shadow" u "off" exactos lo paran.
-    // Un typo en la variable no debe dejar la app diciendo "sol" con el cielo
-    // cubierto sin que nadie se entere.
+    // Turning it off has to be deliberate: only exact "shadow" or "off" stop it.
+    // A typo in the variable must not leave the app saying "sun" under an
+    // overcast sky without anyone noticing.
     process.env.SKY_CORRECTION = 'OFF_PLEASE';
     const res = corregirCieloObservado('Sardinero', DESPEJADO, SIN_SOL, false, EN_FRANJA);
     expect(res?.description).toBe('muy nuboso');

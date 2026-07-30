@@ -89,7 +89,7 @@ const DRY_AEMET = makeWeather({ source: 'AEMET', conditionCode: null, precipitat
 const DRY_OM = makeOmNow();
 
 // ---------------------------------------------------------------------------
-// Helpers puros de detección
+// Pure detection helpers
 // ---------------------------------------------------------------------------
 
 describe('isOpenWeatherPrecipitating', () => {
@@ -139,7 +139,7 @@ describe('isAemetPrecipitating', () => {
 });
 
 // ---------------------------------------------------------------------------
-// computeUpcoming (previsión próximas 6h, tramos minutely_15)
+// computeUpcoming (next-6h forecast, minutely_15 slots)
 // ---------------------------------------------------------------------------
 
 const slot = (offsetMin: number, mm: number | null, code: number | null): PrecipitationSlot => ({
@@ -178,7 +178,7 @@ describe('computeUpcoming', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Agregación
+// Aggregation
 // ---------------------------------------------------------------------------
 
 describe('GetRainNowcast — agregación multi-fuente', () => {

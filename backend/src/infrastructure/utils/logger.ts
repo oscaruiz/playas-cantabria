@@ -1,7 +1,7 @@
 import winston from 'winston';
 import { Request, Response, NextFunction } from 'express';
 
-// Crear el logger con Winston
+// Create the logger with Winston
 export const logger = winston.createLogger({
   level: 'info',
   format: winston.format.combine(
@@ -15,7 +15,7 @@ export const logger = winston.createLogger({
   ],
 });
 
-// Si no estamos en producción, también loguear a la consola
+// If we are not in production, also log to the console
 if (process.env.NODE_ENV !== 'production') {
   logger.add(new winston.transports.Console({
     format: winston.format.combine(
@@ -25,7 +25,7 @@ if (process.env.NODE_ENV !== 'production') {
   }));
 }
 
-// Middleware de logging para Express
+// Logging middleware for Express
 export const expressLogger = (req: Request, res: Response, next: NextFunction): void => {
   const start = Date.now();
   res.on('finish', () => {

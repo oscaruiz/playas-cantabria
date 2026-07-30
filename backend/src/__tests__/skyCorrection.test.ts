@@ -9,7 +9,7 @@ import { SunshineObservation } from '../domain/entities/Sunshine';
 
 const AHORA = Date.parse('2026-07-29T12:00:00.000Z');
 
-/** Cielo despejado según el modelo: el caso que motiva todo esto. */
+/** Clear sky according to the model: the case that motivates all of this. */
 function despejado(extra: Partial<Weather> = {}): Weather {
   return {
     source: 'OpenWeather',
@@ -48,7 +48,7 @@ const ctx = (extra: Partial<ContextoCorreccion> = {}): ContextoCorreccion => ({
 
 describe('decidirCorreccionCielo — el caso que lo motiva', () => {
   it('degrada a muy nuboso cuando el modelo dice despejado y no hubo sol', () => {
-    // 29-jul: OpenWeather daba clouds.all 0 mientras Santander medía 0 min de sol.
+    // 29-jul: OpenWeather reported clouds.all 0 while Santander measured 0 min of sunshine.
     const d = decidirCorreccionCielo(despejado(), [obs({ insoMin: 0, fraccion: 0 })], ctx());
     expect(d.aplicar).toBe(true);
     expect(d.nivel).toBe('muyNuboso');
@@ -67,8 +67,8 @@ describe('decidirCorreccionCielo — el caso que lo motiva', () => {
 
 describe('decidirCorreccionCielo — guardas', () => {
   it('no corrige fuera de la franja de playa', () => {
-    // Sin esta guarda, la hora que contiene el amanecer marcaría "nublado" en un
-    // día impecable, porque el sol estuvo bajo el horizonte parte de esa hora.
+    // Without this guard, the hour containing sunrise would mark "cloudy" on a
+    // flawless day, because the sun was below the horizon for part of that hour.
     const d = decidirCorreccionCielo(despejado(), [obs()], ctx({ enFranjaDePlaya: false }));
     expect(d).toMatchObject({ aplicar: false, motivo: 'fuera-de-franja' });
   });
@@ -81,8 +81,8 @@ describe('decidirCorreccionCielo — guardas', () => {
   });
 
   it('no corrige con una observación de hace más de 2 h', () => {
-    // La ventana stale de la caché llega a 3 h; esta guarda es la que impide
-    // marcar "nublado" con un dato de esta mañana.
+    // The cache stale window reaches 3 h; this guard is what prevents
+    // marking "cloudy" with a data point from this morning.
     const vieja = obs({ observadoEn: AHORA - 3 * 60 * 60 * 1000 });
     expect(decidirCorreccionCielo(despejado(), [vieja], ctx())).toMatchObject({
       aplicar: false,
@@ -130,9 +130,9 @@ describe('decidirCorreccionCielo — guardas', () => {
   });
 
   it('el testigo debe ver AL MENOS tanta nube como la estación principal', () => {
-    // 44 de 60 minutos de sol no confirma un "muy nuboso": es casi despejado.
-    // Con la regla laxa anterior habría bastado con que no estuviera del todo
-    // soleado, que es justo lo contrario de corroborar.
+    // 44 out of 60 minutes of sunshine does not confirm a "muy nuboso": it is almost clear.
+    // With the previous lax rule it would have been enough that it was not fully
+    // sunny, which is exactly the opposite of corroborating.
     const sinSol = obs({ distanciaKm: 35, insoMin: 0, fraccion: 0 });
     const casiDespejado = obs({ idema: '1109X', distanciaKm: 38, insoMin: 44, fraccion: 44 / 60 });
     expect(decidirCorreccionCielo(despejado(), [sinSol, casiDespejado], ctx())).toMatchObject({
@@ -140,7 +140,7 @@ describe('decidirCorreccionCielo — guardas', () => {
       motivo: 'sin-segundo-testigo',
     });
 
-    // En cambio sí vale para una corrección más suave: ambos verían "dispersas".
+    // It is however valid for a milder correction: both would see "dispersas".
     const intermedia = obs({ distanciaKm: 35, insoMin: 30, fraccion: 0.5 });
     expect(decidirCorreccionCielo(despejado(), [intermedia, casiDespejado], ctx())).toMatchObject({
       aplicar: true,
@@ -163,8 +163,8 @@ describe('decidirCorreccionCielo — guardas', () => {
       aplicar: false,
       motivo: 'sol-suficiente',
     });
-    // El modelo dice cubierto y hay sol: seguimos sin tocar. La corrección es de
-    // un solo sentido a propósito.
+    // The model says overcast and there is sun: we still do not touch it. The
+    // correction is one-way on purpose.
     const cubierto = despejado({ icon: '04d', description: 'muy nuboso' });
     expect(decidirCorreccionCielo(cubierto, [conSol], ctx()).aplicar).toBe(false);
   });
@@ -176,7 +176,7 @@ describe('decidirCorreccionCielo — guardas', () => {
       motivo: 'modelo-ya-nublado',
     });
 
-    // 03d (dispersas) con sol intermitente: el destino sería el mismo, no se toca.
+    // 03d (dispersas) with intermittent sunshine: the target would be the same, left untouched.
     const dispersas = despejado({ icon: '03d', description: 'nubes dispersas' });
     expect(
       decidirCorreccionCielo(dispersas, [obs({ insoMin: 30, fraccion: 0.5 })], ctx()).aplicar,
@@ -189,7 +189,7 @@ describe('decidirCorreccionCielo — guardas', () => {
   });
 
   it('no corrige un icono de fenómeno que no está en la escala de nubosidad', () => {
-    // Niebla: no se pisa con un icono de nubes aunque no haya sol.
+    // Fog: it is not overwritten with a clouds icon even if there is no sunshine.
     const niebla = despejado({ icon: '50d', description: 'niebla', conditionCode: 741 });
     expect(decidirCorreccionCielo(niebla, [obs()], ctx())).toMatchObject({
       aplicar: false,
@@ -207,8 +207,8 @@ describe('decidirCorreccionCielo — guardas', () => {
 
 describe('aplicarCorreccionCielo', () => {
   it('conserva source OpenWeather: si no, el ranking pierde el texto del cielo', () => {
-    // buildRankingReason (BeachScorer) solo usa la descripción cuando el origen
-    // es OpenWeather. Cambiarlo aquí dejaría la razón sin la parte del cielo.
+    // buildRankingReason (BeachScorer) only uses the description when the source
+    // is OpenWeather. Changing it here would leave the reason without the sky part.
     const w = despejado();
     const d = decidirCorreccionCielo(w, [obs()], ctx());
     expect(aplicarCorreccionCielo(w, d).source).toBe('OpenWeather');
@@ -234,8 +234,8 @@ describe('aplicarCorreccionCielo', () => {
   });
 
   it('los textos que emite son los que el frontend ya sabe traducir y dibujar', () => {
-    // 'muy nuboso' y 'nubes dispersas' ya están en MAPA_CIELO y en emojiCielo,
-    // así que el corrector no obliga a tocar el frontend.
+    // 'muy nuboso' and 'nubes dispersas' are already in MAPA_CIELO and in emojiCielo,
+    // so the corrector does not force touching the frontend.
     const w = despejado();
     const muyNuboso = aplicarCorreccionCielo(w, decidirCorreccionCielo(w, [obs()], ctx()));
     const dispersas = aplicarCorreccionCielo(

@@ -1,10 +1,11 @@
 /**
- * Validación automatizada del catálogo de playas (backend/data/beaches.json).
+ * Automated validation of the beach catalog (backend/data/beaches.json).
  *
- * Función PURA: recibe el array crudo (claves en español) y devuelve una lista de
- * errores (vacía = catálogo válido). Se ejecuta en un test y puede reutilizarse en
- * un script de CI. No hace red: no comprueba la "vigencia" de un código AEMET en
- * aemet.es (eso se verifica en el proceso de alta), solo la integridad estructural.
+ * PURE function: receives the raw array (Spanish keys) and returns a list of
+ * errors (empty = valid catalog). It runs in a test and can be reused in a CI
+ * script. No network: it does not check the "vigencia" of an AEMET code on
+ * aemet.es (that is verified in the onboarding process), only structural
+ * integrity.
  */
 
 export type RawCatalogAttributes = Record<string, unknown>;
@@ -46,7 +47,7 @@ const KNOWN_ATTRS = new Set([
   'parking', 'chiringuito', 'socorrismo', 'nudista', 'surf',
 ]);
 
-/** minúsculas, sin tildes, sin espacios repetidos, trim. NO quita artículos. */
+/** lowercase, no accents, no repeated spaces, trim. Does NOT strip articles. */
 export function normalizeName(s: string): string {
   return s
     .toLowerCase()
@@ -57,9 +58,9 @@ export function normalizeName(s: string): string {
 }
 
 export interface CatalogValidationResult {
-  /** Problemas de integridad que DEBEN estar vacíos (rompen el test). */
+  /** Integrity problems that MUST be empty (they break the test). */
   errors: string[];
-  /** Señales sospechosas a revisar (no rompen el build; se reportan). */
+  /** Suspicious signals to review (they do not break the build; they are reported). */
   warnings: string[];
 }
 
@@ -77,23 +78,23 @@ export function validateBeachCatalog(
   beaches.forEach((b, i) => {
     const where = typeof b.nombre === 'string' ? `"${b.nombre}"` : `#${i}`;
 
-    // Campos obligatorios
+    // Required fields
     if (typeof b.nombre !== 'string' || !b.nombre.trim()) errors.push(`${where}: nombre inválido`);
     if (typeof b.municipio !== 'string' || !b.municipio.trim()) errors.push(`${where}: municipio inválido`);
     if (typeof b.codigo !== 'string' || !/^\d{7}$/.test(b.codigo)) {
       errors.push(`${where}: codigo (id interno) inválido (se espera 7 dígitos)`);
     }
 
-    // Id interno único
+    // Unique internal id
     if (typeof b.codigo === 'string') ids.set(b.codigo, (ids.get(b.codigo) ?? 0) + 1);
 
-    // Nombre+municipio normalizado único
+    // Unique normalized nombre+municipio
     if (typeof b.nombre === 'string' && typeof b.municipio === 'string') {
       const key = `${normalizeName(b.nombre)}|${normalizeName(b.municipio)}`;
       nameMuni.set(key, (nameMuni.get(key) ?? 0) + 1);
     }
 
-    // Altas prohibidas de la región (entradas erróneas conocidas)
+    // Forbidden entries for the region (known bad entries)
     if (typeof b.nombre === 'string' && typeof b.municipio === 'string') {
       for (const f of rules.forbiddenBeaches) {
         if (normalizeName(b.municipio) === f.municipio && f.nombre.test(normalizeName(b.nombre))) {
@@ -102,7 +103,7 @@ export function validateBeachCatalog(
       }
     }
 
-    // Coordenadas dentro de rango
+    // Coordinates within range
     const lat = b.lat, lon = b.lon;
     if (typeof lat !== 'number' || typeof lon !== 'number' || Number.isNaN(lat) || Number.isNaN(lon)) {
       errors.push(`${where}: coordenadas ausentes o no numéricas`);
@@ -113,12 +114,12 @@ export function validateBeachCatalog(
       errors.push(`${where}: coordenadas fuera del rango de ${rules.regionName} (${lat}, ${lon})`);
     }
 
-    // Longitud/anchura no negativas
+    // Non-negative longitud/anchura
     for (const [k, v] of [['longitud', b.longitud], ['anchura', b.anchura]] as const) {
       if (v != null && (typeof v !== 'number' || v < 0)) errors.push(`${where}: ${k} negativa o no numérica`);
     }
 
-    // Atributos: solo claves conocidas y booleanas (nunca null → evita que "desconocido" se vuelva false)
+    // Attributes: only known, boolean keys (never null → prevents "unknown" from becoming false)
     if (b.atributos && typeof b.atributos === 'object') {
       for (const [k, v] of Object.entries(b.atributos)) {
         if (!KNOWN_ATTRS.has(k)) errors.push(`${where}: atributo desconocido "${k}"`);
@@ -128,7 +129,7 @@ export function validateBeachCatalog(
       }
     }
 
-    // Ids de Cruz Roja (idCruzRoja + puestos) no se repiten entre playas físicas distintas
+    // Cruz Roja ids (idCruzRoja + stations) are not repeated across distinct physical beaches
     const crIds: number[] = [];
     if (typeof b.idCruzRoja === 'number' && b.idCruzRoja > 0) crIds.push(b.idCruzRoja);
     if (Array.isArray(b.cruzRojaStations)) {
@@ -137,7 +138,7 @@ export function validateBeachCatalog(
           errors.push(`${where}: puesto Cruz Roja sin nombreFuente`);
         }
         if (typeof s?.id === 'number' && s.id > 0) crIds.push(s.id);
-        // El nombre del puesto es también un alias operativo → debe resolver a esta playa
+        // The station name is also an operational alias → it must resolve to this beach
         if (typeof s?.nombreFuente === 'string' && typeof b.codigo === 'string') {
           registerAlias(aliasOwner, errors, normalizeName(s.nombreFuente), b.codigo, where);
         }
@@ -146,15 +147,15 @@ export function validateBeachCatalog(
     for (const id of crIds) {
       const owner = crIdOwner.get(id);
       if (owner && owner !== b.codigo) {
-        // Warning (no error): un puesto compartido entre playas contiguas es
-        // concebible y no verificable desde aquí. Se reporta para revisión.
+        // Warning (not an error): a station shared between adjacent beaches is
+        // conceivable and not verifiable from here. Reported for review.
         warnings.push(`${where}: id Cruz Roja ${id} también usado por otra playa (${owner})`);
       } else if (typeof b.codigo === 'string') {
         crIdOwner.set(id, b.codigo);
       }
     }
 
-    // Alias normalizados apuntan a una única playa
+    // Normalized aliases point to a single beach
     if (Array.isArray(b.alias) && typeof b.codigo === 'string') {
       for (const a of b.alias) {
         if (typeof a === 'string') registerAlias(aliasOwner, errors, normalizeName(a), b.codigo, where);

@@ -5,10 +5,10 @@ import type { Beach } from '../domain/entities/Beach';
 import type { Weather } from '../domain/entities/Weather';
 
 // ---------------------------------------------------------------------------
-// El mapa y "Playas recomendadas" pintan `descripcionClima` (y la razón del
-// ranking). Antes mostraban PREVISIÓN AEMET ("Despejado") aunque el icono y la
-// temperatura ya eran observación real. Estos tests fijan que el TEXTO de cielo
-// use la observación de OpenWeather (coherente con el `tiempoActual` del detalle).
+// The map and "Playas recomendadas" render `descripcionClima` (and the ranking
+// reason). They used to show the AEMET FORECAST ("Despejado") even though the icon
+// and the temperature were already real observation. These tests pin that the sky TEXT
+// uses the OpenWeather observation (consistent with the detail's `tiempoActual`).
 // ---------------------------------------------------------------------------
 
 const BEACH: Beach = {
@@ -39,7 +39,7 @@ function makeResult(over: Partial<FeaturedBeachResult> = {}): FeaturedBeachResul
 describe('FeaturedBeachMapper.descripcionClima — observación real con prioridad', () => {
   it('usa la descripción de OpenWeather (observación) en vez de la previsión AEMET', () => {
     const dto = FeaturedBeachMapper.toDTO([makeResult()], [], [makeResult()], 0);
-    expect(dto.playas[0].descripcionClima).toBe('algo de nubes'); // no "Despejado"
+    expect(dto.playas[0].descripcionClima).toBe('algo de nubes'); // not "Despejado"
   });
 
   it('cae a la previsión AEMET cuando la observación NO es OpenWeather (texto sintético)', () => {
@@ -47,7 +47,7 @@ describe('FeaturedBeachMapper.descripcionClima — observación real con priorid
       weather: makeWeather({ source: 'AEMET', description: 'Templado y húmedo' }),
     });
     const dto = FeaturedBeachMapper.toDTO([aemetObs], [], [aemetObs], 0);
-    expect(dto.playas[0].descripcionClima).toBe('Despejado'); // previsión, no sintético
+    expect(dto.playas[0].descripcionClima).toBe('Despejado'); // forecast, not synthetic
   });
 
   it('el icono y la temperatura siguen siendo observación (coherentes con el texto)', () => {
@@ -62,17 +62,17 @@ describe('buildRankingReason — palabra de cielo desde la observación', () => 
 
   it('prefiere la observación OpenWeather sobre enrichment.summary', () => {
     const reason = buildRankingReason(subScores, makeWeather({ description: 'algo de nubes' }), null, makeEnrichment({ summary: 'Despejado' }));
-    expect(reason).toContain('Parcialmente soleado'); // de "algo de nubes", no "Sol"
+    expect(reason).toContain('Parcialmente soleado'); // from "algo de nubes", not "Sol"
     expect(reason).not.toContain('Sol,');
   });
 
   it('cae a la previsión cuando la observación es AEMET', () => {
     const reason = buildRankingReason(subScores, makeWeather({ source: 'AEMET', description: 'Templado' }), null, makeEnrichment({ summary: 'Despejado' }));
-    expect(reason).toContain('Sol'); // palabra derivada de la previsión "Despejado"
+    expect(reason).toContain('Sol'); // word derived from the "Despejado" forecast
   });
 
-  // "nubes dispersas" es el 03x de OpenWeather (25-50% de cobertura): con medio
-  // cielo azul NO es "Nublado". Solo el 04x ("nubes" a secas) lo es.
+  // "nubes dispersas" is OpenWeather's 03x (25-50% coverage): with half the
+  // sky blue it is NOT "Nublado". Only 04x (plain "nubes") is.
   it('"nubes dispersas" es parcialmente soleado, no nublado', () => {
     const reason = buildRankingReason(subScores, makeWeather({ description: 'nubes dispersas', icon: '03d' }), null, makeEnrichment());
     expect(reason).toContain('Parcialmente soleado');

@@ -46,8 +46,8 @@ export class GetFeaturedBeaches {
     private readonly cache: InMemoryCache,
     private readonly rainNowcast: GetRainNowcast,
     /**
-     * Opcional a propósito: sin él, el corrector de cielo simplemente no corre y
-     * el listado se comporta exactamente como antes.
+     * Optional on purpose: without it, the sky corrector simply does not run
+     * and the listing behaves exactly as before.
      */
     private readonly sunshine?: SunshineProvider,
   ) {}
@@ -103,8 +103,8 @@ export class GetFeaturedBeaches {
         continue;
       }
 
-      // Lluvia prevista: previsión numérica Open-Meteo (próximas 6h, viene
-      // en el nowcast) ∪ texto del día de AEMET ("Chubascos"...).
+      // Forecast rain: Open-Meteo numeric forecast (next 6h, comes in the
+      // nowcast) ∪ AEMET's text for the day ("Chubascos"...).
       const rainForecast = buildRainForecastSignal(rain, [enrichment?.summary ?? null]);
 
       const { score, subScores } = computeBeachScore(
@@ -156,8 +156,8 @@ export class GetFeaturedBeaches {
     const [weather, flag, enrichment, rain, sol] = await Promise.all([
       this.getWeatherRace(beach.latitude, beach.longitude),
       this.getFlagForBeach(beach),
-      // Las playas sin ficha AEMET (código sintético) no deben provocar una
-      // llamada AEMET que siempre daría 404: se omite la enriquecedora.
+      // Beaches without an AEMET page (synthetic code) must not trigger an
+      // AEMET call that would always 404: the enrichment one is skipped.
       beach.sinAemet ? Promise.resolve(null) : this.getForecastEnrichment(beach.aemetCode),
       this.getRainSafe(beach.latitude, beach.longitude),
       this.getSunshineSafe(beach.latitude, beach.longitude),
@@ -165,9 +165,9 @@ export class GetFeaturedBeaches {
 
     return {
       beach,
-      // Se corrige el objeto Weather en el origen y no al pintar: descripción,
-      // icono, razón del ranking y puntuación salen todos de aquí, así que
-      // corrigiéndolo antes no pueden acabar contradiciéndose entre sí.
+      // The Weather object is corrected at the source and not at render time:
+      // description, icon, ranking reason and score all come from here, so by
+      // correcting it beforehand they cannot end up contradicting each other.
       weather: corregirCieloObservado(beach.name, weather, sol, rain?.status === 'raining'),
       flag,
       enrichment,
@@ -209,7 +209,7 @@ export class GetFeaturedBeaches {
     }
   }
 
-  /** Bandera de la playa: agrega varios puestos si los hay, o usa la referencia única. */
+  /** Beach flag: aggregates several stations if present, or uses the single reference. */
   private getFlagForBeach(beach: Beach): Promise<FlagStatus | null> {
     return resolveFlagForStations(beach.flagRef, beach.flagStations, (ref) =>
       this.getFlagSafe(ref),

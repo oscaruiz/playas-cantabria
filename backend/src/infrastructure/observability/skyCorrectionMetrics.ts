@@ -1,14 +1,14 @@
 import { DecisionCielo, MotivoDecision } from '../../domain/services/skyCorrection';
 
 /**
- * Contadores del corrector de cielo, para poder decidir con datos si se enciende.
+ * Counters for the sky corrector, to be able to decide with data whether to turn it on.
  *
- * En modo `shadow` la respuesta no cambia, así que sin esto no habría forma de
- * saber cuántas veces habría corregido ni con qué estación. Se contrasta con las
- * webcams de las playas que las tienen.
+ * In `shadow` mode the response does not change, so without this there would be no
+ * way to know how many times it would have corrected or with which station. It is checked
+ * against the webcams of the beaches that have them.
  *
- * Acotado a propósito: el proceso vive en 512 MB y solo hay 46 playas, así que se
- * guarda la ÚLTIMA decisión de cada una, no un histórico.
+ * Bounded on purpose: the process lives in 512 MB and there are only 46 beaches, so
+ * the LAST decision of each one is stored, not a history.
  */
 export interface UltimaDecision {
   playa: string;
@@ -33,7 +33,7 @@ export class SkyCorrectionMetrics {
       motivo: decision.motivo,
       nivel: decision.nivel,
       idema: decision.idema,
-      // Redondeado: el km exacto no aporta y ensucia la lectura del diagnóstico.
+      // Rounded: the exact km adds nothing and clutters the diagnostic readout.
       distanciaKm: decision.distanciaKm != null ? Math.round(decision.distanciaKm) : undefined,
       fraccion: decision.fraccion != null ? Number(decision.fraccion.toFixed(2)) : undefined,
       cuando: new Date(this.now()).toISOString(),

@@ -5,7 +5,7 @@ import { InMemoryCache, CacheKeys } from '../cache/InMemoryCache';
 import { Config } from '../config/config';
 import { debugLog } from '../utils/debug';
 
-/** Medio día (mañana o tarde) de la previsión OpenWeather, para rellenar huecos de AEMET. */
+/** Half day (morning or afternoon) of the OpenWeather forecast, to fill AEMET gaps. */
 export type OwHalf = {
   descripcion: string | null;
   iconOw: string | null;
@@ -26,8 +26,8 @@ export class OpenWeatherWeatherProvider implements WeatherProvider {
     if (!cfg.openWeatherApiKey) throw new ProviderError('OpenWeather', 'Missing OpenWeather API key');
     const cacheKey = CacheKeys.weatherByCoords(lat, lon, 'OpenWeather');
 
-    // getOrSetStale: si OpenWeather cae, se sigue sirviendo la última observación
-    // buena en vez de dejar la ficha sin clima, y nadie espera a la red.
+    // getOrSetStale: if OpenWeather goes down, the last good observation keeps
+    // being served instead of leaving the page without weather, and nobody waits on the network.
     return this.cache.getOrSetStale(cacheKey, Config.providerTtlSeconds(), Config.providerStaleTtlSeconds(), async () => {
       try {
         const resp = await http.get('https://api.openweathermap.org/data/2.5/weather', {
@@ -66,19 +66,19 @@ export class OpenWeatherWeatherProvider implements WeatherProvider {
   }
 
   /**
-   * Descarga (o recupera de caché) el forecast 5d/3h UNA sola vez por coordenadas.
+   * Downloads (or retrieves from cache) the 5d/3h forecast ONCE per coordinates.
    *
-   * Antes había tres métodos públicos que pegaban al MISMO endpoint con tres
-   * claves de caché distintas (mañana, medios días, nubosidad): tres llamadas
-   * a la cuota de OpenWeather para el mismo payload. Ahora todos derivan de aquí.
+   * There used to be three public methods hitting the SAME endpoint with three
+   * different cache keys (tomorrow, half days, cloudiness): three calls
+   * against the OpenWeather quota for the same payload. Now they all derive from here.
    */
   private async getForecastRaw(lat: number, lon: number): Promise<{ list: any[]; tzSec: number }> {
     const cfg = Config.get();
     if (!cfg.openWeatherApiKey) throw new ProviderError('OpenWeather', 'Missing OpenWeather API key');
 
     const cacheKey = `ow:forecast:${lat.toFixed(4)},${lon.toFixed(4)}`;
-    // TTL de previsión, no de observación: el modelo 5d/3h se actualiza cada
-    // pocas horas, así que refrescarlo al ritmo del nowcast era tirar cuota.
+    // Forecast TTL, not observation TTL: the 5d/3h model updates every
+    // few hours, so refreshing it at the nowcast rate was throwing quota away.
     return this.cache.getOrSetStale(cacheKey, Config.forecastTtlSeconds(), Config.forecastStaleTtlSeconds(), async () => {
       try {
         const resp = await http.get('https://api.openweathermap.org/data/2.5/forecast', {
@@ -94,7 +94,7 @@ export class OpenWeatherWeatherProvider implements WeatherProvider {
     });
   }
 
-  /** Slot del forecast más representativo de mañana (mediodía si lo hay). */
+  /** Most representative forecast slot for tomorrow (midday if available). */
   private pickTomorrowSlot(list: any[], tzSec: number): any | undefined {
     const inLocal = (tMs: number) => new Date(tMs + tzSec * 1000);
     const todayLocal = inLocal(Date.now());
@@ -151,9 +151,9 @@ export class OpenWeatherWeatherProvider implements WeatherProvider {
   }
 
   /**
-   * Previsión por MEDIOS DÍAS (mañana/tarde) para hoy y los próximos días, a partir
-   * del forecast gratuito 5d/3h. Se usa para RELLENAR la previsión de AEMET cuando
-   * ésta viene incompleta ("nd" en cielo/viento). Índice 0 = hoy, 1 = mañana, ...
+   * Forecast by HALF DAYS (morning/afternoon) for today and the coming days, from
+   * the free 5d/3h forecast. Used to FILL IN the AEMET forecast when
+   * it comes in incomplete ("nd" in sky/wind). Index 0 = today, 1 = tomorrow, ...
    */
   async getForecastHalfDays(
     lat: number,
@@ -164,7 +164,7 @@ export class OpenWeatherWeatherProvider implements WeatherProvider {
     const inLocal = (dtSec: number) => new Date(dtSec * 1000 + tzSec * 1000);
     const dayKey = (dtSec: number) => inLocal(dtSec).toISOString().slice(0, 10);
 
-    // Agrupar slots por fecha local
+    // Group slots by local date
     const byDay = new Map<string, any[]>();
     for (const it of list) {
       if (typeof it.dt !== 'number') continue;
@@ -182,7 +182,7 @@ export class OpenWeatherWeatherProvider implements WeatherProvider {
         vientoMs: slot.wind?.speed ?? null
       };
     };
-    // Slot más cercano a una hora objetivo dentro de una ventana [min,max).
+    // Slot closest to a target hour within a [min,max) window.
     const pick = (slots: any[], target: number, min: number, max: number) => {
       const inWin = slots.filter((s) => {
         const h = inLocal(s.dt).getUTCHours();
@@ -205,11 +205,11 @@ export class OpenWeatherWeatherProvider implements WeatherProvider {
   }
 
   /**
-   * @deprecated OpenWeather retiró One Call 2.5: con claves nuevas responde 401,
-   * así que esta llamada solo gastaba cuota y latencia para acabar siempre en el
-   * camino de estimación. El UV real lo sirve ahora Open-Meteo (`uvIndexMax` del
-   * nowcast de lluvia), gratis y sin clave, dentro de una petición que ya se hacía.
-   * Se conserva sin llamantes por la regla de no eliminar proveedores.
+   * @deprecated OpenWeather retired One Call 2.5: with new keys it responds 401,
+   * so this call only spent quota and latency to always end up on the
+   * estimation path. Real UV is now served by Open-Meteo (`uvIndexMax` from the
+   * rain nowcast), free and keyless, inside a request that was already being made.
+   * Kept with no callers because of the rule of not removing providers.
    */
   async getDailyUVIndex(lat: number, lon: number): Promise<{ today: number | null; tomorrow: number | null }> {
     const cfg = Config.get();
@@ -242,9 +242,9 @@ export class OpenWeatherWeatherProvider implements WeatherProvider {
   }
 
   /**
-   * Nubosidad hoy/mañana SIN peticiones propias: hoy sale de la observación
-   * actual (ya cacheada) y mañana del forecast compartido. Antes hacía dos
-   * llamadas nuevas por playa para leer un único campo de cada respuesta.
+   * Cloudiness today/tomorrow WITHOUT its own requests: today comes from the
+   * current observation (already cached) and tomorrow from the shared forecast. It used
+   * to make two new calls per beach to read a single field from each response.
    */
   async getCloudinessTodayAndTomorrow(lat: number, lon: number): Promise<{ today: number | null; tomorrow: number | null }> {
     const [current, forecast] = await Promise.allSettled([

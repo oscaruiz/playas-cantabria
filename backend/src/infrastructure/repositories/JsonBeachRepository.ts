@@ -85,14 +85,14 @@ export class JsonBeachRepository implements BeachRepository {
       const ref = this.cruzRojaRef(s.id);
       return {
         ...(ref ? { ref } : {}),
-        // sourceId conserva el id literal del JSON (incluido 0 = pendiente)
-        // para que el DTO lo re-publique tal cual, aunque no sea consultable.
+        // sourceId keeps the literal id from the JSON (including 0 = pending)
+        // so the DTO re-publishes it as-is, even if it is not queryable.
         ...(typeof s.id === 'number' ? { sourceId: s.id } : {}),
         sourceName: s.nombreFuente,
       };
     });
 
-    // Referencia primaria de compatibilidad: la explícita, o la del primer puesto con id.
+    // Primary compatibility reference: the explicit one, or that of the first station with an id.
     const flagRef = this.cruzRojaRef(r.idCruzRoja) ?? stations?.find((s) => s.ref)?.ref;
 
     return {

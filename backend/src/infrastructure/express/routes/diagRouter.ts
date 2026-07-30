@@ -12,11 +12,11 @@ export interface DiagRoutesDeps {
 }
 
 /**
- * /api/_diag/* — diagnóstico SIEMPRE activo (sin DEBUG_WEATHER).
- * - GET /api/_diag/version    -> commit desplegado (Render) para saber qué build vive.
- * - GET /api/_diag/flag/:id   -> resultado real del scrape de Cruz Roja desde el server.
- * - GET /api/_diag/metrics    -> consumo de cuota externa + eficacia de la caché.
- * - GET /api/_diag/sky        -> qué está (o estaría) corrigiendo el cielo observado.
+ * /api/_diag/* — diagnostics ALWAYS on (without DEBUG_WEATHER).
+ * - GET /api/_diag/version    -> deployed commit (Render) to know which build is live.
+ * - GET /api/_diag/flag/:id   -> real result of the Cruz Roja scrape from the server.
+ * - GET /api/_diag/metrics    -> external quota consumption + cache effectiveness.
+ * - GET /api/_diag/sky        -> what the observed sky is (or would be) correcting.
  */
 export function createDiagRouter(deps: DiagRoutesDeps): Router {
   const router = Router();
@@ -38,9 +38,9 @@ export function createDiagRouter(deps: DiagRoutesDeps): Router {
   });
 
   /**
-   * Corrector de cielo por insolación observada. En modo `shadow` la respuesta
-   * de la API no cambia, así que este endpoint es la ÚNICA forma de ver qué
-   * habría hecho. Se contrasta contra las webcams antes de encenderlo.
+   * Sky corrector based on observed insolation. In `shadow` mode the API
+   * response does not change, so this endpoint is the ONLY way to see what
+   * it would have done. It is checked against the webcams before turning it on.
    */
   router.get('/sky', (_req: Request, res: Response) => {
     res.setHeader('Cache-Control', 'no-store');

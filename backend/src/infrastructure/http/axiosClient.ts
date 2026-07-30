@@ -19,9 +19,9 @@ const httpsAgent = new https.Agent({
 });
 
 /**
- * Cabeceras de navegador (UA + idioma) para scraping de webs que filtran bots.
- * Necesario en producción: webs como cruzroja.es o aemet.es rechazan el UA por
- * defecto desde IPs de datacenter. Cada llamante añade su propio `Accept`.
+ * Browser headers (UA + language) for scraping websites that filter bots.
+ * Needed in production: sites like cruzroja.es or aemet.es reject the default
+ * UA from datacenter IPs. Each caller adds its own `Accept`.
  */
 export const BROWSER_HEADERS = {
   'User-Agent':
@@ -44,19 +44,19 @@ export const http = axios.create({
   }
 });
 
-/** Marca interna para no liberar dos veces el mismo hueco del semáforo. */
+/** Internal mark to avoid releasing the same semaphore slot twice. */
 const HOST_TOMADO = Symbol('hostTomado');
 
-// Toma turno ANTES de salir a la red. Si el host está enfriándose por un 429
-// previo, se falla rápido: el proveedor tiene stale-while-revalidate, así que el
-// usuario recibe el último valor bueno en vez de otra llamada que también sería
-// rechazada.
+// Takes a turn BEFORE going out to the network. If the host is cooling down from a
+// previous 429, fail fast: the provider has stale-while-revalidate, so the
+// user receives the last good value instead of another call that would also be
+// rejected.
 //
-// El enfriamiento se comprueba DESPUÉS de coger turno, y esto es lo importante:
-// en un fan-out, las peticiones entran todas a la vez y se quedan esperando en la
-// cola del semáforo. Si se mirase solo al entrar, todas habrían pasado el control
-// antes de que la primera respuesta trajera el 429, y saldrían igualmente. Fue
-// exactamente lo observado contra AEMET: seis 429 seguidos en vez de uno.
+// The cooldown is checked AFTER taking a turn, and this is the important part:
+// in a fan-out, requests come in all at once and sit waiting in the
+// semaphore queue. If it were only checked on entry, all of them would have passed the check
+// before the first response brought the 429, and would go out anyway. That was
+// exactly what was observed against AEMET: six 429s in a row instead of one.
 http.interceptors.request.use(async (config: any) => {
   const host = hostOf(config?.url, config?.baseURL);
   const rechazaSiEnfriando = () => {
@@ -64,11 +64,11 @@ http.interceptors.request.use(async (config: any) => {
     if (restante > 0) throw new HostEnfriadoError(host, restante);
   };
 
-  rechazaSiEnfriando(); // barato: evita encolar lo que ya está condenado
+  rechazaSiEnfriando(); // cheap: avoids queueing what is already doomed
 
   await hostLimiter.adquirir(host);
   try {
-    rechazaSiEnfriando(); // el 429 puede haber llegado mientras esperaba turno
+    rechazaSiEnfriando(); // the 429 may have arrived while waiting for a turn
   } catch (e) {
     hostLimiter.liberar(host);
     throw e;
@@ -78,9 +78,9 @@ http.interceptors.request.use(async (config: any) => {
   return config;
 });
 
-// Contabiliza TODA petición saliente (una sola vez, aquí) para poder ver el
-// consumo real de cuota en /api/_diag/metrics, y libera el turno. No altera el
-// flujo: reemite el error tal cual.
+// Counts EVERY outgoing request (a single time, here) so the real quota
+// consumption can be seen in /api/_diag/metrics, and releases the turn. It does not
+// alter the flow: it re-emits the error as-is.
 const liberar = (cfg: any) => {
   const host = cfg?.[HOST_TOMADO];
   if (host) {
@@ -100,7 +100,7 @@ http.interceptors.response.use(
     const host = hostOf(cfg?.url, cfg?.baseURL);
     const status = error?.response?.status ?? null;
     if (status === 429) hostLimiter.registrar429(host, error?.response?.headers?.['retry-after']);
-    // Un rechazo del propio interceptor de petición no llegó a tomar turno.
+    // A rejection from the request interceptor itself never took a turn.
     if (error?.code !== 'HOST_COOLDOWN') httpMetrics.record(host, status);
     liberar(cfg);
     return Promise.reject(error);
