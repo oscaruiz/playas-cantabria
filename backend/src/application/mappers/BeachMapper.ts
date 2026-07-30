@@ -12,8 +12,19 @@ export class BeachMapper {
       codigo: beach.aemetCode,
       lat: beach.latitude,
       lon: beach.longitude,
-      idCruzRoja: beach.redCrossId ?? 0,
-      ...(beach.cruzRojaStations ? { cruzRojaStations: beach.cruzRojaStations } : {}),
+      // The public DTO keeps the Cruz Roja vocabulary (frontend contract);
+      // refs from other providers do not surface through these two fields.
+      idCruzRoja: beach.flagRef?.provider === 'cruzroja' ? beach.flagRef.ref : 0,
+      ...(beach.flagStations
+        ? {
+            cruzRojaStations: beach.flagStations.map((s) => ({
+              // sourceId is the catalog's literal id (0 = pending station):
+              // it must round-trip verbatim, queryable or not.
+              ...(typeof s.sourceId === 'number' ? { id: s.sourceId } : {}),
+              nombreFuente: s.sourceName,
+            })),
+          }
+        : {}),
       ...(beach.alias ? { alias: beach.alias } : {}),
       ...(beach.sectores ? { sectores: beach.sectores } : {}),
       ...(beach.sinAemet ? { sinAemet: true } : {}),

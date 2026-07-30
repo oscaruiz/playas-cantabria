@@ -1,6 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { Beach, Webcam, CruzRojaStation, BeachSector } from '../../domain/entities/Beach';
+import { Beach, Webcam, BeachSector } from '../../domain/entities/Beach';
+import { FlagRef, FlagStation } from '../../domain/entities/Flag';
 import { BeachRepository } from '../../domain/ports/BeachRepository';
 import { InMemoryCache, CacheKeys } from '../cache/InMemoryCache';
 
@@ -73,15 +74,26 @@ export class JsonBeachRepository implements BeachRepository {
     return found;
   }
 
-  private mapToEntity(r: RawBeach): Beach {
-    const stations: CruzRojaStation[] | undefined = r.cruzRojaStations?.map((s) => ({
-      ...(typeof s.id === 'number' ? { id: s.id } : {}),
-      nombreFuente: s.nombreFuente,
-    }));
+  // The "id 0 or missing = no coverage" convention belongs to the catalog JSON;
+  // it is resolved here so the domain only ever sees real FlagRefs (or none).
+  private cruzRojaRef(id: number | undefined): FlagRef | undefined {
+    return typeof id === 'number' && id > 0 ? { provider: 'cruzroja', ref: id } : undefined;
+  }
 
-    // redCrossId de compatibilidad: el explícito, o el del primer puesto con id.
-    const derivedFromStations = stations?.find((s) => typeof s.id === 'number' && s.id > 0)?.id;
-    const redCrossId = r.idCruzRoja && r.idCruzRoja > 0 ? r.idCruzRoja : derivedFromStations ?? 0;
+  private mapToEntity(r: RawBeach): Beach {
+    const stations: FlagStation[] | undefined = r.cruzRojaStations?.map((s) => {
+      const ref = this.cruzRojaRef(s.id);
+      return {
+        ...(ref ? { ref } : {}),
+        // sourceId conserva el id literal del JSON (incluido 0 = pendiente)
+        // para que el DTO lo re-publique tal cual, aunque no sea consultable.
+        ...(typeof s.id === 'number' ? { sourceId: s.id } : {}),
+        sourceName: s.nombreFuente,
+      };
+    });
+
+    // Referencia primaria de compatibilidad: la explícita, o la del primer puesto con id.
+    const flagRef = this.cruzRojaRef(r.idCruzRoja) ?? stations?.find((s) => s.ref)?.ref;
 
     return {
       id: r.codigo,
@@ -90,8 +102,8 @@ export class JsonBeachRepository implements BeachRepository {
       aemetCode: r.codigo,
       latitude: r.lat,
       longitude: r.lon,
-      redCrossId,
-      ...(stations && stations.length > 0 ? { cruzRojaStations: stations } : {}),
+      ...(flagRef ? { flagRef } : {}),
+      ...(stations && stations.length > 0 ? { flagStations: stations } : {}),
       ...(r.alias && r.alias.length > 0 ? { alias: r.alias } : {}),
       ...(r.sectores && r.sectores.length > 0 ? { sectores: r.sectores } : {}),
       sinAemet: r.sinAemet ?? undefined,

@@ -25,8 +25,21 @@ export interface RawCatalogBeach {
   anchura?: unknown;
 }
 
-// Rango geográfico razonable de Cantabria (con un pequeño margen).
-export const CANTABRIA_BBOX = { latMin: 43.2, latMax: 43.65, lonMin: -4.9, lonMax: -3.0 };
+/**
+ * Region-specific validation rules. The function itself is region-agnostic;
+ * each region provides its own rules (see src/regions/).
+ */
+export interface CatalogRules {
+  /** Reasonable coordinate range for the region's beaches (small margin). */
+  bbox: { latMin: number; latMax: number; lonMin: number; lonMax: number };
+  /** Region name used in error messages. */
+  regionName: string;
+  /**
+   * Known-bad entries that must NOT exist in the catalog. Matched against
+   * normalized (normalizeName) municipality and beach name.
+   */
+  forbiddenBeaches: Array<{ municipio: string; nombre: RegExp }>;
+}
 
 const KNOWN_ATTRS = new Set([
   'accesoBanista', 'accesible', 'mascotas', 'duchas', 'aseos',
@@ -50,7 +63,10 @@ export interface CatalogValidationResult {
   warnings: string[];
 }
 
-export function validateBeachCatalog(beaches: RawCatalogBeach[]): CatalogValidationResult {
+export function validateBeachCatalog(
+  beaches: RawCatalogBeach[],
+  rules: CatalogRules,
+): CatalogValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
   const ids = new Map<string, number>();          // codigo -> count
@@ -77,13 +93,13 @@ export function validateBeachCatalog(beaches: RawCatalogBeach[]): CatalogValidat
       nameMuni.set(key, (nameMuni.get(key) ?? 0) + 1);
     }
 
-    // "La Concha de Santander" no debe existir
-    if (
-      typeof b.nombre === 'string' && typeof b.municipio === 'string' &&
-      normalizeName(b.municipio) === 'santander' &&
-      /^(la )?concha( de santander)?$/.test(normalizeName(b.nombre))
-    ) {
-      errors.push(`${where}: "La Concha de Santander" no debe existir en el catálogo`);
+    // Altas prohibidas de la región (entradas erróneas conocidas)
+    if (typeof b.nombre === 'string' && typeof b.municipio === 'string') {
+      for (const f of rules.forbiddenBeaches) {
+        if (normalizeName(b.municipio) === f.municipio && f.nombre.test(normalizeName(b.nombre))) {
+          errors.push(`${where}: "${b.nombre}" (${b.municipio}) no debe existir en el catálogo`);
+        }
+      }
     }
 
     // Coordenadas dentro de rango
@@ -91,10 +107,10 @@ export function validateBeachCatalog(beaches: RawCatalogBeach[]): CatalogValidat
     if (typeof lat !== 'number' || typeof lon !== 'number' || Number.isNaN(lat) || Number.isNaN(lon)) {
       errors.push(`${where}: coordenadas ausentes o no numéricas`);
     } else if (
-      lat < CANTABRIA_BBOX.latMin || lat > CANTABRIA_BBOX.latMax ||
-      lon < CANTABRIA_BBOX.lonMin || lon > CANTABRIA_BBOX.lonMax
+      lat < rules.bbox.latMin || lat > rules.bbox.latMax ||
+      lon < rules.bbox.lonMin || lon > rules.bbox.lonMax
     ) {
-      errors.push(`${where}: coordenadas fuera del rango de Cantabria (${lat}, ${lon})`);
+      errors.push(`${where}: coordenadas fuera del rango de ${rules.regionName} (${lat}, ${lon})`);
     }
 
     // Longitud/anchura no negativas

@@ -1,9 +1,9 @@
-import { FlagStatus } from '../entities/Flag';
+import { FlagStatus, FlagRef } from '../entities/Flag';
 
 export interface FlagProvider {
   /**
-   * If the beach has a Red Cross id (non-zero), return the flag.
+   * Resolve the current flag for a provider-specific reference.
    * Return null when not available; throw on hard failures.
    */
-  getFlagByRedCrossId(redCrossId: number): Promise<FlagStatus | null>;
+  getFlag(ref: FlagRef): Promise<FlagStatus | null>;
 }

@@ -28,6 +28,7 @@ export const SERVICES = {
   AEMET_WEATHER_PROVIDER: 'aemetWeatherProvider',
   OPENWEATHER_PROVIDER: 'openWeatherProvider',
   REDCROSS_FLAG_PROVIDER: 'redCrossFlagProvider',
+  FLAG_PROVIDER: 'flagProvider',
   AEMET_BEACH_FORECAST_PROVIDER: 'aemetBeachForecastProvider',
   AEMET_BEACH_WEB_SCRAPER: 'aemetBeachWebScraper',
   OPEN_METEO_PRECIPITATION_PROVIDER: 'openMeteoPrecipitationProvider',

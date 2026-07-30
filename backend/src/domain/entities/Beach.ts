@@ -1,3 +1,5 @@
+import { FlagRef, FlagStation } from './Flag';
+
 export interface BeachAttributes {
   accesoBanista?: boolean;
   accesible?: boolean;
@@ -25,18 +27,6 @@ export interface Webcam {
 }
 
 /**
- * Un puesto de Cruz Roja. Una playa física puede tener 0, 1 o varios puestos
- * (p. ej. Berria, Trengandín, Loredo). Cada puesto conserva su nombre e id de
- * origen para resolverlo hacia su playa canónica y agregar sus banderas.
- */
-export interface CruzRojaStation {
-  /** Id del puesto en Cruz Roja. Ausente/undefined = id no verificado todavía. */
-  id?: number;
-  /** Nombre del puesto tal cual aparece en Cruz Roja (alias operativo). */
-  nombreFuente: string;
-}
-
-/**
  * Sector diferenciado de una playa (p. ej. Somocuevas Oriental/Occidental,
  * Langre La Grande/La Pequeña). Metadato: NO se suman longitudes entre sectores.
  */
@@ -54,18 +44,18 @@ export interface Beach {
   latitude: number;
   longitude: number;
   /**
-   * Red Cross beach id; 0 or undefined means “no Red Cross record”.
-   * Sigue siendo la fuente para las 20 playas legadas y para consumidores de una
-   * sola bandera (featured). En playas con varios puestos, el repositorio lo
-   * deriva del primer puesto con id conocido.
+   * Primary flag reference; absent means "no flag coverage on record".
+   * Still the source for single-flag consumers (featured, legacy beaches).
+   * On multi-station beaches the repository derives it from the first
+   * station with a known ref.
    */
-  redCrossId?: number;
+  flagRef?: FlagRef;
   /**
-   * Puestos de Cruz Roja de esta playa física (0, 1 o varios). Cuando existe y
-   * trae ids, las banderas se agregan con una regla conservadora (la más
-   * restrictiva). Complementa `redCrossId` sin romper compatibilidad.
+   * Lifeguard stations on this physical beach (0, 1 or several). When present
+   * with refs, flags are aggregated conservatively (most restrictive wins).
+   * Complements `flagRef` without breaking single-flag consumers.
    */
-  cruzRojaStations?: CruzRojaStation[];
+  flagStations?: FlagStation[];
   /** Nombres alternativos/topónimos/sectores para búsqueda y resolución de nombres. */
   alias?: string[];
   /** Sectores diferenciados (metadato). No se suman longitudes entre sectores. */

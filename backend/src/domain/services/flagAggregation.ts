@@ -1,8 +1,7 @@
-import { FlagStatus, FlagColor } from '../entities/Flag';
-import { CruzRojaStation } from '../entities/Beach';
+import { FlagStatus, FlagColor, FlagRef, FlagStation } from '../entities/Flag';
 
 /**
- * Regla de agregación de banderas para una playa con VARIOS puestos de Cruz Roja.
+ * Regla de agregación de banderas para una playa con VARIOS puestos de socorrismo.
  *
  * Determinista y CONSERVADORA: se muestra la bandera MÁS RESTRICTIVA de entre los
  * puestos que tienen color real izado. Severidad (mayor = más restrictiva):
@@ -49,22 +48,22 @@ export function aggregateFlags(flags: Array<FlagStatus | null>): FlagStatus | nu
 
 /**
  * Resuelve la bandera de una playa a partir de sus puestos:
- *  - varios puestos con id → consulta todos (getFlag, ya seguro) y agrega.
- *  - si no, usa el `redCrossId` único (camino legado).
+ *  - varios puestos con referencia → consulta todos (getFlag, ya seguro) y agrega.
+ *  - si no, usa la referencia primaria `flagRef` (camino legado de bandera única).
  * `getFlag` debe ser una función que NO lanza (devuelve null ante fallo).
  */
 export async function resolveFlagForStations(
-  redCrossId: number | undefined,
-  stations: CruzRojaStation[] | undefined,
-  getFlag: (id: number) => Promise<FlagStatus | null>,
+  primaryRef: FlagRef | undefined,
+  stations: FlagStation[] | undefined,
+  getFlag: (ref: FlagRef) => Promise<FlagStatus | null>,
 ): Promise<FlagStatus | null> {
-  const ids = (stations ?? [])
-    .map((s) => s.id)
-    .filter((id): id is number => typeof id === 'number' && id > 0);
+  const refs = (stations ?? [])
+    .map((s) => s.ref)
+    .filter((r): r is FlagRef => r != null);
 
-  if (ids.length > 0) {
-    return aggregateFlags(await Promise.all(ids.map((id) => getFlag(id))));
+  if (refs.length > 0) {
+    return aggregateFlags(await Promise.all(refs.map((r) => getFlag(r))));
   }
-  if (redCrossId && redCrossId > 0) return getFlag(redCrossId);
+  if (primaryRef) return getFlag(primaryRef);
   return null;
 }

@@ -12,7 +12,7 @@ const { HttpsProxyAgent } = require('https-proxy-agent') as {
 };
 import { InMemoryCache, CacheKeys } from '../cache/InMemoryCache';
 import { FlagProvider } from '../../domain/ports/FlagProvider';
-import { FlagStatus, FlagColor } from '../../domain/entities/Flag';
+import { FlagStatus, FlagColor, FlagRef } from '../../domain/entities/Flag';
 import { Config } from '../config/config';
 
 /**
@@ -130,6 +130,11 @@ export class RedCrossFlagProvider implements FlagProvider {
       action: '',
       aplicacion: 'consultaPlayas'
     }).toString();
+  }
+
+  /** FlagProvider port. The router dispatches 'cruzroja' refs here; `ref.ref` is the Cruz Roja id. */
+  async getFlag(ref: FlagRef): Promise<FlagStatus | null> {
+    return this.getFlagByRedCrossId(ref.ref);
   }
 
   async getFlagByRedCrossId(redCrossId: number): Promise<FlagStatus | null> {

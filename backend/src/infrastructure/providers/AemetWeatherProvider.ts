@@ -6,6 +6,7 @@ import { http } from '../http/axiosClient';
 import { InMemoryCache, CacheKeys } from '../cache/InMemoryCache';
 import { Config } from '../config/config';
 import { debugLog } from '../utils/debug';
+import { activeRegion } from '../../regions';
 
 // 🌤️ TIPOS DE AEMET
 interface AemetObs {
@@ -37,19 +38,19 @@ function haversineSq(lat1: number, lon1: number, lat2: number, lon2: number): nu
 }
 
 /**
- * Caja envolvente de Cantabria con margen (~40 km) para conservar estaciones
- * limítrofes de Asturias, Castilla y León y Vizcaya que a veces son la más
- * cercana a una playa del extremo del litoral.
+ * Caja envolvente de la región activa, con margen (~40 km) para conservar
+ * estaciones limítrofes de comunidades vecinas que a veces son la más
+ * cercana a una playa del extremo del litoral. Valores en src/regions/.
  */
-const CANTABRIA_BBOX = { latMin: 42.5, latMax: 43.8, lonMin: -5.2, lonMax: -2.8 };
+const REGION_BBOX = activeRegion.observationBbox;
 
-function enEntornoDeCantabria(o: AemetObs): boolean {
+function enEntornoDeLaRegion(o: AemetObs): boolean {
   if (typeof o.lat !== 'number' || typeof o.lon !== 'number') return false;
   return (
-    o.lat >= CANTABRIA_BBOX.latMin &&
-    o.lat <= CANTABRIA_BBOX.latMax &&
-    o.lon >= CANTABRIA_BBOX.lonMin &&
-    o.lon <= CANTABRIA_BBOX.lonMax
+    o.lat >= REGION_BBOX.latMin &&
+    o.lat <= REGION_BBOX.latMax &&
+    o.lon >= REGION_BBOX.lonMin &&
+    o.lon <= REGION_BBOX.lonMax
   );
 }
 
@@ -212,8 +213,8 @@ export class AemetWeatherProvider implements WeatherProvider, SunshineProvider {
    * única: una sola descarga por TTL sirve a todas las playas (antes cada playa
    * re-descargaba todo el payload).
    *
-   * Se RECORTA a Cantabria antes de cachear: AEMET devuelve todas las estaciones
-   * de España (decenas de MB) y el proceso vive en 512 MB de RAM.
+   * Se RECORTA a la región activa antes de cachear: AEMET devuelve todas las
+   * estaciones de España (decenas de MB) y el proceso vive en 512 MB de RAM.
    */
   private async getObservacionesCached(): Promise<AemetObs[]> {
     const cfg = Config.get();
@@ -232,9 +233,9 @@ export class AemetWeatherProvider implements WeatherProvider, SunshineProvider {
 
       const obsResp = await http.get<AemetObs[]>(datosUrl, { timeout: 7000, responseType: 'json' });
       const todas = Array.isArray(obsResp.data) ? obsResp.data : [];
-      const arr = todas.filter(enEntornoDeCantabria);
+      const arr = todas.filter(enEntornoDeLaRegion);
       this.lastRaw = arr;
-      debugLog('aemet.obs', { totalEspana: todas.length, cantabria: arr.length, muestra: arr.slice(0, 5) });
+      debugLog('aemet.obs', { totalEspana: todas.length, region: arr.length, muestra: arr.slice(0, 5) });
       // Si el recorte deja el payload vacío (formato inesperado), mejor todas que
       // ninguna: la playa se queda sin dato AEMET solo si de verdad no hay nada.
       return arr.length > 0 ? arr : todas;

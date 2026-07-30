@@ -1,6 +1,6 @@
 import { Beach } from '../entities/Beach';
 import { Weather } from '../entities/Weather';
-import { FlagStatus } from '../entities/Flag';
+import { FlagStatus, FlagRef } from '../entities/Flag';
 import { Tides } from '../entities/Tides';
 import { BeachRepository } from '../ports/BeachRepository';
 import { WeatherProvider } from '../ports/WeatherProvider';
@@ -69,20 +69,20 @@ export class GetBeachDetails {
   }
 
   /**
-   * Bandera de la playa. Si tiene varios puestos de Cruz Roja (con id conocido),
+   * Bandera de la playa. Si tiene varios puestos (con referencia conocida),
    * consulta todos en paralelo y agrega con la regla conservadora (la más
-   * restrictiva). Si no, usa el único `redCrossId` (camino de las 20 legadas).
+   * restrictiva). Si no, usa la referencia única (camino de las 20 legadas).
    */
   private getFlagForBeach(beach: Beach): Promise<FlagStatus | null> {
-    return resolveFlagForStations(beach.redCrossId, beach.cruzRojaStations, (id) =>
-      this.getFlagSafe(id),
+    return resolveFlagForStations(beach.flagRef, beach.flagStations, (ref) =>
+      this.getFlagSafe(ref),
     );
   }
 
-  private async getFlagSafe(redCrossId?: number): Promise<FlagStatus | null> {
-    if (!redCrossId || redCrossId <= 0) return null;
+  private async getFlagSafe(ref?: FlagRef): Promise<FlagStatus | null> {
+    if (!ref) return null;
     try {
-      return await this.flags.getFlagByRedCrossId(redCrossId);
+      return await this.flags.getFlag(ref);
     } catch {
       return null;
     }

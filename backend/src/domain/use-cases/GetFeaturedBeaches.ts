@@ -1,6 +1,6 @@
 import { Beach } from '../entities/Beach';
 import { Weather } from '../entities/Weather';
-import { FlagStatus } from '../entities/Flag';
+import { FlagStatus, FlagRef } from '../entities/Flag';
 import { RainNowcast } from '../entities/RainNowcast';
 import { GetRainNowcast } from './GetRainNowcast';
 import { buildRainForecastSignal } from './RainForecast';
@@ -209,17 +209,17 @@ export class GetFeaturedBeaches {
     }
   }
 
-  /** Bandera de la playa: agrega varios puestos si los hay, o usa el id único. */
+  /** Bandera de la playa: agrega varios puestos si los hay, o usa la referencia única. */
   private getFlagForBeach(beach: Beach): Promise<FlagStatus | null> {
-    return resolveFlagForStations(beach.redCrossId, beach.cruzRojaStations, (id) =>
-      this.getFlagSafe(id),
+    return resolveFlagForStations(beach.flagRef, beach.flagStations, (ref) =>
+      this.getFlagSafe(ref),
     );
   }
 
-  private async getFlagSafe(redCrossId?: number): Promise<FlagStatus | null> {
-    if (!redCrossId || redCrossId <= 0) return null;
+  private async getFlagSafe(ref?: FlagRef): Promise<FlagStatus | null> {
+    if (!ref) return null;
     try {
-      return await this.flags.getFlagByRedCrossId(redCrossId);
+      return await this.flags.getFlag(ref);
     } catch {
       return null;
     }

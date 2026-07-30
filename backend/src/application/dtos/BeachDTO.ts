@@ -1,5 +1,15 @@
 import { WeatherSource } from '../../domain/entities/Weather';
-import { Webcam, CruzRojaStation, BeachSector } from '../../domain/entities/Beach';
+import { Webcam, BeachSector } from '../../domain/entities/Beach';
+
+/**
+ * Cruz Roja station as published by the API. Part of the public contract:
+ * the domain now models stations neutrally (FlagStation), but these keys
+ * (`id`, `nombreFuente`) must not change.
+ */
+export interface CruzRojaStationDTO {
+  id?: number;
+  nombreFuente: string;
+}
 
 export interface WeatherDTO {
   source: WeatherSource;
@@ -38,7 +48,7 @@ export interface BeachDTO {
   lon: number;
   idCruzRoja: number;
   /** Puestos de Cruz Roja (0, 1 o varios). Presente solo en playas multi-puesto. */
-  cruzRojaStations?: CruzRojaStation[];
+  cruzRojaStations?: CruzRojaStationDTO[];
   /** Nombres alternativos/topónimos para búsqueda. */
   alias?: string[];
   /** Sectores diferenciados (metadato; no se suman longitudes). */

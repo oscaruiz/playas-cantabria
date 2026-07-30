@@ -6,6 +6,10 @@ import { JsonBeachRepository } from '../repositories/JsonBeachRepository';
 import { AemetWeatherProvider } from '../providers/AemetWeatherProvider';
 import { OpenWeatherWeatherProvider } from '../providers/OpenWeatherWeatherProvider';
 import { RedCrossFlagProvider } from '../providers/RedCrossFlagProvider';
+import { FlagProviderRouter } from '../providers/FlagProviderRouter';
+import { FlagProvider } from '../../domain/ports/FlagProvider';
+import { FlagProviderId } from '../../domain/entities/Flag';
+import { activeRegion } from '../../regions';
 import { GetAllBeaches } from '../../domain/use-cases/GetAllBeaches';
 import { GetBeachById } from '../../domain/use-cases/GetBeachById';
 import { GetBeachDetails } from '../../domain/use-cases/GetBeachDetails';
@@ -30,8 +34,8 @@ export function configureDependencies(container: DIContainer, overrides: { cache
   // Infrastructure Layer - Singletons
   container.registerSingleton('cache', () => overrides.cache ?? crearCache());
   
-  container.registerSingleton('beachRepository', (c) => 
-    new JsonBeachRepository(c.get('cache'))
+  container.registerSingleton('beachRepository', (c) =>
+    new JsonBeachRepository(c.get('cache'), activeRegion.catalogPath)
   );
   
   container.registerSingleton('aemetWeatherProvider', (c) => 
@@ -42,9 +46,20 @@ export function configureDependencies(container: DIContainer, overrides: { cache
     new OpenWeatherWeatherProvider(c.get('cache'))
   );
   
-  container.registerSingleton('redCrossFlagProvider', (c) => 
-    new RedCrossFlagProvider(c.get('cache'))
+  container.registerSingleton('redCrossFlagProvider', (c) =>
+    new RedCrossFlagProvider(c.get('cache'), activeRegion.flagsPath)
   );
+
+  // Neutral flag port: use cases depend on this router, never on a concrete
+  // operator. The region declares which operators are active; new adapters
+  // get added to this map, one line each.
+  container.registerSingleton('flagProvider', (c) => {
+    const adapters: Partial<Record<FlagProviderId, FlagProvider>> = {};
+    if (activeRegion.flagProviders.includes('cruzroja')) {
+      adapters.cruzroja = c.get('redCrossFlagProvider');
+    }
+    return new FlagProviderRouter(adapters);
+  });
 
   container.registerSingleton('aemetBeachForecastProvider', (c) =>
     new AemetBeachForecastProvider(c.get('cache'))
@@ -72,7 +87,7 @@ export function configureDependencies(container: DIContainer, overrides: { cache
       c.get('beachRepository'),
       c.get('aemetWeatherProvider'),
       c.get('openWeatherProvider'),
-      c.get('redCrossFlagProvider'),
+      c.get('flagProvider'),
       null // tides provider - not implemented yet
     )
   );
@@ -91,7 +106,7 @@ export function configureDependencies(container: DIContainer, overrides: { cache
       c.get('beachRepository'),
       c.get('aemetWeatherProvider'),
       c.get('openWeatherProvider'),
-      c.get('redCrossFlagProvider'),
+      c.get('flagProvider'),
       c.get('aemetBeachForecastProvider'),
       c.get('cache'),
       c.get('getRainNowcast'),

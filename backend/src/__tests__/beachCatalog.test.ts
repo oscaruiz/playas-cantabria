@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import { validateBeachCatalog, normalizeName } from '../domain/services/beachCatalogValidation';
+import { activeRegion } from '../regions';
 
 const backendPath = resolve(__dirname, '../../data/beaches.json');
 const frontendPath = resolve(__dirname, '../../../frontend/src/data/beaches.json');
@@ -10,14 +11,14 @@ const backend = JSON.parse(readFileSync(backendPath, 'utf-8')) as any[];
 
 describe('Catálogo de playas — integridad', () => {
   it('no tiene errores de integridad', () => {
-    const { errors } = validateBeachCatalog(backend);
+    const { errors } = validateBeachCatalog(backend, activeRegion.catalogRules);
     expect(errors).toEqual([]);
   });
 
   it('no hay ids de Cruz Roja duplicados entre playas (el 373 pre-existente ya está corregido)', () => {
     // El id 373 (LA CONCHA I SUANCES) estaba mal asignado a Mogro-Usil; ya se
     // corrigió a MOGRO=376. No debe quedar ningún id compartido entre playas.
-    const { warnings } = validateBeachCatalog(backend);
+    const { warnings } = validateBeachCatalog(backend, activeRegion.catalogRules);
     expect(warnings).toEqual([]);
   });
 
