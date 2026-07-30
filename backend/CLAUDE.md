@@ -38,6 +38,7 @@ infrastructure/ → application/ → domain/
 - **infrastructure/express/**: server, middlewares, routers.
 - **infrastructure/di/**: manual DI container (DIContainer, dependencies.ts).
 - **infrastructure/cache/**: InMemoryCache with TTL and singleflight dedup.
+- **regions/**: region config (`activeRegion`, today fixed to Cantabria): observation bbox, catalog validation rules, data file paths, active flag operators. Engine code reads region specifics ONLY from here.
 
 ### DI Container
 
@@ -71,8 +72,15 @@ AEMET observation API (AemetWeatherProvider) ←→ OpenWeather (hedged — firs
 ### Beach flag
 
 ```
-RedCrossFlagProvider → HTML scraping from cruzroja.es (independent, always runs in parallel)
+FlagProviderRouter → dispatches by FlagRef.provider (neutral port)
+  'cruzroja' → RedCrossFlagProvider → HTML scraping from cruzroja.es (independent, always runs in parallel)
 ```
+
+Beaches carry provider-neutral `FlagRef`s (`{ provider: 'cruzroja', ref: <id> }`), derived by
+JsonBeachRepository from the catalog's `idCruzRoja`/`cruzRojaStations` (the "0 = no coverage"
+convention is resolved there). Use cases only see the `FlagProvider` port (`getFlag(ref)`). To add
+a flag operator for a new region: adapter implementing `FlagProvider`, extend `FlagProviderId`,
+register in the DI router map, list it in the region's `flagProviders`.
 
 ## AEMET data sources
 
@@ -179,6 +187,8 @@ sembrado, el primer `/featured` tras arrancar cuesta **0 peticiones** y responde
 
 ## Rules for Claude Code
 
+- **New code and comments in English.** Existing Spanish comments stay — do not translate them opportunistically; they carry operational history (dated incidents, provider quirks).
+- **No region hardcoding.** Bboxes, catalog paths, forbidden-beach rules and flag operators live in `src/regions/`; engine code reads them from `activeRegion`.
 - **Never delete existing providers.** Add new ones, don't replace.
 - **Never change HTTP endpoint signatures.** Existing response fields are backward compatible.
 - **Defensive parsing**: every field from external APIs can be null. Never assume a field exists.

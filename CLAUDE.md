@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Playas Cantabria is a beach information app for Cantabria, Spain. It displays beach listings with real-time weather (AEMET, OpenWeatherMap) and flag/safety data (Cruz Roja). The codebase is Spanish-language (variable names, comments, UI text).
+Playas Cantabria is a beach information app for Cantabria, Spain. It displays beach listings with real-time weather (AEMET, OpenWeatherMap) and flag/safety data (Cruz Roja). The UI text is Spanish, and the public API keys are Spanish (frontend contract — never rename them).
+
+**Language convention**: NEW code and comments are written in English. Existing Spanish comments and identifiers stay as they are — do not translate them opportunistically; they often carry operational history.
 
 ## Repository Structure
 
@@ -59,11 +61,14 @@ backend/src/
     repositories/   — JsonBeachRepository (reads from JSON file)
     cache/          — InMemoryCache
     config/         — Config loading (env vars + Firebase runtime config, validated with Zod)
+  regions/          — Region config (bboxes, catalog rules, data paths, flag operators)
 ```
 
 Dependencies flow inward: infrastructure -> application -> domain. Domain has no imports from other layers.
 
 DI is manual (no framework) — see `infrastructure/di/dependencies.ts` for the full wiring.
+
+**Regions**: everything region-specific lives in `backend/src/regions/` (today only Cantabria; `activeRegion` in `regions/index.ts` selects it). Engine code must read region data through `activeRegion`, never hardcode bboxes, catalog paths, or region names. Flags are provider-neutral: beaches carry `FlagRef`s (`{ provider, ref }`), use cases depend on the `FlagProvider` port, and `FlagProviderRouter` (wired in the DI from the region's `flagProviders`) dispatches to the concrete adapter (Cruz Roja today). To add a flag operator: new adapter implementing `FlagProvider`, add its id to `FlagProviderId`, register it in the DI router map.
 
 ## API Endpoints
 
