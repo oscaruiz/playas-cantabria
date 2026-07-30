@@ -1,6 +1,6 @@
 # Frontend — CLAUDE.md
 
-Ionic React + Capacitor PWA para información de playas en Cantabria. Todo el código (variables, comentarios, UI) está en español. Consulta el `CLAUDE.md` raíz para contexto general del monorepo.
+Ionic React + Capacitor PWA para información de playas en Cantabria. Los comentarios están en inglés; el texto de UI, las claves de i18n y los nombres de variables siguen en español. Consulta el `CLAUDE.md` raíz para contexto general del monorepo.
 
 ## Comandos
 
@@ -89,7 +89,7 @@ Todas las interfaces están en `src/services/api.ts`:
 - **Componentes**: PascalCase (`FlagBanner`, `QuickStats`, `TidesSection`)
 - **Variables de estado**: camelCase
 - **Helpers**: funciones utilitarias definidas inline dentro de los archivos de página (no extraídas a utils/)
-- **Idioma**: todo el texto de UI, nombres de variables y comentarios en español
+- **Idioma**: comentarios (nuevos y existentes) en inglés; texto de UI, claves de i18n y nombres de variables en español. Nunca traduzcas claves ni valores de i18n: son contrato y producto
 - **Subcomponentes**: `PlayaDetalle.tsx` contiene múltiples componentes internos (`FlagBanner`, `ForecastHero`, `DaySelector`, `TidesSection`, etc.)
 
 ## Testing
