@@ -83,16 +83,27 @@ function dayTitle(fecha: string, t: TraducirFn, idioma: Idioma): string {
   return capitalizar(traducido ?? nombreDiaApi) || fecha;
 }
 
+/**
+ * Month of a forecast day that AEMET labels with its day of month only
+ * ("sábado 01"). A day number below today's has rolled over into the next
+ * month: the forecast never reaches beyond 3 days, so that is unambiguous.
+ * Using the current month printed "1 de julio" for August 1st on the last days
+ * of every month. Date arithmetic rolls the year over on its own (31-dic → ene).
+ */
+function forecastMonth(dayNum: number, now: Date): number {
+  const month = dayNum < now.getDate() ? now.getMonth() + 1 : now.getMonth();
+  return new Date(now.getFullYear(), month, dayNum, 12).getMonth();
+}
+
 function daySubtitle(fecha: string, idioma: Idioma): string {
   const dayNum = parseDayOfMonth(fecha);
   if (dayNum < 0) return '';
 
-  // AEMET format like "domingo 05" — name from the string + day + current month
+  // AEMET format like "domingo 05" — name from the string + day + resolved month
   const nombreDiaApi = fecha.split(/\s/)[0];
   if (nombreDiaApi && /^[a-z\u00e1-\u00fa]/i.test(nombreDiaApi)) {
-    const now = new Date();
     const traducido = traducirNombreDiaApi(nombreDiaApi, idioma) ?? nombreDiaApi;
-    return formatearFechaCorta(capitalizar(traducido), dayNum, now.getMonth(), idioma);
+    return formatearFechaCorta(capitalizar(traducido), dayNum, forecastMonth(dayNum, new Date()), idioma);
   }
 
   // ISO fallback

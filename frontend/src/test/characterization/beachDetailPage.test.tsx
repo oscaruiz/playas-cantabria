@@ -83,6 +83,22 @@ describe('PlayaDetalle — previsión AEMET', () => {
     expect(tabs[0]).toHaveAttribute('aria-selected', 'true');
   });
 
+  it('fecha las pestañas con el mes real, también al cambiar de mes', async () => {
+    // AEMET only labels the day of month ("sábado 01"), so pairing it with the
+    // current month dated August 1st as "1 de julio" on the last days of July.
+    const finDeMes = localNoon('2026-07-30'); // Thursday; +2 days lands in August
+    jest.setSystemTime(finDeMes);
+    mockDetalle(buildAemetDetail(finDeMes));
+
+    renderDetalle();
+    await screen.findByText('Hoy');
+
+    const fechas = screen
+      .getAllByRole('tab')
+      .map((t) => t.querySelector('.day-tab-date')?.textContent);
+    expect(fechas).toEqual(['Jueves 30 de julio', 'Viernes 31 de julio', 'Sábado 1 de agosto']);
+  });
+
   it('para HOY prioriza la observación real sobre la previsión de la tarde', async () => {
     const { container } = renderDetalle();
     await screen.findByText('Hoy');
