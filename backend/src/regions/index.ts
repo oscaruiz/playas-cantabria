@@ -1,11 +1,14 @@
-import { cantabria } from './cantabria';
-import { RegionConfig } from './RegionConfig';
+import { RegionRegistry } from './RegionRegistry';
 
 export type { RegionConfig, RegionBbox } from './RegionConfig';
+export { RegionRegistry } from './RegionRegistry';
+export { parseRegionConfig } from './regionSchema';
 
 /**
- * The region this backend serves. Single-region for now (Cantabria); when a
- * second region exists, a REGION env var will select it here — engine code
- * must always go through this export, never import a region directly.
+ * The loaded regions. There is deliberately no "active region" export: every
+ * consumer names the region it wants (HTTP mounts one router per registry
+ * entry; scripts and tests go through resolveScriptRegion). A module-level
+ * fallback to whichever region happened to load is how the wrong region ends
+ * up being read from — or written to — without anyone noticing.
  */
-export const activeRegion: RegionConfig = cantabria;
+export const regionRegistry = new RegionRegistry().load();

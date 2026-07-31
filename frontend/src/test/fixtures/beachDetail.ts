@@ -107,6 +107,7 @@ export function buildAemetDetail(now: Date): PlayaDetalle {
         prevista: null,
       },
     },
+    fuenteBanderas: 'Cruz Roja',
     cruzRoja: {
       bandera: 'Verde',
       coberturaDesde: COBERTURA_DESDE,
@@ -259,6 +260,7 @@ export function buildOutOfHoursDetail(): PlayaDetalle {
     codigo: '3907501',
     lat: 43.47,
     lon: -3.78,
+    fuenteBanderas: 'Cruz Roja',
     cruzRoja: {
       bandera: 'Verde',
       coberturaDesde: COBERTURA_DESDE,
@@ -270,10 +272,8 @@ export function buildOutOfHoursDetail(): PlayaDetalle {
 }
 
 /**
- * Black flag. The backend emits it, but `flagColorClass` sends it to
- * 'unknown' and `isFlagAvailable` discards it, so today it is painted as "no
- * data" and the `bandera.negra` key does not exist.
- * See `known-issues/blackFlag.test.tsx`.
+ * Black flag safety fixture. The UI must render it as a swimming prohibition,
+ * never as missing data. See `characterization/blackFlag.test.tsx`.
  */
 export function buildBlackFlagDetail(now: Date): PlayaDetalle {
   return {
@@ -282,6 +282,7 @@ export function buildBlackFlagDetail(now: Date): PlayaDetalle {
     codigo: '3906002',
     lat: 43.47,
     lon: -3.72,
+    fuenteBanderas: 'Cruz Roja',
     cruzRoja: {
       bandera: 'Negra',
       coberturaDesde: COBERTURA_DESDE,

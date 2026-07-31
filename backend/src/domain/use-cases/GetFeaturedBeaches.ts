@@ -49,12 +49,19 @@ export class GetFeaturedBeaches {
      * Optional on purpose: without it, the sky corrector simply does not run
      * and the listing behaves exactly as before.
      */
-    private readonly sunshine?: SunshineProvider,
+    private readonly sunshine: SunshineProvider | undefined,
+    private readonly regionId: string,
+    /**
+     * Public names of the region's flag operators; empty means the region has
+     * no lifeguard-flag service. Required so a new region cannot inherit
+     * Cantabria's operator by forgetting to declare its own.
+     */
+    private readonly flagOperators: readonly string[],
   ) {}
 
   async execute(topN = 5): Promise<FeaturedBeachesFullResult> {
     return this.cache.getOrSetStale<FeaturedBeachesFullResult>(
-      CacheKeys.featuredBeaches,
+      CacheKeys.featuredBeaches(this.regionId),
       Config.featuredFreshTtlSeconds(),
       Config.featuredStaleTtlSeconds(),
       () => this.compute(topN),
@@ -114,9 +121,16 @@ export class GetFeaturedBeaches {
         beach.attributes,
         rain,
         rainForecast,
+        this.flagOperators,
       );
 
-      const downgradeReason = buildDowngradeFactors(subScores, flag, rain, rainForecast);
+      const downgradeReason = buildDowngradeFactors(
+        subScores,
+        flag,
+        rain,
+        rainForecast,
+        this.flagOperators,
+      );
 
       if (score >= MIN_SCORE) {
         const reason = buildRankingReason(subScores, weather, flag, enrichment, rain, rainForecast);

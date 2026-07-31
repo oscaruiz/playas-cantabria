@@ -1,6 +1,7 @@
 import { BeachDetails } from '../../domain/use-cases/GetBeachDetails';
 import { Beach, BeachAttributes, Webcam } from '../../domain/entities/Beach';
 import { FlagStatus } from '../../domain/entities/Flag';
+import { resolveFlagOperatorName } from '../../domain/services/flagAggregation';
 import { Weather } from '../../domain/entities/Weather';
 import { RainNowcast } from '../../domain/entities/RainNowcast';
 import { RainForecastSignal } from '../../domain/use-cases/RainForecast';
@@ -108,6 +109,14 @@ export type LegacyDetailsDTO = {
   temperaturaActual: number | null;
   tiempoActual: TiempoActualDTO | null;
   clima: ClimaDTO | null;
+  /**
+   * Operator watching this beach, or null if nobody does. Together with
+   * `cruzRoja` it separates the three states the client has to show:
+   *   name + data → the flag currently flying
+   *   name + null → watched, but no reading right now
+   *   null        → no lifeguard flag service here (hide the section)
+   */
+  fuenteBanderas: string | null;
   cruzRoja: CruzRojaDTO | null;
   prediccionCompleta: PrediccionCompletaDTO | null;
 };
@@ -121,6 +130,7 @@ export class LegacyDetailsMapper {
       temperaturaActual: weather?.temperatureC ?? null,
       tiempoActual: null, // populated by LegacyDetailsAssembler from OpenWeather current
       clima: weather ? this.mapClima(weather) : null,
+      fuenteBanderas: resolveFlagOperatorName(beach.flagRef, beach.flagStations),
       cruzRoja: flag ? this.mapCruzRoja(flag) : null,
       prediccionCompleta: null,
     };

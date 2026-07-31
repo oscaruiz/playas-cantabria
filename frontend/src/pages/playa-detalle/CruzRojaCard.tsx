@@ -1,22 +1,38 @@
 import React, { useState } from 'react';
 import { PlayaDetalle as PlayaDetalleData } from '../../services/api';
-import { estadoBandera, capitalizar, formatearHaceTiempo } from '../../utils/beachHelpers';
+import {
+  estadoBandera,
+  capitalizar,
+  formatearHaceTiempo,
+  operadorVigilancia,
+} from '../../utils/beachHelpers';
 import { useIdioma, TraducirFn } from '../../i18n/IdiomaContext';
-import { traducirTextoApi } from '../../i18n/apiText';
+import { traducirTextoApi, traducirOperador } from '../../i18n/apiText';
 
 function cruzRojaField(value: string | undefined, t: TraducirFn): string {
   if (!value || value.trim() === '' || value === 'N/A') return t('comun.noDisponible');
   return value;
 }
 
-/** Collapsible card with the Red Cross flag, coverage dates and schedule. */
-const CruzRojaCard: React.FC<{ cruzRoja?: PlayaDetalleData['cruzRoja'] }> = ({ cruzRoja }) => {
+/** Collapsible card with the lifeguard flag, coverage dates and schedule. */
+const CruzRojaCard: React.FC<{
+  cruzRoja?: PlayaDetalleData['cruzRoja'];
+  /** Beach whose operator names the card; absent = the legacy Cruz Roja one. */
+  playa?: Pick<PlayaDetalleData, 'fuenteBanderas'>;
+}> = ({ cruzRoja, playa }) => {
   const { t, idioma } = useIdioma();
+  const operador = operadorVigilancia(playa);
   const estado = estadoBandera(cruzRoja);
   const hasData = estado === 'color';
   // It can also be expanded outside of hours to see coverage/schedule.
   const expandable = estado !== 'sinDatos';
   const [expanded, setExpanded] = useState(hasData);
+
+  // No operator watches this beach: there is no flag service to report, and an
+  // empty card would read as "the data failed" instead of "there is none".
+  if (!operador) return null;
+
+  const nombreOperador = traducirOperador(operador, idioma);
 
   return (
     <div className="detail-disclosure">
@@ -27,7 +43,7 @@ const CruzRojaCard: React.FC<{ cruzRoja?: PlayaDetalleData['cruzRoja'] }> = ({ c
         tabIndex={expandable ? 0 : undefined}
         aria-expanded={expandable ? expanded : undefined}
         aria-controls={expandable ? 'cruzroja-content' : undefined}
-        aria-label={expandable ? `${expanded ? t('detalle.contraer') : t('detalle.expandir')} ${t('comun.cruzRoja')}` : undefined}
+        aria-label={expandable ? `${expanded ? t('detalle.contraer') : t('detalle.expandir')} ${nombreOperador}` : undefined}
         aria-disabled={!expandable ? true : undefined}
         onKeyDown={expandable ? (e) => {
           if (e.key === 'Enter' || e.key === ' ') {
@@ -37,13 +53,13 @@ const CruzRojaCard: React.FC<{ cruzRoja?: PlayaDetalleData['cruzRoja'] }> = ({ c
         } : undefined}
       >
         <div>
-          <div className="card-header-title">{t('comun.cruzRoja')}</div>
+          <div className="card-header-title">{nombreOperador}</div>
           <div className="card-header-subtitle">
             {hasData
               ? t('cruzroja.vigilanciaCobertura')
               : estado === 'fueraDeHorario'
                 ? t('bandera.fueraDeHorario')
-                : t('cruzroja.sinInfo')}
+                : t('cruzroja.sinInfo', { operador: nombreOperador })}
           </div>
         </div>
         {expandable && <span className={`card-header-chevron ${expanded ? 'open' : ''}`} aria-hidden="true">&#9662;</span>}

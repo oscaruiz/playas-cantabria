@@ -3,9 +3,10 @@ import path from 'path';
 import { InMemoryCache, CacheKeys } from './InMemoryCache';
 import { Config } from '../config/config';
 import { debugLog } from '../utils/debug';
+import type { RegionConfig } from '../../regions';
 
 /**
- * Cache seed generated in CI (same pattern as data/flags.json).
+ * Cache seed generated in CI (same pattern as a region's flags.json).
  *
  * Render free puts the process to sleep after 15 minutes: without this, the first user
  * who wakes the app up triggers the full /featured fan-out (~200 requests
@@ -25,10 +26,11 @@ export interface SnapshotFile {
 
 export function sembrarDesdeSnapshot(
   cache: InMemoryCache,
-  file = 'data/snapshot.json',
+  region: Pick<RegionConfig, 'id' | 'snapshotPath'>,
   now: () => number = () => Date.now(),
 ): boolean {
   try {
+    const file = region.snapshotPath;
     const ruta = path.resolve(process.cwd(), file);
     if (!fs.existsSync(ruta)) return false;
 
@@ -41,7 +43,12 @@ export function sembrarDesdeSnapshot(
       return false;
     }
 
-    cache.seed(CacheKeys.featuredBeaches, snap.featured, 0, Config.featuredStaleTtlSeconds());
+    cache.seed(
+      CacheKeys.featuredBeaches(region.id),
+      snap.featured,
+      0,
+      Config.featuredStaleTtlSeconds(),
+    );
     debugLog('snapshot.sembrado', { edadMinutos: Math.round(edadMs / 60000) });
     return true;
   } catch (e: any) {

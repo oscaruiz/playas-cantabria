@@ -113,7 +113,7 @@ const PlayaDetallePage: React.FC = () => {
                 </div>
               )}
 
-              <FlagBanner cruzRoja={datos.cruzRoja} />
+              <FlagBanner cruzRoja={datos.cruzRoja} playa={datos} />
 
               {puntuada && <ScoreCard puntuada={puntuada} />}
             </div>
@@ -159,7 +159,7 @@ const PlayaDetallePage: React.FC = () => {
               </div>
 
               <div className="detail-col detail-col--info">
-              {datos.cruzRoja != null && <CruzRojaCard cruzRoja={datos.cruzRoja} />}
+              {datos.cruzRoja != null && <CruzRojaCard cruzRoja={datos.cruzRoja} playa={datos} />}
 
               <WebcamCard webcam={datos.webcam} />
 

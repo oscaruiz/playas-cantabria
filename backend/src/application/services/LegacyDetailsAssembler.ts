@@ -37,6 +37,7 @@ export class LegacyDetailsAssembler {
     private readonly cache?: InMemoryCache,
     /** Optional: without it the sky corrector does not run and the detail does not change. */
     private readonly sunshine?: SunshineProvider,
+    private readonly regionId = 'cantabria',
   ) {}
 
 
@@ -227,7 +228,7 @@ export class LegacyDetailsAssembler {
     if (!this.cache) return this.assembleFresh(beachId);
 
     return this.cache.getOrSetStale(
-      CacheKeys.detailsByBeachId(beachId),
+      CacheKeys.detailsByBeachId(this.regionId, beachId),
       Config.detailsFreshTtlSeconds(),
       Config.detailsStaleTtlSeconds(),
       () => this.assembleFresh(beachId),

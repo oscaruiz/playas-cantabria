@@ -8,8 +8,8 @@ import { OpenWeatherWeatherProvider } from '../providers/OpenWeatherWeatherProvi
 import { RedCrossFlagProvider } from '../providers/RedCrossFlagProvider';
 import { FlagProviderRouter } from '../providers/FlagProviderRouter';
 import { FlagProvider } from '../../domain/ports/FlagProvider';
-import { FlagProviderId } from '../../domain/entities/Flag';
-import { activeRegion } from '../../regions';
+import { FlagProviderId, FLAG_OPERATOR_NAMES } from '../../domain/entities/Flag';
+import { regionRegistry, RegionConfig } from '../../regions';
 import { GetAllBeaches } from '../../domain/use-cases/GetAllBeaches';
 import { GetBeachById } from '../../domain/use-cases/GetBeachById';
 import { GetBeachDetails } from '../../domain/use-cases/GetBeachDetails';
@@ -25,29 +25,68 @@ import { OpenMeteoPrecipitationProvider } from '../providers/OpenMeteoPrecipitat
  * two-tier one is used, which survives sleep and Render free deploys.
  * Without those variables, exactly the usual in-memory one.
  */
-function crearCache(): InMemoryCache {
+export function crearCache(): InMemoryCache {
   const l2 = UpstashRedisStore.fromEnv();
   return l2 ? new TieredCache(l2) : new InMemoryCache();
 }
 
-export function configureDependencies(container: DIContainer, overrides: { cache?: InMemoryCache } = {}): void {
+export interface SharedDependencies {
+  cache: InMemoryCache;
+  aemetWeatherProvider: AemetWeatherProvider;
+  openWeatherProvider: OpenWeatherWeatherProvider;
+  aemetBeachForecastProvider: AemetBeachForecastProvider;
+  aemetBeachWebScraper: AemetBeachWebScraper;
+  openMeteoPrecipitationProvider: OpenMeteoPrecipitationProvider;
+}
+
+export function createSharedDependencies(
+  cache = crearCache(),
+  regions: RegionConfig[] = regionRegistry.all(),
+): SharedDependencies {
+  return {
+    cache,
+    aemetWeatherProvider: new AemetWeatherProvider(
+      cache,
+      regions.map((region) => region.observationBbox),
+    ),
+    openWeatherProvider: new OpenWeatherWeatherProvider(cache),
+    aemetBeachForecastProvider: new AemetBeachForecastProvider(cache),
+    aemetBeachWebScraper: new AemetBeachWebScraper(cache),
+    openMeteoPrecipitationProvider: new OpenMeteoPrecipitationProvider(cache),
+  };
+}
+
+export interface DependencyOverrides {
+  cache?: InMemoryCache;
+  /**
+   * Required on purpose: a container is always bound to one region. Defaulting
+   * this would let a caller silently build a container for whichever region
+   * happened to load — resolve it explicitly at the call site instead.
+   */
+  region: RegionConfig;
+  shared?: SharedDependencies;
+}
+
+export function configureDependencies(
+  container: DIContainer,
+  overrides: DependencyOverrides,
+): void {
+  const region = overrides.region;
+  const shared = overrides.shared ?? createSharedDependencies(overrides.cache, regionRegistry.all());
+
   // Infrastructure Layer - Singletons
-  container.registerSingleton('cache', () => overrides.cache ?? crearCache());
+  container.registerInstance('cache', shared.cache);
   
   container.registerSingleton('beachRepository', (c) =>
-    new JsonBeachRepository(c.get('cache'), activeRegion.catalogPath)
+    new JsonBeachRepository(c.get('cache'), region.catalogPath, region.id)
   );
   
-  container.registerSingleton('aemetWeatherProvider', (c) => 
-    new AemetWeatherProvider(c.get('cache'))
-  );
+  container.registerInstance('aemetWeatherProvider', shared.aemetWeatherProvider);
   
-  container.registerSingleton('openWeatherProvider', (c) => 
-    new OpenWeatherWeatherProvider(c.get('cache'))
-  );
+  container.registerInstance('openWeatherProvider', shared.openWeatherProvider);
   
   container.registerSingleton('redCrossFlagProvider', (c) =>
-    new RedCrossFlagProvider(c.get('cache'), activeRegion.flagsPath)
+    new RedCrossFlagProvider(c.get('cache'), region.flagsPath, region.id)
   );
 
   // Neutral flag port: use cases depend on this router, never on a concrete
@@ -55,23 +94,17 @@ export function configureDependencies(container: DIContainer, overrides: { cache
   // get added to this map, one line each.
   container.registerSingleton('flagProvider', (c) => {
     const adapters: Partial<Record<FlagProviderId, FlagProvider>> = {};
-    if (activeRegion.flagProviders.includes('cruzroja')) {
+    if (region.flagProviders.includes('cruzroja')) {
       adapters.cruzroja = c.get('redCrossFlagProvider');
     }
     return new FlagProviderRouter(adapters);
   });
 
-  container.registerSingleton('aemetBeachForecastProvider', (c) =>
-    new AemetBeachForecastProvider(c.get('cache'))
-  );
+  container.registerInstance('aemetBeachForecastProvider', shared.aemetBeachForecastProvider);
 
-  container.registerSingleton('aemetBeachWebScraper', (c) =>
-    new AemetBeachWebScraper(c.get('cache'))
-  );
+  container.registerInstance('aemetBeachWebScraper', shared.aemetBeachWebScraper);
 
-  container.registerSingleton('openMeteoPrecipitationProvider', (c) =>
-    new OpenMeteoPrecipitationProvider(c.get('cache'))
-  );
+  container.registerInstance('openMeteoPrecipitationProvider', shared.openMeteoPrecipitationProvider);
 
   // Domain Layer - Use Cases
   container.register('getAllBeaches', (c) => 
@@ -112,6 +145,8 @@ export function configureDependencies(container: DIContainer, overrides: { cache
       c.get('getRainNowcast'),
       // Same object as 'aemetWeatherProvider': it also implements SunshineProvider.
       c.get('aemetWeatherProvider'),
+      region.id,
+      region.flagProviders.map((id) => FLAG_OPERATOR_NAMES[id]),
     )
   );
 
@@ -125,6 +160,7 @@ export function configureDependencies(container: DIContainer, overrides: { cache
       c.get('getRainNowcast'),
       c.get('cache'),
       c.get('aemetWeatherProvider'),
+      region.id,
     )
   );
 }

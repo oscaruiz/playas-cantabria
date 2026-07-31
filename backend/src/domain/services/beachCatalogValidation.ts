@@ -1,5 +1,5 @@
 /**
- * Automated validation of the beach catalog (backend/data/beaches.json).
+ * Automated validation of a region beach catalog (regions/<id>/beaches.json).
  *
  * PURE function: receives the raw array (Spanish keys) and returns a list of
  * errors (empty = valid catalog). It runs in a test and can be reused in a CI

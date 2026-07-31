@@ -45,6 +45,7 @@ export function coincidePlaya(
 
 export function flagColorClass(bandera?: string): string {
   const b = bandera?.toLowerCase() || '';
+  if (b.includes('negra')) return 'black';
   if (b.includes('roja')) return 'red';
   if (b.includes('amarilla')) return 'yellow';
   if (b.includes('verde')) return 'green';
@@ -54,7 +55,7 @@ export function flagColorClass(bandera?: string): string {
 export function isFlagAvailable(cruzRoja?: { bandera?: string }): boolean {
   if (!cruzRoja) return false;
   const b = cruzRoja.bandera?.toLowerCase() || '';
-  return b.includes('roja') || b.includes('amarilla') || b.includes('verde');
+  return b.includes('negra') || b.includes('roja') || b.includes('amarilla') || b.includes('verde');
 }
 
 export type EstadoBandera = 'color' | 'fueraDeHorario' | 'sinDatos';
@@ -209,10 +210,10 @@ export function webcamDisponible(
 }
 
 /**
- * Does the beach have Cruz Roja lifeguarding? Looks first at the stations and then at the
- * compatibility `idCruzRoja`.
+ * Does the beach have a lifeguard flag service?
  *
- * BOTH sources must be consulted because `src/data/beaches.json` (the local
+ * For DTOs without `fuenteBanderas`, both legacy sources must be consulted
+ * because `src/data/beaches.json` (the local
  * fallback) is the raw repository file, not the DTO: 32 of the 46 beaches
  * only carry `cruzRojaStations`. The backend does derive an `idCruzRoja` from
  * the first station with an id (`JsonBeachRepository.mapToEntity`), so looking
@@ -222,13 +223,41 @@ export function webcamDisponible(
  * `domain/services/flagAggregation.ts` → `resolveFlagForStations`.
  */
 export function vigilanciaDisponible(
-  playa?: { idCruzRoja?: number; cruzRojaStations?: Array<{ id?: number }> } | null
+  playa?: {
+    fuenteBanderas?: string | null;
+    idCruzRoja?: number;
+    cruzRojaStations?: Array<{ id?: number }>;
+  } | null
 ): boolean {
+  // The explicit operator from current DTOs is authoritative. Consult the
+  // Cruz Roja fields only for old backends and the local fallback catalog.
+  if (playa?.fuenteBanderas !== undefined) {
+    return playa.fuenteBanderas !== null;
+  }
+
   const conPuesto = (playa?.cruzRojaStations ?? []).some(
     (p) => typeof p.id === 'number' && p.id > 0
   );
   if (conPuesto) return true;
   return (playa?.idCruzRoja ?? 0) > 0;
+}
+
+/**
+ * Operator that must be named in the UI ("Vigilada por X"), or null when
+ * nothing watches the beach and the flag section has to disappear.
+ *
+ * The absent field is NOT the same as null: the local fallback catalog and the
+ * backend deployed before this feature simply do not report the operator, and
+ * for them the answer is the one that was always shown. Remove
+ * `OPERADOR_LEGADO` once no such client is left.
+ */
+const OPERADOR_LEGADO = 'Cruz Roja';
+
+export function operadorVigilancia(
+  playa?: { fuenteBanderas?: string | null } | null
+): string | null {
+  if (!playa || playa.fuenteBanderas === undefined) return OPERADOR_LEGADO;
+  return playa.fuenteBanderas;
 }
 
 export type CoberturaWebcam = 'exacta' | 'compartida' | 'cercana';

@@ -152,11 +152,11 @@ export class InMemoryCache {
  * Standardized cache keys used by providers/repository.
  */
 export const CacheKeys = {
-  beachesAll: 'beaches:all',
-  beachById: (id: string) => `beach:${id}`,
+  beachesAll: (regionId: string) => `beaches:${regionId}:all`,
+  beachById: (regionId: string, id: string) => `beach:${regionId}:${id}`,
   weatherByCoords: (lat: number, lon: number, provider: string) =>
     `weather:${provider}:${lat.toFixed(4)},${lon.toFixed(4)}`,
-  flagByRedCrossId: (id: number) => `flag:cr:${id}`,
-  featuredBeaches: 'featured:beaches',
-  detailsByBeachId: (id: string) => `details:${id}`,
+  flagByRedCrossId: (regionId: string, id: number) => `flag:${regionId}:cr:${id}`,
+  featuredBeaches: (regionId: string) => `featured:${regionId}:beaches`,
+  detailsByBeachId: (regionId: string, id: string) => `details:${regionId}:${id}`,
 };

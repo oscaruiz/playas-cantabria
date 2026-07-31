@@ -323,6 +323,15 @@ function traducirFragmento(fragmento: string): string {
   const viento = traducirVientoCompuesto(fragmento);
   if (viento) return respetarMayuscula(fragmento, viento);
 
+  // "sin cobertura <operador>": the operator's name is data, so it cannot be
+  // enumerated here. Translating the frame and leaving the name intact keeps
+  // any future region readable instead of leaving the whole phrase in Spanish.
+  const cobertura = fragmento.match(/^sin cobertura (.+)$/i);
+  if (cobertura) {
+    // Only reachable in English: traducirTextoApi returns early for Spanish.
+    return respetarMayuscula(fragmento, `no ${traducirOperador(cobertura[1], 'en')} coverage`);
+  }
+
   // Numeric fragment ("19°", "09:00 - 21:00") or free text → intact
   return fragmento;
 }
@@ -350,9 +359,25 @@ export function razonLegible(razonRanking: string): string {
   return razonRanking.replace(/(?<!viento )\b(flojo|fuerte)\b/i, 'viento $1');
 }
 
+/**
+ * Names of the lifeguard operators that have an established name in English.
+ * Anything else is a proper noun and is left alone — better an untranslated
+ * name than an invented one.
+ */
+const MAPA_OPERADORES: Record<string, string> = {
+  'cruz roja': 'Red Cross',
+};
+
+/** Operator name ("Cruz Roja") as it must be read in the active language. */
+export function traducirOperador(operador: string, idioma: Idioma): string {
+  if (idioma === 'es') return operador;
+  return MAPA_OPERADORES[operador.trim().toLowerCase()] ?? operador;
+}
+
 /** Dictionary key for the Cruz Roja flag (replaces flagDisplayText). */
 export function claveBandera(bandera?: string): ClaveTexto {
   const b = bandera?.toLowerCase() || '';
+  if (b.includes('negra')) return 'bandera.negra';
   if (b.includes('roja')) return 'bandera.roja';
   if (b.includes('amarilla')) return 'bandera.amarilla';
   if (b.includes('verde')) return 'bandera.verde';

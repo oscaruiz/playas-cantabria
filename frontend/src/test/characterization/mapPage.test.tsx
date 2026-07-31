@@ -272,8 +272,9 @@ describe('MapaPage — popup', () => {
   it('distingue vigilada de sin información según idCruzRoja', async () => {
     await renderMap();
 
+    // The unwatched beach no longer names an operator it does not have.
     expect(markerByName('VientoFuerte')).toHaveTextContent('Vigilada por Cruz Roja');
-    expect(markerByName('EnElCorte')).toHaveTextContent('No hay info de Cruz Roja');
+    expect(markerByName('EnElCorte')).toHaveTextContent('No hay info de vigilancia');
   });
 
   it('anuncia la webcam solo donde la hay', async () => {

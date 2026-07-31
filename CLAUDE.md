@@ -68,13 +68,15 @@ Dependencies flow inward: infrastructure -> application -> domain. Domain has no
 
 DI is manual (no framework) — see `infrastructure/di/dependencies.ts` for the full wiring.
 
-**Regions**: everything region-specific lives in `backend/src/regions/` (today only Cantabria; `activeRegion` in `regions/index.ts` selects it). Engine code must read region data through `activeRegion`, never hardcode bboxes, catalog paths, or region names. Flags are provider-neutral: beaches carry `FlagRef`s (`{ provider, ref }`), use cases depend on the `FlagProvider` port, and `FlagProviderRouter` (wired in the DI from the region's `flagProviders`) dispatches to the concrete adapter (Cruz Roja today). To add a flag operator: new adapter implementing `FlagProvider`, add its id to `FlagProviderId`, register it in the DI router map.
+**Regions**: contributed data lives in root `regions/<id>/`. `RegionRegistry` validates every region at startup and the server creates one DI container per valid region. Weather providers and coordinate-based cache entries are shared; catalogs, flag routers and region-dependent cache keys are isolated. Flags are provider-neutral: beaches carry `FlagRef`s (`{ provider, ref }`), use cases depend on the `FlagProvider` port, and `FlagProviderRouter` dispatches to the concrete adapter. The API reports the watching operator per beach (`fuenteBanderas`), and a region with no operator (`flagProviders: []`) is a supported case, not a degraded one — see `backend/CLAUDE.md`.
 
 ## API Endpoints
 
-- `GET /api/beaches` — list all beaches
-- `GET /api/beaches/:id` — single beach
-- `GET /api/beaches/:id/details` — beach with weather + flag data (legacy format)
+- `GET /api/:region/beaches` — list all beaches in a region
+- `GET /api/:region/beaches/:id` — single beach
+- `GET /api/:region/beaches/:id/details` — beach with weather + flag data
+- `GET /api/:region/beaches/featured` — ranked beach conditions
+- `GET /api/beaches...` — deprecated Cantabria aliases kept for installed clients
 
 ## Frontend Architecture
 

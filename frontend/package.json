@@ -54,7 +54,7 @@
     "eslint-plugin-react": "^7.32.2"
   },
   "scripts": {
-    "sync-beaches": "cp ../backend/data/beaches.json src/data/beaches.json",
+    "sync-beaches": "node scripts/sync-beaches.mjs",
     "start": "npm run sync-beaches && react-scripts start",
     "build": "npm run sync-beaches && react-scripts build",
     "perf:budget": "node scripts/check-bundle-size.mjs",

@@ -5,7 +5,7 @@ import { FlagStatus } from '../../domain/entities/Flag';
  *
  * A flag is only real while there is surveillance (daily schedule within the
  * coverage season) and if the data is recent. The primary source in prod
- * (`data/flags.json`) is refreshed by cron a few times a day and not at all
+ * (`regions/<id>/flags.json`) is refreshed by cron a few times a day and not at all
  * overnight, so the last capture from the past ~24h is accepted; beyond that,
  * the color no longer reflects what is flying and must not be painted.
  *

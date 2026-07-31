@@ -49,6 +49,39 @@ export interface ForecastEnrichment {
 // Sub-score interfaces
 // ---------------------------------------------------------------------------
 
+/**
+ * Public names of the flag operators active in the region. An EMPTY array means
+ * the region has no lifeguard-flag service at all, which is not the same as a
+ * beach with no station: see `rescaleWithoutFlag`.
+ *
+ * The default only serves the unit tests, written against Cantabria and its
+ * single operator. The HTTP path never falls back to it — `GetFeaturedBeaches`
+ * takes the region's operators as a required constructor argument.
+ */
+export const LEGACY_FLAG_OPERATORS: readonly string[] = ['Cruz Roja'];
+
+/** Weight of the flag factor in the 0-100 total, and the total itself. */
+const FLAG_MAX = 20;
+const SCORE_MAX = 100;
+
+/**
+ * Reachable maximum when the region has no flag service: the flag factor
+ * disappears (-20) and `datos` can never award the 2 points that came from
+ * having a flag reading (-2).
+ */
+const SCORE_MAX_WITHOUT_FLAG = SCORE_MAX - FLAG_MAX - 2;
+
+/**
+ * Rescales to 0-100 the score of a region with no flag service. Without this
+ * every beach in such a region would lose the same ~22 points, and the bands
+ * (green ≥60) would read the absence of an operator as bad conditions —
+ * penalising the whole region for something that has nothing to do with the
+ * beach.
+ */
+function rescaleWithoutFlag(raw: number): number {
+  return Math.round((raw * SCORE_MAX) / SCORE_MAX_WITHOUT_FLAG);
+}
+
 export interface SubScores {
   cielo: number;
   temperatura: number;
@@ -277,27 +310,35 @@ export function computeBeachScore(
   attributes?: BeachAttributes,
   rain?: RainNowcast | null,
   rainForecast?: RainForecastSignal | null,
+  flagOperators: readonly string[] = LEGACY_FLAG_OPERATORS,
 ): ScoringResult {
   const isSurf = attributes?.surf === true;
   const uvIndex = enrichment?.uvIndex ?? null;
+  const hasFlagService = flagOperators.length > 0;
 
   const subScores: SubScores = {
     cielo: computeSkyScore(weather),
     temperatura: computeTemperatureScore(weather?.temperatureC ?? null),
-    bandera: computeFlagScore(flag),
+    // 0 and out of the sum with no operator in the region: there is no flag to
+    // judge, so a neutral 10/20 would be inventing a middling reading.
+    bandera: hasFlagService ? computeFlagScore(flag) : 0,
     viento: computeWindScore(weather?.windSpeedMs ?? null),
     oleaje: computeWavesScore(enrichment, weather, isSurf),
     uv: computeUVScore(uvIndex),
     datos: computeDataScore(weather, flag),
   };
 
-  let score = subScores.cielo
+  const raw = subScores.cielo
     + subScores.temperatura
     + subScores.bandera
     + subScores.viento
     + subScores.oleaje
     + subScores.uv
     + subScores.datos;
+
+  // Rescaled BEFORE the rain caps below: those caps are absolute band
+  // boundaries (<60 = never "good"), not a share of the reachable maximum.
+  let score = hasFlagService ? raw : rescaleWithoutFlag(raw);
 
   // FORECAST rain (next few hours): soft yellow.
   if (rainForecast?.expected) {
@@ -424,6 +465,7 @@ export function buildDowngradeFactors(
   flag: FlagStatus | null,
   rain?: RainNowcast | null,
   rainForecast?: RainForecastSignal | null,
+  flagOperators: readonly string[] = LEGACY_FLAG_OPERATORS,
 ): string | null {
   const parts: string[] = [];
 
@@ -436,9 +478,13 @@ export function buildDowngradeFactors(
 
   if (subScores.temperatura <= 8) parts.push('temperatura fresca');
 
-  if (!flag || !flag.color) parts.push('sin cobertura Cruz Roja');
-  else if (flag.color === 'yellow') parts.push('bandera amarilla');
-  else if (flag.color === 'red') parts.push('bandera roja');
+  // Naming the operator only makes sense where one exists. With no service in
+  // the region the absence of a flag is not a downgrade factor at all: it would
+  // be listed on every single beach and say nothing about any of them.
+  const operador = flagOperators[0];
+  if (flag?.color === 'yellow') parts.push('bandera amarilla');
+  else if (flag?.color === 'red') parts.push('bandera roja');
+  else if (!flag?.color && operador) parts.push(`sin cobertura ${operador}`);
 
   if (subScores.viento <= 5) parts.push('viento fuerte');
   if (subScores.oleaje <= 3) parts.push('oleaje fuerte');

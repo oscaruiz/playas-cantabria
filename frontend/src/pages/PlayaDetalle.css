@@ -344,6 +344,10 @@
   background: var(--playa-flag-red);
 }
 
+.flag-pennant.black::after {
+  background: #111827;
+}
+
 /* Última bandera registrada (fuera de horario): su color real, pero atenuado
    para que no se confunda con una bandera ondeando ahora. */
 .flag-pennant.atenuada::after {

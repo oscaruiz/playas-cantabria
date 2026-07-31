@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Playas region",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "name", "observationBbox", "catalogRules", "flagProviders", "branding", "map"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+    "name": { "type": "string", "minLength": 1 },
+    "observationBbox": { "$ref": "#/$defs/bbox" },
+    "catalogRules": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bbox", "regionName", "forbiddenBeaches"],
+      "properties": {
+        "bbox": { "$ref": "#/$defs/bbox" },
+        "regionName": { "type": "string", "minLength": 1 },
+        "forbiddenBeaches": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["municipio", "nombrePattern"],
+            "properties": {
+              "municipio": { "type": "string", "minLength": 1 },
+              "nombrePattern": { "type": "string", "minLength": 1, "maxLength": 200 }
+            }
+          }
+        }
+      }
+    },
+    "flagProviders": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "enum": ["cruzroja"] }
+    },
+    "branding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["appName", "shortName", "themeColor", "backgroundColor", "capacitorAppId"],
+      "properties": {
+        "appName": { "type": "string", "minLength": 1 },
+        "shortName": { "type": "string", "minLength": 1 },
+        "themeColor": { "$ref": "#/$defs/color" },
+        "backgroundColor": { "$ref": "#/$defs/color" },
+        "capacitorAppId": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9]*(\\.[A-Za-z][A-Za-z0-9]*)+$"
+        }
+      }
+    },
+    "map": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["center", "zoom"],
+      "properties": {
+        "center": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["lat", "lon"],
+          "properties": {
+            "lat": { "type": "number", "minimum": -90, "maximum": 90 },
+            "lon": { "type": "number", "minimum": -180, "maximum": 180 }
+          }
+        },
+        "zoom": { "type": "number", "minimum": 1, "maximum": 22 }
+      }
+    }
+  },
+  "$defs": {
+    "bbox": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["latMin", "latMax", "lonMin", "lonMax"],
+      "properties": {
+        "latMin": { "type": "number", "minimum": -90, "maximum": 90 },
+        "latMax": { "type": "number", "minimum": -90, "maximum": 90 },
+        "lonMin": { "type": "number", "minimum": -180, "maximum": 180 },
+        "lonMax": { "type": "number", "minimum": -180, "maximum": 180 }
+      }
+    },
+    "color": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" }
+  }
+}

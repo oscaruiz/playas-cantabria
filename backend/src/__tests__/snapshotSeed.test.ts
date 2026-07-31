@@ -17,6 +17,8 @@ function escribirSnapshot(contenido: unknown): string {
   return ruta;
 }
 
+const region = (snapshotPath: string) => ({ id: 'cantabria', snapshotPath });
+
 afterEach(() => {
   while (temporales.length) {
     try {
@@ -35,9 +37,9 @@ describe('sembrarDesdeSnapshot', () => {
     });
     const cache = new InMemoryCache();
 
-    expect(sembrarDesdeSnapshot(cache, ruta)).toBe(true);
+    expect(sembrarDesdeSnapshot(cache, region(ruta))).toBe(true);
     // 'stale', not 'fresh': the data is from a while ago and does not masquerade as new.
-    expect(cache.state(CacheKeys.featuredBeaches)).toBe('stale');
+    expect(cache.state(CacheKeys.featuredBeaches('cantabria'))).toBe('stale');
   });
 
   it('descarta un snapshot de más de 6 h: las banderas del día ya no valen', () => {
@@ -47,19 +49,19 @@ describe('sembrarDesdeSnapshot', () => {
     });
     const cache = new InMemoryCache();
 
-    expect(sembrarDesdeSnapshot(cache, ruta)).toBe(false);
-    expect(cache.state(CacheKeys.featuredBeaches)).toBe('miss');
+    expect(sembrarDesdeSnapshot(cache, region(ruta))).toBe(false);
+    expect(cache.state(CacheKeys.featuredBeaches('cantabria'))).toBe('miss');
   });
 
   it('no rompe el arranque si el fichero no existe', () => {
     const cache = new InMemoryCache();
-    expect(sembrarDesdeSnapshot(cache, 'data/no-existe.json')).toBe(false);
+    expect(sembrarDesdeSnapshot(cache, region('data/no-existe.json'))).toBe(false);
   });
 
   it('no rompe el arranque si el fichero está corrupto o incompleto', () => {
     const cache = new InMemoryCache();
     const corrupto = escribirSnapshot({ generatedAt: new Date().toISOString() }); // no featured
-    expect(sembrarDesdeSnapshot(cache, corrupto)).toBe(false);
+    expect(sembrarDesdeSnapshot(cache, region(corrupto))).toBe(false);
   });
 
   it('ignora un generatedAt del futuro (reloj descuadrado en CI)', () => {
@@ -69,6 +71,6 @@ describe('sembrarDesdeSnapshot', () => {
     });
     const cache = new InMemoryCache();
 
-    expect(sembrarDesdeSnapshot(cache, ruta)).toBe(false);
+    expect(sembrarDesdeSnapshot(cache, region(ruta))).toBe(false);
   });
 });

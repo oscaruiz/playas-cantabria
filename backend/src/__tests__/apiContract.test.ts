@@ -183,6 +183,7 @@ const BERRIA_LIST_DTO = {
     { id: 101, nombreFuente: 'BERRIA 1' },
     { id: 102, nombreFuente: 'BERRIA 2' },
   ],
+  fuenteBanderas: 'Cruz Roja',
   atributos: { socorrismo: true, duchas: true },
   longitud: 2000,
   webcam: { url: 'https://example.com/berria', cobertura: 'exacta' },
@@ -195,6 +196,9 @@ const COBRECES_LIST_DTO = {
   lat: 43.388,
   lon: -4.214,
   idCruzRoja: 0,
+  // Explicit null, never absent: it is what tells a client "nobody watches
+  // this beach" apart from "this backend does not report the operator".
+  fuenteBanderas: null,
 };
 
 let server: Server;
@@ -273,6 +277,7 @@ describe('API contract — GET /api/beaches/:id/details', () => {
         },
         manana: null,
       },
+      fuenteBanderas: 'Cruz Roja',
       cruzRoja: {
         bandera: 'Roja',
         coberturaDesde: '11:00',
@@ -347,6 +352,9 @@ describe('API contract — GET /api/beaches/:id/details', () => {
         },
         manana: null,
       },
+      // No station in the catalog → no operator watches it. The pair
+      // (null, null) is the "no flag service here" state.
+      fuenteBanderas: null,
       cruzRoja: null,
       prediccionCompleta: null,
     });

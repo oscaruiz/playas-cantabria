@@ -33,7 +33,7 @@ export class RedCrossFlagProvider implements FlagProvider {
     : undefined;
 
   // Pre-scraped flags (by the GitHub Action / local script from a non-blocked
-  // IP) and committed in data/flags.json. It is the PRIMARY source in prod,
+  // IP) and committed in the active region's flags.json. It is the PRIMARY source in prod,
   // where the live scrape returns 403. If a beach is not in the file, we fall
   // back to the live scrape (which works locally).
   private fileFlags: Map<number, FlagStatus> | null = null;
@@ -75,7 +75,8 @@ export class RedCrossFlagProvider implements FlagProvider {
 
   constructor(
     private readonly cache: InMemoryCache,
-    private readonly flagsFile = 'data/flags.json'
+    private readonly flagsFile = 'data/flags.json',
+    private readonly regionId = 'cantabria',
   ) {}
 
   private async loadFileFlags(): Promise<Map<number, FlagStatus>> {
@@ -140,7 +141,7 @@ export class RedCrossFlagProvider implements FlagProvider {
   async getFlagByRedCrossId(redCrossId: number): Promise<FlagStatus | null> {
     if (!redCrossId || redCrossId <= 0) return null;
 
-    // Primary source: pre-scraped flags (data/flags.json), but ONLY if the
+    // Primary source: the region's pre-scraped flags.json, but ONLY if the
     // entry carries a real color. An entry without color (e.g. the cron scraped
     // before the 11:30 flag hoisting and stored "No hay información") must NOT shadow
     // the live scrape, which in prod usually does return the already-hoisted flag.
@@ -165,7 +166,7 @@ export class RedCrossFlagProvider implements FlagProvider {
     // minutes later, and it shadowed the file on top of that. Without color we re-check soon.
     const TTL_CON_COLOR = 86400; // an already-hoisted flag rarely changes
     const TTL_SIN_COLOR = 300;
-    const key = CacheKeys.flagByRedCrossId(redCrossId);
+    const key = CacheKeys.flagByRedCrossId(this.regionId, redCrossId);
 
     const cacheado = this.cache.get<FlagStatus>(key);
     if (cacheado !== undefined) return cacheado;

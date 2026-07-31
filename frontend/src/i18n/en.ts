@@ -23,7 +23,6 @@ export const en = {
   'comun.verDetalleDe': 'View details for {nombre}',
   'comun.aKm': '{km} km away',
   'comun.noDisponible': 'Not available',
-  'comun.cruzRoja': 'Red Cross',
 
   // ---- Relative time ----
   'tiempo.ahoraMismo': 'updated just now',
@@ -69,7 +68,7 @@ export const en = {
   'lista.contador_other': '{count} beaches',
   'lista.paraFiltro': 'for "{filtro}"',
   'lista.noEncontradas': 'No beaches found for "{filtro}"',
-  'lista.vigiladaAria': 'Beach supervised by the Red Cross',
+  'lista.vigiladaAria': 'Beach supervised by {operador}',
   'lista.webcamAria': 'Beach with webcam available',
   'lista.datosLocales': 'Offline: showing saved data, it may be out of date',
   'lista.datosNoDisponibles': 'Could not load beaches or saved data',
@@ -77,8 +76,8 @@ export const en = {
   // ---- Map ----
   'mapa.subtitulo': 'Explore the beaches on the map',
   'mapa.municipio': 'Municipality:',
-  'mapa.vigilada': 'Supervised by the Red Cross',
-  'mapa.sinInfoCruzRoja': 'No Red Cross info',
+  'mapa.vigilada': 'Supervised by {operador}',
+  'mapa.sinInfoCruzRoja': 'No lifeguard info',
   'mapa.webcamDisponible': 'Webcam available',
   'mapa.verDetalles': 'View details',
   'mapa.tuUbicacion': 'Your current location',
@@ -88,7 +87,7 @@ export const en = {
   'mapa.leyendaBuenas': 'Good conditions',
   'mapa.leyendaRegular': 'Use caution',
   'mapa.leyendaMalas': 'Not advised',
-  'mapa.leyendaBandera': 'Red Cross flag hoisted',
+  'mapa.leyendaBandera': 'Flag hoisted',
 
   // ---- Wind levels ----
   'viento.sinViento': 'no wind',
@@ -97,6 +96,7 @@ export const en = {
   'viento.fuerte': 'strong wind',
 
   // ---- Flag (Cruz Roja) ----
+  'bandera.negra': 'Black Flag',
   'bandera.roja': 'Red Flag',
   'bandera.amarilla': 'Yellow Flag',
   'bandera.verde': 'Green Flag',
@@ -117,7 +117,7 @@ export const en = {
   'detalle.scoreInfo.intro': 'The score (0–100) sums up how appealing and safe the beach is today. It combines the current conditions, giving more weight to what matters most for a good beach day:',
   'detalle.scoreInfo.sol': 'Sun and sky: the clearer, the better.',
   'detalle.scoreInfo.temp': 'Temperature: goes up in pleasant weather and down when cold.',
-  'detalle.scoreInfo.bandera': 'Red Cross flag: green adds, yellow subtracts, and red or black sink the score.',
+  'detalle.scoreInfo.bandera': 'Lifeguard flag: green adds, yellow subtracts, and red or black sink the score.',
   'detalle.scoreInfo.viento': 'Wind: the lighter, the better.',
   'detalle.scoreInfo.oleaje': 'Sea state: calm water scores higher (surf beaches are not penalised).',
   'detalle.scoreInfo.uv': 'Strong sun (UV): a very high index subtracts a little.',
@@ -128,7 +128,7 @@ export const en = {
   'detalle.errorCarga': 'Could not load beach details',
   'detalle.comoLlegar': 'Directions',
   'detalle.verEnMapa': 'View on the map',
-  'detalle.estadoBano': 'Swimming conditions (per Red Cross)',
+  'detalle.estadoBano': 'Swimming conditions (per {operador})',
   'detalle.banderaAria': 'flag',
   'detalle.vigilancia': 'Lifeguard hours: {horario}',
   'detalle.registradaHoy': 'Recorded today at {hora}',
@@ -175,7 +175,7 @@ export const en = {
 
   // ---- Cruz Roja (card) ----
   'cruzroja.vigilanciaCobertura': 'Lifeguard service and coverage',
-  'cruzroja.sinInfo': 'Red Cross information not available yet',
+  'cruzroja.sinInfo': '{operador} information not available yet',
   'cruzroja.banderaActual': 'Current flag',
   'cruzroja.coberturaDesde': 'Coverage from',
   'cruzroja.coberturaHasta': 'Coverage until',

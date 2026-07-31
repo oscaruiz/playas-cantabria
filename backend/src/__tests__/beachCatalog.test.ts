@@ -2,23 +2,27 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import { validateBeachCatalog, normalizeName } from '../domain/services/beachCatalogValidation';
-import { activeRegion } from '../regions';
+// Strict resolver, not the compatibility fallback: validating a different
+// region's catalog here would pass and tell us nothing about Cantabria.
+import { resolveScriptRegion } from '../scripts/scriptRegion';
 
-const backendPath = resolve(__dirname, '../../data/beaches.json');
+const cantabria = resolveScriptRegion('cantabria');
+
+const backendPath = cantabria.catalogPath;
 const frontendPath = resolve(__dirname, '../../../frontend/src/data/beaches.json');
 
 const backend = JSON.parse(readFileSync(backendPath, 'utf-8')) as any[];
 
 describe('Catálogo de playas — integridad', () => {
   it('no tiene errores de integridad', () => {
-    const { errors } = validateBeachCatalog(backend, activeRegion.catalogRules);
+    const { errors } = validateBeachCatalog(backend, cantabria.catalogRules);
     expect(errors).toEqual([]);
   });
 
   it('no hay ids de Cruz Roja duplicados entre playas (el 373 pre-existente ya está corregido)', () => {
     // The id 373 (LA CONCHA I SUANCES) was wrongly assigned to Mogro-Usil; it has
     // already been corrected to MOGRO=376. No id must remain shared between beaches.
-    const { warnings } = validateBeachCatalog(backend, activeRegion.catalogRules);
+    const { warnings } = validateBeachCatalog(backend, cantabria.catalogRules);
     expect(warnings).toEqual([]);
   });
 

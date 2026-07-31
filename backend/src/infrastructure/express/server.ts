@@ -4,52 +4,48 @@ import { corsMiddleware } from './middlewares/cors';
 import { errorHandler } from './middlewares/errorHandler';
 import { notFoundHandler } from './middlewares/notFoundHandler';
 import { rateLimit } from './middlewares/rateLimit';
-
 import { InMemoryCache } from '../cache/InMemoryCache';
 import { sembrarDesdeSnapshot } from '../cache/snapshotSeed';
 import { DIContainer } from '../di/DIContainer';
-import { configureDependencies } from '../di/dependencies';
-
-// Import types for better typing
+import { configureDependencies, createSharedDependencies } from '../di/dependencies';
 import { GetAllBeaches } from '../../domain/use-cases/GetAllBeaches';
 import { GetBeachById } from '../../domain/use-cases/GetBeachById';
 import { GetFeaturedBeaches } from '../../domain/use-cases/GetFeaturedBeaches';
 import { LegacyDetailsAssembler } from '../../application/services/LegacyDetailsAssembler';
-import { WeatherProvider } from '../../domain/ports/WeatherProvider';
-
 import { createBeachesRouter } from './routes/beachesRouter';
 import { createDebugRouter } from './routes/debugRouter';
 import { createDiagRouter } from './routes/diagRouter';
 import { RedCrossFlagProvider } from '../providers/RedCrossFlagProvider';
 import { DEBUG_WEATHER } from '../utils/debug';
+import { regionRegistry, RegionConfig } from '../../regions';
 
 export interface BuildDeps {
-  /**
-   * Provide a cache instance (shared across app).
-   * If omitted, a new one will be constructed.
-   */
+  /** Shared cache override, primarily for tests. */
   cache?: InMemoryCache;
+  /** Region override used by isolation tests; production loads the registry. */
+  regions?: RegionConfig[];
 }
 
 /**
- * Build an Express app instance, wiring dependencies following Ports & Adapters.
- * This function is reusable from local index.ts and Firebase adapter.
+ * Builds one regional container per valid registry entry. External weather
+ * providers and their coordinate-based cache are shared by every container.
  */
-export function buildExpressApp({ cache }: BuildDeps = {}): Express {
+export function buildExpressApp({
+  cache,
+  regions = regionRegistry.all(),
+}: BuildDeps = {}): Express {
   const app = express();
 
-  // Render (and Firebase Functions) serve behind a proxy: without this `req.ip`
-  // returns the proxy's IP for EVERYONE and the per-IP limit would turn into
-  // a shared global limit. Only a single hop is trusted, not the whole
-  // X-Forwarded-For chain, which a client can forge.
+  // Render and Firebase Functions serve behind one trusted proxy. Without this,
+  // req.ip would be the proxy for every user and the per-IP limit would become
+  // a shared global limit. Trust exactly one hop, not a client-forgeable chain.
   app.set('trust proxy', 1);
-
-  // Middleware configuration
   app.use(compression());
   app.use(corsMiddleware());
   app.use(express.json());
 
-  // Request timeout: 15s max to prevent zombie requests
+  // Limit how long the client waits. This sends a 504 but does not cancel
+  // provider requests already in flight; provider-level timeouts bound those.
   app.use((_req, res, next) => {
     res.setTimeout(15000, () => {
       if (!res.headersSent) {
@@ -59,69 +55,85 @@ export function buildExpressApp({ cache }: BuildDeps = {}): Express {
     next();
   });
 
-  // 🏗️ DEPENDENCY INJECTION CONTAINER
-  const container = new DIContainer();
-  configureDependencies(container, { cache });
+  const shared = createSharedDependencies(cache, regions);
+  const containers = new Map<string, DIContainer>();
 
-  // Get dependencies from container with proper typing
-  const getAllBeaches = container.get<GetAllBeaches>('getAllBeaches');
-  const getBeachById = container.get<GetBeachById>('getBeachById');
-  const getFeaturedBeaches = container.get<GetFeaturedBeaches>('getFeaturedBeaches');
-  const legacyDetailsAssembler = container.get<LegacyDetailsAssembler>('legacyDetailsAssembler');
-
-  // Warm start: the aggregate is seeded from the CI snapshot (as
-  // STALE) so that the first user after a deploy or after Render's sleep
-  // does not pay the full fan-out to the providers.
-  sembrarDesdeSnapshot(container.get<InMemoryCache>('cache'));
-
-  // Warm the aggregate without delaying server startup. Subsequent refreshes
-  // use stale-while-revalidate, so users do not pay the full provider fan-out.
-  if (process.env.NODE_ENV === 'production') {
-    setTimeout(() => {
-      void getFeaturedBeaches.execute(5).catch(() => undefined);
-    }, 250);
+  for (const region of regions) {
+    const container = new DIContainer();
+    configureDependencies(container, { region, shared });
+    containers.set(region.id, container);
+    sembrarDesdeSnapshot(shared.cache, region);
   }
 
   // Protects the providers' free quota against third-party scrapers.
   // A normal visit makes 2-3 requests; 60/min per IP bothers no real user.
   app.use('/api', rateLimit({ ventanaMs: 60_000, maxPeticiones: 60 }));
 
-  // Routes configuration
-  app.use(
-    '/api/beaches',
-    createBeachesRouter({
-      getAllBeaches,
-      getBeachById,
-      getFeaturedBeaches,
-      legacyDetailsAssembler,
-    })
-  );
+  const routerFor = (container: DIContainer) => createBeachesRouter({
+    getAllBeaches: container.get<GetAllBeaches>('getAllBeaches'),
+    getBeachById: container.get<GetBeachById>('getBeachById'),
+    getFeaturedBeaches: container.get<GetFeaturedBeaches>('getFeaturedBeaches'),
+    legacyDetailsAssembler: container.get<LegacyDetailsAssembler>('legacyDetailsAssembler'),
+  });
 
-  // Diagnostics routes (ALWAYS on) — for debugging production (Cruz Roja, live commit)
-  app.use(
-    '/api/_diag',
-    createDiagRouter({
-      flagProvider: container.get<RedCrossFlagProvider>('redCrossFlagProvider'),
-      cache: container.get<InMemoryCache>('cache'),
-    })
-  );
+  for (const region of regions) {
+    const container = containers.get(region.id)!;
+    app.use(`/api/${region.id}/beaches`, routerFor(container));
+  }
 
-  // Debug routes (conditional)
-  if (DEBUG_WEATHER) {
-    const aemet = container.get<WeatherProvider & { getLastRaw?: () => unknown }>('aemetWeatherProvider');
-    const openWeather = container.get<WeatherProvider & { getLastRaw?: () => unknown }>('openWeatherProvider');
-
+  // Installed clients still use /api/beaches. Keep it as a deprecated alias,
+  // never as a fallback to whichever region happened to load.
+  const cantabriaContainer = containers.get('cantabria');
+  if (cantabriaContainer) {
     app.use(
-      '/api/_debug',
-      createDebugRouter({
-        getBeachById,
-        aemet,
-        openWeather,
-      })
+      '/api/beaches',
+      (_req, res, next) => {
+        res.setHeader('Deprecation', 'true');
+        res.setHeader('Link', '</api/cantabria/beaches>; rel="successor-version"');
+        next();
+      },
+      routerFor(cantabriaContainer),
     );
   }
 
-  // Error handling middleware (must be last)
+  if (process.env.NODE_ENV === 'production') {
+    setTimeout(() => {
+      // Preserve the historical Cantabria warm-up without multiplying its
+      // provider fan-out by every region after each cron-triggered deployment.
+      // Other regions revalidate their stale snapshot on their first read.
+      if (cantabriaContainer) {
+        void cantabriaContainer
+          .get<GetFeaturedBeaches>('getFeaturedBeaches')
+          .execute(5)
+          .catch(() => undefined);
+      }
+    }, 250);
+  }
+
+  if (cantabriaContainer) {
+    app.use(
+      '/api/_diag',
+      createDiagRouter({
+        flagProvider: cantabriaContainer.get<RedCrossFlagProvider>('redCrossFlagProvider'),
+        cache: shared.cache,
+      }),
+    );
+  }
+
+  if (DEBUG_WEATHER) {
+    const debugContainer = cantabriaContainer ?? containers.values().next().value;
+    if (debugContainer) {
+      app.use(
+        '/api/_debug',
+        createDebugRouter({
+          getBeachById: debugContainer.get<GetBeachById>('getBeachById'),
+          aemet: shared.aemetWeatherProvider,
+          openWeather: shared.openWeatherProvider,
+        }),
+      );
+    }
+  }
+
   app.use(notFoundHandler);
   app.use(errorHandler);
 

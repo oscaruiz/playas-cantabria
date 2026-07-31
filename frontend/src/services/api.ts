@@ -188,6 +188,12 @@ export interface Playa {
   lon: number;
   idCruzRoja?: number;
   cruzRojaStations?: CruzRojaStation[];
+  /**
+   * Operator watching the beach ("Cruz Roja"), null if nobody does. Optional
+   * because the local fallback catalog and older backends do not carry it —
+   * resolve it with `operadorVigilancia`, never read it raw.
+   */
+  fuenteBanderas?: string | null;
   alias?: string[];
   sectores?: BeachSector[];
   atributos?: PlayaAtributos;
@@ -382,6 +388,9 @@ export interface PlayaDetalle {
 
   // Standardized weather data
   clima?: DatosClima;
+
+  // Operator watching the beach; null = no lifeguard flag service here.
+  fuenteBanderas?: string | null;
 
   // May be absent
   cruzRoja?: DatosCruzRoja;

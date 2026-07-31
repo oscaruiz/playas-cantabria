@@ -46,12 +46,18 @@ export class JsonBeachRepository implements BeachRepository {
   private readonly dataPath: string;
   private loaded: Beach[] | null = null;
 
-  constructor(private readonly cache: InMemoryCache, dataFileRelativePath = 'data/beaches.json') {
-    this.dataPath = path.resolve(process.cwd(), dataFileRelativePath);
+  // The region registry hands over an absolute path; a relative one is still
+  // accepted (tests pass temp files) and resolved against the working directory.
+  constructor(
+    private readonly cache: InMemoryCache,
+    dataFilePath: string,
+    private readonly regionId = 'cantabria',
+  ) {
+    this.dataPath = path.resolve(process.cwd(), dataFilePath);
   }
 
   async getAll(): Promise<Beach[]> {
-    const cached = this.cache.get<Beach[]>(CacheKeys.beachesAll);
+    const cached = this.cache.get<Beach[]>(CacheKeys.beachesAll(this.regionId));
     if (cached) return cached;
 
     if (!this.loaded) {
@@ -59,12 +65,12 @@ export class JsonBeachRepository implements BeachRepository {
       const raw = JSON.parse(content) as RawBeach[];
       this.loaded = raw.map((b) => this.mapToEntity(b));
     }
-    this.cache.set(CacheKeys.beachesAll, this.loaded, 60 * 60 * 24 * 365);
+    this.cache.set(CacheKeys.beachesAll(this.regionId), this.loaded, 60 * 60 * 24 * 365);
     return this.loaded;
   }
 
   async getById(id: string): Promise<Beach | null> {
-    const key = CacheKeys.beachById(id);
+    const key = CacheKeys.beachById(this.regionId, id);
     const cached = this.cache.get<Beach>(key);
     if (cached) return cached;
 

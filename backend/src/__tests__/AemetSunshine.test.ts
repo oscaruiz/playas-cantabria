@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { AemetWeatherProvider } from '../infrastructure/providers/AemetWeatherProvider';
+import {
+  AemetWeatherProvider,
+  isInsideObservationBboxes,
+} from '../infrastructure/providers/AemetWeatherProvider';
 import { InMemoryCache } from '../infrastructure/cache/InMemoryCache';
 import { http } from '../infrastructure/http/axiosClient';
 
@@ -28,8 +31,24 @@ function mockAemet(filas: unknown[]) {
 }
 
 function provider() {
-  return new AemetWeatherProvider(new InMemoryCache());
+  return new AemetWeatherProvider(
+    new InMemoryCache(),
+    [{ latMin: 42.5, latMax: 43.8, lonMin: -5.2, lonMax: -2.8 }],
+  );
 }
+
+describe('AEMET multi-region observation filter', () => {
+  const bboxes = [
+    { latMin: 43.2, latMax: 43.7, lonMin: -5, lonMax: -3 },
+    { latMin: 36, latMax: 37, lonMin: -7, lonMax: -5 },
+  ];
+
+  it('keeps stations inside any region without retaining the space between them', () => {
+    expect(isInsideObservationBboxes(43.4, -4, bboxes)).toBe(true);
+    expect(isInsideObservationBboxes(36.5, -6, bboxes)).toBe(true);
+    expect(isInsideObservationBboxes(40, -4.5, bboxes)).toBe(false);
+  });
+});
 
 describe('AemetWeatherProvider.getSunshineNear', () => {
   it('ignora las estaciones sin insolación aunque sean las más cercanas', async () => {

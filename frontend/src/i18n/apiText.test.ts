@@ -5,6 +5,7 @@ import {
   claveEstadoBandera,
   claveNivelVientoMs,
   TABLAS_API,
+  traducirOperador,
 } from './apiText';
 import { traducirNombreDiaApi, formatearFechaCorta } from './fechas';
 
@@ -67,6 +68,7 @@ describe('razonLegible', () => {
 
 describe('claveBandera', () => {
   it('mapea los colores a claves de diccionario', () => {
+    expect(claveBandera('Negra')).toBe('bandera.negra');
     expect(claveBandera('Roja')).toBe('bandera.roja');
     expect(claveBandera('Amarilla')).toBe('bandera.amarilla');
     expect(claveBandera('Verde')).toBe('bandera.verde');
@@ -250,5 +252,20 @@ describe('integridad de las tablas', () => {
     // wins due to the spread order. Any other collision would be a bug:
     // the last table would silently shadow the previous one.
     expect(colisiones).toEqual(['fresco (MAPA_VIENTO vs MAPA_SENSACION)']);
+  });
+});
+
+describe('operador de banderas', () => {
+  it('traduce el nombre de Cruz Roja y deja intacto uno desconocido', () => {
+    expect(traducirOperador('Cruz Roja', 'en')).toBe('Red Cross');
+    expect(traducirOperador('Cruz Roja', 'es')).toBe('Cruz Roja');
+    expect(traducirOperador('DYA', 'en')).toBe('DYA');
+  });
+
+  it('traduce "sin cobertura X" para cualquier operador', () => {
+    // Cantabria's exact string keeps its own dictionary entry (contract with
+    // the deployed frontend); any other operator goes through the frame.
+    expect(traducirTextoApi('sin cobertura Cruz Roja', 'en')).toBe('no Red Cross coverage');
+    expect(traducirTextoApi('sin cobertura DYA', 'en')).toBe('no DYA coverage');
   });
 });

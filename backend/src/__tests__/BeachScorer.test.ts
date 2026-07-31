@@ -548,3 +548,83 @@ describe('razones con lluvia prevista', () => {
     expect(reason).not.toContain('lluvia o tormenta');
   });
 });
+
+// ---------------------------------------------------------------------------
+// Region with no flag operator (phase 3)
+// ---------------------------------------------------------------------------
+
+/** A region that declares no flag operator at all. */
+const SIN_OPERADOR: readonly string[] = [];
+
+describe('región sin servicio de banderas', () => {
+  // Every non-flag factor at its maximum, so the totals below are exact.
+  const buenTiempo = () =>
+    makeWeather({ icon: '01d', temperatureC: 28, windSpeedMs: 2 });
+
+  it('deja el factor bandera fuera de la puntuación', () => {
+    const { subScores } = computeBeachScore(
+      buenTiempo(), null, null, undefined, null, null, SIN_OPERADOR,
+    );
+    expect(subScores.bandera).toBe(0);
+  });
+
+  it('no hunde la nota: un día perfecto sigue llegando a 100', () => {
+    const enrichment = makeEnrichment({ waves: 'tranquilo', uvIndex: 3 });
+    const { score } = computeBeachScore(
+      buenTiempo(), null, enrichment, undefined, null, null, SIN_OPERADOR,
+    );
+    expect(score).toBe(100);
+  });
+
+  it('con operador, ese mismo día perfecto pierde puntos por no tener bandera', () => {
+    const enrichment = makeEnrichment({ waves: 'tranquilo', uvIndex: 3 });
+    const conOperador = computeBeachScore(buenTiempo(), null, enrichment).score;
+    const sinOperador = computeBeachScore(
+      buenTiempo(), null, enrichment, undefined, null, null, SIN_OPERADOR,
+    ).score;
+    // The 12 points it cannot reach (10 neutral flag + the 2 from "datos"
+    // that need a reading) are the ones that used to cap a whole region.
+    expect(conOperador).toBe(88);
+    expect(sinOperador).toBe(100);
+  });
+
+  it('mantiene el orden relativo entre playas (solo cambia la escala)', () => {
+    const mejor = buenTiempo();
+    const peor = makeWeather({ icon: '04d', temperatureC: 16, windSpeedMs: 9 });
+    const s = (w: Weather) =>
+      computeBeachScore(w, null, null, undefined, null, null, SIN_OPERADOR).score;
+    expect(s(mejor)).toBeGreaterThan(s(peor));
+  });
+
+  it('los topes de lluvia siguen siendo absolutos tras reescalar', () => {
+    const { score } = computeBeachScore(
+      buenTiempo(), null, null, undefined, makeRain(), null, SIN_OPERADOR,
+    );
+    expect(score).toBe(RAIN_SCORE_CAP);
+  });
+
+  it('no lista "sin cobertura" como motivo de bajada', () => {
+    const weather = makeWeather({ icon: '04d', temperatureC: 16 });
+    const { subScores } = computeBeachScore(
+      weather, null, null, undefined, null, null, SIN_OPERADOR,
+    );
+    const factors = buildDowngradeFactors(subScores, null, null, null, SIN_OPERADOR);
+    expect(factors ?? '').not.toContain('sin cobertura');
+  });
+});
+
+describe('buildDowngradeFactors nombra al operador de la región', () => {
+  it('usa el operador declarado en vez de una marca fija', () => {
+    const weather = makeWeather({ icon: '04d', temperatureC: 16 });
+    const { subScores } = computeBeachScore(weather, null, null);
+    expect(buildDowngradeFactors(subScores, null, null, null, ['DYA']))
+      .toContain('sin cobertura DYA');
+  });
+
+  it('mantiene el texto de Cantabria (contrato con el frontend desplegado)', () => {
+    const weather = makeWeather({ icon: '04d', temperatureC: 16 });
+    const { subScores } = computeBeachScore(weather, null, null);
+    expect(buildDowngradeFactors(subScores, null, null, null, ['Cruz Roja']))
+      .toContain('sin cobertura Cruz Roja');
+  });
+});
