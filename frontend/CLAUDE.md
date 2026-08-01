@@ -1,6 +1,6 @@
 # Frontend — CLAUDE.md
 
-Ionic React + Capacitor PWA para información de playas en Cantabria. Los comentarios están en inglés; el texto de UI, las claves de i18n y los nombres de variables siguen en español. Consulta el `CLAUDE.md` raíz para contexto general del monorepo.
+Ionic React + Capacitor PWA para información de playas. Es un motor **agnóstico de región**: el mismo código genera la app de Cantabria o la de cualquier otra región (ver «Build por región»). Los comentarios están en inglés; el texto de UI, las claves de i18n y los nombres de variables siguen en español. Consulta el `CLAUDE.md` raíz para contexto general del monorepo.
 
 ## Comandos
 
@@ -8,9 +8,11 @@ Ionic React + Capacitor PWA para información de playas en Cantabria. Los coment
 |-------|---------|
 | Dev server | `npm start` (react-scripts, puerto 3000) |
 | Build | `npm run build` |
+| Build de otra región | PowerShell: `$env:REACT_APP_REGION='asturias'; npm run build` |
+| Sincronizar datos de región | `npm run sync-region` |
 | Tests | `npm test` (Jest + React Testing Library) |
 | Lint | `npm run lint` (ESLint sobre `src/`) |
-| Android sync | `npx cap sync android` |
+| Android sync | PowerShell: `$env:REACT_APP_REGION='<id>'; npm run android:sync` |
 
 ## Estructura del Proyecto
 
@@ -54,13 +56,15 @@ Sin store global (no Redux, no Context). Solo hooks de React:
 
 ## Capa API
 
-**`src/config/api.ts`** — Resuelve `API_BASE_URL` desde `REACT_APP_API_BASE_URL` o usa la URL de producción en Render. Exporta `buildApiUrl(path)`.
+**`src/config/api.ts`** — Resuelve `API_BASE_URL` (el host) desde `REACT_APP_API_BASE_URL` o usa la URL de producción en Render. Exporta `buildApiUrl(path)` y **`buildRegionApiUrl(path)`**, que antepone `/api/<region>`. La app siempre usa la segunda: `/api/beaches` sin región es solo el alias en desuso que mantiene vivos a los clientes ya instalados.
+
+**`src/config/region.ts`** — La región de este build. Único sitio que sabe cuál es.
 
 **`src/services/api.ts`** — Dos funciones principales:
 - `getPlayas(options?)` — Lista de playas. Implementa fallback: si el backend no responde en 2.5s, devuelve datos de `data/beaches.json` y actualiza vía callback `onBackendData` cuando llega la respuesta real.
 - `getDetallePlaya(codigo)` — Detalle completo de una playa (clima + Cruz Roja + mareas).
 
-Endpoints consumidos: `GET /api/beaches` y `GET /api/beaches/{codigo}/details`.
+Endpoints consumidos: `GET /api/{region}/beaches`, `/{codigo}/details` y `/featured`.
 
 ## Modelos de Datos
 
@@ -97,19 +101,55 @@ Todas las interfaces están en `src/services/api.ts`:
 - **Framework**: Jest vía react-scripts + React Testing Library
 - **Setup**: `src/setupTests.ts` (jest-dom matchers + mock de `window.matchMedia`)
 - **Transform**: se necesita `transformIgnorePatterns` para paquetes Ionic/Stencil (ya configurado en `package.json`)
-- **Cobertura actual**: test básico smoke en `App.test.tsx`
+- **Cobertura actual**: suite de caracterización, configuración regional, API, i18n y componentes; `App.test.tsx` conserva el smoke básico.
 
 ## Despliegue
 
-- **Web**: Firebase Hosting (proyecto `playas-cantabria-front`), configurado en `firebase.json` con SPA rewrites
-- **Android**: Capacitor (`capacitor.config.ts`), app ID `com.example.app`, web dir `build`
-- **Env vars**: `.env.development` (localhost:4000) y `.env.production` (Render URL)
+- **Web**: Firebase Hosting multi-site dentro del proyecto `playas-cantabria-front` — un target por región en `.firebaserc` y una entrada por target en `firebase.json`. Sin proyecto ni factura adicional.
+- **Workflow**: `.github/workflows/deploy-web.yml`, con `strategy.matrix.region`. Es **manual** (`workflow_dispatch`): necesita el secret `FIREBASE_SERVICE_ACCOUNT` y un sitio de hosting por región.
+- **Android**: Capacitor (`capacitor.config.ts`), `appId` y nombre leídos de la región, web dir `build`. Como `android/` está ignorado, `npm run android:sync` aplica después el `applicationId`, nombre y URL scheme al proyecto nativo local. El nombre pasa por `scripts/android-strings.mjs`: los recursos `<string>` de Android exigen escapar `'`, `"` y `\`, y un apóstrofo suelto **no degrada, rompe la compilación** (L'Escala, L'Ampolla). Aquí no hay JDK para detectarlo, así que lo fija `src/test/androidStrings.test.ts`.
+- **Env vars**: `.env.development` (localhost:4000), `.env.production` (Render URL) y `REACT_APP_REGION` (por defecto `cantabria`)
+
+## Build por región
+
+`REACT_APP_REGION=<id> npm run build` genera la app de esa región (en PowerShell:
+`$env:REACT_APP_REGION='<id>'; npm run build`). El prebuild
+`scripts/sync-region.mjs` copia desde la raíz `regions/<id>/` lo que CRA necesita dentro de
+`src/` y `public/`:
+
+| Generado | De dónde sale | Para qué |
+|---|---|---|
+| `src/data/beaches.json` | `regions/<id>/beaches.json` | catálogo de respaldo sin conexión |
+| `src/data/region.json` | `regions/<id>/region.json` | nombre, branding y centro del mapa |
+| `public/manifest.json` | branding de la región | instalación de la PWA |
+
+Los tres están **versionados**, no ignorados: son el respaldo y el manifiesto. Construir otra
+región los reescribe — `npm run sync-region` sin variable devuelve Cantabria.
+
+`npm test` restaura siempre Cantabria antes de la suite, así que la suite no depende de para qué región se construyó por última vez. El CI comprueba
+después que coincidan con sus fuentes y construye cada región en un job aislado.
+
+`npm run check-regions` valida los datos de cada región y su hosting, **y separa las dos cosas a
+propósito**: unos datos inválidos siempre fallan, porque son del colaborador y él puede
+arreglarlos; que falte el target de Firebase solo avisa, porque el sitio de hosting únicamente lo
+puede crear quien mantiene el repo, y tumbar por eso un PR de solo datos convertiría en mentira
+que «una región es un directorio de datos». Con `--require-hosting` sí falla, y así lo invoca el
+workflow de despliegue, que es donde de verdad bloquea.
+
+**Nunca escribas a fuego el nombre de una región, un centro de mapa ni una ruta del API.** El
+nombre entra en los textos como `{region}`, que `IdiomaContext` interpola solo; el resto sale de
+`src/config/region.ts`.
+
+Los tests leen la región del build en vez de dar por hecho Cantabria (`src/test/apiRoutes.ts`),
+y `regionBuild.otraRegion.test.tsx` sustituye el módulo de región por otra distinta: es lo que
+detecta que algo siga clavado a Cantabria, porque su `region.json` reproduce exactamente los
+valores que antes estaban a fuego.
 
 ## Notas Importantes
 
 - El mecanismo de fallback de 2.5s en `getPlayas()` es intencional — el backend en Render tiene cold starts largos
 - `ExploreContainer.tsx` es boilerplate de Ionic sin usar; se puede eliminar
-- El service worker (PWA) está registrado en `index.tsx` pero inactivo por defecto (`serviceWorkerRegistration.unregister()`)
+- El service worker (PWA) está registrado en `index.tsx` y mantiene bundle y respuestas regionales del API disponibles offline.
 - Los iconos de clima usan URLs de AEMET (`www.aemet.es/imagenes/png/estado_cielo/`)
 - ESLint: `react-in-jsx-scope` desactivado (React 17+ JSX transform)
 

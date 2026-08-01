@@ -191,8 +191,16 @@ Environment variables (or `.env`):
   `off` lo desactiva. Solo actúa en franja de playa. Usa el mismo valor en CI que en el
   servidor, o el primer `/featured` tras arrancar sale del snapshot sin corregir.
 - `DEBUG_WEATHER=1` — enables detailed logs from all providers
+- `DIAG_PROBE_TOKEN` — optional bearer token enabling the live probes
+  (`/api/_diag/flag/:id` and `/api/_diag/providers`); without it both routes return 404.
+  `providers:health` reads the same value from its environment to run the active probe
 
 ## Cuota y diagnóstico
+
+`GET /api/_diag/providers` (con `DIAG_PROBE_TOKEN`) llama EN VIVO a cada proveedor desde la IP de
+producción y devuelve `ok`/`fallo` por host. Es lo que hace `providers:health` una comprobación de
+verdad: las métricas describen el tráfico que hubo, y una ventana vacía —proceso recién arrancado,
+caché que lo sirvió todo, función ya muerta— no contiene ningún fallo que encontrar.
 
 `GET /api/_diag/metrics` expone el consumo real: peticiones salientes por host (desde el arranque,
 última hora y último día), concurrencia y enfriamientos por 429, aciertos/fallos de caché por familia
@@ -208,6 +216,15 @@ sembrado, el primer `/featured` tras arrancar cuesta **0 peticiones** y responde
 - **New code and comments in English.** Existing Spanish comments stay — do not translate them opportunistically; they carry operational history (dated incidents, provider quirks).
 - **No region hardcoding.** Bboxes, catalog paths, forbidden-beach rules and flag operators live in root `regions/<id>/`. HTTP builds one container per validated registry entry; scripts and tests resolve their target explicitly and pass its `RegionConfig` into DI. There is deliberately no `activeRegion` fallback.
 - **Never delete existing providers.** Add new ones, don't replace.
+- **An unhandled rejection logs; it does not kill the process.** An uncaught exception does (after
+  closing the server, with a deadline). The asymmetry is deliberate: nearly every promise here
+  wraps a provider that fails routinely, and dying on one escaped rejection trades a log line for
+  a Render free cold start. When one shows up, the fix is the missing `catch` on that background
+  promise. Every fire-and-forget in the codebase (`void …`) already carries one.
+- **The axios ceilings come from a measurement, not a guess.** `maxContentLength` is sized against
+  AEMET's Spain-wide observation payload (3.11 MB on 31-jul-2026). Tightening it towards that
+  figure does not fail loudly: the rejection is swallowed by the stale cache path and AEMET stops
+  feeding both the observation and the sky corrector's sunshine, silently.
 - **Never change HTTP endpoint signatures.** Existing response fields are backward compatible.
 - **Defensive parsing**: every field from external APIs can be null. Never assume a field exists.
 - **Cache everything**: never make an uncached external request, y elige el TTL según la

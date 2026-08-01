@@ -36,10 +36,11 @@ TypeScript config for build is at `backend/config/tsconfig.json` (rootDir=`../sr
 | Task | Command |
 |------|---------|
 | Dev server | `npm start` (react-scripts) |
-| Build | `npm run build` |
-| Tests | `npm test` |
+| Build | `npm run build` (Cantabria) |
+| Build another region | PowerShell: `$env:REACT_APP_REGION='<id>'; npm run build` |
+| Tests | `npm test` (always restores Cantabria) |
 | Lint | `npm run lint` (eslint on `src/`) |
-| Android sync | `npx cap sync android` |
+| Android sync | PowerShell: `$env:REACT_APP_REGION='<id>'; npm run android:sync` |
 
 ## Backend Architecture (Hexagonal / Ports & Adapters)
 
@@ -85,7 +86,7 @@ Ionic React app with three routes:
 - `/playas/:codigo` — PlayaDetalle (beach detail with weather/flags)
 - `/mapa` — MapaPage (Leaflet map)
 
-API base URL configured via `REACT_APP_API_BASE_URL` env var (defaults to production Render URL). The frontend has a fallback mechanism: if the backend doesn't respond within 2.5s, it serves beach data from a local JSON file, then updates when the backend responds.
+API base URL configured via `REACT_APP_API_BASE_URL` env var (defaults to production Render URL); calls go to `/api/<region>/...`. The app is region-agnostic: `REACT_APP_REGION=<id> npm run build` generates that region's app, with branding, map centre and catalog copied from root `regions/<id>/` by the `sync-region` prebuild. One Firebase Hosting site per region, one app id per region. The frontend has a fallback mechanism: if the backend doesn't respond within 2.5s, it serves beach data from a local JSON file, then updates when the backend responds.
 
 ## Environment Variables
 
@@ -100,10 +101,11 @@ API base URL configured via `REACT_APP_API_BASE_URL` env var (defaults to produc
 
 ### Frontend
 - `REACT_APP_API_BASE_URL` — backend URL override
+- `REACT_APP_REGION` — region this build serves (default `cantabria`)
 
 ## Deployment
 
 - Backend deploys to Render (`playas-cantabria.onrender.com`)
-- Frontend can deploy to Firebase Hosting or as a Capacitor Android app
+- Frontend deploys one app per region: a Firebase Hosting site per region (multi-site, same project) or a Capacitor Android app per `capacitorAppId`. Workflow `deploy-web.yml`, manual, with `strategy.matrix.region`
 - Backend also supports Firebase Functions (auto-detected via env vars)
 
