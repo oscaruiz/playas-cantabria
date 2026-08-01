@@ -1,0 +1,38 @@
+{
+  "$schema": "../region.schema.json",
+  "id": "cantabria",
+  "name": "Cantabria",
+  "observationBbox": {
+    "latMin": 42.5,
+    "latMax": 43.8,
+    "lonMin": -5.2,
+    "lonMax": -2.8
+  },
+  "catalogRules": {
+    "bbox": {
+      "latMin": 43.2,
+      "latMax": 43.65,
+      "lonMin": -4.9,
+      "lonMax": -3.0
+    },
+    "regionName": "Cantabria",
+    "forbiddenBeaches": [
+      {
+        "municipio": "santander",
+        "nombrePattern": "^(la )?concha( de santander)?$"
+      }
+    ]
+  },
+  "flagProviders": ["cruzroja"],
+  "branding": {
+    "appName": "Playas de Cantabria",
+    "shortName": "Playas Cantabria",
+    "themeColor": "#0a7ea4",
+    "backgroundColor": "#faf6f1",
+    "capacitorAppId": "com.example.app"
+  },
+  "map": {
+    "center": { "lat": 43.4, "lon": -4.05 },
+    "zoom": 9
+  }
+}

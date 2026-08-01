@@ -1,4 +1,4 @@
-import { buildApiUrl } from '../config/api';
+import { buildRegionApiUrl } from '../config/api';
 
 const PLAYAS_FALLBACK_TIMEOUT_MS = 2500;
 const CLIENT_CACHE_TTL_MS = 5 * 60 * 1000;
@@ -59,7 +59,7 @@ function fetchPlayasOnce(): Promise<Playa[]> {
   }
   if (playasRequest) return playasRequest;
 
-  playasRequest = fetch(buildApiUrl('/api/beaches'))
+  playasRequest = fetch(buildRegionApiUrl('/beaches'))
     .then((res) => {
       if (!res.ok) throw new Error('Error al obtener playas');
       return res.json() as Promise<Playa[]>;
@@ -188,6 +188,12 @@ export interface Playa {
   lon: number;
   idCruzRoja?: number;
   cruzRojaStations?: CruzRojaStation[];
+  /**
+   * Operator watching the beach ("Cruz Roja"), null if nobody does. Optional
+   * because the local fallback catalog and older backends do not carry it —
+   * resolve it with `operadorVigilancia`, never read it raw.
+   */
+  fuenteBanderas?: string | null;
   alias?: string[];
   sectores?: BeachSector[];
   atributos?: PlayaAtributos;
@@ -334,6 +340,14 @@ export interface LluviaActual {
   prevista?: LluviaPrevista | null;
 }
 
+/** One hour of the outlook the score is judging (already trimmed by the backend). */
+export interface PrevisionHora {
+  horaIso: string;
+  nubesPct: number | null;
+  temperaturaC: number | null;
+  vientoMs: number | null;
+}
+
 export interface TiempoActual {
   cielo: string | null;
   icono: number | null;
@@ -342,6 +356,10 @@ export interface TiempoActual {
   fuente: string;
   timestamp: string;
   lluvia?: LluviaActual | null;
+  /** Next few hours. Absent when Open-Meteo is down or outside the beach window. */
+  previsionHoras?: PrevisionHora[] | null;
+  /** Who forecast those hours, as the API credits it. */
+  previsionHorasFuente?: string | null;
 }
 
 // ------------------------------
@@ -383,6 +401,9 @@ export interface PlayaDetalle {
   // Standardized weather data
   clima?: DatosClima;
 
+  // Operator watching the beach; null = no lifeguard flag service here.
+  fuenteBanderas?: string | null;
+
   // May be absent
   cruzRoja?: DatosCruzRoja;
 
@@ -393,10 +414,41 @@ export interface PlayaDetalle {
   webcam?: WebcamPlaya | null;
 }
 
-export async function getDetallePlaya(codigo: string): Promise<PlayaDetalle> {
-  const res = await fetch(buildApiUrl(`/api/beaches/${codigo}/details`));
+/**
+ * Why the detail could not be loaded. It exists because the same sentence was
+ * shown for a dead backend, a 429, an expired dev IP and a stale service
+ * worker — and each of those cost a diagnosis from scratch. The cause is not
+ * decoration: it is the first thing anyone needs.
+ */
+export class ErrorDetalle extends Error {
+  /** `null` = the request never came back (network, CORS, service worker). */
+  constructor(readonly status: number | null, readonly url: string) {
+    super('No se pudo cargar el detalle de la playa');
+    this.name = 'ErrorDetalle';
+  }
+}
 
-  if (!res.ok) throw new Error('No se pudo cargar el detalle de la playa');
+export async function getDetallePlaya(codigo: string): Promise<PlayaDetalle> {
+  const url = buildRegionApiUrl(`/beaches/${codigo}/details`);
+
+  let res: Response;
+  try {
+    res = await fetch(url);
+  } catch (e) {
+    // A rejected fetch has no status: the request never made it back. Network
+    // down, CORS, or something intercepting it (a service worker, a proxy).
+    const detalle = e instanceof Error ? e.message : String(e);
+    // eslint-disable-next-line no-console
+    console.error(`[detalle] sin respuesta de ${url}: ${detalle}`);
+    throw new ErrorDetalle(null, url);
+  }
+
+  if (!res.ok) {
+    // eslint-disable-next-line no-console
+    console.error(`[detalle] ${url} respondió ${res.status}`);
+    throw new ErrorDetalle(res.status, url);
+  }
+
   return res.json();
 }
 
@@ -418,6 +470,32 @@ export interface FeaturedBeach {
   razonRanking: string;
   motivoBaja: string | null;
   atributos: Record<string, boolean> | null;
+  /**
+   * Score breakdown and outlook. Optional in the type, not in the API: an
+   * installed app talking to an older backend simply shows no breakdown.
+   */
+  subpuntuaciones?: SubPuntuaciones | null;
+  pronostico?: Pronostico | null;
+  topeAplicado?: 'lluvia' | 'lluvia_prevista' | null;
+  oleaje?: string | null;
+}
+
+/**
+ * Points scored on each factor, before caps and outlook. There is no UV factor:
+ * a high index is a reason to bring sunscreen, not to rate the beach worse.
+ */
+export interface SubPuntuaciones {
+  cielo: number;
+  temperatura: number;
+  bandera: number;
+  viento: number;
+  oleaje: number;
+  datos: number;
+}
+
+export interface Pronostico {
+  direccion: 'mejora' | 'empeora' | 'estable';
+  delta: number;
 }
 
 export interface FeaturedBeachesResponse {
@@ -425,6 +503,8 @@ export interface FeaturedBeachesResponse {
   playas: FeaturedBeach[];
   revisar: FeaturedBeach[];
   resumenTodas: FeaturedBeach[];
+  /** Reachable maximum of each factor, so the bars cannot drift from the model. */
+  maximos?: SubPuntuaciones | null;
 }
 
 let featuredRequest: Promise<FeaturedBeachesResponse> | null = null;
@@ -438,7 +518,7 @@ export async function getFeaturedBeaches(
   }
   if (featuredRequest) return featuredRequest;
 
-  featuredRequest = fetch(buildApiUrl('/api/beaches/featured'))
+  featuredRequest = fetch(buildRegionApiUrl('/beaches/featured'))
     .then((res) => {
       if (!res.ok) throw new Error('No se pudieron cargar las playas destacadas');
       return res.json() as Promise<FeaturedBeachesResponse>;

@@ -9,8 +9,8 @@
  */
 export const es = {
   // ---- App / global ----
-  'app.titulo': 'Playas de Cantabria',
-  'app.tituloDocumento': 'Playas Cantabria',
+  'app.titulo': 'Playas de {region}',
+  'app.tituloDocumento': 'Playas {region}',
 
   // ---- Bottom navigation ----
   'nav.principal': 'Navegación principal',
@@ -25,7 +25,6 @@ export const es = {
   'comun.verDetalleDe': 'Ver detalle de {nombre}',
   'comun.aKm': 'a {km} km',
   'comun.noDisponible': 'No disponible',
-  'comun.cruzRoja': 'Cruz Roja',
 
   // ---- Relative time ----
   'tiempo.ahoraMismo': 'actualizado ahora mismo',
@@ -34,7 +33,7 @@ export const es = {
   'tiempo.haceDias': 'actualizado hace {n} d',
 
   // ---- Home ----
-  'home.subtitulo': 'Descubre las mejores playas de Cantabria',
+  'home.subtitulo': 'Descubre las mejores playas de {region}',
   'home.mediaTemp': '{temp}° media',
   'home.playasBadge_one': '{count} playa',
   'home.playasBadge_other': '{count} playas',
@@ -71,7 +70,7 @@ export const es = {
   'lista.contador_other': '{count} playas',
   'lista.paraFiltro': 'para "{filtro}"',
   'lista.noEncontradas': 'No se encontraron playas para "{filtro}"',
-  'lista.vigiladaAria': 'Playa vigilada por Cruz Roja',
+  'lista.vigiladaAria': 'Playa vigilada por {operador}',
   'lista.webcamAria': 'Playa con webcam disponible',
   'lista.datosLocales': 'Sin conexión: mostrando datos guardados, puede que estén desactualizados',
   'lista.datosNoDisponibles': 'No se pudieron cargar las playas ni los datos guardados',
@@ -79,8 +78,9 @@ export const es = {
   // ---- Map ----
   'mapa.subtitulo': 'Explora las playas en el mapa',
   'mapa.municipio': 'Municipio:',
-  'mapa.vigilada': 'Vigilada por Cruz Roja',
-  'mapa.sinInfoCruzRoja': 'No hay info de Cruz Roja',
+  'mapa.vigilada': 'Vigilada por {operador}',
+  'mapa.sinInfoCruzRoja': 'No hay info de vigilancia',
+  'mapa.sinVigilancia': 'Sin servicio de vigilancia',
   'mapa.webcamDisponible': 'Webcam disponible',
   'mapa.verDetalles': 'Ver detalles',
   'mapa.tuUbicacion': 'Tu ubicación actual',
@@ -90,7 +90,7 @@ export const es = {
   'mapa.leyendaBuenas': 'Buenas condiciones',
   'mapa.leyendaRegular': 'Con precaución',
   'mapa.leyendaMalas': 'Desaconsejada',
-  'mapa.leyendaBandera': 'Bandera Cruz Roja izada',
+  'mapa.leyendaBandera': 'Bandera izada',
 
   // ---- Wind levels (derived from vientoMs) ----
   'viento.sinViento': 'sin viento',
@@ -99,6 +99,7 @@ export const es = {
   'viento.fuerte': 'viento fuerte',
 
   // ---- Flag (Cruz Roja) ----
+  'bandera.negra': 'Bandera Negra',
   'bandera.roja': 'Bandera Roja',
   'bandera.amarilla': 'Bandera Amarilla',
   'bandera.verde': 'Bandera Verde',
@@ -119,18 +120,37 @@ export const es = {
   'detalle.scoreInfo.intro': 'La puntuación (0–100) resume lo apetecible y segura que está la playa hoy. Combina las condiciones del momento, dando más peso a lo que más marca un buen día de playa:',
   'detalle.scoreInfo.sol': 'Sol y cielo: cuanto más despejado, mejor.',
   'detalle.scoreInfo.temp': 'Temperatura: sube con tiempo agradable y baja con frío.',
-  'detalle.scoreInfo.bandera': 'Bandera de Cruz Roja: verde suma, amarilla resta y roja o negra hunden la nota.',
+  'detalle.scoreInfo.bandera': 'Bandera de vigilancia: verde suma, amarilla resta y roja o negra hunden la nota.',
   'detalle.scoreInfo.viento': 'Viento: cuanto más flojo, mejor.',
   'detalle.scoreInfo.oleaje': 'Oleaje: el mar tranquilo puntúa más (en playas de surf no penaliza).',
-  'detalle.scoreInfo.uv': 'Sol fuerte (UV): un índice muy alto resta un poco.',
+  'detalle.scoreInfo.datos': 'Datos disponibles: sube cuando hay clima y bandera de hoy.',
   'detalle.scoreInfo.lluvia': 'Lluvia: si llueve o se espera, la nota se limita para que nunca salga como "buen día".',
   'detalle.scoreInfo.peligro': 'Peligro: con bandera negra, tormenta o aviso, la playa se marca para evitarla.',
   'detalle.scoreInfo.cierre': 'Es una orientación rápida, no una medición exacta.',
+  // Desglose real de ESTA playa: el panel explicaba el modelo en abstracto y no
+  // respondía la única pregunta de quien lo abre ("¿por qué esta playa tiene 59?").
+  'detalle.scoreInfo.deEstaPlaya': 'Hoy, en esta playa:',
+  'detalle.scoreInfo.puntos': '{n}/{max}',
+  'detalle.scoreInfo.datosCompletos': 'clima y bandera',
+  'detalle.scoreInfo.datosParciales': 'faltan datos',
+  'detalle.scoreInfo.sinDato': 'sin dato',
+  'detalle.scoreInfo.sinBanderaAhora': 'sin bandera ahora',
+  'detalle.scoreInfo.topeLluvia': 'Está lloviendo: la nota se limita a {n} por muy bien que puntúe el resto.',
+  'detalle.scoreInfo.topeLluviaPrevista': 'Se espera lluvia: la nota se limita a {n} por muy bien que puntúe el resto.',
+  // Previsión de las próximas horas (el ajuste que mueve la nota hasta ±8).
+  'detalle.pronostico.titulo': 'Próximas 4 h',
+  'detalle.pronostico.mejora': 'Mejora',
+  'detalle.pronostico.empeora': 'Empeora',
+  'detalle.pronostico.estable': 'Sin cambios',
+  'detalle.pronostico.puntos': '{n} puntos',
+  'detalle.pronostico.sinDatos': 'Sin previsión horaria ahora mismo.',
+  'detalle.pronostico.ariaHora': 'A las {hora}: {nubes}% de nubes, {temp} grados, viento {viento} metros por segundo',
   'detalle.cargando': 'Cargando datos de la playa...',
   'detalle.errorCarga': 'No se pudo cargar el detalle de la playa',
+  'detalle.sinRespuesta': 'Sin respuesta del servidor',
   'detalle.comoLlegar': 'Cómo llegar',
   'detalle.verEnMapa': 'Ver en el mapa',
-  'detalle.estadoBano': 'Estado para bañarse (según Cruz Roja)',
+  'detalle.estadoBano': 'Estado para bañarse (según {operador})',
   'detalle.banderaAria': 'bandera',
   'detalle.vigilancia': 'Vigilancia: {horario}',
   'detalle.registradaHoy': 'Registrada hoy a las {hora}',
@@ -142,7 +162,7 @@ export const es = {
   'detalle.oleaje': 'Oleaje',
   'detalle.cielo': 'Cielo',
   'detalle.sensacion': 'Sensación',
-  'detalle.indiceUV': 'Indice UV',
+  'detalle.indiceUV': 'Índice UV máx.',
   'detalle.max': 'Máx.',
   'detalle.aguaGrados': 'Agua {temp}°C',
   'detalle.lloviendoAhora': 'Lloviendo ahora',
@@ -177,7 +197,7 @@ export const es = {
 
   // ---- Cruz Roja (card) ----
   'cruzroja.vigilanciaCobertura': 'Vigilancia y cobertura',
-  'cruzroja.sinInfo': 'Información de Cruz Roja aún no disponible',
+  'cruzroja.sinInfo': 'Información de {operador} aún no disponible',
   'cruzroja.banderaActual': 'Bandera actual',
   'cruzroja.coberturaDesde': 'Cobertura desde',
   'cruzroja.coberturaHasta': 'Cobertura hasta',

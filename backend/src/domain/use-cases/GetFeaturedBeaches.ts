@@ -4,10 +4,12 @@ import { FlagStatus, FlagRef } from '../entities/Flag';
 import { RainNowcast } from '../entities/RainNowcast';
 import { GetRainNowcast } from './GetRainNowcast';
 import { buildRainForecastSignal } from './RainForecast';
+import { buildWeatherOutlook } from './WeatherOutlook';
 import { BeachRepository } from '../ports/BeachRepository';
 import { WeatherProvider } from '../ports/WeatherProvider';
 import { FlagProvider } from '../ports/FlagProvider';
 import { resolveFlagForStations } from '../services/flagAggregation';
+import { esColorRestrictivo, vigenciaBandera } from '../services/flagVigencia';
 import { SunshineProvider } from '../ports/SunshineProvider';
 import { SunshineObservation } from '../entities/Sunshine';
 import { corregirCieloObservado } from '../../application/services/skyCorrectionRunner';
@@ -49,12 +51,19 @@ export class GetFeaturedBeaches {
      * Optional on purpose: without it, the sky corrector simply does not run
      * and the listing behaves exactly as before.
      */
-    private readonly sunshine?: SunshineProvider,
+    private readonly sunshine: SunshineProvider | undefined,
+    private readonly regionId: string,
+    /**
+     * Public names of the region's flag operators; empty means the region has
+     * no lifeguard-flag service. Required so a new region cannot inherit
+     * Cantabria's operator by forgetting to declare its own.
+     */
+    private readonly flagOperators: readonly string[],
   ) {}
 
   async execute(topN = 5): Promise<FeaturedBeachesFullResult> {
     return this.cache.getOrSetStale<FeaturedBeachesFullResult>(
-      CacheKeys.featuredBeaches,
+      CacheKeys.featuredBeaches(this.regionId),
       Config.featuredFreshTtlSeconds(),
       Config.featuredStaleTtlSeconds(),
       () => this.compute(topN),
@@ -107,25 +116,44 @@ export class GetFeaturedBeaches {
       // nowcast) ∪ AEMET's text for the day ("Chubascos"...).
       const rainForecast = buildRainForecastSignal(rain, [enrichment?.summary ?? null]);
 
-      const { score, subScores } = computeBeachScore(
+      // Is it about to get better or worse? Bounded correction from the next
+      // 4h of sky, temperature and wind — it rides on the nowcast's own
+      // request, so it costs nothing and it is null whenever Open-Meteo fails.
+      const outlook = buildWeatherOutlook(weather, rain?.outlook);
+
+      const { score, subScores, tope } = computeBeachScore(
         weather,
         flag,
         enrichment,
         beach.attributes,
         rain,
         rainForecast,
+        this.flagOperators,
+        outlook,
       );
 
-      const downgradeReason = buildDowngradeFactors(subScores, flag, rain, rainForecast);
+      const downgradeReason = buildDowngradeFactors(
+        subScores,
+        flag,
+        rain,
+        rainForecast,
+        this.flagOperators,
+        outlook,
+      );
+
+      // The breakdown travels with the entry so the API can publish WHY the
+      // beach scored what it scored, instead of the app explaining the model
+      // in the abstract and leaving the actual question unanswered.
+      const desglose = { subScores, outlook, tope };
 
       if (score >= MIN_SCORE) {
-        const reason = buildRankingReason(subScores, weather, flag, enrichment, rain, rainForecast);
-        const entry = { beach, weather, flag, score, reason, downgradeReason, enrichment };
+        const reason = buildRankingReason(subScores, weather, flag, enrichment, rain, rainForecast, outlook);
+        const entry = { beach, weather, flag, score, reason, downgradeReason, enrichment, ...desglose };
         good.push(entry);
         all.push(entry);
       } else {
-        const reason = buildCautionReason(subScores, weather, flag, enrichment, rain, rainForecast);
-        const entry = { beach, weather, flag, score, reason, downgradeReason, enrichment };
+        const reason = buildCautionReason(subScores, weather, flag, enrichment, rain, rainForecast, outlook);
+        const entry = { beach, weather, flag, score, reason, downgradeReason, enrichment, ...desglose };
         caution.push(entry);
         all.push(entry);
       }
@@ -209,11 +237,37 @@ export class GetFeaturedBeaches {
     }
   }
 
-  /** Beach flag: aggregates several stations if present, or uses the single reference. */
-  private getFlagForBeach(beach: Beach): Promise<FlagStatus | null> {
-    return resolveFlagForStations(beach.flagRef, beach.flagStations, (ref) =>
+  /**
+   * Beach flag: aggregates several stations if present, or uses the single
+   * reference — and DISCARDS it if it is no longer current.
+   *
+   * That last part is the point. Outside lifeguard hours the interface already
+   * refuses to paint a colour, but the score and the ranking reason were still
+   * built from the raw flag: at midnight the app published `bandera: null` and,
+   * in the same object, "bandera verde" worth 20 points. It contradicted
+   * itself, and it inflated the rating with a flag captured hours earlier.
+   *
+   * Discarding is only right when there is NO service. A reading that goes
+   * stale during the watch means the delivery broke, not that the beach was
+   * cleared: turning it into `null` there let a lost black flag score as
+   * "no coverage" (neutral 10/20) and re-enter the ranking. So a restrictive
+   * colour survives its own staleness — it keeps excluding until something
+   * tells us it was taken down — and any other stale colour degrades to
+   * `unknown`, which neither publishes a colour nor scores as good.
+   */
+  private async getFlagForBeach(beach: Beach): Promise<FlagStatus | null> {
+    const flag = await resolveFlagForStations(beach.flagRef, beach.flagStations, (ref) =>
       this.getFlagSafe(ref),
     );
+    if (!flag) return null;
+    switch (vigenciaBandera(flag)) {
+      case 'vigente':
+        return flag;
+      case 'sin-servicio':
+        return null;
+      case 'caducada':
+        return esColorRestrictivo(flag.color) ? flag : { ...flag, color: 'unknown' };
+    }
   }
 
   private async getFlagSafe(ref?: FlagRef): Promise<FlagStatus | null> {

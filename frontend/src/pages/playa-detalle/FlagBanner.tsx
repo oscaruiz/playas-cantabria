@@ -8,9 +8,10 @@ import {
   capitalizar,
   horaLocalMadrid,
   formatearHaceTiempo,
+  operadorVigilancia,
 } from '../../utils/beachHelpers';
 import { useIdioma, Idioma, TraducirFn } from '../../i18n/IdiomaContext';
-import { traducirTextoApi, claveEstadoBandera } from '../../i18n/apiText';
+import { traducirTextoApi, claveEstadoBandera, traducirOperador } from '../../i18n/apiText';
 import { nombreDia, formatearFechaCorta } from '../../i18n/fechas';
 
 /** "Registered today / yesterday / on <date> at HH:MM" — moment in Madrid time. */
@@ -31,11 +32,17 @@ function textoRegistrada(iso: string, t: TraducirFn, idioma: Idioma): string {
   });
 }
 
-const FlagBanner: React.FC<{ cruzRoja?: PlayaDetalleData['cruzRoja'] }> = ({ cruzRoja }) => {
+const FlagBanner: React.FC<{
+  cruzRoja?: PlayaDetalleData['cruzRoja'];
+  /** Beach whose operator names the banner; absent = the legacy Cruz Roja one. */
+  playa?: Pick<PlayaDetalleData, 'fuenteBanderas'>;
+}> = ({ cruzRoja, playa }) => {
   const { t, idioma } = useIdioma();
+  const operador = operadorVigilancia(playa);
   const estado = estadoBandera(cruzRoja);
   // 'sinDatos' (within hours but no capture yet, transient): we show no banner.
-  if (estado === 'sinDatos') {
+  // No operator: there is no flag to report here at all.
+  if (estado === 'sinDatos' || !operador) {
     return null;
   }
 
@@ -59,7 +66,9 @@ const FlagBanner: React.FC<{ cruzRoja?: PlayaDetalleData['cruzRoja'] }> = ({ cru
     <div className="flag-banner">
       <span className={`flag-pennant ${colorClass}`} role="img" aria-label={t('detalle.banderaAria')} />
       <div className="flag-info">
-        <div className="flag-label">{t('detalle.estadoBano')}</div>
+        <div className="flag-label">
+          {t('detalle.estadoBano', { operador: traducirOperador(operador, idioma) })}
+        </div>
         <div className="flag-value">
           {ultima
             ? t('bandera.ultimaRegistrada', {

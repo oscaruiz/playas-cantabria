@@ -38,7 +38,7 @@ infrastructure/ → application/ → domain/
 - **infrastructure/express/**: server, middlewares, routers.
 - **infrastructure/di/**: manual DI container (DIContainer, dependencies.ts).
 - **infrastructure/cache/**: InMemoryCache with TTL and singleflight dedup.
-- **regions/**: region config (`activeRegion`, today fixed to Cantabria): observation bbox, catalog validation rules, data file paths, active flag operators. Engine code reads region specifics ONLY from here.
+- **regions/**: registry and validated runtime config loaded from root `regions/<id>/`. Express creates one container per valid region; weather providers are shared while repositories and flag routers remain regional.
 
 ### DI Container
 
@@ -78,9 +78,27 @@ FlagProviderRouter → dispatches by FlagRef.provider (neutral port)
 
 Beaches carry provider-neutral `FlagRef`s (`{ provider: 'cruzroja', ref: <id> }`), derived by
 JsonBeachRepository from the catalog's `idCruzRoja`/`cruzRojaStations` (the "0 = no coverage"
-convention is resolved there). Use cases only see the `FlagProvider` port (`getFlag(ref)`). To add
-a flag operator for a new region: adapter implementing `FlagProvider`, extend `FlagProviderId`,
-register in the DI router map, list it in the region's `flagProviders`.
+convention is resolved there). Use cases only see the `FlagProvider` port (`getFlag(ref)`).
+
+### Adding a flag operator (supported extension)
+
+1. Adapter implementing `FlagProvider` in `infrastructure/providers/`.
+2. Add its id to `FlagProviderId` and its public name to `FLAG_OPERATOR_NAMES`
+   (`domain/entities/Flag.ts`). The name is engine data, not region data: an operator is the
+   same organisation wherever it works.
+3. Register it in the DI router map (`dependencies.ts`) and list its id in the region's
+   `flagProviders`.
+
+No UI change is needed: the API reports the operator per beach in `fuenteBanderas` and the
+frontend reads the name from there.
+
+### Regions with no flag operator
+
+`flagProviders: []` is a supported configuration, not a degraded one. The API answers
+`fuenteBanderas: null` (explicit null, never absent — that is what tells a client "nobody watches
+this beach" apart from "this backend does not report it"), the interface hides the flag section,
+and `BeachScorer` **takes the flag factor out of the score and rescales to 100**. Scoring it as
+"no data" would dock every beach in the region the same ~22 points and read as bad conditions.
 
 ## AEMET data sources
 
@@ -173,8 +191,16 @@ Environment variables (or `.env`):
   `off` lo desactiva. Solo actúa en franja de playa. Usa el mismo valor en CI que en el
   servidor, o el primer `/featured` tras arrancar sale del snapshot sin corregir.
 - `DEBUG_WEATHER=1` — enables detailed logs from all providers
+- `DIAG_PROBE_TOKEN` — optional bearer token enabling the live probes
+  (`/api/_diag/flag/:id` and `/api/_diag/providers`); without it both routes return 404.
+  `providers:health` reads the same value from its environment to run the active probe
 
 ## Cuota y diagnóstico
+
+`GET /api/_diag/providers` (con `DIAG_PROBE_TOKEN`) llama EN VIVO a cada proveedor desde la IP de
+producción y devuelve `ok`/`fallo` por host. Es lo que hace `providers:health` una comprobación de
+verdad: las métricas describen el tráfico que hubo, y una ventana vacía —proceso recién arrancado,
+caché que lo sirvió todo, función ya muerta— no contiene ningún fallo que encontrar.
 
 `GET /api/_diag/metrics` expone el consumo real: peticiones salientes por host (desde el arranque,
 última hora y último día), concurrencia y enfriamientos por 429, aciertos/fallos de caché por familia
@@ -188,8 +214,17 @@ sembrado, el primer `/featured` tras arrancar cuesta **0 peticiones** y responde
 ## Rules for Claude Code
 
 - **New code and comments in English.** Existing Spanish comments stay — do not translate them opportunistically; they carry operational history (dated incidents, provider quirks).
-- **No region hardcoding.** Bboxes, catalog paths, forbidden-beach rules and flag operators live in `src/regions/`; engine code reads them from `activeRegion`.
+- **No region hardcoding.** Bboxes, catalog paths, forbidden-beach rules and flag operators live in root `regions/<id>/`. HTTP builds one container per validated registry entry; scripts and tests resolve their target explicitly and pass its `RegionConfig` into DI. There is deliberately no `activeRegion` fallback.
 - **Never delete existing providers.** Add new ones, don't replace.
+- **An unhandled rejection logs; it does not kill the process.** An uncaught exception does (after
+  closing the server, with a deadline). The asymmetry is deliberate: nearly every promise here
+  wraps a provider that fails routinely, and dying on one escaped rejection trades a log line for
+  a Render free cold start. When one shows up, the fix is the missing `catch` on that background
+  promise. Every fire-and-forget in the codebase (`void …`) already carries one.
+- **The axios ceilings come from a measurement, not a guess.** `maxContentLength` is sized against
+  AEMET's Spain-wide observation payload (3.11 MB on 31-jul-2026). Tightening it towards that
+  figure does not fail loudly: the rejection is swallowed by the stale cache path and AEMET stops
+  feeding both the observation and the sky corrector's sunshine, silently.
 - **Never change HTTP endpoint signatures.** Existing response fields are backward compatible.
 - **Defensive parsing**: every field from external APIs can be null. Never assume a field exists.
 - **Cache everything**: never make an uncached external request, y elige el TTL según la

@@ -13,12 +13,13 @@ import {
   emojiCielo,
   webcamDisponible,
   vigilanciaDisponible,
+  operadorVigilancia,
   coincidePlaya,
 } from '../utils/beachHelpers';
 import { useUserLocation } from '../hooks/useUserLocation';
 import { useIdioma } from '../i18n/IdiomaContext';
 import { ClaveTexto } from '../i18n/es';
-import { traducirTextoApi, razonLegible } from '../i18n/apiText';
+import { traducirTextoApi, razonLegible, traducirOperador } from '../i18n/apiText';
 import ScoreBadge from '../components/ScoreBadge';
 import BottomNavBar from '../components/BottomNavBar';
 import SelectorIdioma from '../components/SelectorIdioma';
@@ -312,13 +313,21 @@ const PlayasList: React.FC = () => {
                 {weather && <ScoreBadge puntuacion={weather.puntuacion} />}
                 {(() => {
                   const vigilada = vigilanciaDisponible(playa);
+                  // Named by the beach's own operator: a region without
+                  // Cruz Roja must not be labelled with somebody else's badge.
+                  const operador = operadorVigilancia(playa);
                   const conWebcam = webcamDisponible(playa.webcam);
                   return vigilada || conWebcam ? (
                     <div className="beach-card-badges">
-                      {vigilada && (
-                        <span className="badge-vigilada" aria-label={t('lista.vigiladaAria')}>
+                      {vigilada && operador && (
+                        <span
+                          className="badge-vigilada"
+                          aria-label={t('lista.vigiladaAria', {
+                            operador: traducirOperador(operador, idioma),
+                          })}
+                        >
                           <span className="badge-vigilada-dot" aria-hidden="true" />
-                          {t('comun.cruzRoja')}
+                          {traducirOperador(operador, idioma)}
                         </span>
                       )}
                       {conWebcam && (

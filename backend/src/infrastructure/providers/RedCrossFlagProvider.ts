@@ -13,6 +13,8 @@ const { HttpsProxyAgent } = require('https-proxy-agent') as {
 import { InMemoryCache, CacheKeys } from '../cache/InMemoryCache';
 import { FlagProvider } from '../../domain/ports/FlagProvider';
 import { FlagStatus, FlagColor, FlagRef } from '../../domain/entities/Flag';
+import { readFlagsFile } from '../../regions/flagsFileSchema';
+import { MAX_EDAD_BANDERA_MS } from '../../domain/services/flagVigencia';
 import { Config } from '../config/config';
 
 /**
@@ -33,7 +35,7 @@ export class RedCrossFlagProvider implements FlagProvider {
     : undefined;
 
   // Pre-scraped flags (by the GitHub Action / local script from a non-blocked
-  // IP) and committed in data/flags.json. It is the PRIMARY source in prod,
+  // IP) and committed in the active region's flags.json. It is the PRIMARY source in prod,
   // where the live scrape returns 403. If a beach is not in the file, we fall
   // back to the live scrape (which works locally).
   private fileFlags: Map<number, FlagStatus> | null = null;
@@ -75,22 +77,50 @@ export class RedCrossFlagProvider implements FlagProvider {
 
   constructor(
     private readonly cache: InMemoryCache,
-    private readonly flagsFile = 'data/flags.json'
+    private readonly flagsFile = 'data/flags.json',
+    private readonly regionId = 'cantabria',
   ) {}
 
+  /**
+   * Reads the pre-scraped file through the shared schema instead of casting
+   * whatever it finds: `color as FlagColor` turned any text into a colour, and
+   * an undateable (or future) `generatedAt` used to become `Date.now()` — a
+   * capture of unknown age presented as this second's, which is exactly what
+   * the 24 h freshness rule exists to stop.
+   *
+   * A file that cannot be dated is loaded ANYWAY, stamped as already expired.
+   * Dropping it looked safer and was the opposite: in production the live
+   * scrape answers 403, so discarding the file left the region with NO flags,
+   * and a black one stopped excluding its beach — the very failure this work
+   * set out to close. Stamped as expired, `vigenciaBandera` reads it as
+   * `caducada` and the ranking already knows what to do with that: a
+   * restrictive colour keeps excluding, any other degrades to `unknown`.
+   *
+   * The stamp is a deliberate approximation, and the only one that fails safe:
+   * the real age is unknown, and any guess closer to "now" would resurrect the
+   * immortal-flag bug. A broken entry is still dropped on its own, without
+   * taking the rest of the region with it.
+   */
   private async loadFileFlags(): Promise<Map<number, FlagStatus>> {
     if (this.fileFlags) return this.fileFlags;
     const map = new Map<number, FlagStatus>();
     try {
       const raw = JSON.parse(
         await fs.readFile(path.resolve(process.cwd(), this.flagsFile), 'utf-8')
-      ) as {
-        generatedAt?: string;
-        flags: Record<string, { color: string | null; message: string | null; coverageFrom: string | null; coverageTo: string | null; schedule: string | null }>;
-      };
-      const ts = raw.generatedAt ? Date.parse(raw.generatedAt) || Date.now() : Date.now();
-      for (const [id, f] of Object.entries(raw.flags ?? {})) {
-        map.set(Number(id), {
+      ) as unknown;
+      const { generatedAt, flags, errors } = readFlagsFile(raw);
+      if (errors.length > 0) {
+        console.error(`[CRUZ ROJA] ${this.flagsFile}: ${errors.length} entrada(s) inválidas: ${errors[0]}`);
+      }
+      // One millisecond past the freshness window: undateable, therefore expired.
+      const ts = generatedAt ?? Date.now() - MAX_EDAD_BANDERA_MS - 1;
+      if (generatedAt == null && flags.size > 0) {
+        console.error(
+          `[CRUZ ROJA] ${this.flagsFile}: sin fecha utilizable; ${flags.size} banderas se sirven como caducadas`,
+        );
+      }
+      for (const [id, f] of flags) {
+        map.set(id, {
           color: (f.color as FlagColor) ?? undefined,
           message: f.message ?? undefined,
           timestamp: ts,
@@ -140,7 +170,7 @@ export class RedCrossFlagProvider implements FlagProvider {
   async getFlagByRedCrossId(redCrossId: number): Promise<FlagStatus | null> {
     if (!redCrossId || redCrossId <= 0) return null;
 
-    // Primary source: pre-scraped flags (data/flags.json), but ONLY if the
+    // Primary source: the region's pre-scraped flags.json, but ONLY if the
     // entry carries a real color. An entry without color (e.g. the cron scraped
     // before the 11:30 flag hoisting and stored "No hay información") must NOT shadow
     // the live scrape, which in prod usually does return the already-hoisted flag.
@@ -165,7 +195,7 @@ export class RedCrossFlagProvider implements FlagProvider {
     // minutes later, and it shadowed the file on top of that. Without color we re-check soon.
     const TTL_CON_COLOR = 86400; // an already-hoisted flag rarely changes
     const TTL_SIN_COLOR = 300;
-    const key = CacheKeys.flagByRedCrossId(redCrossId);
+    const key = CacheKeys.flagByRedCrossId(this.regionId, redCrossId);
 
     const cacheado = this.cache.get<FlagStatus>(key);
     if (cacheado !== undefined) return cacheado;

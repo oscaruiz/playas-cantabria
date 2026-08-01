@@ -13,6 +13,7 @@ import {
   coincidePlaya,
   normalizarBusqueda,
   emojiCielo,
+  operadorVigilancia,
 } from './beachHelpers';
 
 // During the bathing season, Madrid is CEST (UTC+2): UTC + 2h = Madrid time.
@@ -335,6 +336,18 @@ describe('coincidePlaya — búsqueda por nombre, municipio y alias', () => {
 });
 
 describe('vigilanciaDisponible', () => {
+  it('usa el operador explícito para proveedores que no son Cruz Roja', () => {
+    expect(vigilanciaDisponible({ fuenteBanderas: 'DYA', idCruzRoja: 0 })).toBe(true);
+  });
+
+  it('respeta el null explícito aunque queden campos legados', () => {
+    expect(vigilanciaDisponible({
+      fuenteBanderas: null,
+      idCruzRoja: 482,
+      cruzRojaStations: [{ id: 373 }],
+    })).toBe(false);
+  });
+
   it('detecta el idCruzRoja de compatibilidad', () => {
     expect(vigilanciaDisponible({ idCruzRoja: 482 })).toBe(true);
   });
@@ -429,5 +442,22 @@ describe('emojiCielo', () => {
     expect(emojiCielo(null)).toBe(NUBE_SOL);
     expect(emojiCielo('')).toBe(NUBE_SOL);
     expect(emojiCielo('vete a saber')).toBe(NUBE_SOL);
+  });
+});
+
+describe('operadorVigilancia', () => {
+  it('devuelve el operador que informa el backend', () => {
+    expect(operadorVigilancia({ fuenteBanderas: 'DYA' })).toBe('DYA');
+  });
+
+  it('devuelve null cuando el backend dice que no hay servicio', () => {
+    expect(operadorVigilancia({ fuenteBanderas: null })).toBeNull();
+  });
+
+  it('distingue "no hay servicio" de "el backend no lo informa"', () => {
+    // The local fallback catalog and the backend deployed before this feature
+    // carry no field at all: they must keep showing what they always showed.
+    expect(operadorVigilancia({})).toBe('Cruz Roja');
+    expect(operadorVigilancia(undefined)).toBe('Cruz Roja');
   });
 });

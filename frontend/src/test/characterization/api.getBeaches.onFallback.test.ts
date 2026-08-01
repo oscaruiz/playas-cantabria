@@ -15,8 +15,8 @@
 import { waitFor } from '@testing-library/react';
 import { installFetchMock, restoreFetch, route } from '../http/fakeFetch';
 import { beachesResponse } from '../fixtures/beaches';
+import { RUTA_PLAYAS as BEACHES } from '../apiRoutes';
 
-const BEACHES = /\/api\/beaches$/;
 
 async function loadApi() {
   jest.resetModules();

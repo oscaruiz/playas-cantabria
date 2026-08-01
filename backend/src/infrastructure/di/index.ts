@@ -1,11 +1,11 @@
 import { DIContainer } from './DIContainer';
-import { configureDependencies } from './dependencies';
+import { configureDependencies, DependencyOverrides } from './dependencies';
 import { InMemoryCache } from '../cache/InMemoryCache';
 
 /**
  * Factory function to create a pre-configured DI Container
  */
-export function createContainer(overrides: { cache?: InMemoryCache } = {}): DIContainer {
+export function createContainer(overrides: DependencyOverrides): DIContainer {
   const container = new DIContainer();
   configureDependencies(container, overrides);
   return container;
@@ -74,13 +74,16 @@ export class ServiceLocator {
 /* 
 EXAMPLE USAGE:
 
+import { resolveScriptRegion } from '../../scripts/scriptRegion';
+
 // Basic usage
-const container = createContainer();
+const region = resolveScriptRegion('cantabria');
+const container = createContainer({ region });
 const beachRepo = container.get('beachRepository');
 
 // With overrides
 const customCache = new InMemoryCache();
-const container = createContainer({ cache: customCache });
+const containerWithCache = createContainer({ region, cache: customCache });
 
 // Type-safe usage
 const getAllBeaches = getService<GetAllBeaches>(container, SERVICES.GET_ALL_BEACHES);

@@ -17,7 +17,12 @@
     "test:scraper": "tsx src/scripts/test-scraper.ts",
     "test:full": "tsx src/scripts/test-full-details.ts",
     "scrape:flags": "tsx src/scripts/scrape-flags.ts",
-    "build:snapshot": "tsx src/scripts/build-snapshot.ts"
+    "build:snapshot": "tsx src/scripts/build-snapshot.ts",
+    "validate:regions": "tsx src/scripts/validate-regions.ts",
+    "quota:budget": "tsx src/scripts/quota-budget.ts",
+    "flags:freshness": "tsx src/scripts/flags-freshness.ts",
+    "region:new": "tsx src/scripts/region-new.ts",
+    "providers:health": "tsx src/scripts/providers-health.ts"
   },
   "dependencies": {
     "axios": "^1.7.7",

@@ -214,6 +214,10 @@
   background: var(--playa-flag-red);
 }
 
+.mapa-pennant--black::after {
+  background: #111827;
+}
+
 /* --- Beach markers --- */
 .beach-marker {
   display: flex;

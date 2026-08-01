@@ -39,7 +39,7 @@ const DailyStats: React.FC<{ dia: DiaPrediccionDTO; embedded?: boolean }> = ({ d
             <span className="daily-stat-label">{t('detalle.indiceUV')}</span>
             <span className={`daily-stat-value uv-value ${uvColorClass(dia.indiceUV)}`}>
               <span className="uv-swatch" aria-hidden="true" />
-              {dia.indiceUV}
+              {Math.round(dia.indiceUV)}
               {dia.nivelUV && ` \u2014 ${traducirTextoApi(dia.nivelUV.replace(/^índice ultravioleta\s*/i, ''), idioma)}`}
             </span>
           </div>

@@ -280,6 +280,10 @@
   background: var(--playa-flag-red);
 }
 
+.hp-flag-black {
+  background: #111827;
+}
+
 /* --- Alternative rows (lista abierta con hairlines) --- */
 .hp-alt-list {
   border-top: 1px solid var(--playa-border);

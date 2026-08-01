@@ -3,7 +3,6 @@ dotenv.config();
 process.env.DEBUG_WEATHER = '1';
 
 import fs from 'fs';
-import path from 'path';
 import { createContainer } from '../infrastructure/di';
 import { LegacyDetailsAssembler } from '../application/services/LegacyDetailsAssembler';
 import { AemetBeachWebScraper } from '../infrastructure/providers/AemetBeachWebScraper';
@@ -11,10 +10,13 @@ import { AemetBeachForecastProvider } from '../infrastructure/providers/AemetBea
 import { GetBeachDetails } from '../domain/use-cases/GetBeachDetails';
 import type { LegacyDetailsDTO } from '../application/mappers/LegacyDetailsMapper';
 import type { BeachFullForecast } from '../domain/entities/BeachForecast';
+import { resolveScriptRegion } from './scriptRegion';
+
+const region = resolveScriptRegion();
 
 // Load all beaches from data file
 const allBeaches = JSON.parse(
-  fs.readFileSync(path.resolve(process.cwd(), 'data/beaches.json'), 'utf-8'),
+  fs.readFileSync(region.catalogPath, 'utf-8'),
 ) as Array<{ nombre: string; codigo: string; idCruzRoja: number }>;
 
 const SEP = '═'.repeat(55);
@@ -120,7 +122,7 @@ async function main() {
   console.log(`OPENWEATHER_API_KEY: ${process.env.OPENWEATHER_API_KEY ? '✅' : '❌'}`);
   console.log(`Playas a testear: ${allBeaches.length}\n`);
 
-  const container = createContainer();
+  const container = createContainer({ region });
   const results: BeachResult[] = [];
 
   for (let i = 0; i < allBeaches.length; i++) {

@@ -15,7 +15,11 @@ import DailyStats from './DailyStats';
  * shows "10 — Muy alto" as on beaches with an AEMET sheet. Keys aligned
  * with `MAPA_UV` from `i18n/apiText.ts`.
  */
-function nivelUVDesdeIndice(uv: number): string {
+function nivelUVDesdeIndice(indice: number): string {
+  // Rounded first: Open-Meteo reports decimals and 7.25 would fall in the next
+  // band, so the same real UV read as "Muy alto" here and "alto" on a beach
+  // with an AEMET sheet.
+  const uv = Math.round(indice);
   if (uv <= 2) return 'Bajo';
   if (uv <= 5) return 'Medio';
   if (uv <= 7) return 'Alto';

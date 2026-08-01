@@ -15,9 +15,8 @@ export function errorHandler(err: unknown, _req: Request, res: Response, _next: 
   }
 
   // Generic fallback
-  const message = err instanceof Error ? err.message : 'Unexpected error';
   // Log server-side
   // eslint-disable-next-line no-console
   console.error('[ERROR]', err);
-  return res.status(500).json({ error: message });
+  return res.status(500).json({ error: 'Internal server error' });
 }

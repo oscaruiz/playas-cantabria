@@ -1,4 +1,11 @@
-import { FlagStatus, FlagColor, FlagRef, FlagStation } from '../entities/Flag';
+import {
+  FlagStatus,
+  FlagColor,
+  FlagRef,
+  FlagStation,
+  FlagProviderId,
+  FLAG_OPERATOR_NAMES,
+} from '../entities/Flag';
 
 /**
  * Flag aggregation rule for a beach with SEVERAL lifeguard stations.
@@ -53,6 +60,29 @@ export function aggregateFlags(flags: Array<FlagStatus | null>): FlagStatus | nu
  *  - otherwise, uses the primary reference `flagRef` (legacy single-flag path).
  * `getFlag` must be a function that does NOT throw (returns null on failure).
  */
+/**
+ * Which operator watches this beach, following the same order of preference as
+ * `resolveFlagForStations` so the name shown always belongs to the source the
+ * flag would come from. `null` means nothing watches it — a different thing
+ * from "watched but no data right now", and the API has to tell them apart.
+ */
+export function resolveFlagOperator(
+  primaryRef: FlagRef | undefined,
+  stations: FlagStation[] | undefined,
+): FlagProviderId | null {
+  const fromStation = (stations ?? []).find((s) => s.ref)?.ref;
+  return fromStation?.provider ?? primaryRef?.provider ?? null;
+}
+
+/** Same, resolved to the operator's public name. */
+export function resolveFlagOperatorName(
+  primaryRef: FlagRef | undefined,
+  stations: FlagStation[] | undefined,
+): string | null {
+  const provider = resolveFlagOperator(primaryRef, stations);
+  return provider ? FLAG_OPERATOR_NAMES[provider] : null;
+}
+
 export async function resolveFlagForStations(
   primaryRef: FlagRef | undefined,
   stations: FlagStation[] | undefined,

@@ -4,10 +4,13 @@
 // guaranteed), to exercise the positive path without waiting for rain in Cantabria.
 import 'dotenv/config';
 import { createContainer } from '../infrastructure/di';
+import { resolveScriptRegion } from './scriptRegion';
 import type { GetRainNowcast } from '../domain/use-cases/GetRainNowcast';
 
 (async () => {
-  const container = createContainer();
+  // The nowcast itself is region-agnostic (it takes coordinates), but a
+  // container is always bound to one region — name it rather than defaulting.
+  const container = createContainer({ region: resolveScriptRegion() });
   const rainNowcast = container.get<GetRainNowcast>('getRainNowcast');
 
   const args = process.argv.slice(2);

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { esBanderaVigente } from '../application/mappers/flagVigencia';
+import { esBanderaVigente, vigenciaBandera } from '../domain/services/flagVigencia';
 import { FlagStatus } from '../domain/entities/Flag';
 
 // Summer in Madrid = UTC+2. All dates within the 12-06..15-09 season.
@@ -53,5 +53,37 @@ describe('esBanderaVigente', () => {
   it('sin horario y dato de hace >24h: no vigente (frescura)', () => {
     const ahora = new Date('2026-07-10T13:00:00Z');
     expect(esBanderaVigente(flag('2026-07-09T09:00:00Z', { schedule: null }), ahora)).toBe(false);
+  });
+});
+
+/**
+ * "No vigente" tapaba dos situaciones opuestas: que no haya servicio (no hay
+ * bandera que perder) y que lo haya y hayamos perdido el dato. La segunda es la
+ * peligrosa y necesita nombre propio.
+ */
+describe('vigenciaBandera', () => {
+  it('vigente dentro de horario con dato reciente', () => {
+    const ahora = new Date('2026-07-10T13:00:00Z'); // 15:00 Madrid
+    expect(vigenciaBandera(flag('2026-07-10T09:00:00Z'), ahora)).toBe('vigente');
+  });
+
+  it('sin servicio de noche, aunque el dato sea de hace un rato', () => {
+    const ahora = new Date('2026-07-10T21:00:00Z'); // 23:00 Madrid
+    expect(vigenciaBandera(flag('2026-07-10T16:00:00Z'), ahora)).toBe('sin-servicio');
+  });
+
+  it('sin servicio fuera de temporada', () => {
+    const ahora = new Date('2026-09-20T13:00:00Z');
+    expect(vigenciaBandera(flag('2026-09-20T09:00:00Z'), ahora)).toBe('sin-servicio');
+  });
+
+  it('caducada dentro de horario con dato de hace más de 24 h', () => {
+    const ahora = new Date('2026-07-10T13:00:00Z'); // 15:00 Madrid
+    expect(vigenciaBandera(flag('2026-07-09T09:00:00Z'), ahora)).toBe('caducada'); // 28h
+  });
+
+  it('caducada también cuando no se conoce el horario', () => {
+    const ahora = new Date('2026-07-10T13:00:00Z');
+    expect(vigenciaBandera(flag('2026-07-09T09:00:00Z', { schedule: null }), ahora)).toBe('caducada');
   });
 });

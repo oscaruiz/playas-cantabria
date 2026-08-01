@@ -137,3 +137,66 @@ describe('useUserLocation — sin soporte de geolocalización', () => {
     expect(result.current.userLocation).toBeNull();
   });
 });
+
+/**
+ * Añadido tras un error real en el navegador: `Invalid LatLng object: (NaN, NaN)`
+ * al montar MapaPage. `flyTo` recibía las coordenadas del hook sin que nadie
+ * hubiera comprobado que fueran números. El mapa se cae con estrépito; la
+ * ordenación por cercanía de Home y del listado se habría equivocado en silencio,
+ * que es peor.
+ */
+describe('useUserLocation — coordenadas inservibles', () => {
+  it.each([
+    ['coords nulas', [null, null]],
+    ['coords ausentes', undefined],
+    ['un solo número', [43.4]],
+    ['texto', ['43.4', '-4.05']],
+    ['fuera de rango', [200, -4.05]],
+    ['NaN', [NaN, NaN]],
+  ])('descarta la caché con %s', (_etiqueta, coords) => {
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ coords, timestamp: Date.now() }));
+
+    const { result } = renderHook(() => useUserLocation());
+
+    expect(result.current.userLocation).toBeNull();
+  });
+
+  it('descarta la caché si el timestamp no es un número', () => {
+    // Con un timestamp no numérico la resta da NaN y toda comparación contra él
+    // es falsa: la entrada caducada colaba como si fuera fresca.
+    localStorage.setItem(
+      CACHE_KEY,
+      JSON.stringify({ coords: [43.4, -4.05], timestamp: 'ayer' }),
+    );
+
+    const { result } = renderHook(() => useUserLocation());
+
+    expect(result.current.userLocation).toBeNull();
+  });
+
+  it('no acepta una lectura del navegador sin coordenadas', () => {
+    const { result } = renderHook(() => useUserLocation());
+
+    act(() => {
+      lastCallbacks().success({ coords: {} } as never);
+    });
+
+    expect(result.current.userLocation).toBeNull();
+    expect(result.current.locationLoading).toBe(false);
+    // Nadie ha denegado un permiso: no debe mandarse al usuario a los ajustes.
+    expect(result.current.locationDenied).toBe(true);
+    expect(result.current.locationBlocked).toBe(false);
+    expect(localStorage.getItem(CACHE_KEY)).toBeNull();
+  });
+
+  it('sigue aceptando una lectura buena', () => {
+    const { result } = renderHook(() => useUserLocation());
+
+    act(() => {
+      lastCallbacks().success({ coords: { latitude: 43.46, longitude: -3.8 } });
+    });
+
+    expect(result.current.userLocation).toEqual([43.46, -3.8]);
+    expect(result.current.locationDenied).toBe(false);
+  });
+});

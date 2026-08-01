@@ -5,6 +5,7 @@ import { join } from 'path';
 import { RedCrossFlagProvider } from '../infrastructure/providers/RedCrossFlagProvider';
 import { InMemoryCache } from '../infrastructure/cache/InMemoryCache';
 import { http } from '../infrastructure/http/axiosClient';
+import { esBanderaVigente, MAX_EDAD_BANDERA_MS } from '../domain/services/flagVigencia';
 
 // Minimal HTML with the structure the provider parses (Cruz Roja beach page).
 const FICHA_HTML = `
@@ -210,5 +211,56 @@ describe('RedCrossFlagProvider — caché del scrape en vivo', () => {
     }
 
     expect(spy).toHaveBeenCalledTimes(2);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Fichero sin fecha utilizable. Descartarlo entero parecía lo prudente y era lo
+// contrario: en producción el scrape en vivo responde 403, así que la región se
+// quedaba SIN banderas y una negra dejaba de excluir su playa.
+// ---------------------------------------------------------------------------
+
+describe('RedCrossFlagProvider — flags.json que no se puede fechar', () => {
+  const ficheroCon = (generatedAt: unknown, color: string) => {
+    const dir = mkdtempSync(join(tmpdir(), 'flags-'));
+    const file = join(dir, 'flags.json');
+    writeFileSync(
+      file,
+      JSON.stringify({
+        generatedAt,
+        flags: {
+          '555': {
+            color,
+            message: 'x',
+            coverageFrom: '12-06-2026',
+            coverageTo: '15-09-2026',
+            schedule: '11:30 - 19:30',
+          },
+        },
+      }),
+    );
+    return file;
+  };
+
+  it('con fecha en el futuro sigue sirviendo la bandera negra, pero caducada', async () => {
+    vi.spyOn(http, 'post').mockRejectedValue(new Error('Request failed with status code 403'));
+    const provider = new RedCrossFlagProvider(new InMemoryCache(), ficheroCon('2099-01-01T00:00:00.000Z', 'black'));
+
+    const status = await provider.getFlagByRedCrossId(555);
+
+    expect(status?.color).toBe('black');
+    // Caducada de verdad: fuera de la ventana de frescura, no "de este segundo".
+    expect(esBanderaVigente(status!, new Date())).toBe(false);
+    expect(Date.now() - status!.timestamp).toBeGreaterThan(MAX_EDAD_BANDERA_MS);
+  });
+
+  it('una fecha ilegible tampoco se convierte en "ahora" (la bandera inmortal)', async () => {
+    vi.spyOn(http, 'post').mockRejectedValue(new Error('Request failed with status code 403'));
+    const provider = new RedCrossFlagProvider(new InMemoryCache(), ficheroCon('no-es-una-fecha', 'green'));
+
+    const status = await provider.getFlagByRedCrossId(555);
+
+    expect(status?.color).toBe('green');
+    expect(esBanderaVigente(status!, new Date())).toBe(false);
   });
 });

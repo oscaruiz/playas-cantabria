@@ -21,9 +21,8 @@ import { screen, waitFor } from '@testing-library/react';
 import PlayasList from '../../pages/PlayasList';
 import { renderWithProviders } from '../render';
 import { installFetchMock, restoreFetch, route, deferred, RouteSpec } from '../http/fakeFetch';
+import { RUTA_DESTACADAS as FEATURED, RUTA_PLAYAS as BEACHES } from '../apiRoutes';
 
-const FEATURED = '/api/beaches/featured';
-const BEACHES = /\/api\/beaches$/;
 
 afterEach(() => {
   restoreFetch();

@@ -26,10 +26,8 @@ import { installFetchMock, restoreFetch, route } from '../http/fakeFetch';
 import { beachesResponse } from '../fixtures/beaches';
 import { featuredResponse } from '../fixtures/featured';
 import { buildAemetDetail } from '../fixtures/beachDetail';
+import { RUTA_DESTACADAS as FEATURED, RUTA_PLAYAS as BEACHES, RUTA_DETALLE as DETAILS } from '../apiRoutes';
 
-const FEATURED = '/api/beaches/featured';
-const BEACHES = /\/api\/beaches$/;
-const DETAILS = /\/api\/beaches\/[^/]+\/details$/;
 
 const AHORA = new Date('2026-07-27T12:00:00.000Z'); // 14:00 in Madrid
 

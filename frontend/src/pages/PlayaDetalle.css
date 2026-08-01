@@ -344,6 +344,10 @@
   background: var(--playa-flag-red);
 }
 
+.flag-pennant.black::after {
+  background: #111827;
+}
+
 /* Última bandera registrada (fuera de horario): su color real, pero atenuado
    para que no se confunda con una bandera ondeando ahora. */
 .flag-pennant.atenuada::after {
@@ -385,6 +389,7 @@
 /* --- Paneles planos: cada sección es una región delimitada --- */
 .detail-card,
 .tides-section,
+.proximas-horas-section,
 .detail-section,
 .detail-disclosure,
 .daily-stats-card {
@@ -395,6 +400,7 @@
 }
 
 .tides-section,
+.proximas-horas-section,
 .detail-section,
 .detail-disclosure,
 .daily-stats-card {
@@ -783,7 +789,8 @@
   font-variant-numeric: tabular-nums;
 }
 
-.tides-source {
+.tides-source,
+.proximas-horas-fuente {
   font-size: 0.68rem;
   color: var(--playa-text-muted);
   margin-top: 8px;
@@ -1028,4 +1035,164 @@
   .source-label {
     grid-column: 1 / -1;
   }
+}
+
+/* ---------------------------------------------------------------------------
+   Desglose de la puntuación y previsión de las próximas horas.
+   Mismo lenguaje visual que "Información de la playa": etiqueta a la izquierda,
+   valor a la derecha y regla fina entre filas.
+   --------------------------------------------------------------------------- */
+
+/* Hacia dónde va el día, visible sin desplegar nada. */
+.pd-trend {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  margin: 6px 0 0;
+  line-height: 1.35;
+}
+
+.pd-trend--mejora { color: var(--playa-flag-green); }
+.pd-trend--empeora { color: var(--playa-flag-red); }
+.pd-trend--estable { color: var(--playa-text-muted); }
+
+.pd-trend-sep,
+.pd-trend-hint,
+.pd-trend-delta {
+  color: var(--playa-text-muted);
+  font-weight: 500;
+}
+
+.pd-trend-delta {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+.pd-score-info-sub {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--playa-text-muted);
+  margin: 14px 0 6px;
+}
+
+.pd-score-info-sub:first-of-type { margin-top: 4px; }
+
+/* Cada factor: nombre y valor arriba, puntos a la derecha, barra debajo. */
+.pd-factor {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--playa-border);
+  font-size: 0.82rem;
+}
+
+.pd-factor:last-child { border-bottom: none; }
+
+.pd-factor-nombre { color: var(--playa-text-muted); }
+
+.pd-factor-valor {
+  grid-row: 2;
+  grid-column: 1;
+  font-weight: 600;
+  color: var(--playa-text);
+}
+
+.pd-factor-puntos {
+  grid-row: 1 / span 2;
+  grid-column: 2;
+  align-self: center;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--playa-text);
+}
+
+.pd-factor-barra {
+  grid-row: 3;
+  grid-column: 1 / -1;
+  height: 4px;
+  margin-top: 5px;
+  border-radius: 999px;
+  background: var(--playa-border);
+  overflow: hidden;
+}
+
+.pd-factor-relleno {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--playa-ocean);
+}
+
+.pd-factor-nota {
+  grid-row: 4;
+  grid-column: 1 / -1;
+  margin-top: 4px;
+  font-size: 0.74rem;
+  line-height: 1.35;
+  color: var(--playa-text-muted);
+}
+
+/* Por qué los factores no suman la nota. */
+.pd-score-tope {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 10px 0 0;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: var(--playa-flag-red);
+}
+
+/* Tira horaria: una fila por hora, scroll horizontal si no cabe. */
+.pd-horas {
+  display: flex;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-x: auto;
+}
+
+.pd-hora {
+  flex: 1 1 0;
+  min-width: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 4px;
+  border: 1px solid var(--playa-border);
+  border-radius: var(--playa-radius-s);
+  font-size: 0.76rem;
+  color: var(--playa-text-muted);
+}
+
+.pd-hora-reloj {
+  font-weight: 700;
+  color: var(--playa-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.pd-hora-icono {
+  font-size: 1.05rem;
+  color: var(--playa-ocean);
+}
+
+.pd-hora-temp {
+  font-weight: 600;
+  color: var(--playa-text);
+}
+
+/* Causa del fallo de carga: secundaria, pero es lo primero que hace falta. */
+.error-causa {
+  margin: 4px 0 0;
+  font-size: 0.75rem;
+  color: var(--playa-text-muted);
+  font-variant-numeric: tabular-nums;
 }

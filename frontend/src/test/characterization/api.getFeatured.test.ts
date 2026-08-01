@@ -12,8 +12,8 @@
 
 import { installFetchMock, restoreFetch, route } from '../http/fakeFetch';
 import { featuredResponse } from '../fixtures/featured';
+import { RUTA_DESTACADAS as FEATURED } from '../apiRoutes';
 
-const FEATURED = '/api/beaches/featured';
 const TTL_MS = 5 * 60 * 1000;
 
 async function loadApi() {

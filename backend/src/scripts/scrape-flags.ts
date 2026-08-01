@@ -1,5 +1,5 @@
 /**
- * Scrapes the Cruz Roja flags of every beach and writes data/flags.json.
+ * Scrapes the Cruz Roja flags and writes the active region's flags.json.
  *
  * Meant to run:
  *  - in GitHub Actions (cron) → commits the flags.json that the backend serves, or
@@ -11,9 +11,11 @@
  *   Usage: npm run scrape:flags   (cwd = backend/)
  */
 import fs from 'fs/promises';
-import path from 'path';
 import axios from 'axios';
 import { load } from 'cheerio';
+import { resolveScriptRegion } from './scriptRegion';
+
+const region = resolveScriptRegion();
 
 const BASE = 'https://www.cruzroja.es/appjv/consPlayas';
 
@@ -73,8 +75,7 @@ async function fetchOne(id: number): Promise<{ status: number | null; flag: Stor
 }
 
 async function main() {
-  const dataDir = path.resolve(process.cwd(), 'data');
-  const beaches = JSON.parse(await fs.readFile(path.join(dataDir, 'beaches.json'), 'utf-8')) as Array<{
+  const beaches = JSON.parse(await fs.readFile(region.catalogPath, 'utf-8')) as Array<{
     nombre: string;
     idCruzRoja?: number;
     cruzRojaStations?: Array<{ id?: number; nombreFuente: string }>;
@@ -137,7 +138,7 @@ async function main() {
   }
 
   const out = { generatedAt: new Date().toISOString(), flags };
-  const outPath = path.join(dataDir, 'flags.json');
+  const outPath = region.flagsPath;
   await fs.writeFile(outPath, JSON.stringify(out, null, 2) + '\n', 'utf-8');
   console.log(`\n✅ Escrito ${outPath} con ${ok} banderas.`);
 }

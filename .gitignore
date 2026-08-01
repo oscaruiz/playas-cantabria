@@ -51,3 +51,6 @@ plans/
 /*.png
 .mcp.json
 .gitignore
+
+# Codex reads AGENTS.md; it duplicates CLAUDE.md, so keep it local to avoid drift.
+AGENTS.md

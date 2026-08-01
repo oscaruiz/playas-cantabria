@@ -4,11 +4,13 @@ import { InMemoryCache } from '../../cache/InMemoryCache';
 import { httpMetrics } from '../../http/metrics';
 import { hostLimiter } from '../../http/limiter';
 import { skyCorrectionMetrics } from '../../observability/skyCorrectionMetrics';
+import { probeProviders } from '../../observability/providerProbe';
 import { enFranjaDePlaya, skyCorrectionMode } from '../../config/config';
 
 export interface DiagRoutesDeps {
   flagProvider: RedCrossFlagProvider;
   cache?: InMemoryCache;
+  probeToken?: string;
 }
 
 /**
@@ -17,6 +19,7 @@ export interface DiagRoutesDeps {
  * - GET /api/_diag/flag/:id   -> real result of the Cruz Roja scrape from the server.
  * - GET /api/_diag/metrics    -> external quota consumption + cache effectiveness.
  * - GET /api/_diag/sky        -> what the observed sky is (or would be) correcting.
+ * - GET /api/_diag/providers  -> live probe of every provider from this IP.
  */
 export function createDiagRouter(deps: DiagRoutesDeps): Router {
   const router = Router();
@@ -62,12 +65,37 @@ export function createDiagRouter(deps: DiagRoutesDeps): Router {
   });
 
   router.get('/flag/:id', async (req: Request, res: Response, next: NextFunction) => {
+    if (!deps.probeToken) return res.status(404).json({ error: 'Not found' });
+    if (req.get('authorization') !== `Bearer ${deps.probeToken}`) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
     try {
       const id = Number(req.params.id);
       if (!Number.isFinite(id) || id <= 0) {
         return res.status(400).json({ error: 'invalid id' });
       }
       res.json(await deps.flagProvider.probe(id));
+    } catch (e) {
+      next(e);
+    }
+  });
+
+  /**
+   * Active probe of every provider, from this server's egress IP. It is the
+   * only check that cannot approve without asking: `/metrics` describes the
+   * traffic we happened to make, and an empty window looks identical to a
+   * healthy one. Token-guarded like `/flag/:id` — it spends real requests
+   * against the free tiers, so it is not something an anonymous caller gets
+   * to trigger.
+   */
+  router.get('/providers', async (req: Request, res: Response, next: NextFunction) => {
+    if (!deps.probeToken) return res.status(404).json({ error: 'Not found' });
+    if (req.get('authorization') !== `Bearer ${deps.probeToken}`) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    try {
+      res.setHeader('Cache-Control', 'no-store');
+      res.json({ proveedores: await probeProviders(), now: new Date().toISOString() });
     } catch (e) {
       next(e);
     }

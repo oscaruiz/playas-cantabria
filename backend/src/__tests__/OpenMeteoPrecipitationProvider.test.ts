@@ -17,6 +17,12 @@ const HAPPY_PAYLOAD = {
       precipitation: [0.2, 0, 0.5],
       weather_code: [61, 3, 63],
     },
+    hourly: {
+      time: ['2026-07-15T19:00', '2026-07-15T20:00'],
+      cloud_cover: [80, 15],
+      temperature_2m: [19, 21],
+      wind_speed_10m: [3.4, 2.1],
+    },
   },
 };
 
@@ -83,6 +89,60 @@ describe('OpenMeteoPrecipitationProvider', () => {
     const now = await provider.getPrecipitationNow(43.3944, -4.2205);
 
     expect(now.upcomingSlots).toEqual([]);
+  });
+
+  it('pide la previsión horaria en la MISMA llamada y en m/s', async () => {
+    // El viento de Open-Meteo viene en km/h por defecto y computeWindScore lee
+    // m/s: pedir la unidad aquí evita convertir en tres sitios.
+    const spy = vi.spyOn(http, 'get').mockResolvedValue(HAPPY_PAYLOAD as any);
+    const provider = new OpenMeteoPrecipitationProvider(new InMemoryCache());
+
+    await provider.getPrecipitationNow(43.3944, -4.2205);
+
+    expect(spy).toHaveBeenCalledTimes(1); // coste 0: no hay una segunda petición
+    const config = (spy.mock.calls[0] as any[])[1];
+    expect(config.params.hourly).toBe('cloud_cover,temperature_2m,wind_speed_10m');
+    expect(config.params.wind_speed_unit).toBe('ms');
+  });
+
+  it('pide solo las horas que se usan: 48 tramos para usar 4 eran 1,7 kB por playa', async () => {
+    const spy = vi.spyOn(http, 'get').mockResolvedValue(HAPPY_PAYLOAD as any);
+    const provider = new OpenMeteoPrecipitationProvider(new InMemoryCache());
+
+    await provider.getPrecipitationNow(43.3944, -4.2205);
+
+    const config = (spy.mock.calls[0] as any[])[1];
+    expect(config.params.forecast_hours).toBe(6);
+    // Sin tocar lo demás: el UV sigue necesitando los dos días.
+    expect(config.params.forecast_days).toBe(2);
+    expect(config.params.daily).toBe('uv_index_max');
+    expect(config.params.forecast_minutely_15).toBe(24);
+  });
+
+  it('parsea los tramos horarios de cielo, temperatura y viento', async () => {
+    vi.spyOn(http, 'get').mockResolvedValue(HAPPY_PAYLOAD as any);
+    const provider = new OpenMeteoPrecipitationProvider(new InMemoryCache());
+
+    const now = await provider.getPrecipitationNow(43.3944, -4.2205);
+
+    expect(now.upcomingHours).toHaveLength(2);
+    expect(now.upcomingHours?.[0]).toEqual({
+      timestamp: Date.parse('2026-07-15T19:00:00Z'),
+      cloudCoverPct: 80,
+      temperatureC: 19,
+      windSpeedMs: 3.4,
+    });
+    expect(now.upcomingHours?.[1].cloudCoverPct).toBe(15);
+  });
+
+  it('payload sin bloque hourly → upcomingHours vacío, sin romper el nowcast', async () => {
+    vi.spyOn(http, 'get').mockResolvedValue({ data: { current: { time: '2026-07-15T19:00', precipitation: 0 } } } as any);
+    const provider = new OpenMeteoPrecipitationProvider(new InMemoryCache());
+
+    const now = await provider.getPrecipitationNow(43.3944, -4.2205);
+
+    expect(now.upcomingHours).toEqual([]);
+    expect(now.precipitationMm).toBe(0);
   });
 
   it('parseo defensivo: payload sin current → todos los campos null', async () => {

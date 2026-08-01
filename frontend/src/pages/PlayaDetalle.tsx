@@ -11,7 +11,9 @@ import { useHistory, useParams } from 'react-router-dom';
 import {
   getDetallePlaya,
   getFeaturedBeaches,
+  ErrorDetalle,
   FeaturedBeach,
+  SubPuntuaciones,
   PlayaDetalle as PlayaDetalleData,
 } from '../services/api';
 import BottomNavBar from '../components/BottomNavBar';
@@ -26,6 +28,7 @@ import ForecastHero from './playa-detalle/ForecastHero';
 import HalfDayDetail from './playa-detalle/HalfDayDetail';
 import DailyStats from './playa-detalle/DailyStats';
 import TidesSection from './playa-detalle/TidesSection';
+import ProximasHoras from './playa-detalle/ProximasHoras';
 import ClimaHero from './playa-detalle/ClimaHero';
 import MetadataFooter from './playa-detalle/MetadataFooter';
 import CruzRojaCard from './playa-detalle/CruzRojaCard';
@@ -38,21 +41,51 @@ const PlayaDetallePage: React.FC = () => {
   const { t } = useIdioma();
   const [datos, setDatos] = useState<PlayaDetalleData | null>(null);
   const [error, setError] = useState(false);
+  /** Estado HTTP del fallo; null = la petición no volvió (red, CORS, SW). */
+  const [statusError, setStatusError] = useState<number | null>(null);
   // Ranking score (featured endpoint). Requested IN PARALLEL and optional:
   // the detail is painted without waiting for it, and if it fails/is slow it is simply not shown.
   const [puntuada, setPuntuada] = useState<FeaturedBeach | null>(null);
+  // Scale of each factor, sent once per response: it travels so the bars of the
+  // breakdown cannot drift from the weights the backend actually applies.
+  const [maximos, setMaximos] = useState<SubPuntuaciones | null>(null);
 
+  /**
+   * El error se ENCIENDE y se APAGA. Antes solo se encendía: cualquier fallo
+   * pasajero —un intento que se cruza con otro, una petición que muere al
+   * navegar, un 429 suelto— dejaba el aviso rojo clavado para siempre, y como
+   * el segundo intento sí traía los datos, la ficha se pintaba entera CON el
+   * cartel de "no se pudo cargar" encima. Con StrictMode el efecto corre dos
+   * veces en desarrollo, así que pasaba a diario.
+   *
+   * El guardia `activo` es el mismo que ya usaba el efecto de la puntuación:
+   * el resultado de una petición que ya no interesa no toca el estado.
+   */
   useEffect(() => {
+    let activo = true;
+    setError(false);
+    setStatusError(null);
     getDetallePlaya(codigo)
-      .then(setDatos)
-      .catch(() => setError(true));
+      .then((detalle) => {
+        if (!activo) return;
+        setDatos(detalle);
+        setError(false);
+      })
+      .catch((e) => {
+        if (!activo) return;
+        setError(true);
+        setStatusError(e instanceof ErrorDetalle ? e.status : null);
+      });
+    return () => { activo = false; };
   }, [codigo]);
 
   useEffect(() => {
     let activo = true;
     getFeaturedBeaches()
       .then((res) => {
-        if (activo) setPuntuada(res.resumenTodas.find((b) => b.codigo === codigo) ?? null);
+        if (!activo) return;
+        setPuntuada(res.resumenTodas.find((b) => b.codigo === codigo) ?? null);
+        setMaximos(res.maximos ?? null);
       })
       .catch(() => { /* non-blocking: no score */ });
     return () => { activo = false; };
@@ -77,9 +110,16 @@ const PlayaDetallePage: React.FC = () => {
       </div>
 
       <IonContent>
-        {error && (
+        {/* Nunca junto a los datos: un cartel de "no se pudo cargar" encima de
+            una ficha cargada es, simplemente, falso. */}
+        {error && !datos && (
           <div className="error-container">
             <p style={{ margin: 0 }}>{t('detalle.errorCarga')}</p>
+            {/* La causa, que es lo primero que hace falta: el estado HTTP no
+                necesita traducción y el fallo de red sí. */}
+            <p className="error-causa">
+              {statusError != null ? `HTTP ${statusError}` : t('detalle.sinRespuesta')}
+            </p>
           </div>
         )}
 
@@ -113,9 +153,9 @@ const PlayaDetallePage: React.FC = () => {
                 </div>
               )}
 
-              <FlagBanner cruzRoja={datos.cruzRoja} />
+              <FlagBanner cruzRoja={datos.cruzRoja} playa={datos} />
 
-              {puntuada && <ScoreCard puntuada={puntuada} />}
+              {puntuada && <ScoreCard puntuada={puntuada} maximos={maximos} />}
             </div>
 
             {/* DETAIL CONTENT */}
@@ -141,6 +181,14 @@ const PlayaDetallePage: React.FC = () => {
                     />
                     <DailyStats dia={pred.dias[safeDayIndex]} embedded />
                   </div>
+                  {/* Solo tiene sentido junto al día de hoy: la previsión
+                      horaria es de las próximas horas, no del día elegido. */}
+                  {safeDayIndex === 0 && (
+                    <ProximasHoras
+                      horas={datos.tiempoActual?.previsionHoras}
+                      fuente={datos.tiempoActual?.previsionHorasFuente}
+                    />
+                  )}
                   {pred.mareas?.[safeDayIndex] && (
                     <TidesSection
                       marea={pred.mareas[safeDayIndex]}
@@ -150,16 +198,24 @@ const PlayaDetallePage: React.FC = () => {
                   )}
                 </>
               ) : datos.clima ? (
-                <ClimaHero
-                  clima={datos.clima}
-                  temperaturaActual={datos.temperaturaActual}
-                  tiempoActual={datos.tiempoActual}
-                />
+                <>
+                  <ClimaHero
+                    clima={datos.clima}
+                    temperaturaActual={datos.temperaturaActual}
+                    tiempoActual={datos.tiempoActual}
+                  />
+                  {/* La previsión horaria es de Open-Meteo, así que las playas
+                      sin ficha de AEMET también la tienen. */}
+                  <ProximasHoras
+                    horas={datos.tiempoActual?.previsionHoras}
+                    fuente={datos.tiempoActual?.previsionHorasFuente}
+                  />
+                </>
               ) : null}
               </div>
 
               <div className="detail-col detail-col--info">
-              {datos.cruzRoja != null && <CruzRojaCard cruzRoja={datos.cruzRoja} />}
+              {datos.cruzRoja != null && <CruzRojaCard cruzRoja={datos.cruzRoja} playa={datos} />}
 
               <WebcamCard webcam={datos.webcam} />
 

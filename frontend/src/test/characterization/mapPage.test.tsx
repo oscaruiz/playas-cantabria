@@ -22,9 +22,8 @@ import type { Playa, FeaturedBeach, FeaturedBeachesResponse } from '../../servic
 import { renderWithProviders } from '../render';
 import { installFetchMock, restoreFetch, route } from '../http/fakeFetch';
 import MapaPage from '../../pages/MapaPage';
+import { RUTA_DESTACADAS as FEATURED, RUTA_PLAYAS as BEACHES } from '../apiRoutes';
 
-const FEATURED = '/api/beaches/featured';
-const BEACHES = /\/api\/beaches$/;
 
 const mockMapa = {
   flyTo: jest.fn(),
@@ -272,8 +271,9 @@ describe('MapaPage — popup', () => {
   it('distingue vigilada de sin información según idCruzRoja', async () => {
     await renderMap();
 
+    // The unwatched beach no longer names an operator it does not have.
     expect(markerByName('VientoFuerte')).toHaveTextContent('Vigilada por Cruz Roja');
-    expect(markerByName('EnElCorte')).toHaveTextContent('No hay info de Cruz Roja');
+    expect(markerByName('EnElCorte')).toHaveTextContent('No hay info de vigilancia');
   });
 
   it('anuncia la webcam solo donde la hay', async () => {

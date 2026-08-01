@@ -13,8 +13,9 @@
 import { installFetchMock, restoreFetch, route } from '../http/fakeFetch';
 import { buildAemetDetail } from '../fixtures/beachDetail';
 import { localNoon } from '../time';
+import { RUTA_DETALLE as DETAILS } from '../apiRoutes';
+import { REGION_API_PATH } from '../../config/region';
 
-const DETAILS = /\/api\/beaches\/[^/]+\/details$/;
 
 async function loadApi() {
   jest.resetModules();
@@ -26,7 +27,7 @@ afterEach(() => {
 });
 
 describe('getDetallePlaya', () => {
-  it('pide /api/beaches/{codigo}/details y devuelve el cuerpo tal cual', async () => {
+  it('pide /api/{region}/beaches/{codigo}/details y devuelve el cuerpo tal cual', async () => {
     const detail = buildAemetDetail(localNoon('2026-07-27'));
     const fetchMock = installFetchMock([route(DETAILS, { json: detail })]);
     const { getDetallePlaya } = await loadApi();
@@ -34,7 +35,7 @@ describe('getDetallePlaya', () => {
     const result = await getDetallePlaya('3908503');
 
     expect(result).toEqual(detail);
-    expect(String(fetchMock.mock.calls[0][0])).toContain('/api/beaches/3908503/details');
+    expect(String(fetchMock.mock.calls[0][0])).toContain(`${REGION_API_PATH}/beaches/3908503/details`);
   });
 
   it('rechaza cuando la respuesta no es ok', async () => {

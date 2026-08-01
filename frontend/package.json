@@ -54,11 +54,13 @@
     "eslint-plugin-react": "^7.32.2"
   },
   "scripts": {
-    "sync-beaches": "cp ../backend/data/beaches.json src/data/beaches.json",
-    "start": "npm run sync-beaches && react-scripts start",
-    "build": "npm run sync-beaches && react-scripts build",
+    "sync-region": "node scripts/sync-region.mjs",
+    "check-regions": "node scripts/check-regions.mjs",
+    "start": "npm run sync-region && react-scripts start",
+    "build": "npm run sync-region && react-scripts build",
+    "android:sync": "npm run build && npx cap sync android && node scripts/configure-android.mjs",
     "perf:budget": "node scripts/check-bundle-size.mjs",
-    "test": "react-scripts test",
+    "test": "node scripts/sync-region.mjs --region cantabria && react-scripts test",
     "eject": "react-scripts eject",
     "lint": "eslint --ext .ts,.tsx src"
   },

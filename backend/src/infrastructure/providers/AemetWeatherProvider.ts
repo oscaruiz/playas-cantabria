@@ -6,7 +6,7 @@ import { http } from '../http/axiosClient';
 import { InMemoryCache, CacheKeys } from '../cache/InMemoryCache';
 import { Config } from '../config/config';
 import { debugLog } from '../utils/debug';
-import { activeRegion } from '../../regions';
+import type { RegionBbox } from '../../regions';
 
 // 🌤️ AEMET TYPES
 interface AemetObs {
@@ -38,19 +38,21 @@ function haversineSq(lat1: number, lon1: number, lat2: number, lon2: number): nu
 }
 
 /**
- * Bounding box of the active region, with a margin (~40 km) to keep
- * border stations from neighboring regions that are sometimes the closest
- * one to a beach at the far end of the coastline. Values in src/regions/.
+ * Keeps observations that fall inside at least one loaded region. This is an
+ * exact union rather than a large envelope, so distant regions do not retain
+ * every station between them.
  */
-const REGION_BBOX = activeRegion.observationBbox;
-
-function enEntornoDeLaRegion(o: AemetObs): boolean {
-  if (typeof o.lat !== 'number' || typeof o.lon !== 'number') return false;
-  return (
-    o.lat >= REGION_BBOX.latMin &&
-    o.lat <= REGION_BBOX.latMax &&
-    o.lon >= REGION_BBOX.lonMin &&
-    o.lon <= REGION_BBOX.lonMax
+export function isInsideObservationBboxes(
+  lat: unknown,
+  lon: unknown,
+  bboxes: RegionBbox[],
+): boolean {
+  if (typeof lat !== 'number' || typeof lon !== 'number') return false;
+  return bboxes.some((bbox) =>
+    lat >= bbox.latMin &&
+    lat <= bbox.latMax &&
+    lon >= bbox.lonMin &&
+    lon <= bbox.lonMax
   );
 }
 
@@ -80,8 +82,18 @@ function parseAemetTime(fint: string): number {
  */
 export class AemetWeatherProvider implements WeatherProvider, SunshineProvider {
   private lastRaw: unknown = null;
+  private readonly observationsCacheKey: string;
 
-  constructor(private readonly cache: InMemoryCache) {}
+  constructor(
+    private readonly cache: InMemoryCache,
+    private readonly observationBboxes: RegionBbox[],
+  ) {
+    const bboxFingerprint = observationBboxes
+      .map((bbox) => [bbox.latMin, bbox.latMax, bbox.lonMin, bbox.lonMax].join(','))
+      .sort()
+      .join('|');
+    this.observationsCacheKey = `aemet:obs:${bboxFingerprint}`;
+  }
 
   getLastRaw() {
     return this.lastRaw;
@@ -218,7 +230,7 @@ export class AemetWeatherProvider implements WeatherProvider, SunshineProvider {
    */
   private async getObservacionesCached(): Promise<AemetObs[]> {
     const cfg = Config.get();
-    return this.cache.getOrSetStale('aemet:obs:todas', Config.providerTtlSeconds(), Config.providerStaleTtlSeconds(), async () => {
+    return this.cache.getOrSetStale(this.observationsCacheKey, Config.providerTtlSeconds(), Config.providerStaleTtlSeconds(), async () => {
       const meta = await http.get('https://opendata.aemet.es/opendata/api/observacion/convencional/todas', {
         params: { api_key: cfg.aemetApiKey },
         timeout: 7000
@@ -233,7 +245,13 @@ export class AemetWeatherProvider implements WeatherProvider, SunshineProvider {
 
       const obsResp = await http.get<AemetObs[]>(datosUrl, { timeout: 7000, responseType: 'json' });
       const todas = Array.isArray(obsResp.data) ? obsResp.data : [];
-      const arr = todas.filter(enEntornoDeLaRegion);
+      const arr = todas.filter((observation) =>
+        isInsideObservationBboxes(
+          observation.lat,
+          observation.lon,
+          this.observationBboxes,
+        ),
+      );
       this.lastRaw = arr;
       debugLog('aemet.obs', { totalEspana: todas.length, region: arr.length, muestra: arr.slice(0, 5) });
       // If trimming leaves the payload empty (unexpected format), better all than

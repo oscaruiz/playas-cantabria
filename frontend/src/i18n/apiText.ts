@@ -151,6 +151,9 @@ const MAPA_SENSACION: Record<string, string> = {
 const MAPA_UV: Record<string, string> = {
   'bajo': 'low',
   'medio': 'moderate',
+  // 'moderado' (AEMET's wording for the 3-5 band) is NOT added here: it already
+  // resolves through MAPA_VIENTO, and repeating it would shadow that entry.
+  // The collision test in apiText.test.ts is what caught the attempt.
   'alto': 'high',
   'muy alto': 'very high',
   'extremo': 'extreme',
@@ -168,6 +171,11 @@ const MAPA_RANKING: Record<string, string> = {
   'lluvia en la última hora': 'rain in the last hour',
   'lluvia o tormenta': 'rain or storm',
   'lluvia prevista': 'rain expected',
+  // Outlook for the next few hours (backend `WeatherOutlook`). Qualitative and
+  // without an hour on purpose: these fragments are translated by exact match,
+  // so a time inside them could not be translated at all.
+  'mejora en las próximas horas': 'improving in the next few hours',
+  'empeora en las próximas horas': 'getting worse in the next few hours',
   'precaución': 'caution',
   'oleaje peligroso': 'dangerous surf',
   'aviso litoral': 'coastal warning',
@@ -323,6 +331,15 @@ function traducirFragmento(fragmento: string): string {
   const viento = traducirVientoCompuesto(fragmento);
   if (viento) return respetarMayuscula(fragmento, viento);
 
+  // "sin cobertura <operador>": the operator's name is data, so it cannot be
+  // enumerated here. Translating the frame and leaving the name intact keeps
+  // any future region readable instead of leaving the whole phrase in Spanish.
+  const cobertura = fragmento.match(/^sin cobertura (.+)$/i);
+  if (cobertura) {
+    // Only reachable in English: traducirTextoApi returns early for Spanish.
+    return respetarMayuscula(fragmento, `no ${traducirOperador(cobertura[1], 'en')} coverage`);
+  }
+
   // Numeric fragment ("19°", "09:00 - 21:00") or free text → intact
   return fragmento;
 }
@@ -350,9 +367,25 @@ export function razonLegible(razonRanking: string): string {
   return razonRanking.replace(/(?<!viento )\b(flojo|fuerte)\b/i, 'viento $1');
 }
 
+/**
+ * Names of the lifeguard operators that have an established name in English.
+ * Anything else is a proper noun and is left alone — better an untranslated
+ * name than an invented one.
+ */
+const MAPA_OPERADORES: Record<string, string> = {
+  'cruz roja': 'Red Cross',
+};
+
+/** Operator name ("Cruz Roja") as it must be read in the active language. */
+export function traducirOperador(operador: string, idioma: Idioma): string {
+  if (idioma === 'es') return operador;
+  return MAPA_OPERADORES[operador.trim().toLowerCase()] ?? operador;
+}
+
 /** Dictionary key for the Cruz Roja flag (replaces flagDisplayText). */
 export function claveBandera(bandera?: string): ClaveTexto {
   const b = bandera?.toLowerCase() || '';
+  if (b.includes('negra')) return 'bandera.negra';
   if (b.includes('roja')) return 'bandera.roja';
   if (b.includes('amarilla')) return 'bandera.amarilla';
   if (b.includes('verde')) return 'bandera.verde';

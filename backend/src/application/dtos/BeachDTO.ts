@@ -38,7 +38,7 @@ export interface BeachAttributesDTO {
 
 /**
  * Public API shape for a beach item (Spanish keys preserved).
- * Mirrors data/beaches.json keys with added weather and flag info.
+ * Mirrors a region's beaches.json keys with added weather and flag info.
  */
 export interface BeachDTO {
   nombre: string;
@@ -49,6 +49,12 @@ export interface BeachDTO {
   idCruzRoja: number;
   /** Red Cross stations (0, 1 or several). Present only on multi-station beaches. */
   cruzRojaStations?: CruzRojaStationDTO[];
+  /**
+   * Public name of the operator watching this beach ("Cruz Roja"), or null if
+   * nobody does. Always present so a client can tell "no lifeguard service
+   * here" (null) from "an old backend that does not report it" (absent).
+   */
+  fuenteBanderas: string | null;
   /** Alternative names/toponyms for search. */
   alias?: string[];
   /** Distinct sectors (metadata; lengths are not summed). */

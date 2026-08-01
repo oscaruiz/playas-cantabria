@@ -5,7 +5,6 @@ import {
   computeFlagScore,
   computeWindScore,
   computeWavesScore,
-  computeUVScore,
   computeDataScore,
   computeBeachScore,
   buildRankingReason,
@@ -20,6 +19,7 @@ import { Weather } from '../domain/entities/Weather';
 import { FlagStatus } from '../domain/entities/Flag';
 import { RainNowcast } from '../domain/entities/RainNowcast';
 import { RainForecastSignal } from '../domain/use-cases/RainForecast';
+import { OutlookSignal } from '../domain/use-cases/WeatherOutlook';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -117,20 +117,27 @@ describe('computeTemperatureScore', () => {
     expect(computeTemperatureScore(5)).toBe(0);
   });
 
+  it('22° es una muy buena temperatura de playa, no un aprobado raspado', () => {
+    // Regresión de producto: con el reparto viejo (max 20) sacaba 14, un 70%
+    // para el día que cualquiera describiría como bueno. Ahora 22/25 = 88%.
+    expect(computeTemperatureScore(22)).toBe(22);
+    expect(computeTemperatureScore(22) / 25).toBeGreaterThan(0.85);
+  });
+
   it('returns max for optimal range', () => {
-    expect(computeTemperatureScore(25)).toBe(17); // interpolated between 22-28
-    expect(computeTemperatureScore(28)).toBe(20);
+    expect(computeTemperatureScore(26)).toBe(24);
+    expect(computeTemperatureScore(30)).toBe(25);
   });
 
   it('returns neutral for null', () => {
-    expect(computeTemperatureScore(null)).toBe(7);
+    expect(computeTemperatureScore(null)).toBe(9);
   });
 
   it('penalizes extreme heat', () => {
-    const score33 = computeTemperatureScore(33);
+    const score30 = computeTemperatureScore(30);
     const score38 = computeTemperatureScore(38);
-    expect(score33).toBe(17);
-    expect(score38).toBeLessThan(score33);
+    expect(score30).toBe(25);
+    expect(score38).toBeLessThan(score30);
   });
 
   it('scores increase from cold to warm', () => {
@@ -162,8 +169,12 @@ describe('computeFlagScore', () => {
     expect(computeFlagScore(null)).toBe(10);
   });
 
-  it('returns 6 for unknown', () => {
-    expect(computeFlagScore(makeFlag({ color: 'unknown' }))).toBe(6);
+  it('una bandera que no podemos leer puntúa igual que no tener servicio', () => {
+    // "Hay bandera, lo que no tenemos es información": restar por eso castigaba
+    // a la playa por un fallo nuestro, y encima MÁS que a una playa sin
+    // vigilancia, que se llevaba el 10 neutro.
+    expect(computeFlagScore(makeFlag({ color: 'unknown' }))).toBe(10);
+    expect(computeFlagScore(makeFlag({ color: 'unknown' }))).toBe(computeFlagScore(null));
   });
 });
 
@@ -221,26 +232,6 @@ describe('computeWavesScore', () => {
 
   it('returns neutral when no data at all', () => {
     expect(computeWavesScore(null, null, false)).toBe(5);
-  });
-});
-
-// ---------------------------------------------------------------------------
-// UV score
-// ---------------------------------------------------------------------------
-
-describe('computeUVScore', () => {
-  it('returns max for low UV', () => {
-    expect(computeUVScore(2)).toBe(5);
-    expect(computeUVScore(5)).toBe(5);
-  });
-
-  it('returns lower for high UV', () => {
-    expect(computeUVScore(8)).toBe(1);
-    expect(computeUVScore(11)).toBe(0);
-  });
-
-  it('returns neutral for null', () => {
-    expect(computeUVScore(null)).toBe(3);
   });
 });
 
@@ -335,11 +326,11 @@ describe('computeBeachScore', () => {
 
   it('returns moderate neutral score when no data', () => {
     const { score } = computeBeachScore(null, null, null);
-    // All neutral values: 8+7+10+7+5+3+0 = 40
-    expect(score).toBe(40);
+    // All neutral values: 8+9+10+7+5+0 = 39 (UV ya no puntúa)
+    expect(score).toBe(39);
   });
 
-  it('score with no data (40) is below score with good data', () => {
+  it('score with no data is below score with good data', () => {
     const goodScore = computeBeachScore(
       makeWeather({ icon: '01d', temperatureC: 24, windSpeedMs: 2 }),
       makeFlag({ color: 'green' }),
@@ -378,7 +369,7 @@ describe('buildRankingReason', () => {
 
   it('returns fallback for poor conditions', () => {
     const reason = buildRankingReason(
-      { cielo: 5, temperatura: 5, bandera: 0, viento: 3, oleaje: 5, uv: 3, datos: 0 },
+      { cielo: 5, temperatura: 5, bandera: 0, viento: 3, oleaje: 5, datos: 0 },
       null,
       null,
     );
@@ -546,5 +537,274 @@ describe('razones con lluvia prevista', () => {
     const reason = buildCautionReason(subScores, weather, null, null, null, makeForecastSignal());
     expect(reason.toLowerCase()).toContain('lluvia prevista');
     expect(reason).not.toContain('lluvia o tormenta');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Region with no flag operator (phase 3)
+// ---------------------------------------------------------------------------
+
+/** A region that declares no flag operator at all. */
+const SIN_OPERADOR: readonly string[] = [];
+
+describe('región sin servicio de banderas', () => {
+  // Every non-flag factor at its maximum, so the totals below are exact.
+  // 30° es donde la curva de temperatura llega a su tope (25/25).
+  const buenTiempo = () =>
+    makeWeather({ icon: '01d', temperatureC: 30, windSpeedMs: 2 });
+
+  it('deja el factor bandera fuera de la puntuación', () => {
+    const { subScores } = computeBeachScore(
+      buenTiempo(), null, null, undefined, null, null, SIN_OPERADOR,
+    );
+    expect(subScores.bandera).toBe(0);
+  });
+
+  it('no hunde la nota: un día perfecto sigue llegando a 100', () => {
+    const enrichment = makeEnrichment({ waves: 'tranquilo', uvIndex: 3 });
+    const { score } = computeBeachScore(
+      buenTiempo(), null, enrichment, undefined, null, null, SIN_OPERADOR,
+    );
+    expect(score).toBe(100);
+  });
+
+  it('con operador, ese mismo día perfecto pierde puntos por no tener bandera', () => {
+    const enrichment = makeEnrichment({ waves: 'tranquilo', uvIndex: 3 });
+    const conOperador = computeBeachScore(buenTiempo(), null, enrichment).score;
+    const sinOperador = computeBeachScore(
+      buenTiempo(), null, enrichment, undefined, null, null, SIN_OPERADOR,
+    ).score;
+    // The 12 points it cannot reach (10 neutral flag + the 2 from "datos"
+    // that need a reading) are the ones that used to cap a whole region.
+    expect(conOperador).toBe(88);
+    expect(sinOperador).toBe(100);
+  });
+
+  it('mantiene el orden relativo entre playas (solo cambia la escala)', () => {
+    const mejor = buenTiempo();
+    const peor = makeWeather({ icon: '04d', temperatureC: 16, windSpeedMs: 9 });
+    const s = (w: Weather) =>
+      computeBeachScore(w, null, null, undefined, null, null, SIN_OPERADOR).score;
+    expect(s(mejor)).toBeGreaterThan(s(peor));
+  });
+
+  it('los topes de lluvia siguen siendo absolutos tras reescalar', () => {
+    const { score } = computeBeachScore(
+      buenTiempo(), null, null, undefined, makeRain(), null, SIN_OPERADOR,
+    );
+    expect(score).toBe(RAIN_SCORE_CAP);
+  });
+
+  it('no lista "sin cobertura" como motivo de bajada', () => {
+    const weather = makeWeather({ icon: '04d', temperatureC: 16 });
+    const { subScores } = computeBeachScore(
+      weather, null, null, undefined, null, null, SIN_OPERADOR,
+    );
+    const factors = buildDowngradeFactors(subScores, null, null, null, SIN_OPERADOR);
+    expect(factors ?? '').not.toContain('sin cobertura');
+  });
+});
+
+describe('buildDowngradeFactors nombra al operador de la región', () => {
+  it('usa el operador declarado en vez de una marca fija', () => {
+    const weather = makeWeather({ icon: '04d', temperatureC: 16 });
+    const { subScores } = computeBeachScore(weather, null, null);
+    expect(buildDowngradeFactors(subScores, null, null, null, ['DYA']))
+      .toContain('sin cobertura DYA');
+  });
+
+  it('mantiene el texto de Cantabria (contrato con el frontend desplegado)', () => {
+    const weather = makeWeather({ icon: '04d', temperatureC: 16 });
+    const { subScores } = computeBeachScore(weather, null, null);
+    expect(buildDowngradeFactors(subScores, null, null, null, ['Cruz Roja']))
+      .toContain('sin cobertura Cruz Roja');
+  });
+});
+
+describe('invariantes de rango de computeBeachScore', () => {
+  const perfecto = () => makeWeather({ icon: '01d', temperatureC: 30, windSpeedMs: 2 });
+  const enriquecido = () => makeEnrichment({ waves: 'tranquilo', uvIndex: 3 });
+
+  it('ignora la bandera cuando la región no declara operador', () => {
+    // Reported by the audit: honouring the flag in `datos` while excluding it
+    // from `bandera` was worth 2 points that the rescale turned into 103.
+    const r = computeBeachScore(
+      perfecto(), makeFlag({ color: 'green' }), enriquecido(), undefined, null, null, [],
+    );
+    expect(r.subScores.bandera).toBe(0);
+    expect(r.subScores.datos).toBe(computeDataScore(perfecto(), null));
+    expect(r.score).toBe(100);
+  });
+
+  it('nunca sale del rango 0-100, ni con entradas incoherentes', () => {
+    const casos: Array<readonly string[]> = [[], ['Cruz Roja'], ['DYA', 'Cruz Roja']];
+    for (const operadores of casos) {
+      for (const flag of [null, makeFlag({ color: 'green' }), makeFlag({ color: 'red' })]) {
+        for (const weather of [null, perfecto(), makeWeather({ icon: '10d', temperatureC: 5, windSpeedMs: 20 })]) {
+          const { score } = computeBeachScore(
+            weather, flag, enriquecido(), { surf: true }, null, null, operadores,
+          );
+          expect(score, `${operadores.length} operadores`).toBeGreaterThanOrEqual(0);
+          expect(score, `${operadores.length} operadores`).toBeLessThanOrEqual(100);
+        }
+      }
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Previsión de las próximas horas (WeatherOutlook)
+// ---------------------------------------------------------------------------
+
+describe('computeBeachScore con previsión de las próximas horas', () => {
+  const nublada = () => ({
+    weather: makeWeather({ icon: '04d', description: 'nubes', temperatureC: 20, windSpeedMs: 3 }),
+    flag: null,
+    enrichment: null,
+  });
+
+  const señal = (delta: number): OutlookSignal => ({
+    delta,
+    direccion: delta >= 3 ? 'mejora' : delta <= -3 ? 'empeora' : 'estable',
+    horasConsideradas: 4,
+  });
+
+  it('suma cuando va a mejorar y resta cuando va a empeorar', () => {
+    const { weather, flag, enrichment } = nublada();
+    const base = computeBeachScore(weather, flag, enrichment).score;
+
+    const mejor = computeBeachScore(weather, flag, enrichment, undefined, null, null, ['Cruz Roja'], señal(8));
+    const peor = computeBeachScore(weather, flag, enrichment, undefined, null, null, ['Cruz Roja'], señal(-8));
+
+    expect(mejor.score).toBe(base + 8);
+    expect(peor.score).toBe(base - 8);
+    expect(mejor.subScores.pronostico).toBe(8);
+  });
+
+  it('sin señal la nota es exactamente la de antes (regresión)', () => {
+    const { weather, flag, enrichment } = nublada();
+    const base = computeBeachScore(weather, flag, enrichment).score;
+
+    expect(computeBeachScore(weather, flag, enrichment, undefined, null, null, ['Cruz Roja'], null).score).toBe(base);
+    expect(computeBeachScore(weather, flag, enrichment, undefined, null, null, ['Cruz Roja'], señal(0)).score).toBe(base);
+  });
+
+  it('una mejora NO rompe el tope de lluvia activa: sigue lloviendo', () => {
+    const weather = makeWeather({ icon: '01d', temperatureC: 25, windSpeedMs: 2 });
+    const r = computeBeachScore(
+      weather, makeFlag({ color: 'green' }), makeEnrichment({ waves: 'débil', uvIndex: 4 }),
+      undefined, makeRain(), null, ['Cruz Roja'], señal(8),
+    );
+
+    expect(r.score).toBe(RAIN_SCORE_CAP);
+  });
+
+  it('un empeoramiento SÍ baja del tope: separa la que va a peor de la que solo llueve', () => {
+    const weather = makeWeather({ icon: '01d', temperatureC: 25, windSpeedMs: 2 });
+    const soloLluvia = computeBeachScore(
+      weather, makeFlag({ color: 'green' }), makeEnrichment({ waves: 'débil', uvIndex: 4 }),
+      undefined, makeRain(), null, ['Cruz Roja'], null,
+    );
+    const lluviaYPeor = computeBeachScore(
+      weather, makeFlag({ color: 'green' }), makeEnrichment({ waves: 'débil', uvIndex: 4 }),
+      undefined, makeRain(), null, ['Cruz Roja'], señal(-6),
+    );
+
+    expect(soloLluvia.score).toBe(RAIN_SCORE_CAP);
+    expect(lluviaYPeor.score).toBe(RAIN_SCORE_CAP - 6);
+  });
+
+  it('sigue sin salirse de 0-100 con la señal en los extremos', () => {
+    for (const delta of [-8, 8]) {
+      for (const weather of [null, makeWeather({ icon: '10d', temperatureC: 5, windSpeedMs: 20 })]) {
+        const { score } = computeBeachScore(
+          weather, null, null, undefined, null, null, [], señal(delta),
+        );
+        expect(score).toBeGreaterThanOrEqual(0);
+        expect(score).toBeLessThanOrEqual(100);
+      }
+    }
+  });
+});
+
+describe('razones con previsión de las próximas horas', () => {
+  const señal = (direccion: OutlookSignal['direccion']): OutlookSignal => ({
+    delta: direccion === 'mejora' ? 6 : direccion === 'empeora' ? -6 : 0,
+    direccion,
+    horasConsideradas: 4,
+  });
+
+  it('el ranking anuncia la mejora, al final y sin hora', () => {
+    const weather = makeWeather({ icon: '04d', description: 'nubes', temperatureC: 20, windSpeedMs: 3 });
+    const { subScores } = computeBeachScore(weather, null, null);
+    const reason = buildRankingReason(subScores, weather, null, null, null, null, señal('mejora'));
+
+    expect(reason).toContain('mejora en las próximas horas');
+    expect(reason.endsWith('mejora en las próximas horas')).toBe(true);
+  });
+
+  it('el ranking NO vende un empeoramiento como razón para ir', () => {
+    const weather = makeWeather({ icon: '01d', description: 'cielo claro' });
+    const { subScores } = computeBeachScore(weather, null, null);
+    const reason = buildRankingReason(subScores, weather, null, null, null, null, señal('empeora'));
+
+    expect(reason).not.toContain('próximas horas');
+  });
+
+  it('el motivo de baja sí recoge el empeoramiento', () => {
+    const weather = makeWeather({ icon: '04d', temperatureC: 20, windSpeedMs: 3 });
+    const { subScores } = computeBeachScore(weather, null, null);
+
+    expect(buildDowngradeFactors(subScores, null, null, null, ['Cruz Roja'], señal('empeora')))
+      .toContain('empeora en las próximas horas');
+    // Si es el único fragmento va en cabeza y se capitaliza, como cualquier
+    // otro motivo; el cliente traduce sin distinguir mayúsculas.
+    expect(buildCautionReason(subScores, weather, null, null, null, null, señal('empeora')))
+      .toMatch(/empeora en las próximas horas/i);
+  });
+
+  it('un cambio pequeño (estable) no genera ninguna frase', () => {
+    const weather = makeWeather({ icon: '04d', temperatureC: 20, windSpeedMs: 3 });
+    const { subScores } = computeBeachScore(weather, null, null);
+
+    expect(buildRankingReason(subScores, weather, null, null, null, null, señal('estable')))
+      .not.toContain('próximas horas');
+    expect(buildDowngradeFactors(subScores, null, null, null, ['Cruz Roja'], señal('estable')) ?? '')
+      .not.toContain('próximas horas');
+  });
+});
+
+describe('computeBeachScore — el tope que se aplicó', () => {
+  const perfecta = () => ({
+    weather: makeWeather({ icon: '01d', temperatureC: 25, windSpeedMs: 2 }),
+    flag: makeFlag({ color: 'green' }),
+    enrichment: makeEnrichment({ waves: 'débil', uvIndex: 4 }),
+  });
+
+  it('sin lluvia no hay tope', () => {
+    const { weather, flag, enrichment } = perfecta();
+    expect(computeBeachScore(weather, flag, enrichment).tope).toBeNull();
+  });
+
+  it('lluvia prevista → tope "lluvia_prevista"', () => {
+    const { weather, flag, enrichment } = perfecta();
+    const r = computeBeachScore(weather, flag, enrichment, undefined, null, makeForecastSignal());
+    expect(r.tope).toBe('lluvia_prevista');
+    expect(r.score).toBe(RAIN_FORECAST_SCORE_CAP);
+  });
+
+  it('lluvia activa gana: el tope reportado es "lluvia"', () => {
+    const { weather, flag, enrichment } = perfecta();
+    const r = computeBeachScore(weather, flag, enrichment, undefined, makeRain(), makeForecastSignal());
+    expect(r.tope).toBe('lluvia');
+  });
+
+  it('si la nota ya estaba por debajo, el tope no recortó nada y no se reporta', () => {
+    // Playa que ya estaba por debajo de 55 por sus propias condiciones.
+    const mala = makeWeather({ icon: '04d', temperatureC: 12, windSpeedMs: 15 });
+    const r = computeBeachScore(mala, null, null, undefined, makeRain(), null);
+
+    expect(r.score).toBeLessThan(RAIN_SCORE_CAP);
+    expect(r.tope).toBeNull();
   });
 });

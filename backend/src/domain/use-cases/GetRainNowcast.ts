@@ -154,6 +154,9 @@ export class GetRainNowcast {
         timestamp: Date.now(),
         upcoming: om.status === 'fulfilled' ? computeUpcoming(om.value) : null,
         uvIndexMax: om.status === 'fulfilled' ? om.value.uvIndexMax ?? null : null,
+        // Travels with the nowcast because it comes in the same request. Null
+        // when Open-Meteo fails: then the score simply has no outlook to apply.
+        outlook: om.status === 'fulfilled' ? om.value.upcomingHours ?? null : null,
       };
 
       return nowcast;

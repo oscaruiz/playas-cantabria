@@ -28,6 +28,7 @@ export const laConcha: Playa = {
   lon: -4.0427976710155225,
   // Derived by the backend from the first station with an id; it does not exist in the raw JSON.
   idCruzRoja: 373,
+  fuenteBanderas: 'Cruz Roja',
   cruzRojaStations: [
     { id: 373, nombreFuente: 'LA CONCHA I SUANCES' },
     { id: 820, nombreFuente: 'LA CONCHA II SUANCES' },
@@ -66,6 +67,7 @@ export const elSardinero: Playa = {
   lat: 43.47,
   lon: -3.78,
   idCruzRoja: 101,
+  fuenteBanderas: 'Cruz Roja',
   atributos: {
     accesoBanista: true,
     accesible: true,
@@ -93,6 +95,7 @@ export const laArnia: Playa = {
   lat: 43.49,
   lon: -3.95,
   idCruzRoja: 0,
+  fuenteBanderas: null,
   alias: ['Arnia', 'Covachos'],
   atributos: {
     accesoBanista: false,
@@ -115,6 +118,7 @@ export const laSalve: Playa = {
   lat: 43.41,
   lon: -3.41,
   idCruzRoja: 205,
+  fuenteBanderas: 'Cruz Roja',
   atributos: {
     accesoBanista: true,
     duchas: true,
@@ -150,6 +154,7 @@ export const laMaruca: Playa = {
   lat: 43.48,
   lon: -3.84,
   idCruzRoja: 0,
+  fuenteBanderas: null,
 };
 
 export const langre: Playa = {
@@ -159,6 +164,7 @@ export const langre: Playa = {
   lat: 43.47,
   lon: -3.72,
   idCruzRoja: 0,
+  fuenteBanderas: null,
 };
 
 export const laredo: Playa = {
@@ -168,6 +174,7 @@ export const laredo: Playa = {
   lat: 43.42,
   lon: -3.43,
   idCruzRoja: 310,
+  fuenteBanderas: 'Cruz Roja',
 };
 
 export const beachesResponse: Playa[] = [

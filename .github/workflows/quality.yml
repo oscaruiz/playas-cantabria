@@ -19,7 +19,9 @@ jobs:
           cache: npm
           cache-dependency-path: backend/package-lock.json
       - run: npm ci
+      - run: npm audit --omit=dev --audit-level=high
       - run: npm test
+      - run: npm run validate:regions
       - run: npm run build
 
   frontend:
@@ -35,11 +37,93 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
+      - run: npm run check-regions
+      - run: npm run lint
       - run: npm test -- --watchAll=false
         env:
           CI: "true"
+      - name: Verify committed Cantabria artifacts
+        run: git diff --exit-code -- src/data/beaches.json src/data/region.json public/manifest.json public/index.html
+
+  # Gate on the contributed DATA, separate from the engine's tests: it is what
+  # a region PR actually changes, and what can break every other region.
+  region-data:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      # Schema, catalogue (coordinates, duplicate ids, forbidden beaches) and
+      # that every flag reference has a declared operator.
+      - run: npm run validate:regions
+      - name: Quota budget
+        id: budget
+        # Shared quotas: a region that does not fit degrades everyone, not just
+        # itself. Captured before failing so the PR gets the table either way.
+        run: |
+          set +e
+          npm run --silent quota:budget > budget.md
+          echo "estado=$?" >> "$GITHUB_OUTPUT"
+          cat budget.md
+      # Only the text. The destination PR is NOT shipped here: the privileged
+      # commenter takes it from the run's own metadata, so an artifact written
+      # by PR code cannot choose where that comment lands.
+      - name: Upload budget report
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: region-quota-budget
+          path: backend/budget.md
+          retention-days: 2
+      - name: Fail if over budget
+        if: steps.budget.outputs.estado != '0'
+        run: |
+          echo "The regions do not fit together on the free tiers; see the budget above." >&2
+          exit 1
+
+  regions:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.detect.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: detect
+        run: |
+          matrix=$(find regions -mindepth 2 -maxdepth 2 -name region.json \
+            -printf '%h\n' | xargs -n1 basename | sort | jq -R . | jq -sc .)
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+
+  region-build:
+    needs: [frontend, regions]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        region: ${{ fromJson(needs.regions.outputs.matrix) }}
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
       - run: npm run build
         env:
           CI: "false"
           GENERATE_SOURCEMAP: "false"
+          REACT_APP_REGION: ${{ matrix.region }}
       - run: npm run perf:budget

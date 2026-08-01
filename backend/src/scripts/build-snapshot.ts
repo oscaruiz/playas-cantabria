@@ -1,5 +1,5 @@
 /**
- * Generates data/snapshot.json: the /api/beaches/featured aggregate, precomputed.
+ * Generates the active region's snapshot.json: the /api/beaches/featured aggregate.
  *
  * Meant to run in GitHub Actions alongside the flag scrape. The backend seeds
  * it on startup (as stale), so that the first user after a deployment or after
@@ -12,18 +12,19 @@
  *   Usage: npm run build:snapshot   (cwd = backend/)
  */
 import fs from 'fs/promises';
-import path from 'path';
 import { DIContainer } from '../infrastructure/di/DIContainer';
 import { configureDependencies } from '../infrastructure/di/dependencies';
 import { GetFeaturedBeaches } from '../domain/use-cases/GetFeaturedBeaches';
 import { httpMetrics } from '../infrastructure/http/metrics';
 import { hostLimiter } from '../infrastructure/http/limiter';
+import { resolveScriptRegion } from './scriptRegion';
 
-const DESTINO = path.resolve(process.cwd(), 'data/snapshot.json');
+const region = resolveScriptRegion();
+const DESTINO = region.snapshotPath;
 
 async function main(): Promise<void> {
   const container = new DIContainer();
-  configureDependencies(container);
+  configureDependencies(container, { region });
 
   const featured = container.get<GetFeaturedBeaches>('getFeaturedBeaches');
 

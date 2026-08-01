@@ -8,7 +8,7 @@ import type { FeaturedBeach, FeaturedBeachesResponse } from '../../services/api'
  *   - `ScoreBadge.tramo`      → high ≥ 60, medium ≥ 40
  *   - `MapaPage.markerStatus` → good ≥ 60, medium ≥ 35
  *   - `HomePage`              → "recommended" ≥ 60
- * That is why there are beaches with 82, 71, 60, 59, 40, 38 and 34: each falls on a
+ * That is why there are beaches with 93, 71, 60, 59, 40, 38 and 34: each falls on a
  * different side of at least one of the cutoffs. See `scoreBands` in the F1 plan.
  *
  * `elSardinero` carries `vientoMs: 11.2`, above the 8 m/s threshold that
@@ -22,6 +22,15 @@ const base = {
   atributos: null,
 } satisfies Partial<FeaturedBeach>;
 
+/**
+ * The only one carrying the breakdown block: the rest keep the old shape on
+ * purpose, so the tests also cover an installed app talking to a backend that
+ * does not send it yet (the panel must still work, just without the detail).
+ *
+ * The six factors add up to exactly 93, which is what makes the panel
+ * readable: the numbers have to explain the score they are next to. 22.4 °C
+ * scores 22/25 — a very good beach temperature, not the 70% the old model gave it.
+ */
 export const featuredLaConcha: FeaturedBeach = {
   ...base,
   nombre: 'La Concha',
@@ -32,8 +41,14 @@ export const featuredLaConcha: FeaturedBeach = {
   temperatura: 22.4,
   vientoMs: 3.1,
   bandera: 'Verde',
-  puntuacion: 82,
-  razonRanking: 'cielo despejado, viento flojo, bandera verde',
+  puntuacion: 93,
+  razonRanking: 'cielo despejado, viento flojo, bandera verde, mejora en las próximas horas',
+  subpuntuaciones: {
+    cielo: 25, temperatura: 22, bandera: 20, viento: 15, oleaje: 6, datos: 5,
+  },
+  pronostico: { direccion: 'mejora', delta: 6 },
+  topeAplicado: null,
+  oleaje: 'marejadilla',
 };
 
 export const featuredElSardinero: FeaturedBeach = {
@@ -195,4 +210,6 @@ export const featuredResponse: FeaturedBeachesResponse = {
   playas: [featuredLaConcha, featuredElSardinero, featuredLaArnia],
   revisar: [featuredBerria, featuredLangre],
   resumenTodas,
+  // Scale of each factor, sent once for the whole response.
+  maximos: { cielo: 25, temperatura: 25, bandera: 20, viento: 15, oleaje: 10, datos: 5 },
 };

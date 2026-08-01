@@ -1,5 +1,12 @@
 {
   "projects": {
     "default": "playas-cantabria-front"
+  },
+  "targets": {
+    "playas-cantabria-front": {
+      "hosting": {
+        "cantabria": ["playas-cantabria-front"]
+      }
+    }
   }
 }

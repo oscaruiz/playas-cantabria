@@ -8,10 +8,12 @@ import {
   PrediccionCompletaDTO,
 } from '../mappers/LegacyDetailsMapper';
 import { OpenWeatherWeatherProvider } from '../../infrastructure/providers/OpenWeatherWeatherProvider';
+import { OPEN_METEO_NOMBRE } from '../../infrastructure/providers/OpenMeteoPrecipitationProvider';
 import { AemetBeachForecastProvider } from '../../infrastructure/providers/AemetBeachForecastProvider';
 import { AemetBeachWebScraper } from '../../infrastructure/providers/AemetBeachWebScraper';
 import { GetRainNowcast } from '../../domain/use-cases/GetRainNowcast';
 import { buildRainForecastSignal, textosRestantesHoy } from '../../domain/use-cases/RainForecast';
+import { ventanaOutlook } from '../../domain/use-cases/WeatherOutlook';
 import type { RainNowcast } from '../../domain/entities/RainNowcast';
 import type { BeachFullForecast } from '../../domain/entities/BeachForecast';
 import { CacheKeys, InMemoryCache } from '../../infrastructure/cache/InMemoryCache';
@@ -37,6 +39,7 @@ export class LegacyDetailsAssembler {
     private readonly cache?: InMemoryCache,
     /** Optional: without it the sky corrector does not run and the detail does not change. */
     private readonly sunshine?: SunshineProvider,
+    private readonly regionId = 'cantabria',
   ) {}
 
 
@@ -227,7 +230,7 @@ export class LegacyDetailsAssembler {
     if (!this.cache) return this.assembleFresh(beachId);
 
     return this.cache.getOrSetStale(
-      CacheKeys.detailsByBeachId(beachId),
+      CacheKeys.detailsByBeachId(this.regionId, beachId),
       Config.detailsFreshTtlSeconds(),
       Config.detailsStaleTtlSeconds(),
       () => this.assembleFresh(beachId),
@@ -286,9 +289,16 @@ export class LegacyDetailsAssembler {
     try {
       rainSignal = await rainPromise;
       if (rainSignal && base.tiempoActual) {
+        // The hourly slots ride in the same nowcast (same Open-Meteo request),
+        // and they are trimmed with the very function the score uses, so the
+        // strip shown and the adjustment applied cannot describe different
+        // hours. Empty out of the beach window or with Open-Meteo down.
+        const horas = ventanaOutlook(rainSignal.outlook ?? [], new Date());
         base.tiempoActual = {
           ...base.tiempoActual,
           lluvia: LegacyDetailsMapper.mapLluvia(rainSignal),
+          previsionHoras: horas.length > 0 ? LegacyDetailsMapper.mapPrevisionHoras(horas) : null,
+          previsionHorasFuente: horas.length > 0 ? OPEN_METEO_NOMBRE : null,
         };
       }
     } catch {

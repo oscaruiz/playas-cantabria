@@ -25,10 +25,26 @@ export interface RegionConfig {
   observationBbox: RegionBbox;
   /** Catalog integrity rules: tight coordinate bbox, known-bad entries. */
   catalogRules: CatalogRules;
-  /** Beach catalog JSON, relative to the backend working directory. */
+  /** Absolute path to the region's beach catalog JSON. */
   catalogPath: string;
-  /** Pre-scraped flags JSON (cron output), relative to the working directory. */
+  /** Absolute path to the region's pre-scraped flags JSON (cron output). */
   flagsPath: string;
   /** Flag operators active in this region (wired in the DI flag router). */
   flagProviders: FlagProviderId[];
+  /** Branding consumed by region-specific frontend builds. */
+  branding: {
+    appName: string;
+    shortName: string;
+    themeColor: string;
+    backgroundColor: string;
+    capacitorAppId: string;
+  };
+  /** Initial map viewport consumed by the frontend. */
+  map: {
+    center: { lat: number; lon: number };
+    zoom: number;
+  };
+  /** Region data directory and conventional files resolved by the registry. */
+  regionDir: string;
+  snapshotPath: string;
 }

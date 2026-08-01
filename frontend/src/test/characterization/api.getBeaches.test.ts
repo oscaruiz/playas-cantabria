@@ -18,9 +18,8 @@
 import { waitFor } from '@testing-library/react';
 import { installFetchMock, restoreFetch, route, flushMicrotasks } from '../http/fakeFetch';
 import { beachesResponse } from '../fixtures/beaches';
+import { RUTA_PLAYAS as BEACHES } from '../apiRoutes';
 
-/** Only `/api/beaches`, without catching `/api/beaches/featured` or the details. */
-const BEACHES = /\/api\/beaches$/;
 
 const TTL_MS = 5 * 60 * 1000;
 

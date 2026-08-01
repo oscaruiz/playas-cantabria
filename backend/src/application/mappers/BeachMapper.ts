@@ -1,5 +1,6 @@
 import { Beach } from '../../domain/entities/Beach';
 import { BeachDTO } from '../dtos/BeachDTO';
+import { resolveFlagOperatorName } from '../../domain/services/flagAggregation';
 
 /**
  * Maps internal Beach entity (English) to public API BeachDTO (Spanish keys).
@@ -25,6 +26,7 @@ export class BeachMapper {
             })),
           }
         : {}),
+      fuenteBanderas: resolveFlagOperatorName(beach.flagRef, beach.flagStations),
       ...(beach.alias ? { alias: beach.alias } : {}),
       ...(beach.sectores ? { sectores: beach.sectores } : {}),
       ...(beach.sinAemet ? { sinAemet: true } : {}),

@@ -3,6 +3,9 @@ import { FlagStatus, FlagColor } from '../entities/Flag';
 import { BeachAttributes } from '../entities/Beach';
 import { RainNowcast } from '../entities/RainNowcast';
 import { RainForecastSignal } from './RainForecast';
+// Type-only: `WeatherOutlook` imports the scoring functions from here, and a
+// value import would close the cycle at runtime.
+import type { OutlookSignal } from './WeatherOutlook';
 
 /**
  * Score cap when rain is detected now: <60 so the beach is never "good"
@@ -18,6 +21,15 @@ export const RAIN_SCORE_CAP = 55;
  */
 export const RAIN_FORECAST_SCORE_CAP = 59;
 
+/**
+ * How much the next few hours can move the score, up or down. Eight points is
+ * enough to cross the green band (a beach at 57 that is clearing reaches 65)
+ * and not enough to turn a bad beach into a good one: an hourly global model
+ * is wrong often enough on this coast that it does not get to overrule what is
+ * actually happening.
+ */
+export const OUTLOOK_MAX_DELTA = 8;
+
 /** Human-readable fragment for the reasons when rain is detected. */
 function rainReasonFragment(rain: RainNowcast | null | undefined): string | null {
   if (rain?.status !== 'raining') return null;
@@ -30,6 +42,19 @@ function rainForecastReasonFragment(
   forecast: RainForecastSignal | null | undefined,
 ): string | null {
   return forecast?.expected ? 'lluvia prevista' : null;
+}
+
+/**
+ * Fragment for the outlook. Qualitative and WITHOUT an hour on purpose, like
+ * the rain one: the client translates these reasons fragment by exact
+ * fragment, so "despeja a las 14:00" could not be translated at all.
+ */
+function outlookReasonFragment(
+  outlook: OutlookSignal | null | undefined,
+): string | null {
+  if (outlook?.direccion === 'mejora') return 'mejora en las próximas horas';
+  if (outlook?.direccion === 'empeora') return 'empeora en las próximas horas';
+  return null;
 }
 
 /**
@@ -49,19 +74,78 @@ export interface ForecastEnrichment {
 // Sub-score interfaces
 // ---------------------------------------------------------------------------
 
+/**
+ * Public names of the flag operators active in the region. An EMPTY array means
+ * the region has no lifeguard-flag service at all, which is not the same as a
+ * beach with no station: see `rescaleWithoutFlag`.
+ *
+ * The default only serves the unit tests, written against Cantabria and its
+ * single operator. The HTTP path never falls back to it — `GetFeaturedBeaches`
+ * takes the region's operators as a required constructor argument.
+ */
+export const LEGACY_FLAG_OPERATORS: readonly string[] = ['Cruz Roja'];
+
+/** Weight of the flag factor in the 0-100 total, and the total itself. */
+const FLAG_MAX = 20;
+const SCORE_MAX = 100;
+
+/**
+ * Reachable maximum of each factor. Published in the API so the interface can
+ * draw "10/25" and a proportional bar: these are the model's weights, and a
+ * copy of them in the frontend would keep drawing the old bar the day one
+ * changes.
+ */
+export const SUBSCORE_MAX = {
+  cielo: 25,
+  temperatura: 25,
+  bandera: FLAG_MAX,
+  viento: 15,
+  oleaje: 10,
+  datos: 5,
+} as const;
+
+/**
+ * Reachable maximum when the region has no flag service: the flag factor
+ * disappears (-20) and `datos` can never award the 2 points that came from
+ * having a flag reading (-2).
+ */
+const SCORE_MAX_WITHOUT_FLAG = SCORE_MAX - FLAG_MAX - 2;
+
+/**
+ * Rescales to 0-100 the score of a region with no flag service. Without this
+ * every beach in such a region would lose the same ~22 points, and the bands
+ * (green ≥60) would read the absence of an operator as bad conditions —
+ * penalising the whole region for something that has nothing to do with the
+ * beach.
+ */
+function rescaleWithoutFlag(raw: number): number {
+  return Math.round((raw * SCORE_MAX) / SCORE_MAX_WITHOUT_FLAG);
+}
+
 export interface SubScores {
   cielo: number;
   temperatura: number;
   bandera: number;
   viento: number;
   oleaje: number;
-  uv: number;
   datos: number;
+  /** Applied outlook delta. Optional: it is a correction, not a seventh factor. */
+  pronostico?: number;
 }
+
+/** Which cap clipped the score, if any. */
+export type ScoreCap = 'lluvia' | 'lluvia_prevista';
 
 export interface ScoringResult {
   score: number;
   subScores: SubScores;
+  /**
+   * Reported because it is the reason the factors do not add up to the score.
+   * Only this function knows it: reading it back from the reason text would be
+   * guessing, and the interface needs to say "it is raining, the mark is
+   * capped" instead of leaving the numbers looking broken.
+   */
+  tope: ScoreCap | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -79,6 +163,21 @@ const ICON_SKY_SCORE: Record<string, number> = {
   '13d': 0,  '13n': 0,
   '50d': 4,  '50n': 4,
 };
+
+/**
+ * Sky score from a cloud-cover percentage (Open-Meteo's hourly forecast, which
+ * has no icon). The cuts are OpenWeather's icon bands — 01x clear, 02x few,
+ * 03x scattered, 04x broken — and the values are the ones `ICON_SKY_SCORE`
+ * already gives them, so the same sky scores the same whichever source
+ * describes it. Without that, comparing "now" against "later" would measure
+ * the difference between two providers instead of a change in the weather.
+ */
+export function skyScoreFromCloudCover(cloudCoverPct: number): number {
+  if (cloudCoverPct <= 10) return ICON_SKY_SCORE['01d'];
+  if (cloudCoverPct <= 25) return ICON_SKY_SCORE['02d'];
+  if (cloudCoverPct <= 50) return ICON_SKY_SCORE['03d'];
+  return ICON_SKY_SCORE['04d'];
+}
 
 function skyScoreFromDescription(desc: string): number {
   const s = desc.toLowerCase();
@@ -128,32 +227,58 @@ export function computeSkyScore(weather: Weather | null): number {
 // Temperature score (0-20)
 // ---------------------------------------------------------------------------
 
+/**
+ * Temperature (0-25), the factor that decides whether the day is worth going.
+ *
+ * It used to be worth 20 and to treat 22 °C as a 14/20 — a 70% for what anyone
+ * on this coast calls a very good beach day. The curve now climbs earlier and
+ * flattens out: 22 °C already scores 22/25, and the last three points are
+ * spread all the way to 30 °C, so the difference between a good day and a very
+ * good one stops deciding the ranking on its own.
+ *
+ * The five points come from the UV factor, deleted on purpose: a high index is
+ * a reason to bring sunscreen, not to rate the beach worse.
+ */
 export function computeTemperatureScore(tempC: number | null): number {
-  if (tempC == null) return 7;
-  if (tempC < 10) return 0;
-  if (tempC < 15) return interpolate(tempC, 10, 15, 0, 3);
-  if (tempC < 18) return interpolate(tempC, 15, 18, 3, 8);
-  if (tempC < 22) return interpolate(tempC, 18, 22, 8, 14);
-  if (tempC <= 28) return interpolate(tempC, 22, 28, 14, 20);
-  if (tempC <= 33) return interpolate(tempC, 28, 33, 20, 17);
-  return interpolate(Math.min(tempC, 40), 33, 40, 17, 12);
+  if (tempC == null) return 9;
+  if (tempC < 12) return 0;
+  if (tempC < 16) return interpolate(tempC, 12, 16, 0, 6);
+  if (tempC < 19) return interpolate(tempC, 16, 19, 6, 13);
+  if (tempC < 22) return interpolate(tempC, 19, 22, 13, 22);
+  if (tempC <= 30) return interpolate(tempC, 22, 30, 22, 25);
+  if (tempC <= 34) return interpolate(tempC, 30, 34, 25, 20);
+  return interpolate(Math.min(tempC, 40), 34, 40, 20, 14);
 }
 
 // ---------------------------------------------------------------------------
 // Flag score (0-20)
 // ---------------------------------------------------------------------------
 
+/**
+ * `unknown` scores the SAME neutral as having no flag service at all, and that
+ * is the whole point: there is a flag flying, what is missing is our reading of
+ * it. Docking points for it punished the beach for a failure of ours — and
+ * punished it HARDER than a beach with no lifeguards, which walks away with the
+ * neutral 10. Ignorance is not evidence of bad conditions.
+ *
+ * Safety does not rest on this number: a stale black or red keeps its colour
+ * (see `GetFeaturedBeaches.getFlagForBeach`) and keeps excluding the beach, so
+ * what degrades to `unknown` is only ever a green or a yellow.
+ */
 const FLAG_SCORE: Record<FlagColor, number> = {
   green: 20,
   yellow: 10,
   red: 0,
   black: 0,
-  unknown: 6,
+  unknown: 10,
 };
 
+/** Neutral when there is nothing to judge: no service, or no reading of it. */
+const FLAG_NEUTRAL = 10;
+
 export function computeFlagScore(flag: FlagStatus | null): number {
-  if (!flag || !flag.color) return 10; // no CR coverage → neutral
-  return FLAG_SCORE[flag.color] ?? 10;
+  if (!flag || !flag.color) return FLAG_NEUTRAL; // no CR coverage → neutral
+  return FLAG_SCORE[flag.color] ?? FLAG_NEUTRAL;
 }
 
 // ---------------------------------------------------------------------------
@@ -220,16 +345,14 @@ export function computeWavesScore(
 }
 
 // ---------------------------------------------------------------------------
-// UV score (0-5)
+// UV does NOT score.
+//
+// It used to be worth 5 points and to dock them from any beach with a high
+// index — which on this coast is every clear summer day, exactly the days
+// worth going. A high UV is a reason to bring sunscreen, not to rate the beach
+// worse, so its weight went to temperature. The index is still published and
+// shown on the beach page: it is information, not a penalty.
 // ---------------------------------------------------------------------------
-
-export function computeUVScore(uvIndex: number | null): number {
-  if (uvIndex == null) return 3;
-  if (uvIndex <= 5) return 5;
-  if (uvIndex <= 7) return 3;
-  if (uvIndex <= 10) return 1;
-  return 0;
-}
 
 // ---------------------------------------------------------------------------
 // Data completeness score (0-5)
@@ -277,40 +400,73 @@ export function computeBeachScore(
   attributes?: BeachAttributes,
   rain?: RainNowcast | null,
   rainForecast?: RainForecastSignal | null,
+  flagOperators: readonly string[] = LEGACY_FLAG_OPERATORS,
+  outlook?: OutlookSignal | null,
 ): ScoringResult {
   const isSurf = attributes?.surf === true;
-  const uvIndex = enrichment?.uvIndex ?? null;
+  const hasFlagService = flagOperators.length > 0;
+  // A region with no operator has no flag, whatever the caller passed. Ignoring
+  // it in `bandera` but honouring it in `datos` was worth 2 points that the
+  // rescale then multiplied past 100 — the function broke its own range.
+  const effectiveFlag = hasFlagService ? flag : null;
 
   const subScores: SubScores = {
     cielo: computeSkyScore(weather),
     temperatura: computeTemperatureScore(weather?.temperatureC ?? null),
-    bandera: computeFlagScore(flag),
+    // 0 and out of the sum with no operator in the region: there is no flag to
+    // judge, so a neutral 10/20 would be inventing a middling reading.
+    bandera: hasFlagService ? computeFlagScore(effectiveFlag) : 0,
     viento: computeWindScore(weather?.windSpeedMs ?? null),
     oleaje: computeWavesScore(enrichment, weather, isSurf),
-    uv: computeUVScore(uvIndex),
-    datos: computeDataScore(weather, flag),
+    datos: computeDataScore(weather, effectiveFlag),
+    pronostico: outlook?.delta ?? 0,
   };
 
-  let score = subScores.cielo
+  const raw = subScores.cielo
     + subScores.temperatura
     + subScores.bandera
     + subScores.viento
     + subScores.oleaje
-    + subScores.uv
     + subScores.datos;
 
+  // Rescaled BEFORE the rain caps below: those caps are absolute band
+  // boundaries (<60 = never "good"), not a share of the reachable maximum.
+  let score = hasFlagService ? raw : rescaleWithoutFlag(raw);
+
+  // What the next few hours bring, bounded to ±OUTLOOK_MAX_DELTA. An
+  // IMPROVEMENT goes in before the caps, so it is still subject to them.
+  const delta = outlook?.delta ?? 0;
+  if (delta > 0) score += delta;
+
+  let tope: ScoreCap | null = null;
+
   // FORECAST rain (next few hours): soft yellow.
-  if (rainForecast?.expected) {
-    score = Math.min(score, RAIN_FORECAST_SCORE_CAP);
+  if (rainForecast?.expected && score > RAIN_FORECAST_SCORE_CAP) {
+    score = RAIN_FORECAST_SCORE_CAP;
+    tope = 'lluvia_prevista';
   }
 
   // Rain detected now (multi-source signal): the beach can never be "good",
   // no matter what happens with the other factors. It beats the forecast one.
-  if (rain?.status === 'raining') {
-    score = Math.min(score, RAIN_SCORE_CAP);
+  if (rain?.status === 'raining' && score > RAIN_SCORE_CAP) {
+    score = RAIN_SCORE_CAP;
+    tope = 'lluvia';
   }
 
-  return { score, subScores };
+  // A DETERIORATION lands after the caps, so it counts below them too. The
+  // asymmetry is deliberate and points the safe way: while it rains the beach
+  // cannot be sold as good however much the sky is clearing, but one that is
+  // already capped AND getting worse must rank under one that is merely
+  // capped. Applied before the cap it would vanish — which is exactly when
+  // half the coast sits on the cap and the ranking most needs to separate them.
+  if (delta < 0) score += delta;
+
+  // Last line of defence on the published range. Everything above should stay
+  // within 0-100 on its own; this is here so an inconsistent input can never
+  // put a score outside it into the API, the bands or the map colours.
+  score = Math.max(0, Math.min(SCORE_MAX, score));
+
+  return { score, subScores, tope };
 }
 
 // ---------------------------------------------------------------------------
@@ -324,6 +480,7 @@ export function buildRankingReason(
   enrichment?: ForecastEnrichment | null,
   rain?: RainNowcast | null,
   rainForecast?: RainForecastSignal | null,
+  outlook?: OutlookSignal | null,
 ): string {
   const parts: string[] = [];
 
@@ -376,6 +533,13 @@ export function buildRankingReason(
     parts.push(forecastPart);
   }
 
+  // Only the good news here: a beach that is getting worse says so in
+  // `motivoBaja`, which is the channel the interface reads for that.
+  if (outlook?.direccion === 'mejora') {
+    const mejora = outlookReasonFragment(outlook);
+    if (mejora) parts.push(mejora);
+  }
+
   return parts.join(', ') || 'Condiciones aceptables';
 }
 
@@ -390,6 +554,7 @@ export function buildCautionReason(
   _enrichment?: ForecastEnrichment | null,
   rain?: RainNowcast | null,
   rainForecast?: RainForecastSignal | null,
+  outlook?: OutlookSignal | null,
 ): string {
   const parts: string[] = [];
 
@@ -405,8 +570,12 @@ export function buildCautionReason(
   if (subScores.viento <= 3) parts.push('viento fuerte');
   if (subScores.oleaje <= 2) parts.push('oleaje fuerte');
   if (subScores.cielo <= 3 && !rainPart && !forecastPart) parts.push('lluvia o tormenta');
-  if (subScores.uv <= 1 && subScores.uv !== 3) parts.push('UV muy alto');
-  if (subScores.temperatura <= 3) parts.push('temperatura baja');
+  if (subScores.temperatura <= 5) parts.push('temperatura baja');
+
+  if (outlook?.direccion === 'empeora') {
+    const empeora = outlookReasonFragment(outlook);
+    if (empeora) parts.push(empeora);
+  }
 
   if (parts.length === 0) parts.push('condiciones poco favorables');
 
@@ -424,6 +593,8 @@ export function buildDowngradeFactors(
   flag: FlagStatus | null,
   rain?: RainNowcast | null,
   rainForecast?: RainForecastSignal | null,
+  flagOperators: readonly string[] = LEGACY_FLAG_OPERATORS,
+  outlook?: OutlookSignal | null,
 ): string | null {
   const parts: string[] = [];
 
@@ -436,13 +607,21 @@ export function buildDowngradeFactors(
 
   if (subScores.temperatura <= 8) parts.push('temperatura fresca');
 
-  if (!flag || !flag.color) parts.push('sin cobertura Cruz Roja');
-  else if (flag.color === 'yellow') parts.push('bandera amarilla');
-  else if (flag.color === 'red') parts.push('bandera roja');
+  // Naming the operator only makes sense where one exists. With no service in
+  // the region the absence of a flag is not a downgrade factor at all: it would
+  // be listed on every single beach and say nothing about any of them.
+  const operador = flagOperators[0];
+  if (flag?.color === 'yellow') parts.push('bandera amarilla');
+  else if (flag?.color === 'red') parts.push('bandera roja');
+  else if (!flag?.color && operador) parts.push(`sin cobertura ${operador}`);
 
   if (subScores.viento <= 5) parts.push('viento fuerte');
   if (subScores.oleaje <= 3) parts.push('oleaje fuerte');
-  if (subScores.uv <= 1) parts.push('UV muy alto');
+
+  if (outlook?.direccion === 'empeora') {
+    const empeora = outlookReasonFragment(outlook);
+    if (empeora) parts.push(empeora);
+  }
 
   if (parts.length === 0) return null;
   parts[0] = parts[0].charAt(0).toUpperCase() + parts[0].slice(1);

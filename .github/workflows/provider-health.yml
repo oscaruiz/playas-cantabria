@@ -1,0 +1,35 @@
+# Watches production for providers that answer nothing but errors.
+#
+# The case that motivated it: Open-Meteo returned 429 to every request from
+# Render for hours. Nothing broke — the rain nowcast fell back to two sources
+# and `lluvia.prevista` simply stopped existing — so the app quietly stopped
+# warning about coming rain and nobody found out. Every layer degraded exactly
+# as designed; that is precisely what makes it invisible.
+name: Provider health
+
+on:
+  schedule:
+    # Twice a day, inside the beach window in Madrid (UTC+2 in summer).
+    - cron: '15 10,17 * * *'
+  workflow_dispatch: {}
+
+jobs:
+  salud:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+        # The token turns the check into an actual observation: without it the
+        # script can only read metrics, and an empty window has no failures in
+        # it to find. It is the same secret the server reads as DIAG_PROBE_TOKEN.
+      - run: npm run providers:health
+        env:
+          DIAG_PROBE_TOKEN: ${{ secrets.DIAG_PROBE_TOKEN }}

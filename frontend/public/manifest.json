@@ -1,7 +1,7 @@
 {
-  "short_name": "Playas",
-  "name": "Playas Cantabria",
-  "description": "Estado de las playas de Cantabria: tiempo, banderas de Cruz Roja y mareas.",
+  "short_name": "Playas Cantabria",
+  "name": "Playas de Cantabria",
+  "description": "Estado de las playas de Cantabria: tiempo, banderas y mareas.",
   "icons": [
     {
       "src": "favicon.svg",

@@ -18,6 +18,16 @@ export interface FlagStatus {
  */
 export type FlagProviderId = 'cruzroja';
 
+/**
+ * Public name of each operator, as it must be shown to the user ("watched by
+ * X"). It lives here and not in the region files because an operator is the
+ * same organisation wherever it works: a region declares WHICH operators it
+ * has, never how they are called.
+ */
+export const FLAG_OPERATOR_NAMES: Record<FlagProviderId, string> = {
+  cruzroja: 'Cruz Roja',
+};
+
 /** Provider-neutral reference to a flag source. */
 export interface FlagRef {
   provider: FlagProviderId;
