@@ -32,9 +32,8 @@ import {
   buildOutOfHoursDetail,
 } from '../fixtures/beachDetail';
 import { localNoon } from '../time';
+import { RUTA_DESTACADAS as FEATURED, RUTA_DETALLE as DETAILS } from '../apiRoutes';
 
-const FEATURED = '/api/beaches/featured';
-const DETAILS = /\/api\/beaches\/[^/]+\/details$/;
 
 const MEDIODIA = localNoon('2026-07-27'); // Monday
 
@@ -423,13 +422,13 @@ describe('PlayaDetalle — puntuación', () => {
     const { container } = renderDetalle('3908503');
     await screen.findByText('Puntuación de hoy');
 
-    expect(container.querySelector('.score-badge-num')).toHaveTextContent('82');
+    expect(container.querySelector('.score-badge-num')).toHaveTextContent('93');
     expect(container.querySelector('.pd-score-reason')).toHaveTextContent(
       'cielo despejado, viento flojo, bandera verde',
     );
   });
 
-  it('el desplegable "cómo se calcula" abre 8 factores', async () => {
+  it('el desplegable "cómo se calcula" abre los 6 factores de ESTA playa y las 2 reglas', async () => {
     const { container } = renderDetalle('3908503');
     await screen.findByText('Puntuación de hoy');
 
@@ -437,12 +436,116 @@ describe('PlayaDetalle — puntuación', () => {
 
     fireEvent.click(screen.getByText('Cómo se calcula'));
 
-    const filas = container.querySelectorAll('.pd-score-info .beach-info-row');
-    expect(filas).toHaveLength(8);
-    expect(filas[0].querySelector('.beach-info-label')).toHaveTextContent('Sol y cielo');
-    expect(filas[0].querySelector('.beach-info-value')).toHaveTextContent(
+    // Seis, no siete: el UV dejó de puntuar (restaba en todo día despejado, que
+    // son justo los días que merece la pena ir) y no puede figurar como factor.
+    const factores = container.querySelectorAll('.pd-score-info .pd-factor');
+    expect(factores).toHaveLength(6);
+    expect(container.querySelector('.pd-score-info')).not.toHaveTextContent('UV');
+    expect(factores[0].querySelector('.pd-factor-nombre')).toHaveTextContent('Sol y cielo');
+    expect(factores[0].querySelector('.pd-factor-puntos')).toHaveTextContent('25/25');
+    // La explicación genérica no se pierde: baja a texto secundario de la fila.
+    expect(factores[0].querySelector('.pd-factor-nota')).toHaveTextContent(
       'cuanto más despejado, mejor.',
     );
+
+    // Lluvia y peligro no puntúan: son reglas que limitan o excluyen.
+    const reglas = container.querySelectorAll('.pd-score-info .beach-info-row');
+    expect(reglas).toHaveLength(2);
+    expect(reglas[0].querySelector('.beach-info-label')).toHaveTextContent('Lluvia');
+  });
+
+  it('cada factor enseña el dato de la playa que explica sus puntos', async () => {
+    const { container } = renderDetalle('3908503');
+    await screen.findByText('Puntuación de hoy');
+    fireEvent.click(screen.getByText('Cómo se calcula'));
+
+    const valores = Array.from(container.querySelectorAll('.pd-factor-valor')).map(
+      (n) => n.textContent,
+    );
+
+    expect(valores[0]).toBe('cielo despejado');   // cielo
+    expect(valores[1]).toBe('22°');               // temperatura
+    expect(valores[2]).toBe('Verde');             // bandera
+    expect(valores[4]).toBe('marejadilla');       // oleaje
+    expect(valores[5]).toBe('clima y bandera');   // datos
+  });
+
+  it('22° se lee como muy buena temperatura, no como un aprobado raspado', async () => {
+    const { container } = renderDetalle('3908503');
+    await screen.findByText('Puntuación de hoy');
+    fireEvent.click(screen.getByText('Cómo se calcula'));
+
+    const puntos = container.querySelectorAll('.pd-factor-puntos');
+    expect(puntos[1]).toHaveTextContent('22/25');
+  });
+
+  it('los puntos del desglose suman la nota cuando no hay tope', async () => {
+    const { container } = renderDetalle('3908503');
+    await screen.findByText('Puntuación de hoy');
+    fireEvent.click(screen.getByText('Cómo se calcula'));
+
+    const suma = Array.from(container.querySelectorAll('.pd-factor-puntos'))
+      .map((n) => Number((n.textContent ?? '').split('/')[0]))
+      .reduce((a, b) => a + b, 0);
+
+    expect(suma).toBe(93);
+    expect(container.querySelector('.pd-score-tope')).toBeNull();
+  });
+
+  it('anuncia hacia dónde va el día sin desplegar nada, y sin repetirlo en la razón', async () => {
+    const { container } = renderDetalle('3908503');
+    await screen.findByText('Puntuación de hoy');
+
+    const chip = container.querySelector('.pd-trend');
+    expect(chip).toHaveTextContent('Mejora');
+    expect(chip).toHaveTextContent('+6 puntos');
+    // El backend ya lo dice en razonRanking; con el chip se diría dos veces.
+    expect(container.querySelector('.pd-score-reason')).not.toHaveTextContent('próximas horas');
+  });
+
+  it('la tira horaria se ve sin desplegar nada y va justo encima de mareas', async () => {
+    const { container } = renderDetalle('3908503');
+    await screen.findByText('Puntuación de hoy');
+
+    // Sin tocar "Cómo se calcula": vive en su propia sección de la página.
+    const horas = container.querySelectorAll('.proximas-horas-section .pd-hora');
+    expect(horas).toHaveLength(3);
+    expect(horas[0].querySelector('.pd-hora-temp')).toHaveTextContent('21°');
+    expect(horas[2].querySelector('.pd-hora-temp')).toHaveTextContent('23°');
+
+    // El orden en el DOM: primero las próximas horas, después las mareas.
+    const secciones = Array.from(
+      container.querySelectorAll('.proximas-horas-section, .tides-section'),
+    ).map((n) => n.className);
+    expect(secciones).toEqual(['proximas-horas-section', 'tides-section']);
+  });
+
+  it('acredita quién pronostica esas horas, con lo que dice el API', async () => {
+    const { container } = renderDetalle('3908503');
+    await screen.findByText('Puntuación de hoy');
+
+    expect(container.querySelector('.proximas-horas-fuente')).toHaveTextContent(
+      'Datos meteorológicos: Open-Meteo',
+    );
+  });
+
+  it('el desplegable de la puntuación ya no repite la tira', async () => {
+    const { container } = renderDetalle('3908503');
+    await screen.findByText('Puntuación de hoy');
+    fireEvent.click(screen.getByText('Cómo se calcula'));
+
+    expect(container.querySelectorAll('.pd-score-info .pd-hora')).toHaveLength(0);
+  });
+
+  it('sin desglose (backend antiguo) el panel sigue abriendo con sus reglas', async () => {
+    // La Salvé no lleva el bloque aditivo en el fixture.
+    const { container } = renderDetalle('3903501');
+    await screen.findByText('Puntuación de hoy');
+    fireEvent.click(screen.getByText('Cómo se calcula'));
+
+    expect(container.querySelectorAll('.pd-factor')).toHaveLength(0);
+    expect(container.querySelectorAll('.beach-info-row').length).toBeGreaterThan(0);
+    expect(container.querySelector('.pd-trend')).toBeNull();
   });
 
   it('no muestra bloque de puntuación si la playa no está en el ranking', async () => {
@@ -531,5 +634,62 @@ describe('PlayaDetalle — estados', () => {
 
     await screen.findByText('No se pudo cargar el detalle de la playa');
     expect(screen.queryByText('Cargando datos de la playa...')).not.toBeInTheDocument();
+  });
+
+  it('dice la causa: el estado HTTP cuando el servidor contesta', async () => {
+    // Tres veces hoy el mismo texto con tres causas distintas. La causa es lo
+    // primero que hace falta, no un adorno.
+    jest.useFakeTimers().setSystemTime(MEDIODIA);
+    mockDetalle(() => ({ status: 429 }));
+
+    const { container } = renderDetalle();
+
+    await screen.findByText('No se pudo cargar el detalle de la playa');
+    expect(container.querySelector('.error-causa')).toHaveTextContent('HTTP 429');
+  });
+
+  it('dice la causa: sin respuesta cuando la petición ni vuelve', async () => {
+    jest.useFakeTimers().setSystemTime(MEDIODIA);
+    mockDetalle(() => ({ networkError: true }));
+
+    const { container } = renderDetalle();
+
+    await screen.findByText('No se pudo cargar el detalle de la playa');
+    expect(container.querySelector('.error-causa')).toHaveTextContent('Sin respuesta del servidor');
+  });
+
+  it('un fallo pasajero no deja el aviso clavado si el reintento trae los datos', async () => {
+    // Lo de la captura: la ficha entera pintada (78/100, previsión, webcam...)
+    // y encima el cartel rojo de "no se pudo cargar". El primer intento falló,
+    // el segundo funcionó, y el error no se apagaba nunca.
+    jest.useFakeTimers().setSystemTime(MEDIODIA);
+    let intento = 0;
+    installFetchMock([
+      route(FEATURED, { json: featuredResponse }),
+      route(DETAILS, () => {
+        intento += 1;
+        return intento === 1 ? { networkError: true } : { json: buildAemetDetail(MEDIODIA) };
+      }),
+    ]);
+
+    const { unmount } = renderDetalle();
+    await screen.findByText('No se pudo cargar el detalle de la playa');
+
+    // Segundo montaje (lo que hace StrictMode en desarrollo, o una renavegación).
+    unmount();
+    renderDetalle();
+
+    await screen.findByText('Hoy');
+    expect(screen.queryByText('No se pudo cargar el detalle de la playa')).not.toBeInTheDocument();
+  });
+
+  it('el aviso de error nunca convive con la ficha cargada', async () => {
+    jest.useFakeTimers().setSystemTime(MEDIODIA);
+    mockDetalle(buildAemetDetail(MEDIODIA));
+
+    const { container } = renderDetalle();
+    await screen.findByText('Hoy');
+
+    expect(container.querySelector('.error-container')).toBeNull();
   });
 });

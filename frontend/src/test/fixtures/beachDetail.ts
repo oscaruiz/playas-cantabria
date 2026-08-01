@@ -31,6 +31,11 @@ function aemetFecha(date: Date): string {
   return `${DIAS_ES[date.getDay()]} ${String(date.getDate()).padStart(2, '0')}`;
 }
 
+/** ISO of `n` whole hours after `now`, for the outlook strip. */
+function hora(now: Date, n: number): string {
+  return new Date(now.getTime() + n * 3_600_000).toISOString();
+}
+
 function hhmm(minutesOfDay: number): string {
   const h = Math.floor(minutesOfDay / 60);
   const m = minutesOfDay % 60;
@@ -106,6 +111,14 @@ export function buildAemetDetail(now: Date): PlayaDetalle {
         timestamp: now.toISOString(),
         prevista: null,
       },
+      // Next hours of the outlook, as the backend trims them: the sky opens
+      // and the temperature climbs, which is what the score's chip announces.
+      previsionHoras: [
+        { horaIso: hora(now, 1), nubesPct: 60, temperaturaC: 21, vientoMs: 3 },
+        { horaIso: hora(now, 2), nubesPct: 20, temperaturaC: 22, vientoMs: 3 },
+        { horaIso: hora(now, 3), nubesPct: 5, temperaturaC: 23, vientoMs: 4 },
+      ],
+      previsionHorasFuente: 'Open-Meteo',
     },
     fuenteBanderas: 'Cruz Roja',
     cruzRoja: {

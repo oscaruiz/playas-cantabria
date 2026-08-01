@@ -34,6 +34,16 @@ describe('traducirTextoApi', () => {
     );
   });
 
+  it('traduce la previsión de las próximas horas (WeatherOutlook)', () => {
+    expect(traducirTextoApi('Nublado, 20°, brisa suave, mejora en las próximas horas', 'en')).toBe(
+      'Cloudy, 20°, gentle breeze, improving in the next few hours'
+    );
+    // Cuando es el único motivo llega capitalizado desde el backend.
+    expect(traducirTextoApi('Empeora en las próximas horas', 'en')).toBe(
+      'Getting worse in the next few hours'
+    );
+  });
+
   it('conserva la capitalización inicial', () => {
     expect(traducirTextoApi('Nublado', 'en')).toBe('Cloudy');
     expect(traducirTextoApi('nublado', 'en')).toBe('cloudy');

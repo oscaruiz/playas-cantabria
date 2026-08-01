@@ -151,6 +151,9 @@ const MAPA_SENSACION: Record<string, string> = {
 const MAPA_UV: Record<string, string> = {
   'bajo': 'low',
   'medio': 'moderate',
+  // 'moderado' (AEMET's wording for the 3-5 band) is NOT added here: it already
+  // resolves through MAPA_VIENTO, and repeating it would shadow that entry.
+  // The collision test in apiText.test.ts is what caught the attempt.
   'alto': 'high',
   'muy alto': 'very high',
   'extremo': 'extreme',
@@ -168,6 +171,11 @@ const MAPA_RANKING: Record<string, string> = {
   'lluvia en la última hora': 'rain in the last hour',
   'lluvia o tormenta': 'rain or storm',
   'lluvia prevista': 'rain expected',
+  // Outlook for the next few hours (backend `WeatherOutlook`). Qualitative and
+  // without an hour on purpose: these fragments are translated by exact match,
+  // so a time inside them could not be translated at all.
+  'mejora en las próximas horas': 'improving in the next few hours',
+  'empeora en las próximas horas': 'getting worse in the next few hours',
   'precaución': 'caution',
   'oleaje peligroso': 'dangerous surf',
   'aviso litoral': 'coastal warning',
