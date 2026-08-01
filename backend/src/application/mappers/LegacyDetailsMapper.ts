@@ -3,7 +3,7 @@ import { Beach, BeachAttributes, Webcam } from '../../domain/entities/Beach';
 import { FlagStatus } from '../../domain/entities/Flag';
 import { resolveFlagOperatorName } from '../../domain/services/flagAggregation';
 import { Weather } from '../../domain/entities/Weather';
-import { RainNowcast } from '../../domain/entities/RainNowcast';
+import { HourlyOutlookSlot, RainNowcast } from '../../domain/entities/RainNowcast';
 import { RainForecastSignal } from '../../domain/use-cases/RainForecast';
 
 export type ClimaDiaDTO = {
@@ -52,6 +52,18 @@ export type LluviaDTO = {
   prevista?: LluviaPrevistaDTO | null;
 };
 
+/**
+ * One hour of the forecast that the score's outlook is judging. Published so
+ * the interface can show WHAT is coming, not just the verdict: "improving" is
+ * worth a lot more next to the hours that back it.
+ */
+export type PrevisionHoraDTO = {
+  horaIso: string;
+  nubesPct: number | null;
+  temperaturaC: number | null;
+  vientoMs: number | null;
+};
+
 export type TiempoActualDTO = {
   cielo: string | null;
   icono: number | null;
@@ -60,6 +72,14 @@ export type TiempoActualDTO = {
   fuente: 'OpenWeather' | 'AEMET';
   timestamp: string;
   lluvia?: LluviaDTO | null;
+  /** Next few hours, already trimmed to the beach window. Additive field. */
+  previsionHoras?: PrevisionHoraDTO[] | null;
+  /**
+   * Who forecast those hours. It travels instead of being written into the
+   * interface because the app must never claim a provider it is not using:
+   * the day this falls back to another source, the label follows on its own.
+   */
+  previsionHorasFuente?: string | null;
 };
 
 type CruzRojaDTO = {
@@ -156,6 +176,20 @@ export class LegacyDetailsMapper {
       mm: s.mmMax ?? null,
       fuentes: s.sources,
     };
+  }
+
+  /**
+   * Hourly slots of the outlook window. The trimming is NOT done here: the
+   * caller passes what `ventanaOutlook` selected, so the strip and the score's
+   * adjustment can never disagree about which hours count.
+   */
+  static mapPrevisionHoras(slots: readonly HourlyOutlookSlot[]): PrevisionHoraDTO[] {
+    return slots.map((s) => ({
+      horaIso: new Date(s.timestamp).toISOString(),
+      nubesPct: s.cloudCoverPct,
+      temperaturaC: s.temperatureC,
+      vientoMs: s.windSpeedMs,
+    }));
   }
 
   /** Maps a current observation (OpenWeather current) to TODAY's "real time" block. */

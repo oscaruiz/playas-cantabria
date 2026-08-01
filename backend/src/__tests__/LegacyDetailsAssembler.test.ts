@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { LegacyDetailsAssembler } from '../application/services/LegacyDetailsAssembler';
 import type { GetBeachDetails, BeachDetails } from '../domain/use-cases/GetBeachDetails';
 import type { AemetBeachWebScraper } from '../infrastructure/providers/AemetBeachWebScraper';
@@ -370,5 +370,88 @@ describe('LegacyDetailsAssembler — coherencia resumen vs desglose y "ahora" re
     expect(dia.temperaturaMaxima).toBe(24);
     expect(dia.temperaturaAgua).toBe(24);
     expect(dia.indiceUV).toBe(7);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Tira horaria: el veredicto "mejora" vale mucho más con las horas que lo
+// respaldan, y esas horas ya viajan en el nowcast (misma petición, coste 0).
+// ---------------------------------------------------------------------------
+
+describe('LegacyDetailsAssembler — previsión horaria en tiempoActual', () => {
+  const MEDIODIA = new Date('2026-08-01T11:00:00Z'); // 13:00 Madrid
+
+  const rainCon = (horas: number): RainNowcast => ({
+    status: 'dry',
+    precipitationMm: 0,
+    lastHourOnly: false,
+    sources: [],
+    timestamp: MEDIODIA.getTime(),
+    outlook: Array.from({ length: horas }, (_, i) => ({
+      timestamp: MEDIODIA.getTime() + (i + 1) * 3_600_000,
+      cloudCoverPct: 20 + i,
+      temperatureC: 21,
+      windSpeedMs: 3,
+    })),
+  });
+
+  afterEach(() => vi.useRealTimers());
+
+  it('publica como mucho la ventana de 4 h, recortada por la misma función que puntúa', async () => {
+    vi.setSystemTime(MEDIODIA);
+    const assembler = buildAssembler({
+      details: { beach: COBRECES, weather: makeOwCurrent(), flag: null, tides: null },
+      forecast: makeForecast(),
+      owCurrent: makeOwCurrent(),
+      rain: rainCon(8), // ocho tramos disponibles, solo cuatro entran
+    });
+
+    const dto = await assembler.assemble('3902401');
+
+    expect(dto.tiempoActual?.previsionHoras).toHaveLength(4);
+    expect(dto.tiempoActual?.previsionHoras?.[0]).toEqual({
+      horaIso: new Date(MEDIODIA.getTime() + 3_600_000).toISOString(),
+      nubesPct: 20,
+      temperaturaC: 21,
+      vientoMs: 3,
+    });
+  });
+
+  it('de noche no hay tira: no hay franja de playa que anticipar', async () => {
+    const medianoche = new Date('2026-08-01T22:00:00Z'); // 00:00 Madrid
+    vi.setSystemTime(medianoche);
+    const assembler = buildAssembler({
+      details: { beach: COBRECES, weather: makeOwCurrent(), flag: null, tides: null },
+      forecast: makeForecast(),
+      owCurrent: makeOwCurrent(),
+      rain: {
+        ...rainCon(4),
+        outlook: Array.from({ length: 4 }, (_, i) => ({
+          timestamp: medianoche.getTime() + (i + 1) * 3_600_000,
+          cloudCoverPct: 0,
+          temperatureC: 15,
+          windSpeedMs: 2,
+        })),
+      },
+    });
+
+    const dto = await assembler.assemble('3902401');
+
+    expect(dto.tiempoActual?.previsionHoras).toBeNull();
+  });
+
+  it('sin Open-Meteo el resto del endpoint no se entera', async () => {
+    vi.setSystemTime(MEDIODIA);
+    const assembler = buildAssembler({
+      details: { beach: COBRECES, weather: makeOwCurrent(), flag: null, tides: null },
+      forecast: makeForecast(),
+      owCurrent: makeOwCurrent(),
+      rain: { ...rainCon(0), outlook: null },
+    });
+
+    const dto = await assembler.assemble('3902401');
+
+    expect(dto.tiempoActual?.previsionHoras).toBeNull();
+    expect(dto.tiempoActual?.lluvia).not.toBeNull();
   });
 });

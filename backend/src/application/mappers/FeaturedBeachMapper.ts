@@ -1,7 +1,13 @@
 import { Beach } from '../../domain/entities/Beach';
 import { Weather } from '../../domain/entities/Weather';
 import { FlagStatus } from '../../domain/entities/Flag';
-import { ForecastEnrichment } from '../../domain/use-cases/BeachScorer';
+import {
+  ForecastEnrichment,
+  ScoreCap,
+  SubScores,
+  SUBSCORE_MAX,
+} from '../../domain/use-cases/BeachScorer';
+import type { OutlookSignal } from '../../domain/use-cases/WeatherOutlook';
 import { FeaturedBeachDTO, FeaturedBeachesResponseDTO } from '../dtos/FeaturedBeachDTO';
 import { esBanderaVigente } from '../../domain/services/flagVigencia';
 
@@ -13,6 +19,10 @@ export interface FeaturedBeachResult {
   reason: string;
   downgradeReason: string | null;
   enrichment: ForecastEnrichment | null;
+  /** Breakdown behind `score`. Absent on the excluded path, which never scores. */
+  subScores?: SubScores | null;
+  outlook?: OutlookSignal | null;
+  tope?: ScoreCap | null;
 }
 
 const FLAG_COLOR_ES: Record<string, 'Verde' | 'Amarilla' | 'Roja'> = {
@@ -35,6 +45,7 @@ export class FeaturedBeachMapper {
       playas: mejores.map((r) => this.mapOne(r, ahora)),
       revisar: revisar.map((r) => this.mapOne(r, ahora)),
       resumenTodas: resumenTodas.map((r) => this.mapOne(r, ahora)),
+      maximos: { ...SUBSCORE_MAX },
     };
   }
 
@@ -69,6 +80,24 @@ export class FeaturedBeachMapper {
       razonRanking: r.reason,
       motivoBaja: r.downgradeReason ?? null,
       atributos: r.beach.attributes ?? null,
+      // The breakdown of the mark. An excluded beach carries none: it does not
+      // go through the scoring, it is filtered out, and publishing zeros would
+      // read as "it scored 0 everywhere" instead of "it was ruled out".
+      subpuntuaciones: r.subScores
+        ? {
+            cielo: r.subScores.cielo,
+            temperatura: r.subScores.temperatura,
+            bandera: r.subScores.bandera,
+            viento: r.subScores.viento,
+            oleaje: r.subScores.oleaje,
+            datos: r.subScores.datos,
+          }
+        : null,
+      pronostico: r.outlook
+        ? { direccion: r.outlook.direccion, delta: r.outlook.delta }
+        : null,
+      topeAplicado: r.tope ?? null,
+      oleaje: r.enrichment?.waves ?? null,
     };
   }
 }

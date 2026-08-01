@@ -30,6 +30,21 @@ export interface PrecipitationSlot {
   weatherCode: number | null;
 }
 
+/**
+ * One hour of the forecast used to judge whether conditions are ABOUT to get
+ * better or worse. It rides on the nowcast's request (same call, no extra
+ * quota), which is why it lives next to the precipitation entities and not in
+ * a weather module of its own.
+ */
+export interface HourlyOutlookSlot {
+  /** Unix epoch (ms) of the hour start (UTC). */
+  timestamp: number;
+  cloudCoverPct: number | null;
+  temperatureC: number | null;
+  /** m/s, requested as such: Open-Meteo defaults to km/h. */
+  windSpeedMs: number | null;
+}
+
 /** Signal of precipitation forecast for the next few hours (Open-Meteo). */
 export interface RainUpcoming {
   expected: boolean;
@@ -53,6 +68,8 @@ export interface RainNowcast {
   upcoming?: RainUpcoming | null;
   /** Max UV today/tomorrow from Open-Meteo (null if it did not respond). */
   uvIndexMax?: UvIndexMax | null;
+  /** Hourly sky/temperature/wind forecast, for the score's outlook adjustment. */
+  outlook?: HourlyOutlookSlot[] | null;
 }
 
 /** Raw current-precipitation observation from Open-Meteo. */
@@ -68,6 +85,8 @@ export interface PrecipitationNow {
   weatherCode: number | null;
   /** 15-min slots for the next ~6h (minutely_15). Empty if the API does not return them. */
   upcomingSlots?: PrecipitationSlot[];
+  /** Hourly sky/temperature/wind, same request. Empty if the API omits them. */
+  upcomingHours?: HourlyOutlookSlot[];
   /** Forecast max UV for today and tomorrow (`daily.uv_index_max`), in the SAME
    *  request as the precipitation: replaces the dead One Call request. */
   uvIndexMax?: UvIndexMax | null;

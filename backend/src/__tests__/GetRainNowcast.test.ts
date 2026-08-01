@@ -272,6 +272,29 @@ describe('GetRainNowcast — agregación multi-fuente', () => {
     expect(r.upcoming).toBeNull();
   });
 
+  it('propaga los tramos horarios (outlook): viajan en la misma petición', async () => {
+    const horas = [
+      { timestamp: 1750003600000, cloudCoverPct: 20, temperatureC: 22, windSpeedMs: 2 },
+    ];
+    const { useCase } = build({
+      ow: DRY_OW,
+      aemet: DRY_AEMET,
+      om: makeOmNow({ upcomingHours: horas }),
+    });
+
+    const r = await useCase.execute(43.3944, -4.2205);
+
+    expect(r.outlook).toEqual(horas);
+  });
+
+  it('si Open-Meteo cae, outlook es null y la nota se queda como está', async () => {
+    const { useCase } = build({ ow: DRY_OW, aemet: DRY_AEMET, om: FAIL });
+
+    const r = await useCase.execute(43.3944, -4.2205);
+
+    expect(r.outlook).toBeNull();
+  });
+
   it('cachea por coordenadas: la segunda llamada no re-invoca los providers', async () => {
     const { useCase, ow, aemet, om } = build({ ow: DRY_OW, aemet: DRY_AEMET, om: DRY_OM });
 

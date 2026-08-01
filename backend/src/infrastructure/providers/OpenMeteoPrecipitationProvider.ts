@@ -1,4 +1,4 @@
-import { PrecipitationNow, PrecipitationSlot } from '../../domain/entities/RainNowcast';
+import { HourlyOutlookSlot, PrecipitationNow, PrecipitationSlot } from '../../domain/entities/RainNowcast';
 import { PrecipitationNowProvider } from '../../domain/ports/PrecipitationNowProvider';
 import { ProviderError } from '../../domain/ports/WeatherProvider';
 import { http } from '../http/axiosClient';
@@ -14,6 +14,9 @@ import { debugLog } from '../utils/debug';
  * break the quota. Complements OpenWeather to detect rain that
  * single-provider models miss (hyperlocal coastal drizzle).
  */
+/** Public name of this provider, as it must be credited in the interface. */
+export const OPEN_METEO_NOMBRE = 'Open-Meteo';
+
 export class OpenMeteoPrecipitationProvider implements PrecipitationNowProvider {
   private lastRaw: unknown = null;
 
@@ -39,6 +42,23 @@ export class OpenMeteoPrecipitationProvider implements PrecipitationNowProvider 
             // Max UV for today and tomorrow, also in the same call (cost 0):
             // replaces OpenWeather One Call 2.5, which is retired.
             daily: 'uv_index_max',
+            // Hourly sky/temperature/wind for the score's outlook, ALSO in the
+            // same call and therefore free in requests — but not in bytes:
+            // `forecast_days: 2` handed out 48 slots to use 4, and measured
+            // that was 1.7 kB per beach (3.0 kB vs 1.3 kB, +130%) thrown away
+            // 46 times per TTL cycle. `forecast_hours` trims the hourly block
+            // WITHOUT touching `daily` (the UV still covers today and
+            // tomorrow), `minutely_15` or `current`.
+            //
+            // Six and not four: `ventanaOutlook` can start counting at 11:00
+            // when it is asked earlier, so the window reaches further than four
+            // hours from now. The code keeps filtering by timestamp anyway, so
+            // the parsing never depended on the API honouring this.
+            hourly: 'cloud_cover,temperature_2m,wind_speed_10m',
+            forecast_hours: 6,
+            // Open-Meteo answers km/h by default and `computeWindScore` reads m/s.
+            // Asking for the right unit here beats converting at three call sites.
+            wind_speed_unit: 'ms',
             forecast_days: 2,
             timezone: 'UTC'
           },
@@ -50,6 +70,10 @@ export class OpenMeteoPrecipitationProvider implements PrecipitationNowProvider 
 
         const c = resp.data?.current ?? {};
         const num = (v: unknown): number | null => (typeof v === 'number' ? v : null);
+        const redondearUv = (v: unknown): number | null => {
+          const n = num(v);
+          return n === null ? null : Math.round(n);
+        };
         // Open-Meteo's ISO strings arrive without zone ("2026-07-15T19:00") in UTC.
         const parseUtc = (iso: unknown): number | null => {
           if (typeof iso !== 'string') return null;
@@ -74,6 +98,23 @@ export class OpenMeteoPrecipitationProvider implements PrecipitationNowProvider 
           });
         }
 
+        const h = resp.data?.hourly ?? {};
+        const hTimes: unknown[] = Array.isArray(h.time) ? h.time : [];
+        const clouds: unknown[] = Array.isArray(h.cloud_cover) ? h.cloud_cover : [];
+        const temps: unknown[] = Array.isArray(h.temperature_2m) ? h.temperature_2m : [];
+        const winds: unknown[] = Array.isArray(h.wind_speed_10m) ? h.wind_speed_10m : [];
+        const upcomingHours: HourlyOutlookSlot[] = [];
+        for (let i = 0; i < hTimes.length; i++) {
+          const ts = parseUtc(hTimes[i]);
+          if (ts == null) continue;
+          upcomingHours.push({
+            timestamp: ts,
+            cloudCoverPct: num(clouds[i]),
+            temperatureC: num(temps[i]),
+            windSpeedMs: num(winds[i])
+          });
+        }
+
         // `timezone: UTC` makes the `daily` days be UTC days. In Spain
         // (UTC+1/+2) they only diverge during the first hours after midnight, when
         // UV is 0 and irrelevant for a beach page.
@@ -89,7 +130,15 @@ export class OpenMeteoPrecipitationProvider implements PrecipitationNowProvider 
           showersMm: num(c.showers),
           weatherCode: num(c.weather_code),
           upcomingSlots,
-          uvIndexMax: uv.length > 0 ? { today: num(uv[0]), tomorrow: num(uv[1]) } : null
+          upcomingHours,
+          // Rounded here, not at render time: the UV index is an integer by
+          // convention and AEMET already publishes it as one. Open-Meteo gives
+          // decimals, and letting them through made the same real UV land in
+          // different risk bands depending on which source the beach used —
+          // 7.25 reads as "muy alto" where an AEMET beach says "alto".
+          uvIndexMax: uv.length > 0
+            ? { today: redondearUv(uv[0]), tomorrow: redondearUv(uv[1]) }
+            : null
         };
 
         return now;

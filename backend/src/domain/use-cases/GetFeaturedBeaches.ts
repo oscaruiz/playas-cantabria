@@ -4,6 +4,7 @@ import { FlagStatus, FlagRef } from '../entities/Flag';
 import { RainNowcast } from '../entities/RainNowcast';
 import { GetRainNowcast } from './GetRainNowcast';
 import { buildRainForecastSignal } from './RainForecast';
+import { buildWeatherOutlook } from './WeatherOutlook';
 import { BeachRepository } from '../ports/BeachRepository';
 import { WeatherProvider } from '../ports/WeatherProvider';
 import { FlagProvider } from '../ports/FlagProvider';
@@ -115,7 +116,12 @@ export class GetFeaturedBeaches {
       // nowcast) ∪ AEMET's text for the day ("Chubascos"...).
       const rainForecast = buildRainForecastSignal(rain, [enrichment?.summary ?? null]);
 
-      const { score, subScores } = computeBeachScore(
+      // Is it about to get better or worse? Bounded correction from the next
+      // 4h of sky, temperature and wind — it rides on the nowcast's own
+      // request, so it costs nothing and it is null whenever Open-Meteo fails.
+      const outlook = buildWeatherOutlook(weather, rain?.outlook);
+
+      const { score, subScores, tope } = computeBeachScore(
         weather,
         flag,
         enrichment,
@@ -123,6 +129,7 @@ export class GetFeaturedBeaches {
         rain,
         rainForecast,
         this.flagOperators,
+        outlook,
       );
 
       const downgradeReason = buildDowngradeFactors(
@@ -131,16 +138,22 @@ export class GetFeaturedBeaches {
         rain,
         rainForecast,
         this.flagOperators,
+        outlook,
       );
 
+      // The breakdown travels with the entry so the API can publish WHY the
+      // beach scored what it scored, instead of the app explaining the model
+      // in the abstract and leaving the actual question unanswered.
+      const desglose = { subScores, outlook, tope };
+
       if (score >= MIN_SCORE) {
-        const reason = buildRankingReason(subScores, weather, flag, enrichment, rain, rainForecast);
-        const entry = { beach, weather, flag, score, reason, downgradeReason, enrichment };
+        const reason = buildRankingReason(subScores, weather, flag, enrichment, rain, rainForecast, outlook);
+        const entry = { beach, weather, flag, score, reason, downgradeReason, enrichment, ...desglose };
         good.push(entry);
         all.push(entry);
       } else {
-        const reason = buildCautionReason(subScores, weather, flag, enrichment, rain, rainForecast);
-        const entry = { beach, weather, flag, score, reason, downgradeReason, enrichment };
+        const reason = buildCautionReason(subScores, weather, flag, enrichment, rain, rainForecast, outlook);
+        const entry = { beach, weather, flag, score, reason, downgradeReason, enrichment, ...desglose };
         caution.push(entry);
         all.push(entry);
       }
