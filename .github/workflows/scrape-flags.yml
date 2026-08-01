@@ -39,10 +39,37 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  scrape:
+  # Only the regions that declare a flag operator. A region without one has
+  # nothing to scrape, and iterating it would just push empty commits.
+  regiones:
     runs-on: ubuntu-latest
+    outputs:
+      lista: ${{ steps.detectar.outputs.lista }}
+      hay: ${{ steps.detectar.outputs.hay }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: detectar
+        run: |
+          set -euo pipefail
+          lista=$(find regions -mindepth 2 -maxdepth 2 -name region.json -print0             | xargs -0 -n1 jq -r 'select((.flagProviders // []) | length > 0) | .id'             | sort | jq -R . | jq -sc .)
+          echo "lista=$lista" >> "$GITHUB_OUTPUT"
+          echo "hay=$([ "$lista" = "[]" ] && echo false || echo true)" >> "$GITHUB_OUTPUT"
+          echo "Regions with a flag operator: $lista"
+
+  scrape:
+    needs: regiones
+    if: needs.regiones.outputs.hay == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      # One region's failure must not stop the others from delivering flags.
+      fail-fast: false
+      # Serialised: every job pushes to main, and in parallel they would reject
+      # each other. Flags are not urgent to the second; a clean push is.
+      max-parallel: 1
+      matrix:
+        region: ${{ fromJson(needs.regiones.outputs.lista) }}
     env:
-      REGION: cantabria
+      REGION: ${{ matrix.region }}
     defaults:
       run:
         working-directory: backend
@@ -84,8 +111,32 @@ jobs:
             if [[ -f "../regions/${REGION}/snapshot.json" ]]; then
               git add "../regions/${REGION}/snapshot.json"
             fi
-            git commit -m "chore(flags): actualizar banderas Cruz Roja [skip ci]"
+            git commit -m "chore(flags): actualizar banderas ${REGION} [skip ci]"
+            # Otro job de la matriz puede haber empujado mientras tanto.
+            git pull --rebase
             git push
           else
             echo "Sin cambios en flags.json ni snapshot.json"
           fi
+
+  # Ruidoso a propósito: hoy una cadena de entrega rota se ve igual que una
+  # playa tranquila, y las banderas son el dato más sensible que servimos.
+  frescura:
+    needs: [regiones, scrape]
+    if: always() && needs.regiones.outputs.hay == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Tras los push de la matriz, o comprobaría la frescura del commit viejo.
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - run: npm run flags:freshness

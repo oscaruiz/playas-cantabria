@@ -162,6 +162,17 @@ function franjaYTemporada(now: Date): { enTemporada: boolean; enFranja: boolean 
 }
 
 /**
+ * Are we in the bathing season (June–September, Madrid time)?
+ *
+ * Shares its definition with `ttlFactor` and `enFranjaDePlaya`: out of season
+ * there are no hoisted flags, so anything that watches over flag freshness has
+ * to keep quiet or it teaches people to ignore it.
+ */
+export function enTemporadaDePlaya(now: Date = new Date()): boolean {
+  return franjaYTemporada(now).enTemporada;
+}
+
+/**
  * Are we in the in-season beach window (11:00–21:00 Madrid time)?
  *
  * Shares its definition with `ttlFactor` on purpose: it is the same idea of
