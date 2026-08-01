@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import type { RawCatalogBeach } from '../domain/services/beachCatalogValidation';
-import { validateBeachCatalog } from '../domain/services/beachCatalogValidation';
+import { validateBeachCatalog, validateCatalogFlagRefs } from '../domain/services/beachCatalogValidation';
 import type { RegionConfig } from './RegionConfig';
 import { parseRegionConfig } from './regionSchema';
 
@@ -59,6 +59,15 @@ export class RegionRegistry {
       const validation = validateBeachCatalog(catalog as RawCatalogBeach[], parsed.catalogRules);
       if (validation.errors.length > 0) {
         throw new Error(`invalid beach catalog: ${validation.errors.join('; ')}`);
+      }
+
+      // The catalog and the declared operators have to agree. A beach pointing
+      // at an operator the region does not declare gets no adapter in the
+      // router, so it shows no flag — indistinguishable from a beach nobody
+      // watches. Better to discard the region loudly than to serve that.
+      const flagErrors = validateCatalogFlagRefs(catalog as RawCatalogBeach[], parsed.flagProviders);
+      if (flagErrors.length > 0) {
+        throw new Error(`inconsistent flag providers: ${flagErrors.join('; ')}`);
       }
 
       this.regions.set(parsed.id, {

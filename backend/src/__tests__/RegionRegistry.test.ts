@@ -56,6 +56,41 @@ describe('RegionRegistry', () => {
     expect(errors[0]).toContain('Discarding "broken"');
   });
 
+  it('discards a region whose catalog references an undeclared flag operator', () => {
+    // The router has no adapter for a provider the region did not declare, so
+    // those beaches would show no flag at all — indistinguishable from a beach
+    // nobody watches. Silent degradation on the most sensitive data we serve.
+    const root = makeRoot();
+    const errors: string[] = [];
+    writeRegion(root, 'olvidadiza', { flagProviders: [] }, [
+      { ...validBeach, idCruzRoja: 373 },
+    ]);
+
+    const registry = new RegionRegistry(root, { error: (message) => errors.push(message) }).load();
+
+    expect(registry.all()).toHaveLength(0);
+    expect(errors[0]).toContain('inconsistent flag providers');
+    expect(errors[0]).toContain('cruzroja');
+  });
+
+  it('accepts the same catalog once the region declares the operator', () => {
+    const root = makeRoot();
+    writeRegion(root, 'coherente', { flagProviders: ['cruzroja'] }, [
+      { ...validBeach, idCruzRoja: 373 },
+    ]);
+
+    expect(new RegionRegistry(root).load().all()).toHaveLength(1);
+  });
+
+  it('does not count the "0 = no coverage" convention as a reference', () => {
+    const root = makeRoot();
+    writeRegion(root, 'sinvigilancia', { flagProviders: [] }, [
+      { ...validBeach, idCruzRoja: 0, cruzRojaStations: [{ id: 0, nombreFuente: 'PENDIENTE' }] },
+    ]);
+
+    expect(new RegionRegistry(root).load().all()).toHaveLength(1);
+  });
+
   it('discards a region whose beach catalog is invalid', () => {
     const root = makeRoot();
     writeRegion(root, 'broken', {}, [{ ...validBeach, lat: 0 }]);

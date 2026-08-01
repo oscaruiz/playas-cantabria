@@ -1,3 +1,4 @@
+import type { FlagProviderId } from '../entities/Flag';
 /**
  * Automated validation of a region beach catalog (regions/<id>/beaches.json).
  *
@@ -179,4 +180,52 @@ function registerAlias(
   } else {
     owner.set(alias, codigo);
   }
+}
+
+/**
+ * Fields through which a catalog can reference each flag operator. It is the
+ * mirror image of what `JsonBeachRepository` turns into `FlagRef`s, and the
+ * one place to extend when a new operator arrives with its own catalog field.
+ */
+const CATALOG_FLAG_FIELDS: Record<FlagProviderId, (beach: RawCatalogBeach) => boolean> = {
+  cruzroja: (beach) =>
+    esReferenciaViva(beach.idCruzRoja) ||
+    (beach.cruzRojaStations ?? []).some((station) => esReferenciaViva(station.id)),
+};
+
+/** The catalog convention: a missing id, or 0, means "no coverage". */
+function esReferenciaViva(id: unknown): boolean {
+  return typeof id === 'number' && id > 0;
+}
+
+/**
+ * Does the catalog reference operators the region does not declare?
+ *
+ * Without this, a region that forgets `flagProviders` still parses, still
+ * serves, and its beaches simply never show a flag: the router has no adapter
+ * for the ref and returns null, which is indistinguishable from "no coverage".
+ * Silent, and on the most safety-sensitive data in the app.
+ */
+export function validateCatalogFlagRefs(
+  beaches: RawCatalogBeach[],
+  flagProviders: FlagProviderId[],
+): string[] {
+  const declared = new Set(flagProviders);
+  const errors: string[] = [];
+
+  for (const [provider, referencesIt] of Object.entries(CATALOG_FLAG_FIELDS) as Array<
+    [FlagProviderId, (beach: RawCatalogBeach) => boolean]
+  >) {
+    if (declared.has(provider)) continue;
+    const afectadas = beaches.filter((beach) => referencesIt(beach));
+    if (afectadas.length > 0) {
+      const ejemplo = afectadas[0];
+      errors.push(
+        `${afectadas.length} beach(es) reference "${provider}" but the region does not declare it ` +
+          `in flagProviders (e.g. ${typeof ejemplo.nombre === 'string' ? ejemplo.nombre : 'unnamed'})`,
+      );
+    }
+  }
+
+  return errors;
 }

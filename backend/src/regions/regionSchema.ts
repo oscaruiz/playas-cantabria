@@ -11,6 +11,77 @@ const bboxSchema = z.object({
   'bbox minimums must be lower than maximums',
 );
 
+/**
+ * `nombrePattern` is the one place where contributed data becomes EXECUTABLE
+ * behaviour: it is compiled with `new RegExp` and run against catalog names.
+ * Capping its length was not enough — `(a+)+$` is 6 characters and its cost
+ * grows exponentially with the input, so a valid-looking contribution could
+ * hang `validate:regions`, the CI, or the server's startup.
+ *
+ * The way out is to forbid what makes backtracking explode instead of trying
+ * to detect it: no repetition at all. Exact bounds do not make an ambiguous
+ * repeated body safe. What survives — literals,
+ * anchors, groups, alternation and a handful of `?` — is exactly what the rule
+ * needs ("^(la )?concha( de santander)?$") and its cost is bounded by
+ * 2^OPTIONALS paths, which for 8 is nothing.
+ */
+const MAX_OPTIONALS = 8;
+const MAX_ALTERNATIVES = 8;
+
+function assertSafePattern(pattern: string, ctx: z.RefinementCtx): void {
+  const reject = (message: string) =>
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: `nombrePattern ${message}` });
+
+  let optionals = 0;
+  let alternatives = 0;
+  let inCharacterClass = false;
+
+  // Inspect regex syntax instead of using negative lookbehind: the latter
+  // mistakes an escaped backslash followed by a quantifier for an escaped
+  // quantifier. Exact repetitions are forbidden too: `^(a|aa){40}$` is
+  // bounded syntactically but still exhibits catastrophic backtracking.
+  for (let index = 0; index < pattern.length; index += 1) {
+    const char = pattern[index];
+    if (char === '\\') {
+      const escaped = pattern[index + 1];
+      if (!inCharacterClass && (/[1-9]/.test(escaped ?? '') || (escaped === 'k' && pattern[index + 2] === '<'))) {
+        reject('must not use backreferences');
+      }
+      index += 1;
+      continue;
+    }
+    if (char === '[' && !inCharacterClass) {
+      inCharacterClass = true;
+      continue;
+    }
+    if (char === ']' && inCharacterClass) {
+      inCharacterClass = false;
+      continue;
+    }
+    if (inCharacterClass) continue;
+
+    if (char === '*' || char === '+' || char === '{') {
+      reject(`must not use repetition ("${char}"): bounded repetition can also cause catastrophic backtracking`);
+    } else if (char === '?') {
+      optionals += 1;
+    } else if (char === '|') {
+      alternatives += 1;
+    }
+  }
+
+  if (optionals > MAX_OPTIONALS) {
+    reject(`must not use more than ${MAX_OPTIONALS} optional groups (found ${optionals})`);
+  }
+  if (alternatives > MAX_ALTERNATIVES) {
+    reject(`must not use more than ${MAX_ALTERNATIVES} alternatives (found ${alternatives})`);
+  }
+  try {
+    new RegExp(pattern);
+  } catch (error) {
+    reject(`is not a valid regular expression: ${(error as Error).message}`);
+  }
+}
+
 const rawRegionSchema = z.object({
   $schema: z.string().optional(),
   id: z.string().regex(/^[a-z][a-z0-9-]*$/),
@@ -21,11 +92,7 @@ const rawRegionSchema = z.object({
     regionName: z.string().min(1),
     forbiddenBeaches: z.array(z.object({
       municipio: z.string().min(1),
-      // Capped because this string is compiled into a RegExp below: it is the
-      // one place where contributed data becomes executable behaviour, and a
-      // pathological pattern would hang catalog validation. A real safe-pattern
-      // check belongs in the contribution validator (plan, phase 5).
-      nombrePattern: z.string().min(1).max(200),
+      nombrePattern: z.string().min(1).max(200).superRefine(assertSafePattern),
     }).strict()),
   }).strict(),
   flagProviders: z.array(z.enum(['cruzroja'])).refine(
