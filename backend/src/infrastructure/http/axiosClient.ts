@@ -35,6 +35,20 @@ export const BROWSER_HEADERS = {
  */
 export const http = axios.create({
   timeout: 7000,
+  /**
+   * Ceiling on the DECOMPRESSED body, so a broken or compromised upstream
+   * cannot exhaust the 512 MB of Render free.
+   *
+   * The number comes from a measurement, not from a guess: the largest payload
+   * the app downloads is AEMET's Spain-wide observation list
+   * (`observacion/convencional/todas`), and on 31-jul-2026 it weighed 3.11 MB.
+   * 25 MB leaves an 8x margin over that and is still 5% of the process memory.
+   * Do not tighten it towards the measured figure: exceeding it does not fail
+   * loudly, it rejects inside `getOrSetStale`, gets swallowed by the stale
+   * path, and AEMET silently stops feeding both the observation and the
+   * sunshine used by the sky corrector.
+   */
+  maxContentLength: 25 * 1024 * 1024,
   httpAgent,
   httpsAgent,
   decompress: true,

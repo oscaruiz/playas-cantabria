@@ -14,13 +14,37 @@ const GEO_OPTIONS: PositionOptions = {
   maximumAge: 300_000, // 5 min
 };
 
+/**
+ * The only shape this hook is willing to hand out. Anything else becomes "no
+ * location", which every consumer already knows how to render.
+ *
+ * Both sources can yield garbage and neither is ours to trust: `localStorage`
+ * is shared with everything else that ever ran on this origin, and a browser or
+ * a geolocation polyfill can return a position whose coords are undefined. The
+ * consequences are not symmetrical — Leaflet throws `Invalid LatLng object:
+ * (NaN, NaN)` and takes the map down with it, while the distance sorting on
+ * Home and the listing would just come out silently wrong, which is worse.
+ */
+function esCoordenadaValida(value: unknown): value is [number, number] {
+  if (!Array.isArray(value) || value.length !== 2) return false;
+  const [lat, lon] = value;
+  return (
+    typeof lat === 'number' && Number.isFinite(lat) && lat >= -90 && lat <= 90 &&
+    typeof lon === 'number' && Number.isFinite(lon) && lon >= -180 && lon <= 180
+  );
+}
+
 function getCachedLocation(): [number, number] | null {
   try {
     const raw = localStorage.getItem(CACHE_KEY);
     if (!raw) return null;
-    const cached: CachedLocation = JSON.parse(raw);
+    const cached = JSON.parse(raw) as Partial<CachedLocation>;
+    // Checked before comparing: with a non-numeric timestamp the subtraction
+    // gives NaN, every comparison against it is false, and the stale entry
+    // would sail through as if it were fresh.
+    if (typeof cached?.timestamp !== 'number' || !Number.isFinite(cached.timestamp)) return null;
     if (Date.now() - cached.timestamp > CACHE_MAX_AGE) return null;
-    return cached.coords;
+    return esCoordenadaValida(cached.coords) ? cached.coords : null;
   } catch {
     return null;
   }
@@ -59,9 +83,16 @@ export function useUserLocation(): UserLocationResult {
 
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        const coords: [number, number] = [pos.coords.latitude, pos.coords.longitude];
-        setUserLocation(coords);
+        const coords = [pos?.coords?.latitude, pos?.coords?.longitude];
         setLocationLoading(false);
+        if (!esCoordenadaValida(coords)) {
+          // An unusable reading is a failure, not a location. Reported as
+          // "denied" but never as "blocked": nobody refused a permission here,
+          // so the interface must not send the user to the browser settings.
+          setLocationDenied(true);
+          return;
+        }
+        setUserLocation(coords);
         cacheLocation(coords);
       },
       (err) => {

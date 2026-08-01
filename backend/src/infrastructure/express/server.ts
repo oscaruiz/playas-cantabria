@@ -27,6 +27,13 @@ export interface BuildDeps {
 }
 
 /**
+ * Ceiling on a single request. Exported because the shutdown deadline is
+ * derived from it: closing the server for less than this would cut requests
+ * that are still within their own budget.
+ */
+export const REQUEST_TIMEOUT_MS = 15_000;
+
+/**
  * Builds one regional container per valid registry entry. External weather
  * providers and their coordinate-based cache are shared by every container.
  */
@@ -34,6 +41,9 @@ export function buildExpressApp({
   cache,
   regions = regionRegistry.all(),
 }: BuildDeps = {}): Express {
+  if (regions.length === 0) {
+    throw new Error('Cannot start without at least one valid region');
+  }
   const app = express();
 
   // Render and Firebase Functions serve behind one trusted proxy. Without this,
@@ -47,7 +57,7 @@ export function buildExpressApp({
   // Limit how long the client waits. This sends a 504 but does not cancel
   // provider requests already in flight; provider-level timeouts bound those.
   app.use((_req, res, next) => {
-    res.setTimeout(15000, () => {
+    res.setTimeout(REQUEST_TIMEOUT_MS, () => {
       if (!res.headersSent) {
         res.status(504).json({ error: 'Request timeout' });
       }
@@ -87,9 +97,15 @@ export function buildExpressApp({
   if (cantabriaContainer) {
     app.use(
       '/api/beaches',
-      (_req, res, next) => {
+      (req, res, next) => {
         res.setHeader('Deprecation', 'true');
-        res.setHeader('Link', '</api/cantabria/beaches>; rel="successor-version"');
+        // The successor is the SAME resource under its region, not the
+        // collection: from /api/beaches/:id/details the link has to land on
+        // /api/cantabria/beaches/:id/details, or following it changes what you
+        // asked for. Inside a mounted middleware `req.path` is already the
+        // remainder after /api/beaches.
+        const successor = `/api/cantabria/beaches${req.path === '/' ? '' : req.path}`;
+        res.setHeader('Link', `<${successor}>; rel="successor-version"`);
         next();
       },
       routerFor(cantabriaContainer),
@@ -116,6 +132,7 @@ export function buildExpressApp({
       createDiagRouter({
         flagProvider: cantabriaContainer.get<RedCrossFlagProvider>('redCrossFlagProvider'),
         cache: shared.cache,
+        probeToken: process.env.DIAG_PROBE_TOKEN?.trim() || undefined,
       }),
     );
   }
