@@ -9,8 +9,8 @@
 
 import { installFetchMock, restoreFetch, route } from '../http/fakeFetch';
 import { beachesResponse } from '../fixtures/beaches';
+import { RUTA_PLAYAS as BEACHES } from '../apiRoutes';
 
-const BEACHES = /\/api\/beaches$/;
 const CLAVE = 'playas:ultimoListado';
 
 async function loadApi() {

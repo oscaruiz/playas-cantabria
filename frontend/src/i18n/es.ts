@@ -9,8 +9,8 @@
  */
 export const es = {
   // ---- App / global ----
-  'app.titulo': 'Playas de Cantabria',
-  'app.tituloDocumento': 'Playas Cantabria',
+  'app.titulo': 'Playas de {region}',
+  'app.tituloDocumento': 'Playas {region}',
 
   // ---- Bottom navigation ----
   'nav.principal': 'Navegación principal',
@@ -33,7 +33,7 @@ export const es = {
   'tiempo.haceDias': 'actualizado hace {n} d',
 
   // ---- Home ----
-  'home.subtitulo': 'Descubre las mejores playas de Cantabria',
+  'home.subtitulo': 'Descubre las mejores playas de {region}',
   'home.mediaTemp': '{temp}° media',
   'home.playasBadge_one': '{count} playa',
   'home.playasBadge_other': '{count} playas',
@@ -80,6 +80,7 @@ export const es = {
   'mapa.municipio': 'Municipio:',
   'mapa.vigilada': 'Vigilada por {operador}',
   'mapa.sinInfoCruzRoja': 'No hay info de vigilancia',
+  'mapa.sinVigilancia': 'Sin servicio de vigilancia',
   'mapa.webcamDisponible': 'Webcam disponible',
   'mapa.verDetalles': 'Ver detalles',
   'mapa.tuUbicacion': 'Tu ubicación actual',

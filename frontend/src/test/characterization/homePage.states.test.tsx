@@ -22,9 +22,8 @@ import { renderWithProviders } from '../render';
 import { installFetchMock, restoreFetch, route, deferred, RouteSpec } from '../http/fakeFetch';
 import { beachesResponse } from '../fixtures/beaches';
 import { featuredResponse } from '../fixtures/featured';
+import { RUTA_DESTACADAS as FEATURED, RUTA_PLAYAS as BEACHES } from '../apiRoutes';
 
-const FEATURED = '/api/beaches/featured';
-const BEACHES = /\/api\/beaches$/;
 
 beforeEach(() => {
   localStorage.removeItem('user_location');

@@ -1,0 +1,122 @@
+[
+  {
+    "nombre": "Peñarronda",
+    "municipio": "Castropol",
+    "codigo": "3301704",
+    "lat": 43.5533333333,
+    "lon": -6.9938888889,
+    "atributos": { "socorrismo": true }
+  },
+  {
+    "nombre": "Anguileiro",
+    "municipio": "Tapia de Casariego",
+    "codigo": "3307007",
+    "lat": 43.5686111111,
+    "lon": -6.9472222222,
+    "alias": ["La Grande", "Los Campos"],
+    "atributos": { "socorrismo": true }
+  },
+  {
+    "nombre": "Primera y Segunda de Luarca",
+    "municipio": "Valdés",
+    "codigo": "3303407",
+    "lat": 43.5475,
+    "lon": -6.5369444444,
+    "atributos": { "socorrismo": true }
+  },
+  {
+    "nombre": "Salinas - San Juan, El Espartal",
+    "municipio": "Castrillón",
+    "codigo": "3301608",
+    "lat": 43.5825,
+    "lon": -5.9480555556,
+    "alias": ["San Juan de Nieva", "El Espartal"],
+    "atributos": { "socorrismo": true }
+  },
+  {
+    "nombre": "Candás - La Palmera",
+    "municipio": "Carreño",
+    "codigo": "3301403",
+    "lat": 43.5891666667,
+    "lon": -5.76,
+    "alias": ["La Palmera"],
+    "atributos": { "socorrismo": true }
+  },
+  {
+    "nombre": "Verdicio",
+    "municipio": "Gozón",
+    "codigo": "3302590",
+    "lat": 43.626322,
+    "lon": -5.876741,
+    "alias": ["Tenrero"],
+    "sinAemet": true,
+    "longitud": 330,
+    "atributos": { "duchas": true, "parking": true, "socorrismo": true }
+  },
+  {
+    "nombre": "San Lorenzo",
+    "municipio": "Gijón",
+    "codigo": "3302403",
+    "lat": 43.5419444444,
+    "lon": -5.6516666667,
+    "atributos": { "socorrismo": true }
+  },
+  {
+    "nombre": "Rodiles",
+    "municipio": "Villaviciosa",
+    "codigo": "3307606",
+    "lat": 43.5341666667,
+    "lon": -5.3791666667,
+    "atributos": { "socorrismo": true }
+  },
+  {
+    "nombre": "Vega",
+    "municipio": "Ribadesella",
+    "codigo": "3305601",
+    "lat": 43.4802777778,
+    "lon": -5.1386111111,
+    "atributos": { "socorrismo": true }
+  },
+  {
+    "nombre": "Santa Marina",
+    "municipio": "Ribadesella",
+    "codigo": "3305602",
+    "lat": 43.4663888889,
+    "lon": -5.0677777778,
+    "atributos": { "socorrismo": true }
+  },
+  {
+    "nombre": "Niembro",
+    "municipio": "Llanes",
+    "codigo": "3303612",
+    "lat": 43.4416666667,
+    "lon": -4.8383333333,
+    "alias": ["Toranda"],
+    "atributos": { "socorrismo": true }
+  },
+  {
+    "nombre": "Palombina - Las Cámaras, Los Frailes",
+    "municipio": "Llanes",
+    "codigo": "3303618",
+    "lat": 43.4327777778,
+    "lon": -4.8075,
+    "alias": ["Las Cámaras", "Los Frailes"],
+    "atributos": { "socorrismo": true }
+  },
+  {
+    "nombre": "Toró",
+    "municipio": "Llanes",
+    "codigo": "3303626",
+    "lat": 43.4175,
+    "lon": -4.7419444444,
+    "atributos": { "socorrismo": true }
+  },
+  {
+    "nombre": "La Franca",
+    "municipio": "Ribadedeva",
+    "codigo": "3305501",
+    "lat": 43.3936111111,
+    "lon": -4.5761111111,
+    "atributos": { "socorrismo": true }
+  }
+]

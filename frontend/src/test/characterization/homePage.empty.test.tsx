@@ -18,9 +18,8 @@ import { renderWithProviders } from '../render';
 import { installFetchMock, restoreFetch, route } from '../http/fakeFetch';
 import { beachesResponse } from '../fixtures/beaches';
 import { featuredLaSalve, featuredBerria, featuredSomo } from '../fixtures/featured';
+import { RUTA_DESTACADAS as FEATURED, RUTA_PLAYAS as BEACHES } from '../apiRoutes';
 
-const FEATURED = '/api/beaches/featured';
-const BEACHES = /\/api\/beaches$/;
 
 /** The best one scores 59: just below the cut. */
 const sinDestacadas: FeaturedBeachesResponse = {

@@ -14,6 +14,7 @@ import { ExpirationPlugin } from 'workbox-expiration';
 import { precacheAndRoute, createHandlerBoundToURL } from 'workbox-precaching';
 import { registerRoute } from 'workbox-routing';
 import { NetworkFirst, StaleWhileRevalidate } from 'workbox-strategies';
+import { REGION_API_PATH } from './config/region';
 
 declare const self: ServiceWorkerGlobalScope;
 
@@ -79,7 +80,7 @@ registerRoute(
 // useful at the beach with poor coverage, and revisits don't spend quota of the
 // free APIs.
 registerRoute(
-  ({ url }) => url.pathname.startsWith('/api/beaches'),
+  ({ url }) => url.pathname.startsWith(`${REGION_API_PATH}/beaches`),
   new NetworkFirst({
     cacheName: 'api-playas',
     networkTimeoutSeconds: 3,

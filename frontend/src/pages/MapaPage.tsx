@@ -16,6 +16,7 @@ import { Playa, FeaturedBeach, getPlayas, getFeaturedBeaches } from '../services
 import { emojiCielo, flagColorClass, webcamDisponible, vigilanciaDisponible, operadorVigilancia } from '../utils/beachHelpers';
 import { useIdioma } from '../i18n/IdiomaContext';
 import { traducirTextoApi, claveNivelVientoMs, claveBandera, traducirOperador } from '../i18n/apiText';
+import { REGION } from '../config/region';
 import { useUserLocation } from '../hooks/useUserLocation';
 import BottomNavBar from '../components/BottomNavBar';
 import SelectorIdioma from '../components/SelectorIdioma';
@@ -185,8 +186,8 @@ const MapaPage: React.FC = () => {
       <IonContent className="mapa-content">
         <div id="mapa-container">
           <MapContainer
-            center={[43.4, -4.05]}
-            zoom={9}
+            center={[REGION.map.center.lat, REGION.map.center.lon]}
+            zoom={REGION.map.zoom}
             scrollWheelZoom={true}
             className="leaflet-map"
             ref={(mapInstance) => {
@@ -260,7 +261,12 @@ const MapaPage: React.FC = () => {
                       <p className="mapa-popup-row mapa-popup-muted">
                         {isVigilada && operador
                           ? t('mapa.vigilada', { operador: traducirOperador(operador, idioma) })
-                          : t('mapa.sinInfoCruzRoja')}
+                          // null = the backend says nobody watches it; absent =
+                          // it does not report the operator. Collapsing both
+                          // into "no info" hid a fact we do know.
+                          : playa.fuenteBanderas === null
+                            ? t('mapa.sinVigilancia')
+                            : t('mapa.sinInfoCruzRoja')}
                       </p>
                       {webcamDisponible(playa.webcam) && (
                         <p className="mapa-popup-row mapa-popup-webcam">

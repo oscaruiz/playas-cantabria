@@ -1,0 +1,18 @@
+{
+  "id": "cantabria",
+  "name": "Cantabria",
+  "branding": {
+    "appName": "Playas de Cantabria",
+    "shortName": "Playas Cantabria",
+    "themeColor": "#0a7ea4",
+    "backgroundColor": "#faf6f1",
+    "capacitorAppId": "com.example.app"
+  },
+  "map": {
+    "center": {
+      "lat": 43.4,
+      "lon": -4.05
+    },
+    "zoom": 9
+  }
+}

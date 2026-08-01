@@ -1,0 +1,92 @@
+# Deploys one web app per region, all from this same code.
+#
+# Manual on purpose: it needs the FIREBASE_SERVICE_ACCOUNT secret and a hosting
+# site per region. Firing it on every push before those exist would just mean a
+# red workflow on every commit.
+name: Deploy web apps
+
+on:
+  workflow_dispatch:
+    inputs:
+      region:
+        description: "Region id to deploy; empty deploys every region"
+        required: false
+        default: ""
+
+jobs:
+  regiones:
+    runs-on: ubuntu-latest
+    outputs:
+      lista: ${{ steps.detectar.outputs.lista }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Validate regional and Firebase configuration
+        # --require-hosting: here a missing target does block, unlike in the
+        # quality CI, where it must not sink a data-only contribution. Scoped
+        # to the requested region when there is one: a region that is not being
+        # deployed must not block the one that is. The input goes through the
+        # environment, never interpolated into the script.
+        env:
+          REGION_PEDIDA: ${{ inputs.region }}
+        run: |
+          set -euo pipefail
+          node frontend/scripts/check-regions.mjs --require-hosting \
+            ${REGION_PEDIDA:+--region "$REGION_PEDIDA"}
+      - id: detectar
+        # Through an env var, never interpolated into the script: the input is
+        # user-controlled text and would otherwise be shell injection.
+        env:
+          REGION_PEDIDA: ${{ inputs.region }}
+        run: |
+          set -euo pipefail
+          if [ -n "$REGION_PEDIDA" ]; then
+            if [ ! -f "regions/$REGION_PEDIDA/region.json" ]; then
+              echo "Unknown region: $REGION_PEDIDA" >&2
+              exit 1
+            fi
+            lista=$(printf '%s' "$REGION_PEDIDA" | jq -R . | jq -sc .)
+          else
+            lista=$(find regions -mindepth 2 -maxdepth 2 -name region.json \
+              -printf '%h\n' | xargs -n1 basename | sort | jq -R . | jq -sc .)
+          fi
+          echo "lista=$lista" >> "$GITHUB_OUTPUT"
+          echo "Regions to deploy: $lista"
+
+  desplegar:
+    needs: regiones
+    runs-on: ubuntu-latest
+    strategy:
+      # One region's failure must not cancel the others: they are independent apps.
+      fail-fast: false
+      matrix:
+        region: ${{ fromJson(needs.regiones.outputs.lista) }}
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - name: Build ${{ matrix.region }}
+        run: npm run build
+        env:
+          CI: "false"
+          GENERATE_SOURCEMAP: "false"
+          REACT_APP_REGION: ${{ matrix.region }}
+      - run: npm run perf:budget
+      - name: Deploy ${{ matrix.region }}
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          projectId: playas-cantabria-front
+          target: ${{ matrix.region }}
+          channelId: live
+          entryPoint: frontend

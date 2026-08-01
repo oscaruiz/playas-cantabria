@@ -1,6 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { es, ClaveTexto, BasePlural } from './es';
 import { en } from './en';
+import { REGION } from '../config/region';
 
 export type Idioma = 'es' | 'en';
 
@@ -35,10 +36,17 @@ export function detectarIdiomaInicial(): Idioma {
   return navigator.language?.toLowerCase().startsWith('en') ? 'en' : 'es';
 }
 
+/**
+ * `{region}` is always available without the call sites passing it: it is a
+ * property of the build, not of each screen. That is what lets the titles and
+ * subtitles be the same key in every region.
+ */
+const VARS_IMPLICITAS: Vars = { region: REGION.name };
+
 function interpolar(plantilla: string, vars?: Vars): string {
-  if (!vars) return plantilla;
+  const todas = vars ? { ...VARS_IMPLICITAS, ...vars } : VARS_IMPLICITAS;
   return plantilla.replace(/\{(\w+)\}/g, (original, nombre) =>
-    vars[nombre] != null ? String(vars[nombre]) : original
+    todas[nombre] != null ? String(todas[nombre]) : original
   );
 }
 
@@ -47,7 +55,8 @@ export const IdiomaProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   useEffect(() => {
     document.documentElement.lang = idioma;
-    document.title = DICCIONARIOS[idioma]['app.tituloDocumento'];
+    // Through interpolar: the title carries {region} like any other text.
+    document.title = interpolar(DICCIONARIOS[idioma]['app.tituloDocumento']);
     try {
       localStorage.setItem(IDIOMA_KEY, idioma);
     } catch {

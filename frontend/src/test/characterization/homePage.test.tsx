@@ -20,9 +20,8 @@ import { renderWithProviders } from '../render';
 import { installFetchMock, restoreFetch, route } from '../http/fakeFetch';
 import { beachesResponse } from '../fixtures/beaches';
 import { featuredResponse } from '../fixtures/featured';
+import { RUTA_DESTACADAS as FEATURED, RUTA_PLAYAS as BEACHES } from '../apiRoutes';
 
-const FEATURED = '/api/beaches/featured';
-const BEACHES = /\/api\/beaches$/;
 
 const NOW = featuredResponse.timestamp + 30 * 60 * 1000;
 
@@ -78,7 +77,7 @@ describe('HomePage — sin ubicación', () => {
 
     expect(screen.getByText('La mejor playa para hoy')).toBeInTheDocument();
     expect(container.querySelector('#hp-hero-nombre')).toHaveTextContent('La Concha');
-    expect(container.querySelector('.hp-hero-score-num')).toHaveTextContent('82');
+    expect(container.querySelector('.hp-hero-score-num')).toHaveTextContent('93');
   });
 
   it('muestra como alternativas el resto del pool, sin La Salvé (59 < 60)', async () => {

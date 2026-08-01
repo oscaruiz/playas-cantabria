@@ -1,0 +1,33 @@
+{
+  "$schema": "../region.schema.json",
+  "id": "asturias",
+  "name": "Asturias",
+  "observationBbox": {
+    "latMin": 42.95,
+    "latMax": 44.05,
+    "lonMin": -7.55,
+    "lonMax": -4.0
+  },
+  "catalogRules": {
+    "bbox": {
+      "latMin": 43.38,
+      "latMax": 43.67,
+      "lonMin": -7.05,
+      "lonMax": -4.51
+    },
+    "regionName": "Asturias",
+    "forbiddenBeaches": []
+  },
+  "flagProviders": [],
+  "branding": {
+    "appName": "Playas de Asturias",
+    "shortName": "Playas Asturias",
+    "themeColor": "#1b6b4a",
+    "backgroundColor": "#f5f7f2",
+    "capacitorAppId": "com.example.asturias"
+  },
+  "map": {
+    "center": { "lat": 43.525, "lon": -5.78 },
+    "zoom": 8
+  }
+}

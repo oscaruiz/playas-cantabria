@@ -23,10 +23,8 @@ import { beachesResponse } from '../fixtures/beaches';
 import { featuredResponse } from '../fixtures/featured';
 import { buildAemetDetail } from '../fixtures/beachDetail';
 import { localNoon } from '../time';
+import { RUTA_DESTACADAS as FEATURED, RUTA_PLAYAS as BEACHES, RUTA_DETALLE as DETAILS } from '../apiRoutes';
 
-const FEATURED = '/api/beaches/featured';
-const BEACHES = /\/api\/beaches$/;
-const DETAILS = /\/api\/beaches\/[^/]+\/details$/;
 const MEDIODIA = localNoon('2026-07-27');
 
 function badgeDe(nombre: string): Element | null {

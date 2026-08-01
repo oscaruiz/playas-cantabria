@@ -22,9 +22,8 @@ import type { Playa, FeaturedBeach, FeaturedBeachesResponse } from '../../servic
 import { renderWithProviders } from '../render';
 import { installFetchMock, restoreFetch, route } from '../http/fakeFetch';
 import MapaPage from '../../pages/MapaPage';
+import { RUTA_DESTACADAS as FEATURED, RUTA_PLAYAS as BEACHES } from '../apiRoutes';
 
-const FEATURED = '/api/beaches/featured';
-const BEACHES = /\/api\/beaches$/;
 
 const mockMapa = {
   flyTo: jest.fn(),

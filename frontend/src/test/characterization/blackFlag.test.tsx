@@ -23,9 +23,8 @@ import { renderWithProviders } from '../render';
 import { installFetchMock, restoreFetch, route } from '../http/fakeFetch';
 import { featuredResponse } from '../fixtures/featured';
 import { buildBlackFlagDetail } from '../fixtures/beachDetail';
+import { RUTA_DESTACADAS as FEATURED, RUTA_DETALLE as DETAILS } from '../apiRoutes';
 
-const FEATURED = '/api/beaches/featured';
-const DETAILS = /\/api\/beaches\/[^/]+\/details$/;
 
 const AHORA = new Date('2026-07-27T12:00:00.000Z'); // 14:00 Madrid, within opening hours
 

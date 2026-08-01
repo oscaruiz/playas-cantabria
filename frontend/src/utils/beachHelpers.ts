@@ -137,7 +137,8 @@ export function dentroDeHorario(
  * The flag is only painted with color if it is CURRENT: within hours/season AND
  * with recent data (≤24h). A color from an older capture no longer reflects what
  * is flying now → it is not shown.
- * MIRROR of the backend: same rule in `application/mappers/flagVigencia.ts`.
+ * MIRROR of the backend: same rule in `domain/services/flagVigencia.ts`, whose
+ * `vigenciaBandera` draws the same three states ('sin-servicio' / 'caducada').
  */
 export function estadoBandera(
   cruzRoja?: { bandera?: string; horario?: string | null; coberturaDesde?: string | null; coberturaHasta?: string | null; ultimaActualizacion?: string | null },

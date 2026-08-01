@@ -7,8 +7,8 @@ import type { ClaveTexto } from './es';
  */
 export const en = {
   // ---- App / global ----
-  'app.titulo': 'Cantabria Beaches',
-  'app.tituloDocumento': 'Cantabria Beaches',
+  'app.titulo': '{region} Beaches',
+  'app.tituloDocumento': '{region} Beaches',
 
   // ---- Bottom navigation ----
   'nav.principal': 'Main navigation',
@@ -31,7 +31,7 @@ export const en = {
   'tiempo.haceDias': 'updated {n}d ago',
 
   // ---- Home ----
-  'home.subtitulo': 'Discover the best beaches in Cantabria',
+  'home.subtitulo': 'Discover the best beaches in {region}',
   'home.mediaTemp': '{temp}° average',
   'home.playasBadge_one': '{count} beach',
   'home.playasBadge_other': '{count} beaches',
@@ -78,6 +78,7 @@ export const en = {
   'mapa.municipio': 'Municipality:',
   'mapa.vigilada': 'Supervised by {operador}',
   'mapa.sinInfoCruzRoja': 'No lifeguard info',
+  'mapa.sinVigilancia': 'No lifeguard service',
   'mapa.webcamDisponible': 'Webcam available',
   'mapa.verDetalles': 'View details',
   'mapa.tuUbicacion': 'Your current location',

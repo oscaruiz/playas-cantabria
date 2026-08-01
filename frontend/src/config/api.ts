@@ -1,3 +1,5 @@
+import { REGION_API_PATH } from './region';
+
 const DEFAULT_API_BASE_URL = 'https://playas-cantabria.onrender.com';
 
 const normalizeBaseUrl = (value: string): string => value.replace(/\/+$/, '');
@@ -39,3 +41,12 @@ export const buildApiUrl = (path: string): string => {
     ? `${API_BASE_URL}${path}`
     : `${API_BASE_URL}/${path}`;
 };
+
+/**
+ * URL of a beach endpoint for THIS build's region: `/beaches` becomes
+ * `<host>/api/<region>/beaches`. Every app call goes through here — the
+ * region-less `/api/beaches` is only the deprecated alias kept alive for the
+ * clients already installed, and a new build must not use it.
+ */
+export const buildRegionApiUrl = (path: string): string =>
+  buildApiUrl(`${REGION_API_PATH}${path.startsWith('/') ? path : `/${path}`}`);
