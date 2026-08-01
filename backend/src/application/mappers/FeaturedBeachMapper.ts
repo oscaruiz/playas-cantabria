@@ -3,7 +3,7 @@ import { Weather } from '../../domain/entities/Weather';
 import { FlagStatus } from '../../domain/entities/Flag';
 import { ForecastEnrichment } from '../../domain/use-cases/BeachScorer';
 import { FeaturedBeachDTO, FeaturedBeachesResponseDTO } from '../dtos/FeaturedBeachDTO';
-import { esBanderaVigente } from './flagVigencia';
+import { esBanderaVigente } from '../../domain/services/flagVigencia';
 
 export interface FeaturedBeachResult {
   beach: Beach;

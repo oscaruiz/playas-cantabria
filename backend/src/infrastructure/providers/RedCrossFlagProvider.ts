@@ -13,6 +13,8 @@ const { HttpsProxyAgent } = require('https-proxy-agent') as {
 import { InMemoryCache, CacheKeys } from '../cache/InMemoryCache';
 import { FlagProvider } from '../../domain/ports/FlagProvider';
 import { FlagStatus, FlagColor, FlagRef } from '../../domain/entities/Flag';
+import { readFlagsFile } from '../../regions/flagsFileSchema';
+import { MAX_EDAD_BANDERA_MS } from '../../domain/services/flagVigencia';
 import { Config } from '../config/config';
 
 /**
@@ -79,19 +81,46 @@ export class RedCrossFlagProvider implements FlagProvider {
     private readonly regionId = 'cantabria',
   ) {}
 
+  /**
+   * Reads the pre-scraped file through the shared schema instead of casting
+   * whatever it finds: `color as FlagColor` turned any text into a colour, and
+   * an undateable (or future) `generatedAt` used to become `Date.now()` — a
+   * capture of unknown age presented as this second's, which is exactly what
+   * the 24 h freshness rule exists to stop.
+   *
+   * A file that cannot be dated is loaded ANYWAY, stamped as already expired.
+   * Dropping it looked safer and was the opposite: in production the live
+   * scrape answers 403, so discarding the file left the region with NO flags,
+   * and a black one stopped excluding its beach — the very failure this work
+   * set out to close. Stamped as expired, `vigenciaBandera` reads it as
+   * `caducada` and the ranking already knows what to do with that: a
+   * restrictive colour keeps excluding, any other degrades to `unknown`.
+   *
+   * The stamp is a deliberate approximation, and the only one that fails safe:
+   * the real age is unknown, and any guess closer to "now" would resurrect the
+   * immortal-flag bug. A broken entry is still dropped on its own, without
+   * taking the rest of the region with it.
+   */
   private async loadFileFlags(): Promise<Map<number, FlagStatus>> {
     if (this.fileFlags) return this.fileFlags;
     const map = new Map<number, FlagStatus>();
     try {
       const raw = JSON.parse(
         await fs.readFile(path.resolve(process.cwd(), this.flagsFile), 'utf-8')
-      ) as {
-        generatedAt?: string;
-        flags: Record<string, { color: string | null; message: string | null; coverageFrom: string | null; coverageTo: string | null; schedule: string | null }>;
-      };
-      const ts = raw.generatedAt ? Date.parse(raw.generatedAt) || Date.now() : Date.now();
-      for (const [id, f] of Object.entries(raw.flags ?? {})) {
-        map.set(Number(id), {
+      ) as unknown;
+      const { generatedAt, flags, errors } = readFlagsFile(raw);
+      if (errors.length > 0) {
+        console.error(`[CRUZ ROJA] ${this.flagsFile}: ${errors.length} entrada(s) inválidas: ${errors[0]}`);
+      }
+      // One millisecond past the freshness window: undateable, therefore expired.
+      const ts = generatedAt ?? Date.now() - MAX_EDAD_BANDERA_MS - 1;
+      if (generatedAt == null && flags.size > 0) {
+        console.error(
+          `[CRUZ ROJA] ${this.flagsFile}: sin fecha utilizable; ${flags.size} banderas se sirven como caducadas`,
+        );
+      }
+      for (const [id, f] of flags) {
+        map.set(id, {
           color: (f.color as FlagColor) ?? undefined,
           message: f.message ?? undefined,
           timestamp: ts,
