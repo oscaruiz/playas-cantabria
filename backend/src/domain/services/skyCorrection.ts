@@ -48,6 +48,8 @@ const MAX_KM_MEJORA_EXCEPCIONAL = 50;
 const KM_SIN_CORROBORAR = 30;
 /** Improving a cloudy model needs a closer station than worsening it. */
 const MAX_KM_PARA_MEJORAR = 25;
+/** A remote observation must be virtually uninterrupted sunshine. */
+const UMBRAL_SOL_MEJORA_EXCEPCIONAL = 0.95;
 /**
  * The AEMET observation is hourly, but `getOrSetStale` can serve the payload
  * for up to 3 h (TTL ×6) if AEMET goes down. Without this guard we could mark
@@ -191,11 +193,14 @@ export function decidirCorreccionCielo(
     observacion.fraccion >= UMBRAL_DESPEJADO
     && (ctx.horasDespejadasConsecutivas ?? 0) >= 3;
   const mejoraExcepcionalCorroborada =
-    observacion.fraccion >= UMBRAL_DESPEJADO
-    && (ctx.horasDespejadasConsecutivas ?? 0) >= 4;
-  const mejoraLejanaPermitida = observacion.distanciaKm <= MAX_KM_PARA_EMPEORAR
-    ? mejoraLejanaCorroborada
-    : mejoraExcepcionalCorroborada;
+    observacion.fraccion >= UMBRAL_SOL_MEJORA_EXCEPCIONAL
+    && typeof ctx.nubesInmediatasPct === 'number'
+    && ctx.nubesInmediatasPct <= UMBRAL_NUBES_DESPEJADO;
+  const mejoraLejanaPermitida = mejoraExcepcionalCorroborada
+    || (
+      observacion.distanciaKm <= MAX_KM_PARA_EMPEORAR
+      && mejoraLejanaCorroborada
+    );
   if (
     esMejora
     && observacion.distanciaKm > MAX_KM_PARA_MEJORAR
