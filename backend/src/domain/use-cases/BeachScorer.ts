@@ -595,6 +595,13 @@ export function buildDowngradeFactors(
   rainForecast?: RainForecastSignal | null,
   flagOperators: readonly string[] = LEGACY_FLAG_OPERATORS,
   outlook?: OutlookSignal | null,
+  /**
+   * Does the beach have a lifeguard station ON RECORD (a `flagRef` or listed
+   * stations)? It is not the same question as "do we have a reading": a covered
+   * beach whose scrape failed, or whose station id is still pending, arrives
+   * here with `flag === null` exactly like an unwatched one.
+   */
+  hasFlagStation = false,
 ): string | null {
   const parts: string[] = [];
 
@@ -610,10 +617,14 @@ export function buildDowngradeFactors(
   // Naming the operator only makes sense where one exists. With no service in
   // the region the absence of a flag is not a downgrade factor at all: it would
   // be listed on every single beach and say nothing about any of them.
+  //
+  // And on a beach that IS watched, a missing reading is our gap, not the
+  // operator's: saying "sin cobertura Cruz Roja" on a beach with a station
+  // states as fact the opposite of what the detail page shows. Say nothing.
   const operador = flagOperators[0];
   if (flag?.color === 'yellow') parts.push('bandera amarilla');
   else if (flag?.color === 'red') parts.push('bandera roja');
-  else if (!flag?.color && operador) parts.push(`sin cobertura ${operador}`);
+  else if (!flag?.color && operador && !hasFlagStation) parts.push(`sin cobertura ${operador}`);
 
   if (subScores.viento <= 5) parts.push('viento fuerte');
   if (subScores.oleaje <= 3) parts.push('oleaje fuerte');

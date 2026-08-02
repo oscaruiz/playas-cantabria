@@ -619,6 +619,19 @@ describe('buildDowngradeFactors nombra al operador de la región', () => {
     expect(buildDowngradeFactors(subScores, null, null, null, ['Cruz Roja']))
       .toContain('sin cobertura Cruz Roja');
   });
+
+  it('calla sobre la cobertura cuando la playa SÍ tiene puesto y falta la lectura', () => {
+    // Tagle, 2-ago-2026: el detalle daba bandera verde y el listado "sin
+    // cobertura Cruz Roja" porque el scrape no había respondido a tiempo.
+    const weather = makeWeather({ icon: '04d', temperatureC: 16 });
+    const { subScores } = computeBeachScore(weather, null, null);
+    const factors = buildDowngradeFactors(
+      subScores, null, null, null, ['Cruz Roja'], null, true,
+    );
+    expect(factors ?? '').not.toContain('sin cobertura');
+    // El resto de motivos sigue saliendo: callar no es enmudecer la línea.
+    expect(factors).toContain('Cielo nublado');
+  });
 });
 
 describe('invariantes de rango de computeBeachScore', () => {

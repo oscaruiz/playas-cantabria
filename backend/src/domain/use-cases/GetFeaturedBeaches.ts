@@ -27,6 +27,14 @@ import {
 } from './BeachScorer';
 import type { FeaturedBeachResult } from '../../application/mappers/FeaturedBeachMapper';
 
+/**
+ * Is this beach watched, according to the catalog? A station with a pending id
+ * counts: the beach has lifeguards, what we lack is a way to query them.
+ */
+function hasFlagStation(beach: Beach): boolean {
+  return beach.flagRef != null || (beach.flagStations?.length ?? 0) > 0;
+}
+
 const MIN_SCORE = 30;
 const MIN_BEACHES = 2;
 const CAUTION_COUNT = 3;
@@ -139,6 +147,7 @@ export class GetFeaturedBeaches {
         rainForecast,
         this.flagOperators,
         outlook,
+        hasFlagStation(beach),
       );
 
       // The breakdown travels with the entry so the API can publish WHY the
