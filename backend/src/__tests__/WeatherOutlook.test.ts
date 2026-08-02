@@ -1,8 +1,13 @@
 import { describe, it, expect } from 'vitest';
-import { buildWeatherOutlook, ventanaOutlook } from '../domain/use-cases/WeatherOutlook';
+import {
+  buildWeatherOutlook,
+  resolvePublishedOutlook,
+  ventanaOutlook,
+} from '../domain/use-cases/WeatherOutlook';
 import { OUTLOOK_MAX_DELTA } from '../domain/use-cases/BeachScorer';
 import type { Weather } from '../domain/entities/Weather';
 import type { HourlyOutlookSlot } from '../domain/entities/RainNowcast';
+import type { RainForecastSignal } from '../domain/use-cases/RainForecast';
 
 /**
  * El caso que lo motivó: Tagle, 57 puntos a las 10:55 con un `04d` de nubes de
@@ -193,5 +198,131 @@ describe('el ruido no mueve la nota', () => {
 
     expect(casi!.delta).toBe(0);
     expect(casi!.direccion).toBe('estable');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Por qué se mueve, no solo hacia dónde
+// ---------------------------------------------------------------------------
+
+describe('causa dominante', () => {
+  it('nombra el cielo cuando es lo que abre la tarde', () => {
+    const señal = buildWeatherOutlook(weather(), tramos(MEDIODIA, 4, { cloudCoverPct: 5 }), MEDIODIA);
+
+    expect(señal?.causa).toBe('despeja');
+  });
+
+  it('nombra el viento cuando es lo que estropea la tarde', () => {
+    // Cielo y temperatura clavados: el único que se mueve es el viento.
+    const señal = buildWeatherOutlook(
+      weather({ icon: '04d', temperatureC: 20, windSpeedMs: 2 }),
+      tramos(MEDIODIA, 4, { cloudCoverPct: 60, temperatureC: 20, windSpeedMs: 16 }),
+      MEDIODIA,
+    );
+
+    expect(señal?.direccion).toBe('empeora');
+    expect(señal?.causa).toBe('arrecia_viento');
+  });
+
+  it('amaina el viento: mismo factor, sentido contrario', () => {
+    const señal = buildWeatherOutlook(
+      weather({ icon: '04d', temperatureC: 20, windSpeedMs: 14 }),
+      tramos(MEDIODIA, 4, { cloudCoverPct: 60, temperatureC: 20, windSpeedMs: 1 }),
+      MEDIODIA,
+    );
+
+    expect(señal?.direccion).toBe('mejora');
+    expect(señal?.causa).toBe('amaina_viento');
+  });
+
+  it('con factores en sentidos opuestos gana el que arrastra la nota', () => {
+    // El cielo se abre del todo (+7,5 de aporte) mientras entra viento (−2,4).
+    // Neto positivo: la causa es el cielo. Coger el mayor en valor absoluto sin
+    // mirar el signo anunciaría "mejora · se levanta viento".
+    const señal = buildWeatherOutlook(
+      weather({ icon: '04d', temperatureC: 20, windSpeedMs: 2 }),
+      tramos(MEDIODIA, 4, { cloudCoverPct: 0, temperatureC: 20, windSpeedMs: 9 }),
+      MEDIODIA,
+    );
+
+    expect(señal?.direccion).toBe('mejora');
+    expect(señal?.causa).toBe('despeja');
+  });
+
+  it('en ola de calor la nota mejora BAJANDO la temperatura', () => {
+    // `computeTemperatureScore` no es monótona: por encima de 30° baja. Al
+    // refrescar de 40° a 26° la puntuación SUBE, y decir "sube la temperatura"
+    // sería falso justo el día en que todo el mundo mira el termómetro. La
+    // causa se lee de los grados, no de los puntos.
+    //
+    // Hacen falta 14 grados de diferencia porque la temperatura pesa 0,3 y en
+    // este tramo solo puede mover 11 puntos: es el extremo del rango, y el
+    // único sitio donde el signo de los grados y el de los puntos discrepan.
+    const señal = buildWeatherOutlook(
+      weather({ icon: '04d', temperatureC: 40, windSpeedMs: 3 }),
+      tramos(MEDIODIA, 4, { cloudCoverPct: 60, temperatureC: 26, windSpeedMs: 3 }),
+      MEDIODIA,
+    );
+
+    expect(señal?.direccion).toBe('mejora');
+    expect(señal?.causa).toBe('baja_temperatura');
+  });
+
+  it('un cambio que no puntúa tampoco se nombra', () => {
+    const señal = buildWeatherOutlook(
+      weather({ temperatureC: 20, windSpeedMs: 3 }),
+      tramos(MEDIODIA, 4, { cloudCoverPct: 60, temperatureC: 20.8, windSpeedMs: 3 }),
+      MEDIODIA,
+    );
+
+    expect(señal!.delta).toBe(0);
+    expect(señal!.causa).toBeNull();
+  });
+});
+
+describe('resolvePublishedOutlook', () => {
+  const lluvia = (expected: boolean): RainForecastSignal => ({
+    expected,
+    firstAt: expected ? MEDIODIA.getTime() + 2 * 3_600_000 : null,
+    mmMax: expected ? 1.2 : null,
+    sources: expected ? ['OpenMeteo'] : [],
+  });
+
+  const despejando = buildWeatherOutlook(weather(), tramos(MEDIODIA, 4, { cloudCoverPct: 5 }), MEDIODIA);
+
+  it('sin lluvia prevista devuelve el pronóstico intacto', () => {
+    expect(resolvePublishedOutlook(despejando, lluvia(false))).toEqual(despejando);
+    expect(resolvePublishedOutlook(despejando, null)).toEqual(despejando);
+  });
+
+  it('la lluvia prevista manda: es lo que más cambia el plan', () => {
+    const publicado = resolvePublishedOutlook(despejando, lluvia(true));
+
+    expect(publicado?.direccion).toBe('empeora');
+    expect(publicado?.causa).toBe('lluvia_prevista');
+  });
+
+  it('no toca el delta: la lluvia puntúa por los topes, no por aquí', () => {
+    const publicado = resolvePublishedOutlook(despejando, lluvia(true));
+
+    expect(publicado?.delta).toBe(despejando!.delta);
+  });
+
+  it('habla aunque el cielo no se mueva, que es cuando más falta hace', () => {
+    // Sin señal horaria de Open-Meteo no había nada que decir, y una playa a la
+    // que le va a caer un chubasco se quedaba muda.
+    const publicado = resolvePublishedOutlook(null, lluvia(true));
+
+    expect(publicado).toEqual({
+      delta: 0,
+      direccion: 'empeora',
+      horasConsideradas: 0,
+      causa: 'lluvia_prevista',
+    });
+  });
+
+  it('sin nada que resolver no inventa una señal', () => {
+    expect(resolvePublishedOutlook(null, null)).toBeNull();
+    expect(resolvePublishedOutlook(null, lluvia(false))).toBeNull();
   });
 });

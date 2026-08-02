@@ -121,14 +121,14 @@ describe('FeaturedBeachMapper — desglose, pronóstico y tope', () => {
     expect(suma).toBe(dto.playas[0].puntuacion);
   });
 
-  it('publica el pronóstico con dirección y delta, y null si no lo hay', () => {
+  it('publica el pronóstico con dirección, delta y causa, y null si no lo hay', () => {
     const con = FeaturedBeachMapper.toDTO(
-      [makeResult({ outlook: { delta: 8, direccion: 'mejora', horasConsideradas: 4 } })],
+      [makeResult({ outlook: { delta: 8, direccion: 'mejora', horasConsideradas: 4, causa: 'despeja' } })],
       [], [], 1750000000000,
     );
     const sin = FeaturedBeachMapper.toDTO([makeResult({ outlook: null })], [], [], 1750000000000);
 
-    expect(con.playas[0].pronostico).toEqual({ direccion: 'mejora', delta: 8 });
+    expect(con.playas[0].pronostico).toEqual({ direccion: 'mejora', delta: 8, causa: 'despeja' });
     expect(sin.playas[0].pronostico).toBeNull();
   });
 

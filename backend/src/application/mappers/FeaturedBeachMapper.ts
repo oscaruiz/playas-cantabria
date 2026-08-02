@@ -94,7 +94,11 @@ export class FeaturedBeachMapper {
           }
         : null,
       pronostico: r.outlook
-        ? { direccion: r.outlook.direccion, delta: r.outlook.delta }
+        ? {
+            direccion: r.outlook.direccion,
+            delta: r.outlook.delta,
+            causa: r.outlook.causa ?? null,
+          }
         : null,
       topeAplicado: r.tope ?? null,
       oleaje: r.enrichment?.waves ?? null,

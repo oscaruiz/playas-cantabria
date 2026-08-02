@@ -19,6 +19,26 @@ export interface PronosticoDTO {
   direccion: 'mejora' | 'empeora' | 'estable';
   /** Points added (or subtracted) by the outlook. */
   delta: number;
+  /**
+   * WHY it is moving: the dominant factor, so the app can say "mejora, se
+   * despeja" instead of an unactionable "mejora". A structured value and not a
+   * phrase because the client already translates it from a key — unlike
+   * `razonRanking`, which travels as Spanish text.
+   *
+   * `lluvia_prevista` does not come from the delta (rain scores through the
+   * caps, not the outlook): it is the reason that most changes the plan, so it
+   * takes precedence over the other factors. Null when there is nothing worth
+   * naming, and absent from older cached responses.
+   */
+  causa:
+    | 'despeja'
+    | 'nubla'
+    | 'sube_temperatura'
+    | 'baja_temperatura'
+    | 'amaina_viento'
+    | 'arrecia_viento'
+    | 'lluvia_prevista'
+    | null;
 }
 
 /** Cap that clipped the score, and therefore why the factors do not add up. */

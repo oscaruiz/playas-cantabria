@@ -4,7 +4,7 @@ import { FlagStatus, FlagRef } from '../entities/Flag';
 import { RainNowcast } from '../entities/RainNowcast';
 import { GetRainNowcast } from './GetRainNowcast';
 import { buildRainForecastSignal } from './RainForecast';
-import { buildWeatherOutlook } from './WeatherOutlook';
+import { buildWeatherOutlook, resolvePublishedOutlook } from './WeatherOutlook';
 import { BeachRepository } from '../ports/BeachRepository';
 import { WeatherProvider } from '../ports/WeatherProvider';
 import { FlagProvider } from '../ports/FlagProvider';
@@ -153,7 +153,18 @@ export class GetFeaturedBeaches {
       // The breakdown travels with the entry so the API can publish WHY the
       // beach scored what it scored, instead of the app explaining the model
       // in the abstract and leaving the actual question unanswered.
-      const desglose = { subScores, outlook, tope };
+      //
+      // The PUBLISHED outlook lets forecast rain take over the reason; the raw
+      // one above is what scored and what the reason builders read. Keeping
+      // them apart is not a detail: hand the resolved one to
+      // `buildDowngradeFactors` and its `direccion: 'empeora'` appends "empeora
+      // en las próximas horas" right next to the "lluvia prevista" that same
+      // function already adds — the same fact, twice, in one line.
+      const desglose = {
+        subScores,
+        outlook: resolvePublishedOutlook(outlook, rainForecast),
+        tope,
+      };
 
       if (score >= MIN_SCORE) {
         const reason = buildRankingReason(subScores, weather, flag, enrichment, rain, rainForecast, outlook);

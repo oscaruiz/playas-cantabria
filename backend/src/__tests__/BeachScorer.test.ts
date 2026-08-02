@@ -680,6 +680,7 @@ describe('computeBeachScore con previsión de las próximas horas', () => {
     delta,
     direccion: delta >= 3 ? 'mejora' : delta <= -3 ? 'empeora' : 'estable',
     horasConsideradas: 4,
+    causa: delta === 0 ? null : delta > 0 ? 'despeja' : 'nubla',
   });
 
   it('suma cuando va a mejorar y resta cuando va a empeorar', () => {
@@ -745,6 +746,7 @@ describe('razones con previsión de las próximas horas', () => {
     delta: direccion === 'mejora' ? 6 : direccion === 'empeora' ? -6 : 0,
     direccion,
     horasConsideradas: 4,
+    causa: direccion === 'mejora' ? 'despeja' : direccion === 'empeora' ? 'nubla' : null,
   });
 
   it('el ranking anuncia la mejora, al final y sin hora', () => {

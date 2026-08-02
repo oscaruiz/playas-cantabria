@@ -113,6 +113,13 @@ describe('GetFeaturedBeaches — previsión de las próximas horas', () => {
     expect(tagle.reason).not.toContain('próximas horas');
   });
 
+  it('publica POR QUÉ se mueve, no solo hacia dónde', async () => {
+    vi.setSystemTime(AHORA);
+    const { resumenTodas } = await construir(nowcast(tramos(0))).execute();
+
+    expect(resumenTodas[0].outlook?.causa).toBe('despeja');
+  });
+
   it('de noche no se toca la nota: no hay franja que anticipar', async () => {
     const medianoche = new Date('2026-08-01T22:00:00Z'); // 00:00 Madrid
     vi.setSystemTime(medianoche);
@@ -129,5 +136,52 @@ describe('GetFeaturedBeaches — previsión de las próximas horas', () => {
     ).execute();
 
     expect(resumenTodas[0].score).toBe(59);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// La lluvia prevista manda en lo que se cuenta, sin tocar lo que puntúa
+// ---------------------------------------------------------------------------
+
+describe('GetFeaturedBeaches — lluvia prevista sobre un cielo que se abre', () => {
+  /** El cielo se despeja Y Open-Meteo anuncia chubascos: los dos a la vez. */
+  function conLluviaPrevista(): RainNowcast {
+    return {
+      ...nowcast(tramos(0)),
+      upcoming: { expected: true, firstAt: AHORA.getTime() + 2 * 3_600_000, mmMax: 1.2 },
+    };
+  }
+
+  it('la causa publicada es la lluvia, no el cielo', async () => {
+    vi.setSystemTime(AHORA);
+    const { resumenTodas } = await construir(conLluviaPrevista()).execute();
+
+    expect(resumenTodas[0].outlook?.direccion).toBe('empeora');
+    expect(resumenTodas[0].outlook?.causa).toBe('lluvia_prevista');
+  });
+
+  it('el motivo no dice dos veces lo mismo (regresión)', async () => {
+    vi.setSystemTime(AHORA);
+    const { resumenTodas } = await construir(conLluviaPrevista()).execute();
+    const tagle = resumenTodas[0];
+    const textos = `${tagle.reason} ${tagle.downgradeReason ?? ''}`;
+
+    // Si el pronóstico resuelto llegara a los constructores de motivo, su
+    // `direccion: 'empeora'` añadiría "empeora en las próximas horas" pegado al
+    // "lluvia prevista" que esos mismos constructores ya ponen.
+    expect(textos).toContain('lluvia prevista');
+    expect(textos).not.toContain('empeora en las próximas horas');
+  });
+
+  it('la nota la sigue decidiendo el algoritmo de siempre', async () => {
+    vi.setSystemTime(AHORA);
+    const { resumenTodas } = await construir(conLluviaPrevista()).execute();
+    const tagle = resumenTodas[0];
+
+    // El +8 del cielo entró en la puntuación (59 → 67) y después lo recortó el
+    // tope de lluvia prevista. Nombrar la lluvia en el chip no movió nada de eso.
+    expect(tagle.subScores?.pronostico).toBe(8);
+    expect(tagle.score).toBe(59);
+    expect(tagle.tope).toBe('lluvia_prevista');
   });
 });

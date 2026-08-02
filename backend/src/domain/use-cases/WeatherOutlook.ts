@@ -1,5 +1,6 @@
 import type { Weather } from '../entities/Weather';
 import type { HourlyOutlookSlot } from '../entities/RainNowcast';
+import type { RainForecastSignal } from './RainForecast';
 import {
   OUTLOOK_MAX_DELTA,
   computeSkyScore,
@@ -51,12 +52,44 @@ const PESOS = { cielo: 0.5, temperatura: 0.3, viento: 0.2 } as const;
 /** Below this the change is noise and produces no user-facing text. */
 export const OUTLOOK_UMBRAL_TEXTO = 3;
 
+/**
+ * WHY the conditions are moving: the dominant factor, phrased as the change
+ * itself rather than as its effect on the score.
+ *
+ * "Mejora" on its own was not actionable — the whole point of looking four
+ * hours ahead is that the sky is going to open or the wind is going to get up,
+ * and that is what decides whether to go. `lluvia_prevista` is the exception:
+ * it does not move the delta (see `resolvePublishedOutlook`), it is the one
+ * that most changes the plan.
+ */
+export type OutlookCausa =
+  | 'despeja'
+  | 'nubla'
+  | 'sube_temperatura'
+  | 'baja_temperatura'
+  | 'amaina_viento'
+  | 'arrecia_viento'
+  | 'lluvia_prevista';
+
 export interface OutlookSignal {
   /** Integer in [-OUTLOOK_MAX_DELTA, +OUTLOOK_MAX_DELTA], already rounded. */
   delta: number;
   direccion: 'mejora' | 'empeora' | 'estable';
   /** Slots actually used. 0 never reaches the caller: it returns null instead. */
   horasConsideradas: number;
+  /**
+   * Dominant factor behind the delta. `null` when the delta is 0: a change too
+   * small to score is also too small to name.
+   */
+  causa: OutlookCausa | null;
+}
+
+/** One factor's weighted contribution, kept so the dominant one can be named. */
+interface Contribucion {
+  /** Points of the score this factor moves, already weighted by `PESOS`. */
+  aporte: number;
+  /** How to word it. Read from the factor's OWN change, not from `aporte`. */
+  causa: OutlookCausa;
 }
 
 function media(valores: number[]): number {
@@ -121,14 +154,18 @@ export function buildWeatherOutlook(
   // Each factor is scored with the SAME function used for the present, so
   // "now" and "later" live on one scale and their difference is in points of
   // the score itself — not in units invented here.
-  const cambios: number[] = [];
+  const cambios: Contribucion[] = [];
 
   const nubes = ventana
     .map((s) => s.cloudCoverPct)
     .filter((v): v is number => typeof v === 'number');
   if (nubes.length > 0) {
+    const ahoraCielo = computeSkyScore(weather);
     const futuro = media(nubes.map(skyScoreFromCloudCover));
-    cambios.push(PESOS.cielo * (futuro - computeSkyScore(weather)));
+    cambios.push({
+      aporte: PESOS.cielo * (futuro - ahoraCielo),
+      causa: futuro > ahoraCielo ? 'despeja' : 'nubla',
+    });
   }
 
   const temperaturas = ventana
@@ -136,7 +173,15 @@ export function buildWeatherOutlook(
     .filter((v): v is number => typeof v === 'number');
   if (temperaturas.length > 0 && weather.temperatureC != null) {
     const futuro = media(temperaturas.map(computeTemperatureScore));
-    cambios.push(PESOS.temperatura * (futuro - computeTemperatureScore(weather.temperatureC)));
+    cambios.push({
+      aporte: PESOS.temperatura * (futuro - computeTemperatureScore(weather.temperatureC)),
+      // Worded from the DEGREES, not from the points. `computeTemperatureScore`
+      // is not monotonic (it falls above 30 °C), so in a heatwave the score
+      // improves as the thermometer DROPS, and "sube la temperatura" would be
+      // plainly false on the one day anybody checks.
+      causa:
+        media(temperaturas) > weather.temperatureC ? 'sube_temperatura' : 'baja_temperatura',
+    });
   }
 
   const vientos = ventana
@@ -144,7 +189,10 @@ export function buildWeatherOutlook(
     .filter((v): v is number => typeof v === 'number');
   if (vientos.length > 0 && weather.windSpeedMs != null) {
     const futuro = media(vientos.map(computeWindScore));
-    cambios.push(PESOS.viento * (futuro - computeWindScore(weather.windSpeedMs)));
+    cambios.push({
+      aporte: PESOS.viento * (futuro - computeWindScore(weather.windSpeedMs)),
+      causa: media(vientos) < weather.windSpeedMs ? 'amaina_viento' : 'arrecia_viento',
+    });
   }
 
   if (cambios.length === 0) return null;
@@ -152,7 +200,7 @@ export function buildWeatherOutlook(
   // A factor with no forecast contributes 0, which is the honest reading: no
   // evidence of change, no adjustment for it. There is nothing to renormalise
   // — the weights are shares of a real change, not parts of a whole.
-  const bruto = cambios.reduce((sum, c) => sum + c, 0);
+  const bruto = cambios.reduce((sum, c) => sum + c.aporte, 0);
   const redondeado = Math.round(clamp(bruto, -OUTLOOK_MAX_DELTA, OUTLOOK_MAX_DELTA));
 
   // Below the threshold the change is noise, and noise MUST NOT move the mark:
@@ -165,5 +213,53 @@ export function buildWeatherOutlook(
     delta,
     direccion: delta >= OUTLOOK_UMBRAL_TEXTO ? 'mejora' : delta <= -OUTLOOK_UMBRAL_TEXTO ? 'empeora' : 'estable',
     horasConsideradas: ventana.length,
+    causa: causaDominante(cambios, delta),
+  };
+}
+
+/**
+ * The factor that carries the delta: the largest contribution AMONG THOSE
+ * PULLING THE SAME WAY as the total.
+ *
+ * The filter is the whole point. With the sky opening (+6) while the wind gets
+ * up (−2) the net is an improvement, and the honest headline is the sky;
+ * picking the largest absolute contribution regardless of sign would announce
+ * "mejora · se levanta viento", which reads as a bug.
+ */
+function causaDominante(cambios: Contribucion[], delta: number): OutlookCausa | null {
+  if (delta === 0) return null;
+
+  const mismoSentido = cambios.filter((c) => Math.sign(c.aporte) === Math.sign(delta));
+  if (mismoSentido.length === 0) return null;
+
+  return mismoSentido.reduce((mayor, c) =>
+    Math.abs(c.aporte) > Math.abs(mayor.aporte) ? c : mayor,
+  ).causa;
+}
+
+/**
+ * The outlook AS PUBLISHED, which is not the one that scores.
+ *
+ * Rain stays out of the delta on purpose — `RainForecast` already governs it
+ * through the two score caps, and counting it twice would penalise a shower
+ * once for being forecast and again for the cloud that comes with it. But
+ * silence is not the answer either: a shower at 17:00 is the single fact that
+ * most changes whether to go, and a card reading "mejora · se despeja" over a
+ * beach capped at 59 for rain explains nothing.
+ *
+ * So this is presentation only: rain takes over the direction and the reason,
+ * the delta is left exactly as it was, and no score moves.
+ */
+export function resolvePublishedOutlook(
+  outlook: OutlookSignal | null | undefined,
+  rainForecast: RainForecastSignal | null | undefined,
+): OutlookSignal | null {
+  if (!rainForecast?.expected) return outlook ?? null;
+
+  return {
+    delta: outlook?.delta ?? 0,
+    direccion: 'empeora',
+    horasConsideradas: outlook?.horasConsideradas ?? 0,
+    causa: 'lluvia_prevista',
   };
 }
