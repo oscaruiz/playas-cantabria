@@ -14,6 +14,7 @@
 
 import React from 'react';
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { Route } from 'react-router-dom';
 import PlayasList from '../../pages/PlayasList';
 import { renderWithProviders } from '../render';
 import { installFetchMock, restoreFetch, route } from '../http/fakeFetch';
@@ -148,12 +149,19 @@ describe('PlayasList — sugerencias', () => {
     expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
   });
 
-  it('sugiere a partir de 2 caracteres, en el orden original de la lista', async () => {
+  it('sugiere municipios primero y luego playas', async () => {
+    // "su" matches the municipality Suances AND its beach La Concha: the
+    // municipality (the broader answer) leads.
     await typeSearch('su');
     const options = screen.getAllByRole('option');
     expect(options.map((o) => o.querySelector('.suggestion-name')?.textContent)).toEqual([
+      'Suances',
       'La Concha',
     ]);
+    // The municipality row says what it is and how many beaches it has.
+    expect(options[0].querySelector('.suggestion-municipio')?.textContent).toContain(
+      'Municipio',
+    );
   });
 
   it('corta en 5 sugerencias aunque haya más coincidencias', async () => {
@@ -182,9 +190,13 @@ describe('PlayasList — sugerencias', () => {
     expect(screen.getAllByRole('option')[4]).toHaveAttribute('aria-selected', 'true');
   });
 
-  it('Enter selecciona la sugerencia activa y cierra la lista', async () => {
+  it('Enter sobre una playa activa la selecciona y cierra la lista', async () => {
     const input = await typeSearch('la');
 
+    // "la" puts two municipalities first (Laredo, Piélagos); the third
+    // option is the first beach, La Concha.
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
     fireEvent.keyDown(input, { key: 'ArrowDown' });
     fireEvent.keyDown(input, { key: 'Enter' });
 
@@ -219,11 +231,31 @@ describe('PlayasList — sugerencias', () => {
     await waitFor(() => expect(screen.queryByRole('listbox')).not.toBeInTheDocument());
   });
 
-  it('el click en una sugerencia la selecciona', async () => {
+  it('el click en una sugerencia de playa la selecciona', async () => {
     const input = await typeSearch('su');
-    fireEvent.mouseDown(screen.getAllByRole('option')[0]);
+    // Option 0 is the municipality Suances; option 1 is the beach.
+    fireEvent.mouseDown(screen.getAllByRole('option')[1]);
 
     expect(input).toHaveValue('La Concha');
+  });
+
+  it('elegir un municipio navega a su página', async () => {
+    renderWithProviders(
+      <>
+        <PlayasList />
+        <Route
+          path="/municipios/:municipio"
+          render={({ match }) => <div>EN-MUNICIPIO:{match.params.municipio}</div>}
+        />
+      </>,
+      { route: '/playas' },
+    );
+    await screen.findByText('La Concha');
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'suan' } });
+
+    fireEvent.mouseDown(screen.getAllByRole('option')[0]);
+
+    expect(await screen.findByText('EN-MUNICIPIO:suances')).toBeInTheDocument();
   });
 });
 

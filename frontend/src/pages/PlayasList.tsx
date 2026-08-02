@@ -8,15 +8,22 @@ import {
 } from '@ionic/react';
 import { searchOutline, locateOutline, starOutline } from 'ionicons/icons';
 import { Playa, FeaturedBeach, getPlayas, getFeaturedBeaches } from '../services/api';
-import { coincidePlaya } from '../utils/beachHelpers';
+import { coincidePlaya, normalizarBusqueda } from '../utils/beachHelpers';
 import { useUserLocation } from '../hooks/useUserLocation';
 import { useIdioma } from '../i18n/IdiomaContext';
+import { useHistory } from 'react-router-dom';
 import BeachCard from '../components/BeachCard';
 import BottomNavBar from '../components/BottomNavBar';
 import SelectorIdioma from '../components/SelectorIdioma';
 import { useFavoritas } from '../features/favorites/useFavorites';
+import { resumenMunicipios } from '../seo/landings';
 import SeoHead from '../seo/SeoHead';
 import './PlayasList.css';
+
+/** A search suggestion: a municipality (navigates) or a beach (filters). */
+type Sugerencia =
+  | { tipo: 'municipio'; municipio: string; ruta: string; total: number }
+  | { tipo: 'playa'; playa: Playa };
 
 type OrdenMode = 'az' | 'cerca';
 
@@ -48,6 +55,7 @@ const PlayasList: React.FC = () => {
   const [activeIdx, setActiveIdx] = useState(-1);
   const { userLocation } = useUserLocation();
   const blurTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const history = useHistory();
 
   useEffect(() => {
     getPlayas({
@@ -74,18 +82,36 @@ const PlayasList: React.FC = () => {
 
   // No toggle needed — two separate buttons
 
-  const suggestions = useMemo(() => {
+  const suggestions = useMemo<Sugerencia[]>(() => {
     if (!playas || filtro.length < 2) return [];
-    return playas
+    const termino = normalizarBusqueda(filtro);
+    // Municipalities first (they are the broader answer), max 2, then
+    // beaches up to the usual 5 total.
+    const municipios = (resumenMunicipios(playas) as Array<{
+      municipio: string;
+      ruta: string;
+      total: number;
+    }>)
+      .filter((m) => normalizarBusqueda(m.municipio).includes(termino))
+      .slice(0, 2)
+      .map((m): Sugerencia => ({ tipo: 'municipio', ...m }));
+    const dePlaya = playas
       .filter((p) => coincidePlaya(p, filtro))
-      .slice(0, 5);
+      .slice(0, 5 - municipios.length)
+      .map((p): Sugerencia => ({ tipo: 'playa', playa: p }));
+    return [...municipios, ...dePlaya];
   }, [playas, filtro]);
 
-  const selectSuggestion = useCallback((nombre: string) => {
-    setFiltro(nombre);
+  const selectSuggestion = useCallback((sugerencia: Sugerencia) => {
+    if (sugerencia.tipo === 'municipio') {
+      // A municipality is a destination, not a filter: go to its page.
+      history.push(sugerencia.ruta);
+    } else {
+      setFiltro(sugerencia.playa.nombre);
+    }
     setShowSuggestions(false);
     setActiveIdx(-1);
-  }, []);
+  }, [history]);
 
   const handleSearchKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (!showSuggestions || suggestions.length === 0) return;
@@ -97,7 +123,7 @@ const PlayasList: React.FC = () => {
       setActiveIdx((prev) => (prev > 0 ? prev - 1 : suggestions.length - 1));
     } else if (e.key === 'Enter' && activeIdx >= 0) {
       e.preventDefault();
-      selectSuggestion(suggestions[activeIdx].nombre);
+      selectSuggestion(suggestions[activeIdx]);
     } else if (e.key === 'Escape') {
       setShowSuggestions(false);
       setActiveIdx(-1);
@@ -210,17 +236,28 @@ const PlayasList: React.FC = () => {
             <ul className="search-suggestions" role="listbox">
               {suggestions.map((s, i) => (
                 <li
-                  key={s.codigo}
+                  key={s.tipo === 'municipio' ? `municipio-${s.ruta}` : s.playa.codigo}
                   className={`search-suggestion-item${i === activeIdx ? ' search-suggestion-item--active' : ''}`}
                   role="option"
                   aria-selected={i === activeIdx}
                   onMouseDown={() => {
                     if (blurTimeout.current) clearTimeout(blurTimeout.current);
-                    selectSuggestion(s.nombre);
+                    selectSuggestion(s);
                   }}
                 >
-                  <span className="suggestion-name">{s.nombre}</span>
-                  <span className="suggestion-municipio">{s.municipio}</span>
+                  {s.tipo === 'municipio' ? (
+                    <>
+                      <span className="suggestion-name">{s.municipio}</span>
+                      <span className="suggestion-municipio">
+                        {t('detalle.municipio')} · {tPlural('lista.contador', s.total)}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="suggestion-name">{s.playa.nombre}</span>
+                      <span className="suggestion-municipio">{s.playa.municipio}</span>
+                    </>
+                  )}
                 </li>
               ))}
             </ul>
