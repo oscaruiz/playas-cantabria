@@ -34,6 +34,17 @@ const SIN_SOL: SunshineObservation[] = [
   },
 ];
 
+const SOL_SOSTENIDO: SunshineObservation[] = [
+  {
+    insoMin: 55,
+    fraccion: 55 / 60,
+    distanciaKm: 20,
+    idema: '1111X',
+    ubicacion: 'SANTANDER CMT',
+    observadoEn: EN_FRANJA - 10 * 60 * 1000,
+  },
+];
+
 const original = process.env.SKY_CORRECTION;
 
 beforeEach(() => skyCorrectionMetrics.reset());
@@ -67,6 +78,16 @@ describe('corregirCieloObservado — modos', () => {
     expect(res?.icon).toBe('04d');
     expect(res?.source).toBe('OpenWeather');
     expect(res?.temperatureC).toBe(DESPEJADO.temperatureC);
+  });
+
+  it('on: mejora a despejado cuando la insolación cercana contradice las nubes', () => {
+    process.env.SKY_CORRECTION = 'on';
+    const nublado = { ...DESPEJADO, description: 'muy nuboso', icon: '04d' };
+    const res = corregirCieloObservado('La Concha', nublado, SOL_SOSTENIDO, false, EN_FRANJA);
+
+    expect(res?.description).toBe('cielo claro');
+    expect(res?.icon).toBe('01d');
+    expect(res?.source).toBe('OpenWeather');
   });
 
   it('off: ni calcula ni registra', () => {

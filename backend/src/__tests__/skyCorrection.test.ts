@@ -157,16 +157,40 @@ describe('decidirCorreccionCielo — guardas', () => {
     });
   });
 
-  it('no corrige con sol suficiente ni "mejora" un cielo nublado', () => {
+  it('mantiene el modelo despejado cuando la insolación lo confirma', () => {
     const conSol = obs({ insoMin: 55, fraccion: 55 / 60 });
     expect(decidirCorreccionCielo(despejado(), [conSol], ctx())).toMatchObject({
       aplicar: false,
       motivo: 'sol-suficiente',
     });
-    // The model says overcast and there is sun: we still do not touch it. The
-    // correction is one-way on purpose.
+  });
+
+  it('mejora un cielo nublado cuando una estación cercana registra sol sostenido', () => {
+    const conSol = obs({ insoMin: 55, fraccion: 55 / 60, distanciaKm: 20 });
     const cubierto = despejado({ icon: '04d', description: 'muy nuboso' });
-    expect(decidirCorreccionCielo(cubierto, [conSol], ctx()).aplicar).toBe(false);
+    expect(decidirCorreccionCielo(cubierto, [conSol], ctx())).toMatchObject({
+      aplicar: true,
+      nivel: 'despejado',
+    });
+  });
+
+  it('no mejora con insolación ambigua ni con una estación lejana', () => {
+    const cubierto = despejado({ icon: '04d', description: 'muy nuboso' });
+    expect(
+      decidirCorreccionCielo(
+        cubierto,
+        [obs({ insoMin: 48, fraccion: 0.8, distanciaKm: 10 })],
+        ctx(),
+      ),
+    ).toMatchObject({ aplicar: false, motivo: 'sol-suficiente' });
+
+    expect(
+      decidirCorreccionCielo(
+        cubierto,
+        [obs({ insoMin: 55, fraccion: 55 / 60, distanciaKm: 26 })],
+        ctx(),
+      ),
+    ).toMatchObject({ aplicar: false, motivo: 'estacion-lejos-para-mejorar' });
   });
 
   it('no corrige si el modelo ya dice algo igual o más nublado', () => {
@@ -231,6 +255,18 @@ describe('aplicarCorreccionCielo', () => {
     const w = despejado();
     const d = decidirCorreccionCielo(w, [], ctx());
     expect(aplicarCorreccionCielo(w, d)).toBe(w);
+  });
+
+  it('aplica la mejora a despejado sin tocar el resto del dato meteorológico', () => {
+    const w = despejado({ icon: '04d', description: 'muy nuboso', cloudinessPct: 90 });
+    const conSol = obs({ insoMin: 55, fraccion: 55 / 60, distanciaKm: 20 });
+    const corregido = aplicarCorreccionCielo(w, decidirCorreccionCielo(w, [conSol], ctx()));
+
+    expect(corregido.description).toBe('cielo claro');
+    expect(corregido.icon).toBe('01d');
+    expect(corregido.temperatureC).toBe(w.temperatureC);
+    expect(corregido.windSpeedMs).toBe(w.windSpeedMs);
+    expect(corregido.timestamp).toBe(w.timestamp);
   });
 
   it('los textos que emite son los que el frontend ya sabe traducir y dibujar', () => {

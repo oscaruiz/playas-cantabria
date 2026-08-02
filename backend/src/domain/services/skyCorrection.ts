@@ -18,8 +18,9 @@ import { SunshineObservation } from '../entities/Sunshine';
  * exhaustively without spinning anything up. Same pattern as `flagAggregation.ts`.
  */
 
-/** Sky level it can be downgraded to, with its icon on the OpenWeather scale. */
+/** Sky levels supported by the correction, with OpenWeather-compatible icons. */
 const NIVELES = {
+  despejado: { descripcion: 'cielo claro', icono: '01d', severidad: 0 },
   dispersas: { descripcion: 'nubes dispersas', icono: '03d', severidad: 2 },
   muyNuboso: { descripcion: 'muy nuboso', icono: '04d', severidad: 3 },
 } as const;
@@ -43,6 +44,8 @@ const SEVERIDAD_MODELO: Record<string, number> = {
 const MAX_KM = 40;
 /** Below this one station is enough; above it two are required. */
 const KM_SIN_CORROBORAR = 30;
+/** Improving a cloudy model needs a closer station than worsening it. */
+const MAX_KM_PARA_MEJORAR = 25;
 /**
  * The AEMET observation is hourly, but `getOrSetStale` can serve the payload
  * for up to 3 h (TTL ×6) if AEMET goes down. Without this guard we could mark
@@ -52,8 +55,10 @@ const FRESCURA_MAX_MS = 2 * 60 * 60 * 1000;
 
 /** Below 1/4 of an hour of sun the sky is genuinely covered. */
 const UMBRAL_MUY_NUBOSO = 0.25;
-/** Above 3/4 the morning is sunny and there is nothing to correct. */
+/** Between this and the clear threshold the signal is intentionally inconclusive. */
 const UMBRAL_SIN_TOCAR = 0.75;
+/** Strong sunshine can disprove a cloudy current observation. */
+const UMBRAL_DESPEJADO = 0.85;
 
 export type MotivoDecision =
   | 'corregido'
@@ -62,6 +67,7 @@ export type MotivoDecision =
   | 'sin-observacion'
   | 'observacion-vieja'
   | 'estacion-lejos'
+  | 'estacion-lejos-para-mejorar'
   | 'sin-segundo-testigo'
   | 'lloviendo'
   | 'modelo-ya-nublado'
@@ -85,10 +91,11 @@ export interface DecisionCielo {
   fraccion?: number;
 }
 
-/** Level that sun fraction would downgrade to, or null if nothing needs touching. */
+/** Sky level supported by the sunshine fraction, or null in the uncertain band. */
 function nivelPara(fraccion: number): NivelCorregido | null {
   if (fraccion < UMBRAL_MUY_NUBOSO) return 'muyNuboso';
   if (fraccion <= UMBRAL_SIN_TOCAR) return 'dispersas';
+  if (fraccion >= UMBRAL_DESPEJADO) return 'despejado';
   return null;
 }
 
@@ -143,17 +150,29 @@ export function decidirCorreccionCielo(
     return { aplicar: false, motivo: 'estacion-lejos', ...base };
   }
 
-  // 5. Enough sun: we do not correct, and we do not "improve" a cloudy sky
-  // either. The documented failure always goes one way —the models swallow the
-  // stratus, they do not invent clouds— so the correction is one-directional.
+  // 5. Low sunshine can expose swallowed stratus. Very high sunshine can also
+  // disprove a cloudy current observation; the gap between both thresholds is
+  // intentionally inconclusive.
   const nivel = nivelPara(observacion.fraccion);
   if (!nivel) return { aplicar: false, motivo: 'sol-suficiente', ...base };
+
+  // Improving a cloudy model is useful, but more geographically sensitive
+  // than detecting a widespread stratus layer. Require a closer station and
+  // stronger sunshine than the downgrade path.
+  const esMejora = nivel === 'despejado';
+  const severidadModelo = weather.icon ? SEVERIDAD_MODELO[weather.icon] : undefined;
+  if (esMejora && severidadModelo === NIVELES.despejado.severidad) {
+    return { aplicar: false, motivo: 'sol-suficiente', ...base };
+  }
+  if (esMejora && observacion.distanciaKm > MAX_KM_PARA_MEJORAR) {
+    return { aplicar: false, motivo: 'estacion-lejos-para-mejorar', ...base };
+  }
 
   // 6. Between 30 and 40 km a second witness is required. A stratus layer is a
   // long, coherent band along the coast, so if it really is covered more than
   // one station will be seeing it; requiring two avoids correcting half the
   // province because of a dirty or broken sensor.
-  if (observacion.distanciaKm > KM_SIN_CORROBORAR) {
+  if (!esMejora && observacion.distanciaKm > KM_SIN_CORROBORAR) {
     // The witness has to see AT LEAST as much cloud as the main station.
     // A simple "not clear" was not enough: a station with 44 of the 60 minutes
     // of sun would have validated a "muy nuboso", which is exactly the opposite
@@ -167,10 +186,14 @@ export function decidirCorreccionCielo(
     if (!corrobora) return { aplicar: false, motivo: 'sin-segundo-testigo', ...base };
   }
 
-  // 7. Downgrade only. If the model already reports something equally or more
-  // cloudy, or a phenomenon not in the table (rain, fog, snow), leave it alone.
-  const severidadModelo = weather.icon ? SEVERIDAD_MODELO[weather.icon] : undefined;
-  if (severidadModelo === undefined || severidadModelo >= NIVELES[nivel].severidad) {
+  // 7. Low/intermittent sunshine only worsens the model. Strong sunshine is
+  // the sole case allowed to improve it. Phenomena outside the cloud scale
+  // (rain, fog, snow) are never replaced.
+  if (
+    severidadModelo === undefined
+    || severidadModelo === NIVELES[nivel].severidad
+    || (!esMejora && severidadModelo > NIVELES[nivel].severidad)
+  ) {
     return { aplicar: false, motivo: 'modelo-ya-nublado', ...base };
   }
 
@@ -178,7 +201,7 @@ export function decidirCorreccionCielo(
 }
 
 /**
- * Returns a copy of the `Weather` with the sky downgraded. Temperature, wind,
+ * Returns a copy of the `Weather` with the observed sky correction. Temperature, wind,
  * humidity and pressure are preserved: only the sky is disputed.
  *
  * `source` is kept INTACT on purpose: `buildRankingReason` in BeachScorer only
