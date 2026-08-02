@@ -7,6 +7,8 @@
  * with the second argument of t(). Keys with the _one/_other suffix
  * are plural forms and are resolved with tPlural().
  */
+import { PLANTILLAS_SEO, ETIQUETAS_ATTR } from '../seo/metadata';
+
 export const es = {
   // ---- App / global ----
   'app.titulo': 'Playas de {region}',
@@ -208,14 +210,16 @@ export const es = {
   'detalle.datosMeteo': 'Datos meteorológicos: {fuente}',
 
   // ---- SEO (document head per route) ----
-  'seo.tituloInicio': 'Playas {region}: la mejor playa para hoy',
-  'seo.descInicio': 'Compara las playas de {region} ahora mismo: puntuación, bandera, tiempo y previsión para elegir playa hoy.',
-  'seo.tituloLista': 'Todas las playas de {region} | Playas {region}',
-  'seo.descLista': 'Listado completo de las playas de {region}, con buscador, distancia, banderas y servicios.',
-  'seo.tituloMapa': 'Mapa de playas de {region} | Playas {region}',
-  'seo.descMapa': 'Mapa interactivo con todas las playas de {region} y su estado.',
-  'seo.tituloDetalle': '{nombre}: bandera, tiempo y mareas hoy | Playas {region}',
-  'seo.descDetalle': 'Estado de la playa de {nombre}, en {municipio}: bandera actual, tiempo, previsión y mareas de hoy.',
+  // The Spanish templates live in seo/metadata.js, shared with the
+  // prerender script so the baked HTML and the client can never drift.
+  'seo.tituloInicio': PLANTILLAS_SEO.tituloInicio,
+  'seo.descInicio': PLANTILLAS_SEO.descInicio,
+  'seo.tituloLista': PLANTILLAS_SEO.tituloLista,
+  'seo.descLista': PLANTILLAS_SEO.descLista,
+  'seo.tituloMapa': PLANTILLAS_SEO.tituloMapa,
+  'seo.descMapa': PLANTILLAS_SEO.descMapa,
+  'seo.tituloDetalle': PLANTILLAS_SEO.tituloDetalle,
+  'seo.descDetalle': PLANTILLAS_SEO.descDetalle,
 
   // ---- Data provenance ----
   'datos.enDirectoFuente': 'Observación en directo de {fuente}',
@@ -243,18 +247,19 @@ export const es = {
   'webcam.cercana': 'Webcam cercana',
   'webcam.abrir': 'Abrir webcam',
 
-  // ---- Beach attributes (keys aligned with ATTR_CONFIG) ----
-  'attr.duchas': 'Duchas',
-  'attr.aseos': 'Aseos',
-  'attr.parking': 'Parking',
-  'attr.accesible': 'Accesible',
-  'attr.chiringuito': 'Chiringuito',
-  'attr.surf': 'Surf',
-  'attr.mascotas': 'Mascotas',
-  'attr.socorrismo': 'Socorrismo',
-  'attr.nudista': 'Nudista',
-  'attr.accesoBanista': 'Acceso baño',
-  'attr.submarinismo': 'Submarinismo',
+  // ---- Beach attributes (keys aligned with ATTR_CONFIG; labels shared
+  // with the prerender script via seo/metadata.js) ----
+  'attr.duchas': ETIQUETAS_ATTR.duchas,
+  'attr.aseos': ETIQUETAS_ATTR.aseos,
+  'attr.parking': ETIQUETAS_ATTR.parking,
+  'attr.accesible': ETIQUETAS_ATTR.accesible,
+  'attr.chiringuito': ETIQUETAS_ATTR.chiringuito,
+  'attr.surf': ETIQUETAS_ATTR.surf,
+  'attr.mascotas': ETIQUETAS_ATTR.mascotas,
+  'attr.socorrismo': ETIQUETAS_ATTR.socorrismo,
+  'attr.nudista': ETIQUETAS_ATTR.nudista,
+  'attr.accesoBanista': ETIQUETAS_ATTR.accesoBanista,
+  'attr.submarinismo': ETIQUETAS_ATTR.submarinismo,
 } as const;
 
 export type ClaveTexto = keyof typeof es;

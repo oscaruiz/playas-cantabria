@@ -19,6 +19,7 @@ import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { createRequire } from 'node:module';
+import { origenPublico } from './lib/site-origin.mjs';
 
 const require = createRequire(import.meta.url);
 const raiz = dirname(fileURLToPath(import.meta.url));
@@ -45,24 +46,7 @@ if (colisiones.length > 0) {
   process.exit(1);
 }
 
-function origenPorFirebaserc(regionId) {
-  const rutaRc = join(frontend, '.firebaserc');
-  if (!existsSync(rutaRc)) return null;
-  try {
-    const rc = JSON.parse(readFileSync(rutaRc, 'utf8'));
-    for (const proyecto of Object.values(rc.targets ?? {})) {
-      const sitios = proyecto.hosting?.[regionId];
-      if (Array.isArray(sitios) && sitios.length > 0) return `https://${sitios[0]}.web.app`;
-    }
-  } catch {
-    return null;
-  }
-  return null;
-}
-
-const origen =
-  process.env.REACT_APP_SITE_ORIGIN?.trim().replace(/\/+$/, '') ||
-  origenPorFirebaserc(region.id);
+const origen = origenPublico(frontend, region.id);
 
 if (!origen) {
   console.warn(
