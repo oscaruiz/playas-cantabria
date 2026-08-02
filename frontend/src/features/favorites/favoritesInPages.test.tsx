@@ -8,6 +8,7 @@ import React from 'react';
 import { fireEvent, screen, waitFor } from '@testing-library/react';
 import PlayasList from '../../pages/PlayasList';
 import PlayaDetallePage from '../../pages/PlayaDetalle';
+import HomePage from '../../pages/HomePage';
 import { renderWithProviders } from '../../test/render';
 import { installFetchMock, restoreFetch, route } from '../../test/http/fakeFetch';
 import { beachesResponse } from '../../test/fixtures/beaches';
@@ -85,6 +86,36 @@ describe('favoritas en el listado', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Mostrar solo favoritas' }));
 
     expect(screen.getByText(/Aún no tienes playas favoritas/)).toBeInTheDocument();
+  });
+});
+
+describe('favoritas en la página de inicio', () => {
+  function guardarFavorita(codigo: string) {
+    localStorage.setItem(
+      'playas:favoritas',
+      JSON.stringify({ version: 1, beachCodes: [codigo] })
+    );
+    recargarFavoritas();
+  }
+
+  it('la sección "Tus playas favoritas" sale la primera, con la playa guardada', async () => {
+    guardarFavorita('3908503'); // La Concha
+    const { container } = renderWithProviders(<HomePage />, { route: '/' });
+
+    const seccion = await screen.findByText('Tus playas favoritas');
+    expect(seccion).toBeInTheDocument();
+    // First section of the body: favorites go at the very top.
+    const primera = container.querySelector('.hp-body section');
+    expect(primera).toHaveClass('hp-section--favoritas');
+    expect(primera).toHaveTextContent('La Concha');
+    // With the ranking loaded, the row carries current conditions.
+    await waitFor(() => expect(primera).toHaveTextContent('22°'));
+  });
+
+  it('sin favoritas no hay sección', async () => {
+    renderWithProviders(<HomePage />, { route: '/' });
+    await screen.findByText('La mejor playa para hoy');
+    expect(screen.queryByText('Tus playas favoritas')).not.toBeInTheDocument();
   });
 });
 

@@ -37,6 +37,7 @@ export const es = {
   'fav.quitar': 'Quitar {nombre} de favoritas',
   'fav.filtro': 'Mostrar solo favoritas',
   'fav.vacio': 'Aún no tienes playas favoritas. Toca la estrella de una playa para guardarla aquí.',
+  'home.favoritas': 'Tus playas favoritas',
 
   // ---- Home ----
   'home.subtitulo': 'Descubre las mejores playas de {region}',

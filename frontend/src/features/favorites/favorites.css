@@ -21,3 +21,17 @@
   outline-offset: 2px;
   border-radius: 8px;
 }
+
+/* In the detail header the star is a primary action, not an ornament:
+   bigger tap target, and WHITE like the back button — the muted gray of the
+   default state is invisible on the header's dark ocean gradient. The
+   active gold keeps enough contrast on that background. */
+.pd-sticky-header .fav-btn {
+  font-size: 1.55rem;
+  padding: 8px;
+  color: #ffffff;
+}
+
+.pd-sticky-header .fav-btn--activa {
+  color: var(--ion-color-secondary);
+}

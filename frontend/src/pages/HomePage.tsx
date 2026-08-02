@@ -28,6 +28,7 @@ import ScoreBadge from '../components/ScoreBadge';
 import TrendBadge from '../components/TrendBadge';
 import { rutaPlaya } from '../seo/beachUrls';
 import SeoHead from '../seo/SeoHead';
+import { useFavoritas } from '../features/favorites/useFavorites';
 import './HomePage.css';
 
 /**
@@ -372,6 +373,20 @@ const HomePage: React.FC = () => {
   const mejorPlaya = sortedFeatured.length > 0 ? sortedFeatured[0] : null;
   const alternativas = sortedFeatured.slice(1, 5);
 
+  // Favorites go at the very top, but as THEIR OWN section: they never
+  // displace "the best beach today", which must remain the honestly ranked
+  // one. Conditions are joined from resumenTodas when the ranking loaded;
+  // without it the row still shows name and municipality from the catalog.
+  const { favoritas } = useFavoritas();
+  const favoritasEnHome = useMemo(() => {
+    if (!allPlayas || favoritas.size === 0) return [];
+    const porCodigo = new Map((featured?.resumenTodas ?? []).map((b) => [b.codigo, b]));
+    return allPlayas
+      .filter((p) => favoritas.has(p.codigo))
+      .sort((a, b) => a.nombre.localeCompare(b.nombre))
+      .map((p) => ({ playa: p, condiciones: porCodigo.get(p.codigo) ?? null }));
+  }, [allPlayas, favoritas, featured]);
+
   const avgTemp = featured ? averageTemp(featured.playas) : null;
   const totalBeaches = allPlayas?.length ?? 0;
   const actualizadoMs = featured ? normalizarInstante(featured.timestamp) : null;
@@ -398,6 +413,45 @@ const HomePage: React.FC = () => {
         />
 
         <div className="hp-body">
+          {/* Favorites first — independent of the featured ranking's fate. */}
+          {favoritasEnHome.length > 0 && (
+            <section className="hp-section hp-section--favoritas">
+              <h2 className="section-kicker">{t('home.favoritas')}</h2>
+              <div className="hp-alt-list">
+                {favoritasEnHome.map(({ playa, condiciones }) =>
+                  condiciones ? (
+                    <AlternativeRow
+                      key={playa.codigo}
+                      beach={condiciones}
+                      distKm={distanceMap.get(playa.codigo) ?? null}
+                      onClick={() => history.push(rutaPlaya(playa))}
+                    />
+                  ) : (
+                    <div
+                      key={playa.codigo}
+                      className="hp-alt-row"
+                      role="link"
+                      tabIndex={0}
+                      aria-label={t('comun.verDetalleDe', { nombre: playa.nombre })}
+                      onClick={() => history.push(rutaPlaya(playa))}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          history.push(rutaPlaya(playa));
+                        }
+                      }}
+                    >
+                      <div className="hp-alt-body">
+                        <p className="hp-alt-name">{playa.nombre}</p>
+                        <p className="hp-alt-municipio">{playa.municipio}</p>
+                      </div>
+                    </div>
+                  )
+                )}
+              </div>
+            </section>
+          )}
+
           {/* Loading state */}
           {featuredLoading && (
             <div className="hp-loading">
