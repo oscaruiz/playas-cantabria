@@ -90,7 +90,9 @@ it('el listado pide /api/asturias y titula con Asturias', async () => {
   renderWithProviders(<PlayasList />, { route: '/playas' });
 
   expect(await screen.findByText('Playas de Asturias')).toBeInTheDocument();
-  expect(document.title).toBe('Playas Asturias');
+  // Since Phase 4 each page titles itself (SeoHead); the list page's title
+  // still must carry the region and never a hardcoded Cantabria.
+  expect(document.title).toBe('Todas las playas de Asturias | Playas Asturias');
   expect(screen.queryByText(/Cantabria/)).not.toBeInTheDocument();
 
   const urls = fetchMock.mock.calls.map((c) => String(c[0]));

@@ -206,6 +206,16 @@ export const es = {
   'detalle.zonaAvisos': 'Zona de avisos: {zona}',
   'detalle.datosMeteo': 'Datos meteorológicos: {fuente}',
 
+  // ---- SEO (document head per route) ----
+  'seo.tituloInicio': 'Playas {region}: la mejor playa para hoy',
+  'seo.descInicio': 'Compara las playas de {region} ahora mismo: puntuación, bandera, tiempo y previsión para elegir playa hoy.',
+  'seo.tituloLista': 'Todas las playas de {region} | Playas {region}',
+  'seo.descLista': 'Listado completo de las playas de {region}, con buscador, distancia, banderas y servicios.',
+  'seo.tituloMapa': 'Mapa de playas de {region} | Playas {region}',
+  'seo.descMapa': 'Mapa interactivo con todas las playas de {region} y su estado.',
+  'seo.tituloDetalle': '{nombre}: bandera, tiempo y mareas hoy | Playas {region}',
+  'seo.descDetalle': 'Estado de la playa de {nombre}, en {municipio}: bandera actual, tiempo, previsión y mareas de hoy.',
+
   // ---- Data provenance ----
   'datos.enDirectoFuente': 'Observación en directo de {fuente}',
   'datos.estatico': 'Información fija de la playa, no cambia a diario',

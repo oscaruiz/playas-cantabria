@@ -28,6 +28,8 @@ import { useUserLocation } from '../hooks/useUserLocation';
 import BottomNavBar from '../components/BottomNavBar';
 import SelectorIdioma from '../components/SelectorIdioma';
 import { useHistory, useLocation } from 'react-router-dom';
+import { rutaPlaya } from '../seo/beachUrls';
+import SeoHead from '../seo/SeoHead';
 import './MapaPage.css';
 
 // ---- Marker helpers ----
@@ -184,6 +186,11 @@ const MapaPage: React.FC = () => {
 
   return (
     <IonPage className="mapa-page">
+      <SeoHead
+        titulo={t('seo.tituloMapa')}
+        descripcion={t('seo.descMapa')}
+        rutaCanonica="/mapa"
+      />
       <div className="mapa-sticky-header" onClick={() => window.location.reload()} style={{ cursor: 'pointer' }}>
         <h1 className="mapa-sticky-title">{t('app.titulo')}</h1>
         <p className="mapa-sticky-subtitle">{t('mapa.subtitulo')}</p>
@@ -289,7 +296,7 @@ const MapaPage: React.FC = () => {
                       )}
                       <button
                         className="mapa-popup-btn"
-                        onClick={() => history.push(`/playas/${playa.codigo}`)}
+                        onClick={() => history.push(rutaPlaya(playa))}
                       >
                         {t('mapa.verDetalles')}
                       </button>

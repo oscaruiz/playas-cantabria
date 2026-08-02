@@ -85,7 +85,11 @@ describe('los textos de cabecera llevan el nombre de la región', () => {
     renderWithProviders(<PlayasList />, { route: '/playas' });
 
     expect(await screen.findByText(`Playas de ${REGION.name}`)).toBeInTheDocument();
-    expect(document.title).toBe(`Playas ${REGION.name}`);
+    // Since Phase 4 the list page titles itself via SeoHead — still with
+    // {region} interpolated, never hardcoded.
+    expect(document.title).toBe(
+      `Todas las playas de ${REGION.name} | Playas ${REGION.name}`
+    );
     // The placeholder must never reach the screen.
     expect(screen.queryByText(/\{region\}/)).not.toBeInTheDocument();
   });

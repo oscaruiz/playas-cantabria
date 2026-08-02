@@ -32,6 +32,8 @@ import SelectorIdioma from '../components/SelectorIdioma';
 import { useHistory } from 'react-router-dom';
 import FavoriteButton from '../features/favorites/FavoriteButton';
 import { useFavoritas } from '../features/favorites/useFavorites';
+import { rutaPlaya } from '../seo/beachUrls';
+import SeoHead from '../seo/SeoHead';
 import './PlayasList.css';
 
 type OrdenMode = 'az' | 'cerca';
@@ -137,6 +139,11 @@ const PlayasList: React.FC = () => {
 
   return (
     <IonPage className="home-page">
+      <SeoHead
+        titulo={t('seo.tituloLista')}
+        descripcion={t('seo.descLista')}
+        rutaCanonica="/playas"
+      />
       {/* Sticky header */}
       <div className="home-sticky-header" onClick={() => window.location.reload()} style={{ cursor: 'pointer' }}>
         <h1 className="home-sticky-title">{t('app.titulo')}</h1>
@@ -281,14 +288,14 @@ const PlayasList: React.FC = () => {
               <div
                 key={playa.codigo}
                 className="beach-card"
-                onClick={() => history.push(`/playas/${playa.codigo}`)}
+                onClick={() => history.push(rutaPlaya(playa))}
                 role="link"
                 tabIndex={0}
                 aria-label={t('comun.verDetalleDe', { nombre: `${playa.nombre}, ${playa.municipio}` })}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
-                    history.push(`/playas/${playa.codigo}`);
+                    history.push(rutaPlaya(playa));
                   }
                 }}
               >

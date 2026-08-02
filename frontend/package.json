@@ -57,7 +57,7 @@
     "sync-region": "node scripts/sync-region.mjs",
     "check-regions": "node scripts/check-regions.mjs",
     "start": "npm run sync-region && react-scripts start",
-    "build": "npm run sync-region && react-scripts build",
+    "build": "npm run sync-region && react-scripts build && node scripts/generate-sitemap.mjs",
     "android:sync": "npm run build && npx cap sync android && node scripts/configure-android.mjs",
     "perf:budget": "node scripts/check-bundle-size.mjs",
     "test": "node scripts/sync-region.mjs --region cantabria && react-scripts test",

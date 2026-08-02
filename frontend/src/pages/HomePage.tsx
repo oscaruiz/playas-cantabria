@@ -26,6 +26,8 @@ import {
 } from '../i18n/apiText';
 import ScoreBadge from '../components/ScoreBadge';
 import TrendBadge from '../components/TrendBadge';
+import { rutaPlaya } from '../seo/beachUrls';
+import SeoHead from '../seo/SeoHead';
 import './HomePage.css';
 
 /**
@@ -376,6 +378,11 @@ const HomePage: React.FC = () => {
 
   return (
     <IonPage className="hp-page">
+      <SeoHead
+        titulo={t('seo.tituloInicio')}
+        descripcion={t('seo.descInicio')}
+        rutaCanonica="/"
+      />
       <div className="hp-sticky-header" onClick={() => window.location.reload()} style={{ cursor: 'pointer' }}>
         <h1 className="hp-sticky-title">{t('app.titulo')}</h1>
         <p className="hp-sticky-subtitle">{t('home.subtitulo')}</p>
@@ -435,7 +442,7 @@ const HomePage: React.FC = () => {
                   beach={mejorPlaya}
                   distKm={distanceMap.get(mejorPlaya.codigo) ?? null}
                   priorizadaPorCercania={codigoMejorPuntuacion != null}
-                  onVerDetalles={() => history.push(`/playas/${mejorPlaya.codigo}`)}
+                  onVerDetalles={() => history.push(rutaPlaya(mejorPlaya))}
                   onVerEnMapa={() => history.push(`/mapa?lat=${mejorPlaya.lat}&lon=${mejorPlaya.lon}&codigo=${mejorPlaya.codigo}`)}
                 />
               </section>
@@ -450,7 +457,7 @@ const HomePage: React.FC = () => {
                         beach={beach}
                         distKm={distanceMap.get(beach.codigo) ?? null}
                         esMejorPuntuacion={beach.codigo === codigoMejorPuntuacion}
-                        onClick={() => history.push(`/playas/${beach.codigo}`)}
+                        onClick={() => history.push(rutaPlaya(beach))}
                       />
                     ))}
                   </div>

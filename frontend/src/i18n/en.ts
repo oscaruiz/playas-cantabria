@@ -199,6 +199,16 @@ export const en = {
   'detalle.zonaAvisos': 'Warning zone: {zona}',
   'detalle.datosMeteo': 'Weather data: {fuente}',
 
+  // ---- SEO (document head per route) ----
+  'seo.tituloInicio': '{region} beaches: the best beach for today',
+  'seo.descInicio': 'Compare {region} beaches right now: score, flag, weather and forecast to pick a beach today.',
+  'seo.tituloLista': 'All the beaches of {region} | {region} Beaches',
+  'seo.descLista': 'Full list of {region} beaches, with search, distance, flags and services.',
+  'seo.tituloMapa': '{region} beach map | {region} Beaches',
+  'seo.descMapa': 'Interactive map with every beach in {region} and its status.',
+  'seo.tituloDetalle': '{nombre}: flag, weather and tides today | {region} Beaches',
+  'seo.descDetalle': 'Status of {nombre} beach, in {municipio}: current flag, weather, forecast and today\'s tides.',
+
   // ---- Data provenance ----
   'datos.enDirectoFuente': 'Live observation from {fuente}',
   'datos.estatico': 'Fixed beach information, does not change daily',

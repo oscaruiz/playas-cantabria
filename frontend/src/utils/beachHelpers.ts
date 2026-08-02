@@ -16,6 +16,7 @@ import {
 } from 'ionicons/icons';
 import type { TraducirFn } from '../i18n/IdiomaContext';
 import type { ClaveTexto } from '../i18n/es';
+import { sinAcentos } from '../seo/beachUrls';
 
 export function limpiarTexto(texto: string | null | undefined): string {
   if (!texto) return '';
@@ -24,7 +25,10 @@ export function limpiarTexto(texto: string | null | undefined): string {
 
 /** Normalizes for search: lowercase + no accents (Arn\u00EDa \u2192 arnia). */
 export function normalizarBusqueda(texto: string): string {
-  return texto.toLowerCase().normalize('NFD').replace(/\p{M}/gu, '');
+  // Shares the accent-stripper with the URL module: the previous inline
+  // `\p{M}` regex cost ~4 kB of bundle once Babel expanded it (see
+  // seo/beachUrls.js).
+  return sinAcentos(texto.toLowerCase());
 }
 
 /**

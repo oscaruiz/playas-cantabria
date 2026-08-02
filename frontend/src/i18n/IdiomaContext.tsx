@@ -55,8 +55,10 @@ export const IdiomaProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   useEffect(() => {
     document.documentElement.lang = idioma;
-    // Through interpolar: the title carries {region} like any other text.
-    document.title = interpolar(DICCIONARIOS[idioma]['app.tituloDocumento']);
+    // The title is no longer set here: each page owns it via SeoHead
+    // (src/seo/SeoHead.tsx). A provider-level title would overwrite the
+    // page's one on every language switch, because parent effects run
+    // after child effects.
     try {
       localStorage.setItem(IDIOMA_KEY, idioma);
     } catch {

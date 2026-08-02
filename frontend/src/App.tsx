@@ -38,6 +38,10 @@ const App: React.FC = () => (
         <IonRouterOutlet animated={false}>
           <Route exact path="/" component={HomePage} />
           <Route exact path="/playas" component={PlayasList} />
+          {/* Canonical (slugs) and legacy (AEMET code) detail routes: both
+              exact, different segment counts, same page. The legacy one must
+              outlive every shared link ever sent. */}
+          <Route exact path="/playas/:municipio/:playa" component={PlayaDetallePage} />
           <Route exact path="/playas/:codigo" component={PlayaDetallePage} />
           <Route path="/mapa" component={MapaPage} exact />
         </IonRouterOutlet>

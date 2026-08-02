@@ -11,11 +11,14 @@ import { useHistory, useParams } from 'react-router-dom';
 import {
   getDetallePlaya,
   getFeaturedBeaches,
+  getPlayas,
   ErrorDetalle,
   FeaturedBeach,
   SubPuntuaciones,
   PlayaDetalle as PlayaDetalleData,
 } from '../services/api';
+import { rutaPlaya, encontrarPorSlugs } from '../seo/beachUrls';
+import SeoHead from '../seo/SeoHead';
 import BottomNavBar from '../components/BottomNavBar';
 import SelectorIdioma from '../components/SelectorIdioma';
 import './PlayaDetalle.css';
@@ -38,7 +41,15 @@ import { nombreFuenteMeteo } from '../features/provenance/procedencia';
 import FavoriteButton from '../features/favorites/FavoriteButton';
 
 const PlayaDetallePage: React.FC = () => {
-  const { codigo } = useParams<{ codigo: string }>();
+  // Two routes land here: canonical /playas/:municipio/:playa and legacy
+  // /playas/:codigo. The canonical one is resolved to a codigo against the
+  // catalog (getPlayas never rejects: backend, saved copy or bundled JSON).
+  const { codigo, municipio, playa } = useParams<{
+    codigo?: string;
+    municipio?: string;
+    playa?: string;
+  }>();
+  const [codigoResuelto, setCodigoResuelto] = useState<string | null>(codigo ?? null);
   const history = useHistory();
   const { t } = useIdioma();
   const [datos, setDatos] = useState<PlayaDetalleData | null>(null);
@@ -63,11 +74,34 @@ const PlayaDetallePage: React.FC = () => {
    * El guardia `activo` es el mismo que ya usaba el efecto de la puntuación:
    * el resultado de una petición que ya no interesa no toca el estado.
    */
+  // Canonical route: slugs → codigo. The legacy route resolves synchronously.
   useEffect(() => {
+    if (codigo) {
+      setCodigoResuelto(codigo);
+      return;
+    }
+    let activo = true;
+    setCodigoResuelto(null);
+    getPlayas().then((todas) => {
+      if (!activo) return;
+      const encontrada = encontrarPorSlugs(todas, municipio ?? '', playa ?? '');
+      if (encontrada) {
+        setCodigoResuelto(encontrada.codigo);
+      } else {
+        // Same shape as a backend 404: unknown beach.
+        setError(true);
+        setStatusError(404);
+      }
+    });
+    return () => { activo = false; };
+  }, [codigo, municipio, playa]);
+
+  useEffect(() => {
+    if (!codigoResuelto) return;
     let activo = true;
     setError(false);
     setStatusError(null);
-    getDetallePlaya(codigo)
+    getDetallePlaya(codigoResuelto)
       .then((detalle) => {
         if (!activo) return;
         setDatos(detalle);
@@ -79,19 +113,20 @@ const PlayaDetallePage: React.FC = () => {
         setStatusError(e instanceof ErrorDetalle ? e.status : null);
       });
     return () => { activo = false; };
-  }, [codigo]);
+  }, [codigoResuelto]);
 
   useEffect(() => {
+    if (!codigoResuelto) return;
     let activo = true;
     getFeaturedBeaches()
       .then((res) => {
         if (!activo) return;
-        setPuntuada(res.resumenTodas.find((b) => b.codigo === codigo) ?? null);
+        setPuntuada(res.resumenTodas.find((b) => b.codigo === codigoResuelto) ?? null);
         setMaximos(res.maximos ?? null);
       })
       .catch(() => { /* non-blocking: no score */ });
     return () => { activo = false; };
-  }, [codigo]);
+  }, [codigoResuelto]);
 
   const [selectedDay, setSelectedDay] = useState(0);
   const pred = datos?.prediccionCompleta;
@@ -100,6 +135,16 @@ const PlayaDetallePage: React.FC = () => {
 
   return (
     <IonPage className="playa-detalle-page">
+      {/* Whether reached by slug or by legacy code, the canonical URL is
+          always the slug one: that is what "resolves" old links for SEO
+          without remounting the Ionic view stack with a client redirect. */}
+      {datos && (
+        <SeoHead
+          titulo={t('seo.tituloDetalle', { nombre: datos.nombre })}
+          descripcion={t('seo.descDetalle', { nombre: datos.nombre, municipio: datos.municipio })}
+          rutaCanonica={rutaPlaya(datos)}
+        />
+      )}
       <div className="pd-sticky-header">
         <button className="pd-back-btn" onClick={() => history.goBack()} aria-label={t('detalle.volver')}>
           <IonIcon icon={chevronBackOutline} aria-hidden="true" />
