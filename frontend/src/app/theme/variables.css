@@ -335,3 +335,64 @@ ion-page.ion-page {
   height: 1px;
   background: var(--playa-border);
 }
+
+/* --- Contenido prerenderizado (scripts/prerender.mjs) ---
+   Cada ruta pública lleva dentro de #root una versión estática y semántica de
+   su contenido: es lo que leen los buscadores y lo que ve una persona con la
+   conexión lenta mientras descarga el bundle. React la sustituye al montar.
+   Sin estas reglas ese instante se veía como una lista con viñetas y enlaces
+   azules subrayados —"sin CSS"— cuando en realidad la hoja ya estaba cargada:
+   lo que faltaba era que alguien la vistiera. No es decoración: es el primer
+   pintado real de la página. */
+.prerender {
+  color: var(--playa-text);
+}
+
+.prerender nav {
+  font-size: 0.82rem;
+  color: var(--playa-text-muted);
+  padding-bottom: 14px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid var(--playa-border);
+}
+
+.prerender a {
+  color: var(--playa-ocean);
+  text-decoration: none;
+}
+
+.prerender h1 {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 600;
+  font-size: 1.5rem;
+  line-height: 1.25;
+  margin: 0 0 6px;
+}
+
+.prerender p {
+  color: var(--playa-text-muted);
+  font-size: 0.9rem;
+  margin: 0 0 14px;
+}
+
+.prerender ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.prerender li {
+  padding: 11px 0;
+  border-bottom: 1px solid var(--playa-border);
+  font-size: 0.95rem;
+}
+
+.prerender li strong {
+  color: var(--playa-text);
+  font-weight: 600;
+}
+
+.prerender em {
+  color: var(--playa-text-muted);
+  font-size: 0.85rem;
+}

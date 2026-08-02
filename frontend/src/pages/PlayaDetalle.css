@@ -52,7 +52,11 @@
   font-size: 1.5rem;
 }
 
+/* Takes the space the back button, the star and the language selector leave,
+   and no more: without flex-grow it sized itself to the title's content and
+   pushed the star on top of the selector. */
 .pd-sticky-header > div {
+  flex: 1;
   min-width: 0;
 }
 
@@ -66,7 +70,20 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  padding-right: 76px;
+}
+
+/* The language selector is absolutely positioned (it is shared by the four
+   headers), so the flow has to reserve its width or whatever comes last lands
+   underneath it — which is exactly what happened to the star. Reserved here,
+   once, instead of padding the title: the star is now the item that stops
+   before the selector, and the title gets every pixel that is left.
+   Measured, not guessed: the selector renders 79px wide and sits 16px from
+   the edge, so the star clears it from 83px onwards — at the 72px this first
+   used, the two boxes still overlapped by 11px and the star was tappable on
+   top of the ES button, which is how the bug looked. 88px leaves 5px of air,
+   and every pixel above that comes straight out of the beach name. */
+.pd-sticky-header .fav-btn {
+  margin-right: 88px;
 }
 
 .pd-sticky-subtitle {
@@ -74,6 +91,33 @@
   opacity: 0.8;
   margin: 2px 0 0;
   color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* A long name ("El Cabo / Gerra / Bederna") does not fit at 1.25rem on a
+   360 px header no matter how the space is divided; a size down buys three or
+   four characters before the ellipsis, which is the difference between
+   "El Cabo / Gerr…" and a name you can recognise. */
+@media (max-width: 420px) {
+  .pd-sticky-title {
+    font-size: 1.1rem;
+  }
+
+  /* Same reason, and it buys the whole municipality: the longest one in the
+     catalogue, "San Vicente de la Barquera", needed 157px at 0.78rem against
+     the 155px the header had left, and lost its last letters to an ellipsis.
+     At 0.7rem it asks for exactly the 159px now available — it fits, with no
+     slack. A longer name still ellipsizes, which is the intended way for this
+     to degrade; what is not acceptable is the star sitting on the selector. */
+  .pd-sticky-subtitle {
+    font-size: 0.7rem;
+  }
+
+  .pd-sticky-header {
+    padding-right: 12px;
+  }
 }
 
 /* --- Loading / error --- */
@@ -111,8 +155,13 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.16);
 }
 
+/* Three actions that do not fit on one phone row: at 360px each button got
+   ~50px of text width and "Ver en el mapa" broke into three lines, leaving the
+   row visibly ragged. The row wraps instead of the labels — a button whose
+   text is chopped up stops reading as a button. */
 .hero-links {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   margin-bottom: 14px;
 }
@@ -250,8 +299,17 @@
   padding: 8px 14px;
   cursor: pointer;
   text-decoration: none;
+  white-space: nowrap;
   transition: background 0.15s ease, border-color 0.15s ease;
   -webkit-tap-highlight-color: transparent;
+}
+
+/* Tighter chrome so two of the three still share a row on a narrow phone. */
+@media (max-width: 420px) {
+  .hero-directions-link {
+    padding: 8px 11px;
+    gap: 5px;
+  }
 }
 
 .hero-directions-link:active {

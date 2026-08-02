@@ -371,6 +371,30 @@
   opacity: 0.5;
 }
 
+/* --- Narrow phones: the beach NAME wins the row ---
+   Six items compete for the width (sky+temp, text, score, badges, star,
+   chevron) and only the text column can shrink. On a 360 px screen that left
+   it about 30 px: the list read "Ber…", "Canal…", "Co…" — a beach list where
+   you cannot read the beach. What goes is the operator's LABEL, repeated
+   identically on nearly every row; the coloured dot and the badge's
+   aria-label stay, so neither the signal nor the screen-reader text is lost.
+   The municipality keeps one line instead of wrapping into three. */
+@media (max-width: 480px) {
+  .beach-card {
+    gap: 9px;
+  }
+
+  .beach-card .badge-vigilada-texto {
+    display: none;
+  }
+
+  .beach-card-municipio {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
 /* --- Loading state --- */
 .home-loading {
   display: flex;

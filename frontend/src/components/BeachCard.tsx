@@ -123,7 +123,12 @@ const BeachCard: React.FC<{
                 })}
               >
                 <span className="badge-vigilada-dot" aria-hidden="true" />
-                {traducirOperador(operador, idioma)}
+                {/* The label is what the CSS drops on a narrow screen; the dot
+                    and the aria-label above stay, so nothing is lost to
+                    assistive tech. */}
+                <span className="badge-vigilada-texto">
+                  {traducirOperador(operador, idioma)}
+                </span>
               </span>
             )}
             {conWebcam && (
