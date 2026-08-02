@@ -10,7 +10,8 @@ import { SunshineObservation } from '../entities/Sunshine';
 export interface SunshineProvider {
   /**
    * Stations with sunshine data closest to the point, SORTED by distance.
-   * Empty array if none is usable. Never throws.
+   * Empty array if the source responded but none is usable. Throws when the
+   * source itself is unavailable, so callers with stale data can preserve it.
    *
    * Returns several and not just the best one because for far-away beaches a
    * second witness is needed before trusting it: a stratus layer is seen by

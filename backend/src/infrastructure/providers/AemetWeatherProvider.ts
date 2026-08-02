@@ -108,12 +108,13 @@ export class AemetWeatherProvider implements WeatherProvider, SunshineProvider {
    * `getCurrentByCoords` cannot be reused: the closest one is almost never one
    * of those that measure sun.
    *
-   * Does not throw: without a candidate it returns null and the caller keeps its data.
+   * An empty successful payload returns no candidates. Provider/network errors
+   * propagate so a caller with stale corrected data does not mistake an outage
+   * for a valid observation with no sunshine stations.
    */
   async getSunshineNear(lat: number, lon: number): Promise<SunshineObservation[]> {
-    try {
-      const arr = await this.getObservacionesCached();
-      if (arr.length === 0) return [];
+    const arr = await this.getObservacionesCached();
+    if (arr.length === 0) return [];
 
       // The payload carries several rows per station (last hours). We keep
       // the most recent of each one that also carries `inso` in range: a
@@ -130,23 +131,20 @@ export class AemetWeatherProvider implements WeatherProvider, SunshineProvider {
       // Only the 3 closest: the first one decides and the others serve as witnesses.
       // Returning all nine of the Cantabrian arc adds nothing and enlarges the object
       // that ends up in the diagnostic.
-      return [...porEstacion.values()]
-        .map((s) => {
-          const insoMin = s.inso as number;
-          return {
-            insoMin,
-            fraccion: insoMin / 60,
-            distanciaKm: haversineSq(lat, lon, s.lat!, s.lon!),
-            idema: s.idema as string,
-            ubicacion: s.ubi ?? null,
-            observadoEn: s.fint ? parseAemetTime(s.fint) : Date.now(),
-          };
-        })
-        .sort((a, b) => a.distanciaKm - b.distanciaKm)
-        .slice(0, 3);
-    } catch {
-      return [];
-    }
+    return [...porEstacion.values()]
+      .map((s) => {
+        const insoMin = s.inso as number;
+        return {
+          insoMin,
+          fraccion: insoMin / 60,
+          distanciaKm: haversineSq(lat, lon, s.lat!, s.lon!),
+          idema: s.idema as string,
+          ubicacion: s.ubi ?? null,
+          observadoEn: s.fint ? parseAemetTime(s.fint) : Date.now(),
+        };
+      })
+      .sort((a, b) => a.distanciaKm - b.distanciaKm)
+      .slice(0, 3);
   }
 
   async getCurrentByCoords(lat: number, lon: number): Promise<Weather> {

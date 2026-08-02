@@ -113,8 +113,8 @@ describe('AemetWeatherProvider.getSunshineNear', () => {
     expect(await provider().getSunshineNear(43.47, -3.79)).toEqual([]);
   });
 
-  it('si AEMET falla devuelve vacío en vez de lanzar', async () => {
+  it('si AEMET falla propaga el error para no confundirlo con una respuesta vacía', async () => {
     vi.spyOn(http, 'get').mockRejectedValue(new Error('503'));
-    expect(await provider().getSunshineNear(43.47, -3.79)).toEqual([]);
+    await expect(provider().getSunshineNear(43.47, -3.79)).rejects.toThrow('503');
   });
 });
