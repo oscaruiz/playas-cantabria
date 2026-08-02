@@ -216,7 +216,14 @@ export class GetFeaturedBeaches {
       // The Weather object is corrected at the source and not at render time:
       // description, icon, ranking reason and score all come from here, so by
       // correcting it beforehand they cannot end up contradicting each other.
-      weather: corregirCieloObservado(beach.name, weather, sol, rain?.status === 'raining'),
+      weather: corregirCieloObservado(
+        beach.name,
+        weather,
+        sol,
+        rain?.status === 'raining',
+        Date.now(),
+        rain?.outlook,
+      ),
       flag,
       enrichment,
       rain,
