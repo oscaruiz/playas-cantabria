@@ -9,7 +9,9 @@ import {
   getPlayas,
   getFeaturedBeaches,
 } from '../services/api';
-import { emojiCielo, flagColorClass, formatearHaceTiempo } from '../utils/beachHelpers';
+import { emojiCielo, flagColorClass } from '../utils/beachHelpers';
+import { normalizarInstante } from '../features/provenance/procedencia';
+import { FreshnessLabel } from '../features/provenance/SourceAndFreshness';
 import { haversineKm, rankearPlayas, codigoMejorPuntuacionNoHero } from '../utils/beachRanking';
 import { useUserLocation } from '../hooks/useUserLocation';
 import BottomNavBar from '../components/BottomNavBar';
@@ -85,8 +87,9 @@ const HeroBody: React.FC<{
   featuredCount: number;
   avgTemp: number | null;
   totalBeaches: number;
-  updatedAt: string;
-}> = ({ featuredCount, avgTemp, totalBeaches, updatedAt }) => {
+  /** Epoch ms of the featured snapshot; null hides the badge. */
+  actualizadoMs: number | null;
+}> = ({ featuredCount, avgTemp, totalBeaches, actualizadoMs }) => {
   const { t, tPlural } = useIdioma();
   return (
     <div className="hp-hero">
@@ -101,9 +104,10 @@ const HeroBody: React.FC<{
             <span aria-hidden="true">{'\uD83C\uDFD6'}</span> {tPlural('home.playasBadge', totalBeaches)}
           </span>
         )}
-        {featuredCount > 0 && updatedAt && (
+        {featuredCount > 0 && actualizadoMs != null && (
           <span className="hp-badge">
-            <span aria-hidden="true">{'\uD83D\uDD52'}</span> {updatedAt}
+            <span aria-hidden="true">{'\uD83D\uDD52'}</span>{' '}
+            <FreshnessLabel instante={actualizadoMs} />
           </span>
         )}
       </div>
@@ -368,7 +372,7 @@ const HomePage: React.FC = () => {
 
   const avgTemp = featured ? averageTemp(featured.playas) : null;
   const totalBeaches = allPlayas?.length ?? 0;
-  const updatedAt = featured ? formatearHaceTiempo(featured.timestamp, t) : '';
+  const actualizadoMs = featured ? normalizarInstante(featured.timestamp) : null;
 
   return (
     <IonPage className="hp-page">
@@ -383,7 +387,7 @@ const HomePage: React.FC = () => {
           featuredCount={featured?.playas.length ?? 0}
           avgTemp={avgTemp}
           totalBeaches={totalBeaches}
-          updatedAt={updatedAt}
+          actualizadoMs={actualizadoMs}
         />
 
         <div className="hp-body">

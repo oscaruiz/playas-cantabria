@@ -34,6 +34,7 @@ import MetadataFooter from './playa-detalle/MetadataFooter';
 import CruzRojaCard from './playa-detalle/CruzRojaCard';
 import { BeachInfoSection, BeachAttributesSection } from './playa-detalle/BeachInfoSection';
 import { WebcamCard } from './playa-detalle/WebcamCard';
+import { nombreFuenteMeteo } from '../features/provenance/procedencia';
 
 const PlayaDetallePage: React.FC = () => {
   const { codigo } = useParams<{ codigo: string }>();
@@ -236,7 +237,7 @@ const PlayaDetallePage: React.FC = () => {
 
               {fuente && (
                 <p className="source-label">
-                  {t('detalle.datosMeteo', { fuente: fuente.replace('AEMET_HTML', 'AEMET').replace('AEMET_XML', 'AEMET') })}
+                  {t('detalle.datosMeteo', { fuente: nombreFuenteMeteo(fuente) })}
                 </p>
               )}
             </div>

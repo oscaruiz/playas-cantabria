@@ -7,9 +7,10 @@ import {
   fechaMadrid,
   capitalizar,
   horaLocalMadrid,
-  formatearHaceTiempo,
   operadorVigilancia,
 } from '../../utils/beachHelpers';
+import { FreshnessLabel } from '../../features/provenance/SourceAndFreshness';
+import { normalizarInstante } from '../../features/provenance/procedencia';
 import { useIdioma, Idioma, TraducirFn } from '../../i18n/IdiomaContext';
 import { traducirTextoApi, claveEstadoBandera, traducirOperador } from '../../i18n/apiText';
 import { nombreDia, formatearFechaCorta } from '../../i18n/fechas';
@@ -57,10 +58,8 @@ const FlagBanner: React.FC<{
     : ultima
       ? `${flagColorClass(ultima.bandera)} atenuada`
       : 'unknown';
-  const actualizado =
-    estado === 'color' && cruzRoja!.ultimaActualizacion
-      ? formatearHaceTiempo(cruzRoja!.ultimaActualizacion, t)
-      : '';
+  const capturaBanderaMs =
+    estado === 'color' ? normalizarInstante(cruzRoja?.ultimaActualizacion) : null;
 
   return (
     <div className="flag-banner">
@@ -80,7 +79,11 @@ const FlagBanner: React.FC<{
           <div className="flag-horario">{t('detalle.vigilancia', { horario: cruzRoja!.horario })}</div>
         )}
         {ultima && <div className="flag-horario">{textoRegistrada(ultima.registradaIso, t, idioma)}</div>}
-        {actualizado && <div className="flag-horario">{capitalizar(actualizado)}</div>}
+        {capturaBanderaMs != null && (
+          <div className="flag-horario">
+            <FreshnessLabel instante={capturaBanderaMs} capitalizado />
+          </div>
+        )}
       </div>
     </div>
   );

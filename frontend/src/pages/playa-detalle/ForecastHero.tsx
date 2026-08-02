@@ -9,6 +9,8 @@ import {
 } from '../../utils/beachHelpers';
 import { useIdioma } from '../../i18n/IdiomaContext';
 import { traducirTextoApi } from '../../i18n/apiText';
+import { procedenciaObservacion } from '../../features/provenance/procedencia';
+import { SourceAndFreshness } from '../../features/provenance/SourceAndFreshness';
 
 /** Map wind description text to a speed level 0–4 for animation. */
 function windSpeedLevel(text: string): number {
@@ -142,6 +144,12 @@ const ForecastHero: React.FC<{
         {viento && <WindTurbine level={wLevel} label={traducirTextoApi(viento, idioma)} />}
         {oleaje && <WavesIndicator label={traducirTextoApi(oleaje, idioma)} />}
       </div>
+      {/* The headline mixes observation over forecast (skyText above): say
+          who observed it and when, or the freshest value has no face. */}
+      <SourceAndFreshness
+        procedencia={procedenciaObservacion(tiempoActual)}
+        claveFuente="datos.enDirectoFuente"
+      />
     </div>
   );
 };

@@ -4,6 +4,8 @@ import { sunnyOutline, partlySunnyOutline, cloudyOutline } from 'ionicons/icons'
 import { PrevisionHora } from '../../services/api';
 import { useIdioma } from '../../i18n/IdiomaContext';
 import { horaLocalMadrid } from '../../utils/beachHelpers';
+import { procedenciaPrevisionHoras } from '../../features/provenance/procedencia';
+import { SourceAndFreshness } from '../../features/provenance/SourceAndFreshness';
 
 /** Cloud cover → the same three states the score uses (clear / scattered / broken). */
 function iconoDeNubes(pct: number | null): string {
@@ -60,10 +62,12 @@ const ProximasHoras: React.FC<{
         ))}
       </ul>
       {/* Quién lo pronostica. Misma frase que el pie de la ficha, para no
-          inventar una segunda forma de decir lo mismo. */}
-      {fuente && (
-        <div className="proximas-horas-fuente">{t('detalle.datosMeteo', { fuente })}</div>
-      )}
+          inventar una segunda forma de decir lo mismo. The API sends no
+          emission time for the outlook, so none is shown. */}
+      <SourceAndFreshness
+        procedencia={procedenciaPrevisionHoras(fuente)}
+        className="proximas-horas-fuente"
+      />
     </section>
   );
 };

@@ -1,11 +1,8 @@
 import React, { useState } from 'react';
 import { PlayaDetalle as PlayaDetalleData } from '../../services/api';
-import {
-  estadoBandera,
-  capitalizar,
-  formatearHaceTiempo,
-  operadorVigilancia,
-} from '../../utils/beachHelpers';
+import { estadoBandera, operadorVigilancia } from '../../utils/beachHelpers';
+import { FreshnessLabel } from '../../features/provenance/SourceAndFreshness';
+import { normalizarInstante } from '../../features/provenance/procedencia';
 import { useIdioma, TraducirFn } from '../../i18n/IdiomaContext';
 import { traducirTextoApi, traducirOperador } from '../../i18n/apiText';
 
@@ -97,9 +94,9 @@ const CruzRojaCard: React.FC<{
               </span>
             </div>
           </div>
-          {cruzRoja?.ultimaActualizacion && (
+          {normalizarInstante(cruzRoja?.ultimaActualizacion) != null && (
             <p className="cruzroja-actualizado">
-              {capitalizar(formatearHaceTiempo(cruzRoja.ultimaActualizacion, t))}
+              <FreshnessLabel instante={cruzRoja?.ultimaActualizacion} capitalizado />
             </p>
           )}
         </div>

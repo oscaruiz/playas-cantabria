@@ -4,6 +4,7 @@ import { videocamOutline } from 'ionicons/icons';
 import { PlayaDetalle as PlayaDetalleData } from '../../services/api';
 import { claveCoberturaWebcam } from '../../utils/beachHelpers';
 import { useIdioma } from '../../i18n/IdiomaContext';
+import { DataStatus } from '../../features/provenance/SourceAndFreshness';
 
 /**
  * Beach webcam as an external LINK (never embedded). The title shows the
@@ -25,6 +26,9 @@ export const WebcamCard: React.FC<{ webcam?: PlayaDetalleData['webcam'] }> = ({ 
       >
         <IonIcon icon={videocamOutline} aria-hidden="true" /> {t('webcam.abrir')}
       </a>
+      {/* The link is editorial data; whether the camera is broadcasting is
+          not something this app knows — so it says exactly that. */}
+      <DataStatus clave="datos.webcamExterna" />
     </section>
   );
 };

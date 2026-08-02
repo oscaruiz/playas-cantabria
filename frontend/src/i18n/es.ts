@@ -200,6 +200,11 @@ export const es = {
   'detalle.zonaAvisos': 'Zona de avisos: {zona}',
   'detalle.datosMeteo': 'Datos meteorológicos: {fuente}',
 
+  // ---- Data provenance ----
+  'datos.enDirectoFuente': 'Observación en directo de {fuente}',
+  'datos.estatico': 'Información fija de la playa, no cambia a diario',
+  'datos.webcamExterna': 'Servicio externo: la app no comprueba si emite',
+
   // ---- Tides ----
   'marea.subiendo': 'Subiendo',
   'marea.bajando': 'Bajando',

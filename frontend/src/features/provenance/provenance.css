@@ -1,0 +1,14 @@
+/* Provenance lines: always present, never loud. Same muted voice as the
+   existing .tides-source / .source-label footers. */
+
+.procedencia-linea {
+  font-size: 0.68rem;
+  color: var(--playa-text-muted);
+  margin-top: 8px;
+}
+
+.procedencia-estatica {
+  font-size: 0.68rem;
+  color: var(--playa-text-muted);
+  margin: 8px 0 0;
+}

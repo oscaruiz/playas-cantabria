@@ -193,6 +193,11 @@ export const en = {
   'detalle.zonaAvisos': 'Warning zone: {zona}',
   'detalle.datosMeteo': 'Weather data: {fuente}',
 
+  // ---- Data provenance ----
+  'datos.enDirectoFuente': 'Live observation from {fuente}',
+  'datos.estatico': 'Fixed beach information, does not change daily',
+  'datos.webcamExterna': 'External service: the app does not check if it is live',
+
   // ---- Tides ----
   'marea.subiendo': 'Rising',
   'marea.bajando': 'Falling',
