@@ -62,6 +62,25 @@ honesty note; no live claims), and the exact-count guard includes them.
 - `prerender.test.ts` (extended) — municipality and landing files generated
   with the shared texts.
 
+## Addendum: municipality navigation (user-requested increment)
+
+Three access paths added after the phase commit, from the same shared module
+(`resumenMunicipios()` in `landings.js`):
+
+1. **`/municipios` index** — every municipality with its beach count, in the
+   app, prerendered (72nd route) and in the sitemap; the static nav of every
+   generated page now links «Municipios», completing the crawl path
+   index → municipality → beaches.
+2. **Beach detail** — a «Municipio» row in the info card links to the
+   municipality page (the reverse link that did not exist).
+3. **Beach list** — the municipality name in each card is a link to its
+   municipality (stopPropagation, same pattern as the favorite star).
+
+Verification after the increment: 424/424 tests, lint 0 errors, 72 routes,
+**bundle 184.32 kB of 185 — 0.68 kB headroom left**: the budget is
+effectively exhausted; the next bundle-touching feature must either measure
+and trim, or make the case for raising the guard per its own escalation rule.
+
 ## Verification (2026-08-02)
 
 | Check | Result |

@@ -3,6 +3,7 @@ import {
   landingsNoVacias,
   municipiosDe,
   rutaMunicipio,
+  resumenMunicipios,
   playasDeMunicipioSlug,
 } from './landings';
 import { beachesResponse } from '../test/fixtures/beaches';
@@ -82,6 +83,23 @@ describe('municipios', () => {
 
   it('la ruta usa el mismo slugify que las playas', () => {
     expect(rutaMunicipio('Ribamontán al Mar')).toBe('/municipios/ribamontan-al-mar');
+  });
+
+  it('el resumen del índice trae ruta y número de playas por municipio', () => {
+    const resumen = resumenMunicipios(beachesResponse);
+    expect(resumen).toContainEqual({
+      municipio: 'Santander',
+      ruta: '/municipios/santander',
+      total: 2,
+    });
+    expect(resumen).toContainEqual({
+      municipio: 'Suances',
+      ruta: '/municipios/suances',
+      total: 1,
+    });
+    expect(resumen.map((m: { municipio: string }) => m.municipio)).toEqual(
+      municipiosDe(beachesResponse)
+    );
   });
 
   it('el slug reencuentra sus playas; uno desconocido, ninguna', () => {

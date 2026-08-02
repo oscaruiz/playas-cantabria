@@ -103,6 +103,19 @@ function rutaMunicipio(municipio) {
   return `/municipios/${slugify(municipio)}`;
 }
 
+/**
+ * One row per municipality: name, canonical route and beach count. The
+ * /municipios index (app page and prerendered file) is built from THIS,
+ * so both always agree.
+ */
+function resumenMunicipios(playas) {
+  return municipiosDe(playas).map((municipio) => ({
+    municipio,
+    ruta: rutaMunicipio(municipio),
+    total: playas.filter((p) => p.municipio === municipio).length,
+  }));
+}
+
 /** Beaches of the municipality a slug points at (empty array if unknown). */
 function playasDeMunicipioSlug(playas, municipioSlug) {
   return playas.filter((p) => slugify(p.municipio) === municipioSlug);
@@ -113,6 +126,7 @@ module.exports = {
   landingsNoVacias,
   municipiosDe,
   rutaMunicipio,
+  resumenMunicipios,
   playasDeMunicipioSlug,
   rutaPlaya,
 };

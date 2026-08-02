@@ -35,6 +35,7 @@ const {
   landingsNoVacias,
   municipiosDe,
   rutaMunicipio,
+  resumenMunicipios,
   playasDeMunicipioSlug,
 } = require('../src/seo/landings.js');
 
@@ -115,7 +116,7 @@ function serviciosPlaya(p) {
 const AVISO_ESTATICO =
   '<p><em>Información fija de la playa. La bandera, el tiempo y las mareas de hoy se cargan al abrir la aplicación.</em></p>';
 
-const NAV = `<nav><a href="/">Inicio</a> · <a href="/playas">Todas las playas</a> · <a href="/mapa">Mapa</a></nav>`;
+const NAV = `<nav><a href="/">Inicio</a> · <a href="/playas">Todas las playas</a> · <a href="/municipios">Municipios</a> · <a href="/mapa">Mapa</a></nav>`;
 
 function enlacesPlayas(lista) {
   return lista
@@ -230,6 +231,22 @@ try {
     generadas += 1;
   }
 
+  // Municipalities index: the global access point to the 18 pages below.
+  escribirRuta(
+    '/municipios',
+    rellenar(PLANTILLAS_SEO.tituloMunicipios, vars),
+    rellenar(PLANTILLAS_SEO.descMunicipios, vars),
+    bloqueContenido(
+      `<h1>Municipios con playa en ${escaparHtml(region.name)}</h1>
+      <ul>
+        ${resumenMunicipios(playas)
+          .map((m) => `<li><a href="${m.ruta}">${escaparHtml(m.municipio)}</a> (${m.total})</li>`)
+          .join('\n        ')}
+      </ul>`
+    )
+  );
+  generadas += 1;
+
   // Phase 6: municipality pages — one per municipality in the catalog.
   for (const municipio of municipiosDe(playas)) {
     const ruta = rutaMunicipio(municipio);
@@ -275,7 +292,8 @@ try {
 }
 
 // The count must be exact: a silently skipped beach is a missing page.
-const esperadas = 3 + playas.length + municipiosDe(playas).length + landingsNoVacias(playas).length;
+const esperadas =
+  4 + playas.length + municipiosDe(playas).length + landingsNoVacias(playas).length;
 if (generadas !== esperadas) {
   console.error(`[prerender] generadas ${generadas} rutas, esperadas ${esperadas}.`);
   process.exit(1);

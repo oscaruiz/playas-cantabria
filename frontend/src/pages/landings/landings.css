@@ -49,6 +49,22 @@
   font-size: 1.3rem;
 }
 
+/* Inline municipality link inside beach cards and the detail info grid.
+   Lives here (loaded with the always-bundled landing pages) so the EOL-noisy
+   page stylesheets stay untouched. */
+.ld-enlace-municipio {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
+  text-underline-offset: 2px;
+}
+
 .ld-enlace {
   margin-top: 12px;
   background: none;

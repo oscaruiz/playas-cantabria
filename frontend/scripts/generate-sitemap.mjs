@@ -62,6 +62,7 @@ const rutas = [
   '/',
   '/playas',
   '/mapa',
+  '/municipios',
   ...playas.map((p) => rutaPlaya(p)),
   ...municipiosDe(playas).map((m) => rutaMunicipio(m)),
   ...landingsNoVacias(playas).map((l) => `/${l.id}`),

@@ -211,6 +211,12 @@ export const en = {
   'seo.descDetalle': 'Status of {nombre} beach, in {municipio}: current flag, weather, forecast and today\'s tides.',
   'seo.tituloMunicipio': 'Beaches in {municipio}: current conditions | {region} Beaches',
   'seo.descMunicipio': 'The beaches of {municipio}, in {region}, each linking to today\'s flag, weather and tides.',
+  'seo.tituloMunicipios': 'Municipalities with beaches in {region} | {region} Beaches',
+  'seo.descMunicipios': 'Every municipality in {region} with a beach in the catalog, with access to each one\'s beaches.',
+  'municipios.titulo': 'Municipalities with beaches',
+  'municipios.intro': 'The municipalities of {region} with beaches in the catalog. Each one leads to its beaches and their status.',
+  'municipio.verPlayas': 'See all the beaches of {municipio}',
+  'detalle.municipio': 'Municipality',
 
   // ---- Municipality and curated landing pages ----
   'municipio.titulo': 'Beaches in {municipio}',

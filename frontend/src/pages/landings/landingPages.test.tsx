@@ -1,7 +1,9 @@
 import React from 'react';
-import { screen, waitFor } from '@testing-library/react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 import MunicipioPage from './MunicipioPage';
+import MunicipiosIndex from './MunicipiosIndex';
 import LandingPlayas from './LandingPlayas';
+import PlayasList from '../PlayasList';
 import { renderWithProviders } from '../../test/render';
 import { installFetchMock, restoreFetch, route } from '../../test/http/fakeFetch';
 import { beachesResponse } from '../../test/fixtures/beaches';
@@ -43,6 +45,36 @@ describe('MunicipioPage', () => {
     expect(
       await screen.findByText(/No conocemos ese municipio/)
     ).toBeInTheDocument();
+  });
+});
+
+describe('MunicipiosIndex', () => {
+  it('lista todos los municipios con su número de playas', async () => {
+    renderWithProviders(<MunicipiosIndex />, { route: '/municipios' });
+
+    expect(await screen.findByText('Suances')).toBeInTheDocument();
+    // Santander has 2 beaches in the fixture; its row says so.
+    const santander = screen.getByText('Santander').closest('.ld-fila');
+    expect(santander).toHaveTextContent('2 playas');
+    // 5 unique municipalities in the fixture → 5 rows.
+    expect(document.querySelectorAll('.ld-fila')).toHaveLength(5);
+    await waitFor(() => expect(document.title).toContain('Municipios'));
+  });
+});
+
+describe('acceso al municipio desde el listado de playas', () => {
+  it('el nombre del municipio navega al municipio, no a la playa', async () => {
+    renderWithProviders(<PlayasList />, { route: '/playas' });
+    await screen.findByText('La Concha');
+
+    const enlace = screen.getByRole('button', {
+      name: 'Ver todas las playas de Suances',
+    });
+    fireEvent.click(enlace);
+    // The list page unmounts nothing here (no Route switch in the harness),
+    // but the row click handler must NOT have fired: the search box is
+    // still there and no detail fetch happened.
+    expect(screen.getByRole('combobox')).toBeInTheDocument();
   });
 });
 

@@ -33,6 +33,7 @@ import { useHistory } from 'react-router-dom';
 import FavoriteButton from '../features/favorites/FavoriteButton';
 import { useFavoritas } from '../features/favorites/useFavorites';
 import { rutaPlaya } from '../seo/beachUrls';
+import { rutaMunicipio } from '../seo/landings';
 import SeoHead from '../seo/SeoHead';
 import './PlayasList.css';
 
@@ -308,7 +309,21 @@ const PlayasList: React.FC = () => {
                 <div className="beach-card-info">
                   <p className="beach-card-name">{playa.nombre}</p>
                   <p className="beach-card-municipio">
-                    {playa.municipio}
+                    {/* The card navigates to the beach; the municipality name
+                        navigates to the municipality — so it stops the row. */}
+                    <button
+                      className="ld-enlace-municipio"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        history.push(rutaMunicipio(playa.municipio));
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') e.stopPropagation();
+                      }}
+                      aria-label={t('municipio.verPlayas', { municipio: playa.municipio })}
+                    >
+                      {playa.municipio}
+                    </button>
                     {distKm != null && (
                       <span className="beach-card-dist">
                         {' · '}

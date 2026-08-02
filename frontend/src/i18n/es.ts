@@ -225,6 +225,12 @@ export const es = {
   'seo.descDetalle': PLANTILLAS_SEO.descDetalle,
   'seo.tituloMunicipio': PLANTILLAS_SEO.tituloMunicipio,
   'seo.descMunicipio': PLANTILLAS_SEO.descMunicipio,
+  'seo.tituloMunicipios': PLANTILLAS_SEO.tituloMunicipios,
+  'seo.descMunicipios': PLANTILLAS_SEO.descMunicipios,
+  'municipios.titulo': 'Municipios con playa',
+  'municipios.intro': 'Los municipios de {region} con playa en el catálogo. Cada uno lleva a sus playas y su estado.',
+  'municipio.verPlayas': 'Ver todas las playas de {municipio}',
+  'detalle.municipio': 'Municipio',
 
   // ---- Municipality and curated landing pages (Spanish texts shared with
   // the prerender script via seo/landings.js) ----

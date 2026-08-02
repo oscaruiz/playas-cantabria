@@ -29,6 +29,9 @@ const PLANTILLAS_SEO = {
   tituloMunicipio: 'Playas de {municipio}: estado actual | Playas {region}',
   descMunicipio:
     'Las playas de {municipio}, en {region}, con enlace al estado de hoy de cada una: bandera, tiempo y mareas.',
+  tituloMunicipios: 'Municipios con playa en {region} | Playas {region}',
+  descMunicipios:
+    'Todos los municipios de {region} con playa en el catálogo, con acceso a las playas de cada uno.',
 };
 
 /**

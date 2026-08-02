@@ -11,6 +11,7 @@ import PlayasList from './pages/PlayasList';
 import PlayaDetallePage from './pages/PlayaDetalle';
 import MapaPage from './pages/MapaPage';
 import MunicipioPage from './pages/landings/MunicipioPage';
+import MunicipiosIndex from './pages/landings/MunicipiosIndex';
 import LandingPlayas, { LandingId } from './pages/landings/LandingPlayas';
 import { LANDINGS } from './seo/landings';
 import { IdiomaProvider } from './i18n/IdiomaContext';
@@ -47,6 +48,7 @@ const App: React.FC = () => (
           <Route exact path="/playas/:municipio/:playa" component={PlayaDetallePage} />
           <Route exact path="/playas/:codigo" component={PlayaDetallePage} />
           <Route path="/mapa" component={MapaPage} exact />
+          <Route exact path="/municipios" component={MunicipiosIndex} />
           <Route exact path="/municipios/:municipio" component={MunicipioPage} />
           {LANDINGS.map((l: { id: string }) => (
             <Route
