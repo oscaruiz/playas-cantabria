@@ -35,6 +35,7 @@ import CruzRojaCard from './playa-detalle/CruzRojaCard';
 import { BeachInfoSection, BeachAttributesSection } from './playa-detalle/BeachInfoSection';
 import { WebcamCard } from './playa-detalle/WebcamCard';
 import { nombreFuenteMeteo } from '../features/provenance/procedencia';
+import FavoriteButton from '../features/favorites/FavoriteButton';
 
 const PlayaDetallePage: React.FC = () => {
   const { codigo } = useParams<{ codigo: string }>();
@@ -107,6 +108,7 @@ const PlayaDetallePage: React.FC = () => {
           <h1 className="pd-sticky-title">{datos?.nombre || t('detalle.titulo')}</h1>
           <p className="pd-sticky-subtitle">{datos?.municipio || ''}</p>
         </div>
+        {datos && <FavoriteButton codigo={datos.codigo} nombre={datos.nombre} />}
         <SelectorIdioma />
       </div>
 

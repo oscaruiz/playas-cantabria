@@ -1,0 +1,23 @@
+.fav-btn {
+  background: none;
+  border: none;
+  margin: 0;
+  padding: 6px;
+  display: inline-flex;
+  align-items: center;
+  font-size: 1.2rem;
+  line-height: 1;
+  color: var(--playa-text-muted);
+  cursor: pointer;
+}
+
+/* Sandy gold, the theme's secondary: saved = warm, not alarming. */
+.fav-btn--activa {
+  color: var(--ion-color-secondary);
+}
+
+.fav-btn:focus-visible {
+  outline: 2px solid var(--ion-color-primary);
+  outline-offset: 2px;
+  border-radius: 8px;
+}

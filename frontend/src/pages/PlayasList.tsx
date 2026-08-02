@@ -6,7 +6,7 @@ import {
   IonSpinner,
   IonIcon,
 } from '@ionic/react';
-import { searchOutline, locateOutline, videocamOutline } from 'ionicons/icons';
+import { searchOutline, locateOutline, videocamOutline, starOutline } from 'ionicons/icons';
 import { Playa, FeaturedBeach, getPlayas, getFeaturedBeaches } from '../services/api';
 import {
   getActiveAttrs,
@@ -30,6 +30,8 @@ import TrendBadge from '../components/TrendBadge';
 import BottomNavBar from '../components/BottomNavBar';
 import SelectorIdioma from '../components/SelectorIdioma';
 import { useHistory } from 'react-router-dom';
+import FavoriteButton from '../features/favorites/FavoriteButton';
+import { useFavoritas } from '../features/favorites/useFavorites';
 import './PlayasList.css';
 
 type OrdenMode = 'az' | 'cerca';
@@ -51,6 +53,8 @@ const PlayasList: React.FC = () => {
   const [weatherMap, setWeatherMap] = useState<Map<string, FeaturedBeach>>(new Map());
   const [filtro, setFiltro] = useState('');
   const [orden, setOrden] = useState<OrdenMode>('az');
+  const [soloFavoritas, setSoloFavoritas] = useState(false);
+  const { favoritas } = useFavoritas();
   // There is no error state: `getPlayas` never rejects, it always falls back to the local
   // JSON. What does need to be conveyed is that the data is not fresh.
   const [esFallback, setEsFallback] = useState(false);
@@ -119,7 +123,9 @@ const PlayasList: React.FC = () => {
 
   const filtradas = useMemo(() => {
     if (!playas) return [];
-    const result = playas.filter((p) => coincidePlaya(p, filtro));
+    const result = playas.filter(
+      (p) => (!soloFavoritas || favoritas.has(p.codigo)) && coincidePlaya(p, filtro)
+    );
     if (orden === 'cerca' && userLocation) {
       const [uLat, uLon] = userLocation;
       return result.sort((a, b) =>
@@ -127,7 +133,7 @@ const PlayasList: React.FC = () => {
       );
     }
     return result.sort((a, b) => a.nombre.localeCompare(b.nombre));
-  }, [playas, filtro, orden, userLocation]);
+  }, [playas, filtro, orden, userLocation, soloFavoritas, favoritas]);
 
   return (
     <IonPage className="home-page">
@@ -201,6 +207,15 @@ const PlayasList: React.FC = () => {
               aria-pressed={orden === 'az'}
             >
               AZ
+            </button>
+            <button
+              className={`sort-button${soloFavoritas ? ' sort-button--active' : ''}`}
+              onClick={() => setSoloFavoritas((v) => !v)}
+              title={t('fav.filtro')}
+              aria-label={t('fav.filtro')}
+              aria-pressed={soloFavoritas}
+            >
+              <IonIcon icon={starOutline} aria-hidden="true" />
             </button>
           </div>
           {showSuggestions && suggestions.length > 0 && (
@@ -350,6 +365,11 @@ const PlayasList: React.FC = () => {
                     </div>
                   ) : null;
                 })()}
+                <FavoriteButton
+                  codigo={playa.codigo}
+                  nombre={playa.nombre}
+                  className="beach-card-fav"
+                />
                 <span className="beach-card-arrow" aria-hidden="true">&#8250;</span>
               </div>
               );
@@ -361,7 +381,12 @@ const PlayasList: React.FC = () => {
         {playas && !datosNoDisponibles && filtradas.length === 0 && (
           <div className="home-empty">
             <p className="home-empty-text">
-              {t('lista.noEncontradas', { filtro })}
+              {/* Without a search term, an empty favorites view means "you have
+                  not saved anything (visible) yet" — tell the user how, instead
+                  of a false "no results". */}
+              {soloFavoritas && !filtro
+                ? t('fav.vacio')
+                : t('lista.noEncontradas', { filtro })}
             </p>
           </div>
         )}

@@ -30,6 +30,12 @@ export const en = {
   'tiempo.haceHoras': 'updated {n}h ago',
   'tiempo.haceDias': 'updated {n}d ago',
 
+  // ---- Favorites ----
+  'fav.marcar': 'Save {nombre} to favorites',
+  'fav.quitar': 'Remove {nombre} from favorites',
+  'fav.filtro': 'Show only favorites',
+  'fav.vacio': 'No favorite beaches yet. Tap the star on a beach to save it here.',
+
   // ---- Home ----
   'home.subtitulo': 'Discover the best beaches in {region}',
   'home.mediaTemp': '{temp}° average',

@@ -32,6 +32,12 @@ export const es = {
   'tiempo.haceHoras': 'actualizado hace {n}h',
   'tiempo.haceDias': 'actualizado hace {n} d',
 
+  // ---- Favorites ----
+  'fav.marcar': 'Guardar {nombre} en favoritas',
+  'fav.quitar': 'Quitar {nombre} de favoritas',
+  'fav.filtro': 'Mostrar solo favoritas',
+  'fav.vacio': 'Aún no tienes playas favoritas. Toca la estrella de una playa para guardarla aquí.',
+
   // ---- Home ----
   'home.subtitulo': 'Descubre las mejores playas de {region}',
   'home.mediaTemp': '{temp}° media',
