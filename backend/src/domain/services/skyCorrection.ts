@@ -59,6 +59,9 @@ const UMBRAL_MUY_NUBOSO = 0.25;
 const UMBRAL_SIN_TOCAR = 0.75;
 /** Strong sunshine can disprove a cloudy current observation. */
 const UMBRAL_DESPEJADO = 0.85;
+/** Moderate sunshine is enough only when the immediate local model also says clear. */
+const UMBRAL_SOL_CON_CORROBORACION = 0.5;
+const UMBRAL_NUBES_DESPEJADO = 10;
 
 export type MotivoDecision =
   | 'corregido'
@@ -79,6 +82,8 @@ export interface ContextoCorreccion {
   ahora: number;
   /** External rain signal (nowcast); the one in `weather` itself is already checked. */
   lloviendo?: boolean;
+  /** Nearest Open-Meteo hourly slot (max 90 min away), used only as corroboration. */
+  nubesInmediatasPct?: number | null;
 }
 
 export interface DecisionCielo {
@@ -153,7 +158,11 @@ export function decidirCorreccionCielo(
   // 5. Low sunshine can expose swallowed stratus. Very high sunshine can also
   // disprove a cloudy current observation; the gap between both thresholds is
   // intentionally inconclusive.
-  const nivel = nivelPara(observacion.fraccion);
+  const despejadoCorroborado =
+    observacion.fraccion >= UMBRAL_SOL_CON_CORROBORACION
+    && typeof ctx.nubesInmediatasPct === 'number'
+    && ctx.nubesInmediatasPct <= UMBRAL_NUBES_DESPEJADO;
+  const nivel = despejadoCorroborado ? 'despejado' : nivelPara(observacion.fraccion);
   if (!nivel) return { aplicar: false, motivo: 'sol-suficiente', ...base };
 
   // Improving a cloudy model is useful, but more geographically sensitive

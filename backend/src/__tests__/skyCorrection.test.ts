@@ -174,6 +174,30 @@ describe('decidirCorreccionCielo — guardas', () => {
     });
   });
 
+  it('mejora con sol moderado si la próxima hora local también viene despejada', () => {
+    const cubierto = despejado({ icon: '04d', description: 'muy nuboso' });
+    const conSolModerado = obs({ insoMin: 33, fraccion: 0.55, distanciaKm: 17 });
+    expect(
+      decidirCorreccionCielo(
+        cubierto,
+        [conSolModerado],
+        ctx({ nubesInmediatasPct: 0 }),
+      ),
+    ).toMatchObject({ aplicar: true, nivel: 'despejado' });
+  });
+
+  it('no mejora con sol moderado si la previsión inmediata no está despejada', () => {
+    const cubierto = despejado({ icon: '04d', description: 'muy nuboso' });
+    const conSolModerado = obs({ insoMin: 33, fraccion: 0.55, distanciaKm: 17 });
+    expect(
+      decidirCorreccionCielo(
+        cubierto,
+        [conSolModerado],
+        ctx({ nubesInmediatasPct: 40 }),
+      ),
+    ).toMatchObject({ aplicar: false, motivo: 'modelo-ya-nublado' });
+  });
+
   it('no mejora con insolación ambigua ni con una estación lejana', () => {
     const cubierto = despejado({ icon: '04d', description: 'muy nuboso' });
     expect(

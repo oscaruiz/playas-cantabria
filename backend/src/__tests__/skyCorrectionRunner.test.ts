@@ -90,6 +90,28 @@ describe('corregirCieloObservado — modos', () => {
     expect(res?.source).toBe('OpenWeather');
   });
 
+  it('on: usa solo una previsión horaria inmediata para corroborar sol moderado', () => {
+    process.env.SKY_CORRECTION = 'on';
+    const nublado = { ...DESPEJADO, description: 'nubes', icon: '04d' };
+    const solModerado = [{ ...SOL_SOSTENIDO[0], insoMin: 33, fraccion: 0.55 }];
+    const inmediata = [{
+      timestamp: EN_FRANJA + 30 * 60 * 1000,
+      cloudCoverPct: 0,
+      temperatureC: 24,
+      windSpeedMs: 3,
+    }];
+
+    expect(
+      corregirCieloObservado('La Concha', nublado, solModerado, false, EN_FRANJA, inmediata)
+        ?.description,
+    ).toBe('cielo claro');
+
+    const lejana = [{ ...inmediata[0], timestamp: EN_FRANJA + 2 * 60 * 60 * 1000 }];
+    expect(
+      corregirCieloObservado('La Concha', nublado, solModerado, false, EN_FRANJA, lejana),
+    ).toBe(nublado);
+  });
+
   it('off: ni calcula ni registra', () => {
     process.env.SKY_CORRECTION = 'off';
     const res = corregirCieloObservado('Sardinero', DESPEJADO, SIN_SOL, false, EN_FRANJA);

@@ -273,7 +273,14 @@ export class LegacyDetailsAssembler {
       // detail headline and the listing headline come from the same criterion.
       const [sol, lluvia] = await Promise.all([solPromise, rainPromise]);
       const conCieloReal =
-        corregirCieloObservado(details.beach.name, now, sol, lluvia?.status === 'raining') ?? now;
+        corregirCieloObservado(
+          details.beach.name,
+          now,
+          sol,
+          lluvia?.status === 'raining',
+          Date.now(),
+          lluvia?.outlook,
+        ) ?? now;
       base.tiempoActual = LegacyDetailsMapper.mapTiempoActual(conCieloReal);
     } catch {
       base.tiempoActual =
