@@ -81,6 +81,15 @@ export class GetFeaturedBeaches {
   private async compute(topN: number): Promise<FeaturedBeachesFullResult> {
     const beaches = await this.beachRepo.getAll();
 
+    // A provider outage is not the same as a valid response without a nearby
+    // sunshine station. Probe once before the fan-out: if AEMET is unavailable,
+    // reject this refresh so getOrSetStale keeps serving the last corrected
+    // ranking instead of replacing all skies with uncorrected OpenWeather 04d.
+    // The observations request is shared by cache, so this adds no HTTP call.
+    if (this.sunshine && skyCorrectionMode() !== 'off' && beaches.length > 0) {
+      await this.sunshine.getSunshineNear(beaches[0].latitude, beaches[0].longitude);
+    }
+
     const enriched: Array<Awaited<ReturnType<GetFeaturedBeaches['enrichBeach']>> | null> =
       new Array(beaches.length).fill(null);
     let nextIndex = 0;
