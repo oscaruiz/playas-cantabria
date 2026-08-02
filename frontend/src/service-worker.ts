@@ -14,7 +14,7 @@ import { ExpirationPlugin } from 'workbox-expiration';
 import { precacheAndRoute, createHandlerBoundToURL } from 'workbox-precaching';
 import { registerRoute } from 'workbox-routing';
 import { NetworkFirst, StaleWhileRevalidate } from 'workbox-strategies';
-import { REGION_API_PATH } from './config/region';
+import { REGION_API_PATH } from './shared/config/region';
 
 declare const self: ServiceWorkerGlobalScope;
 

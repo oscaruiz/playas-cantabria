@@ -10,7 +10,7 @@ import { join } from 'path';
 describe('firebase.json hosting', () => {
   it('todos los targets fijan trailingSlash en false', () => {
     const config = JSON.parse(
-      readFileSync(join(__dirname, '..', '..', 'firebase.json'), 'utf8')
+      readFileSync(join(__dirname, '..', '..', '..', 'firebase.json'), 'utf8')
     ) as { hosting: Array<{ target: string; trailingSlash?: boolean }> };
 
     expect(config.hosting.length).toBeGreaterThan(0);

@@ -12,19 +12,19 @@ import {
   vigilanciaDisponible,
   operadorVigilancia,
 } from '../../utils/beachHelpers';
-import { useIdioma } from '../../i18n/IdiomaContext';
+import { useIdioma } from '../../shared/i18n/IdiomaContext';
 import {
   traducirTextoApi,
   claveNivelVientoMs,
   claveBandera,
   traducirOperador,
   sinFragmentoDePronostico,
-} from '../../i18n/apiText';
+} from '../../shared/i18n/apiText';
 import TrendBadge from '../../components/TrendBadge';
-import { REGION } from '../../config/region';
+import { REGION } from '../../shared/config/region';
 import { useUserLocation } from '../../hooks/useUserLocation';
 import { useHistory, useLocation } from 'react-router-dom';
-import { rutaPlaya } from '../../seo/beachUrls';
+import { rutaPlaya } from '../../shared/seo/beachUrls';
 
 /**
  * Everything Leaflet, split OUT of the initial bundle: this module is

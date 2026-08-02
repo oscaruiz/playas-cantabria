@@ -1,5 +1,5 @@
 import React from 'react';
-import { useIdioma } from '../i18n/IdiomaContext';
+import { useIdioma } from '../shared/i18n/IdiomaContext';
 import './ScoreBadge.css';
 
 type Tramo = 'alta' | 'media' | 'baja';

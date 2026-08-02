@@ -1,10 +1,10 @@
 import React from 'react';
 import { IonPage, IonContent, IonFooter } from '@ionic/react';
 import { Link } from 'react-router-dom';
-import { useIdioma } from '../i18n/IdiomaContext';
-import SeoHead from '../seo/SeoHead';
-import BottomNavBar from '../components/BottomNavBar';
-import SelectorIdioma from '../components/SelectorIdioma';
+import { useIdioma } from '../shared/i18n/IdiomaContext';
+import SeoHead from '../shared/seo/SeoHead';
+import BottomNavBar from '../shared/ui/BottomNavBar';
+import SelectorIdioma from '../shared/ui/SelectorIdioma';
 import './landings/landings.css';
 
 /**

@@ -3,9 +3,7 @@ import {
   estadoBandera,
   ultimaBanderaRegistrada,
   esInfoReciente,
-  formatearHaceTiempo,
   esLluviaActiva,
-  horaLocalMadrid,
   lluviaPrevista,
   claveCoberturaWebcam,
   webcamDisponible,
@@ -210,22 +208,6 @@ describe('claveCoberturaWebcam', () => {
   });
 });
 
-describe('formatearHaceTiempo', () => {
-  const t = ((clave: string, vars?: { n: number }) =>
-    vars ? `${clave}|${vars.n}` : clave) as unknown as Parameters<typeof formatearHaceTiempo>[1];
-
-  it('ahora mismo, minutos, horas y días', () => {
-    expect(formatearHaceTiempo(Date.now(), t)).toBe('tiempo.ahoraMismo');
-    expect(formatearHaceTiempo(Date.now() - 5 * 60000 - 100, t)).toBe('tiempo.haceMin|5');
-    expect(formatearHaceTiempo(Date.now() - 3 * 3600000 - 1000, t)).toBe('tiempo.haceHoras|3');
-    expect(formatearHaceTiempo(Date.now() - 2 * 86400000 - 1000, t)).toBe('tiempo.haceDias|2');
-  });
-
-  it('acepta ISO y devuelve "" si no parsea', () => {
-    expect(formatearHaceTiempo('no-es-fecha', t)).toBe('');
-  });
-});
-
 describe('esLluviaActiva', () => {
   it('true con la señal estructurada del backend (multi-fuente)', () => {
     expect(
@@ -260,18 +242,6 @@ describe('esLluviaActiva', () => {
   it('false sin datos', () => {
     expect(esLluviaActiva(null)).toBe(false);
     expect(esLluviaActiva(undefined)).toBe(false);
-  });
-});
-
-describe('horaLocalMadrid', () => {
-  it('convierte un ISO UTC a HH:MM de Madrid (CEST en verano)', () => {
-    expect(horaLocalMadrid('2026-07-15T14:30:00Z')).toBe('16:30');
-  });
-
-  it('null con entradas inválidas o vacías', () => {
-    expect(horaLocalMadrid('no-es-fecha')).toBeNull();
-    expect(horaLocalMadrid(null)).toBeNull();
-    expect(horaLocalMadrid(undefined)).toBeNull();
   });
 });
 

@@ -1,7 +1,8 @@
 import React from 'react';
-import { useIdioma } from '../../i18n/IdiomaContext';
-import type { ClaveTexto } from '../../i18n/es';
-import { formatearHaceTiempo, capitalizar } from '../../utils/beachHelpers';
+import { useIdioma } from '../../shared/i18n/IdiomaContext';
+import type { ClaveTexto } from '../../shared/i18n/es';
+import { formatearHaceTiempo } from '../../shared/format/tiempo';
+import { capitalizar } from '../../shared/format/texto';
 import {
   Procedencia,
   normalizarInstante,

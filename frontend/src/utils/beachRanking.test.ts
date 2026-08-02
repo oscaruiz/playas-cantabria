@@ -1,5 +1,5 @@
+import { haversineKm } from '../shared/geo/haversine';
 import {
-  haversineKm,
   scoreAjustado,
   rankearPlayas,
   codigoMejorPuntuacionNoHero,

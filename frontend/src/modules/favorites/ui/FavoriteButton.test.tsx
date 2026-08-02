@@ -1,8 +1,8 @@
 import React from 'react';
 import { fireEvent, screen } from '@testing-library/react';
-import { renderWithProviders } from '../../test/render';
+import { renderWithProviders } from '../../../test/render';
 import FavoriteButton from './FavoriteButton';
-import { recargarFavoritas } from './useFavorites';
+import { recargarFavoritas } from '../application/useFavorites';
 
 const CLAVE = 'playas:favoritas';
 

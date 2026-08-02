@@ -4,16 +4,15 @@ import {
   flagColorClass,
   estadoBandera,
   ultimaBanderaRegistrada,
-  fechaMadrid,
-  capitalizar,
-  horaLocalMadrid,
   operadorVigilancia,
 } from '../../utils/beachHelpers';
+import { fechaMadrid, horaLocalMadrid } from '../../shared/format/tiempo';
+import { capitalizar } from '../../shared/format/texto';
 import { FreshnessLabel } from '../../features/provenance/SourceAndFreshness';
 import { normalizarInstante } from '../../features/provenance/procedencia';
-import { useIdioma, Idioma, TraducirFn } from '../../i18n/IdiomaContext';
-import { traducirTextoApi, claveEstadoBandera, traducirOperador } from '../../i18n/apiText';
-import { nombreDia, formatearFechaCorta } from '../../i18n/fechas';
+import { useIdioma, Idioma, TraducirFn } from '../../shared/i18n/IdiomaContext';
+import { traducirTextoApi, claveEstadoBandera, traducirOperador } from '../../shared/i18n/apiText';
+import { nombreDia, formatearFechaCorta } from '../../shared/i18n/fechas';
 
 /** "Registered today / yesterday / on <date> at HH:MM" — moment in Madrid time. */
 function textoRegistrada(iso: string, t: TraducirFn, idioma: Idioma): string {

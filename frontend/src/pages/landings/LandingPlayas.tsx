@@ -1,11 +1,11 @@
 import React, { useMemo } from 'react';
 import { IonPage, IonContent, IonFooter, IonSpinner } from '@ionic/react';
-import { useIdioma } from '../../i18n/IdiomaContext';
-import { ClaveTexto } from '../../i18n/es';
-import SeoHead from '../../seo/SeoHead';
-import { LANDINGS } from '../../seo/landings';
-import BottomNavBar from '../../components/BottomNavBar';
-import SelectorIdioma from '../../components/SelectorIdioma';
+import { useIdioma } from '../../shared/i18n/IdiomaContext';
+import { ClaveTexto } from '../../shared/i18n/es';
+import SeoHead from '../../shared/seo/SeoHead';
+import { LANDINGS } from '../../shared/seo/landings';
+import BottomNavBar from '../../shared/ui/BottomNavBar';
+import SelectorIdioma from '../../shared/ui/SelectorIdioma';
 import BeachCard from '../../components/BeachCard';
 import { useCatalogo } from './useCatalogo';
 import { FreshnessLabel } from '../../features/provenance/SourceAndFreshness';
@@ -19,7 +19,7 @@ export type LandingId =
 
 /**
  * One curated landing page: heading, short factual intro, ONLY the beaches
- * the shared selector accepts (src/seo/landings.js — the same module the
+ * the shared selector accepts (src/shared/seo/landings.js — the same module the
  * prerender uses), each linking to its canonical page. The intro carries
  * the data-source clarification; nothing here claims live conditions from
  * static attributes.

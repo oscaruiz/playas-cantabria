@@ -2,8 +2,8 @@ import React from 'react';
 import { IonIcon } from '@ionic/react';
 import { trendingUpOutline, trendingDownOutline, removeOutline } from 'ionicons/icons';
 import { Pronostico, CausaPronostico } from '../services/api';
-import { useIdioma } from '../i18n/IdiomaContext';
-import { ClaveTexto } from '../i18n/es';
+import { useIdioma } from '../shared/i18n/IdiomaContext';
+import { ClaveTexto } from '../shared/i18n/es';
 import './TrendBadge.css';
 
 const DIRECCION: Record<Pronostico['direccion'], { clave: ClaveTexto; icono: string }> = {

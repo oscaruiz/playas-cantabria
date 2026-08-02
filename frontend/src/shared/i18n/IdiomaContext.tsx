@@ -56,7 +56,7 @@ export const IdiomaProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   useEffect(() => {
     document.documentElement.lang = idioma;
     // The title is no longer set here: each page owns it via SeoHead
-    // (src/seo/SeoHead.tsx). A provider-level title would overwrite the
+    // (src/shared/seo/SeoHead.tsx). A provider-level title would overwrite the
     // page's one on every language switch, because parent effects run
     // after child effects.
     try {

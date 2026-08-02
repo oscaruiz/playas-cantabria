@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { IdiomaProvider } from '../i18n/IdiomaContext';
+import { IdiomaProvider } from '../shared/i18n/IdiomaContext';
 import { WebcamCard } from './playa-detalle/WebcamCard';
 import type { WebcamPlaya } from '../services/api';
 

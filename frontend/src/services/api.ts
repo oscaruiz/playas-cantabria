@@ -1,4 +1,4 @@
-import { buildRegionApiUrl } from '../config/api';
+import { buildRegionApiUrl } from '../shared/config/api';
 
 const PLAYAS_FALLBACK_TIMEOUT_MS = 2500;
 const CLIENT_CACHE_TTL_MS = 5 * 60 * 1000;

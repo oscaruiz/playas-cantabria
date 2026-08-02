@@ -17,7 +17,7 @@
 
 import React from 'react';
 import { screen } from '@testing-library/react';
-import { es } from '../../i18n/es';
+import { es } from '../../shared/i18n/es';
 import PlayaDetallePage from '../../pages/PlayaDetalle';
 import { renderWithProviders } from '../render';
 import { installFetchMock, restoreFetch, route } from '../http/fakeFetch';

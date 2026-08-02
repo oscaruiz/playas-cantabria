@@ -2,8 +2,8 @@ import React from 'react';
 import { IonIcon } from '@ionic/react';
 import { sunnyOutline, partlySunnyOutline, cloudyOutline } from 'ionicons/icons';
 import { PrevisionHora } from '../../services/api';
-import { useIdioma } from '../../i18n/IdiomaContext';
-import { horaLocalMadrid } from '../../utils/beachHelpers';
+import { useIdioma } from '../../shared/i18n/IdiomaContext';
+import { horaLocalMadrid } from '../../shared/format/tiempo';
 import { procedenciaPrevisionHoras } from '../../features/provenance/procedencia';
 import { SourceAndFreshness } from '../../features/provenance/SourceAndFreshness';
 

@@ -1,10 +1,10 @@
 import { IonPage, IonContent, IonFooter, IonSpinner } from '@ionic/react';
 import React, { Suspense, useEffect, useState } from 'react';
 import { Playa, FeaturedBeach, getPlayas, getFeaturedBeaches } from '../services/api';
-import { useIdioma } from '../i18n/IdiomaContext';
-import BottomNavBar from '../components/BottomNavBar';
-import SelectorIdioma from '../components/SelectorIdioma';
-import SeoHead from '../seo/SeoHead';
+import { useIdioma } from '../shared/i18n/IdiomaContext';
+import BottomNavBar from '../shared/ui/BottomNavBar';
+import SelectorIdioma from '../shared/ui/SelectorIdioma';
+import SeoHead from '../shared/seo/SeoHead';
 import './MapaPage.css';
 
 // Leaflet is the heaviest dependency in the app and only this route uses

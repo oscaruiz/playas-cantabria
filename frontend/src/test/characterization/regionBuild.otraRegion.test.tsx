@@ -25,7 +25,7 @@ const OTRA_REGION = {
   map: { center: { lat: 43.45, lon: -5.9 }, zoom: 10 },
 };
 
-jest.mock('../../config/region', () => ({
+jest.mock('../../shared/config/region', () => ({
   REGION: {
     id: 'asturias',
     name: 'Asturias',

@@ -11,8 +11,8 @@
 
 import React from 'react';
 import { screen } from '@testing-library/react';
-import { REGION, REGION_API_PATH } from '../../config/region';
-import { buildRegionApiUrl, buildApiUrl } from '../../config/api';
+import { REGION, REGION_API_PATH } from '../../shared/config/region';
+import { buildRegionApiUrl, buildApiUrl } from '../../shared/config/api';
 import { renderWithProviders } from '../render';
 import { installFetchMock, restoreFetch, route } from '../http/fakeFetch';
 import { RUTA_PLAYAS, RUTA_DESTACADAS } from '../apiRoutes';

@@ -1,8 +1,8 @@
 import React from 'react';
 import { IonIcon } from '@ionic/react';
 import { star, starOutline } from 'ionicons/icons';
-import { useIdioma } from '../../i18n/IdiomaContext';
-import { useFavoritas } from './useFavorites';
+import { useIdioma } from '../../../shared/i18n/IdiomaContext';
+import { useFavoritas } from '../application/useFavorites';
 import './favorites.css';
 
 /**

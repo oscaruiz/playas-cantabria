@@ -14,7 +14,7 @@ const PLANTILLA = `<!doctype html><html lang="es"><head><meta charset="utf-8"/><
 
 function ejecutarPrerender(dir: string): string {
   return execFileSync('node', ['scripts/prerender.mjs', dir], {
-    cwd: join(__dirname, '..', '..'),
+    cwd: join(__dirname, '..', '..', '..'),
     encoding: 'utf8',
   });
 }
@@ -51,7 +51,7 @@ describe('scripts/prerender.mjs', () => {
     ejecutarPrerender(dir);
 
     const catalogo = JSON.parse(
-      readFileSync(join(__dirname, '..', 'data', 'beaches.json'), 'utf8')
+      readFileSync(join(__dirname, '..', '..', 'data', 'beaches.json'), 'utf8')
     ) as Array<unknown>;
 
     const listado = readFileSync(join(dir, 'playas', 'index.html'), 'utf8');

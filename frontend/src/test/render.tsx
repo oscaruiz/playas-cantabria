@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, RenderResult } from '@testing-library/react';
 import { MemoryRouter, Route } from 'react-router-dom';
-import { IdiomaProvider, Idioma } from '../i18n/IdiomaContext';
+import { IdiomaProvider, Idioma } from '../shared/i18n/IdiomaContext';
 
 interface RenderOptions {
   /** Initial router entry, with a query string if needed. */

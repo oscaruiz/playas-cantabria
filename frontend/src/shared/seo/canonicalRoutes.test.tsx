@@ -8,14 +8,14 @@
 import React from 'react';
 import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { useHistory } from 'react-router-dom';
-import PlayaDetallePage from '../pages/PlayaDetalle';
-import { renderWithProviders } from '../test/render';
-import { installFetchMock, restoreFetch, route, deferred, RouteSpec } from '../test/http/fakeFetch';
-import { beachesResponse } from '../test/fixtures/beaches';
-import { featuredResponse } from '../test/fixtures/featured';
-import { buildOpenWeatherDetail } from '../test/fixtures/beachDetail';
-import { localNoon } from '../test/time';
-import { RUTA_DESTACADAS, RUTA_PLAYAS, RUTA_DETALLE } from '../test/apiRoutes';
+import PlayaDetallePage from '../../pages/PlayaDetalle';
+import { renderWithProviders } from '../../test/render';
+import { installFetchMock, restoreFetch, route, deferred, RouteSpec } from '../../test/http/fakeFetch';
+import { beachesResponse } from '../../test/fixtures/beaches';
+import { featuredResponse } from '../../test/fixtures/featured';
+import { buildOpenWeatherDetail } from '../../test/fixtures/beachDetail';
+import { localNoon } from '../../test/time';
+import { RUTA_DESTACADAS, RUTA_PLAYAS, RUTA_DETALLE } from '../../test/apiRoutes';
 
 let fetchMock: jest.Mock;
 

@@ -3,8 +3,8 @@ import { PlayaDetalle as PlayaDetalleData } from '../../services/api';
 import { estadoBandera, operadorVigilancia } from '../../utils/beachHelpers';
 import { FreshnessLabel } from '../../features/provenance/SourceAndFreshness';
 import { normalizarInstante } from '../../features/provenance/procedencia';
-import { useIdioma, TraducirFn } from '../../i18n/IdiomaContext';
-import { traducirTextoApi, traducirOperador } from '../../i18n/apiText';
+import { useIdioma, TraducirFn } from '../../shared/i18n/IdiomaContext';
+import { traducirTextoApi, traducirOperador } from '../../shared/i18n/apiText';
 
 function cruzRojaField(value: string | undefined, t: TraducirFn): string {
   if (!value || value.trim() === '' || value === 'N/A') return t('comun.noDisponible');

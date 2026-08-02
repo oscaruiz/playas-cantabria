@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react';
-import { leerFavoritas, guardarFavoritas } from './favoritesStorage';
+import { leerFavoritas, guardarFavoritas } from '../infrastructure/favoritesStorage';
 
 /**
  * Shared favorites store: ONE in-memory set backed by localStorage, so the

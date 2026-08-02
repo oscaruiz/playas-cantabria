@@ -19,7 +19,7 @@ async function loadConfig(value?: string) {
     process.env.REACT_APP_API_BASE_URL = value;
   }
   jest.resetModules();
-  return import('../../config/api');
+  return import('../../shared/config/api');
 }
 
 const ORIGINAL = process.env.REACT_APP_API_BASE_URL;

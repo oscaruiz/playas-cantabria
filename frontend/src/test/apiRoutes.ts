@@ -1,4 +1,4 @@
-import { REGION_API_PATH } from '../config/region';
+import { REGION_API_PATH } from '../shared/config/region';
 
 /**
  * The endpoints the app really calls, derived from the region being built.

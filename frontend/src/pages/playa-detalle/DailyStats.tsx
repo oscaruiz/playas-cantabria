@@ -1,8 +1,8 @@
 import React from 'react';
 import { DiaPrediccionDTO } from '../../services/api';
-import { capitalizar } from '../../utils/beachHelpers';
-import { useIdioma } from '../../i18n/IdiomaContext';
-import { traducirTextoApi } from '../../i18n/apiText';
+import { capitalizar } from '../../shared/format/texto';
+import { useIdioma } from '../../shared/i18n/IdiomaContext';
+import { traducirTextoApi } from '../../shared/i18n/apiText';
 
 function avisoLevelClass(nivel: number | null): string {
   if (nivel === 1) return 'aviso-red';

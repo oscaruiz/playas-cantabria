@@ -1,6 +1,6 @@
 import React from 'react';
-import { useIdioma } from '../../i18n/IdiomaContext';
-import { ClaveTexto } from '../../i18n/es';
+import { useIdioma } from '../../shared/i18n/IdiomaContext';
+import { ClaveTexto } from '../../shared/i18n/es';
 
 function parseTimeMinutes(t: string): number {
   const [h, m] = t.split(':').map(Number);

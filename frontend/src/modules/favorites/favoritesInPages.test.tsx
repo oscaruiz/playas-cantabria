@@ -20,7 +20,7 @@ import {
   RUTA_PLAYAS,
   RUTA_DETALLE,
 } from '../../test/apiRoutes';
-import { recargarFavoritas } from './useFavorites';
+import { recargarFavoritas } from './application/useFavorites';
 
 beforeEach(() => {
   localStorage.clear();

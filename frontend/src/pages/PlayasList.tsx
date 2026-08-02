@@ -9,15 +9,16 @@ import {
 import { searchOutline, locateOutline, starOutline } from 'ionicons/icons';
 import { Playa, FeaturedBeach, getPlayas, getFeaturedBeaches } from '../services/api';
 import { coincidePlaya, normalizarBusqueda } from '../utils/beachHelpers';
+import { haversineKm } from '../shared/geo/haversine';
 import { useUserLocation } from '../hooks/useUserLocation';
-import { useIdioma } from '../i18n/IdiomaContext';
+import { useIdioma } from '../shared/i18n/IdiomaContext';
 import { useHistory } from 'react-router-dom';
 import BeachCard from '../components/BeachCard';
-import BottomNavBar from '../components/BottomNavBar';
-import SelectorIdioma from '../components/SelectorIdioma';
-import { useFavoritas } from '../features/favorites/useFavorites';
-import { resumenMunicipios } from '../seo/landings';
-import SeoHead from '../seo/SeoHead';
+import BottomNavBar from '../shared/ui/BottomNavBar';
+import SelectorIdioma from '../shared/ui/SelectorIdioma';
+import { useFavoritas } from '../modules/favorites';
+import { resumenMunicipios } from '../shared/seo/landings';
+import SeoHead from '../shared/seo/SeoHead';
 import './PlayasList.css';
 
 /** A search suggestion: a municipality (navigates) or a beach (filters). */
@@ -26,18 +27,6 @@ type Sugerencia =
   | { tipo: 'playa'; playa: Playa };
 
 type OrdenMode = 'az' | 'cerca';
-
-function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 6371;
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLon = ((lon2 - lon1) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
 
 const PlayasList: React.FC = () => {
   const [playas, setPlayas] = useState<Playa[] | null>(null);

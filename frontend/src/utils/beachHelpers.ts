@@ -14,14 +14,9 @@ import {
   walkOutline,
   bodyOutline,
 } from 'ionicons/icons';
-import type { TraducirFn } from '../i18n/IdiomaContext';
-import type { ClaveTexto } from '../i18n/es';
-import { sinAcentos } from '../seo/beachUrls';
-
-export function limpiarTexto(texto: string | null | undefined): string {
-  if (!texto) return '';
-  return texto.replace(/\uFFFD/g, 'e');
-}
+import type { ClaveTexto } from '../shared/i18n/es';
+import { sinAcentos } from '../shared/seo/beachUrls';
+import { fechaMadrid, minutosMadrid } from '../shared/format/tiempo';
 
 /** Normalizes for search: lowercase + no accents (Arn\u00EDa \u2192 arnia). */
 export function normalizarBusqueda(texto: string): string {
@@ -63,28 +58,6 @@ export function isFlagAvailable(cruzRoja?: { bandera?: string }): boolean {
 }
 
 export type EstadoBandera = 'color' | 'fueraDeHorario' | 'sinDatos';
-
-/** Minutes elapsed in the day in Madrid time (robust to the device's TZ). */
-function minutosMadrid(fecha: Date): number {
-  const hhmm = new Intl.DateTimeFormat('en-GB', {
-    timeZone: 'Europe/Madrid',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).format(fecha);
-  const [h, m] = hhmm.split(':').map(Number);
-  return h * 60 + m;
-}
-
-/** "YYYY-MM-DD" date in Madrid, to compare against the season coverage. */
-export function fechaMadrid(fecha: Date): string {
-  return new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Europe/Madrid',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(fecha); // en-CA → "YYYY-MM-DD"
-}
 
 /** Converts "DD-MM-YYYY" (Cruz Roja format) to "YYYY-MM-DD"; null if it doesn't parse. */
 function isoDesdeDDMMYYYY(fecha?: string | null): string | null {
@@ -284,26 +257,6 @@ export function claveCoberturaWebcam(cobertura: CoberturaWebcam): ClaveTexto {
   }
 }
 
-/**
- * "updated X ago" (min / hours / days) from an ISO or epoch ms.
- * Returns '' if it doesn't parse. Reuses the `tiempo.*` i18n keys.
- */
-export function formatearHaceTiempo(input: string | number, t: TraducirFn): string {
-  const ms = typeof input === 'number' ? input : new Date(input).getTime();
-  if (!ms || Number.isNaN(ms)) return '';
-  const min = Math.floor((Date.now() - ms) / 60000);
-  if (min < 1) return t('tiempo.ahoraMismo');
-  if (min < 60) return t('tiempo.haceMin', { n: min });
-  const horas = Math.floor(min / 60);
-  if (horas < 24) return t('tiempo.haceHoras', { n: horas });
-  return t('tiempo.haceDias', { n: Math.floor(horas / 24) });
-}
-
-export function capitalizar(s: string | null | undefined): string {
-  if (!s) return '';
-  return s.charAt(0).toUpperCase() + s.slice(1);
-}
-
 /** Waves glyph for "surf" (doesn't exist in Ionicons) \u2014 same data-URI format as ionicons */
 const olasIcon =
   "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><path d='M48 192c48-44 112-44 160 0s112 44 160 0 88-38 96-42' fill='none' stroke='currentColor' stroke-width='32' stroke-linecap='round'/><path d='M48 320c48-44 112-44 160 0s112 44 160 0 88-38 96-42' fill='none' stroke='currentColor' stroke-width='32' stroke-linecap='round'/></svg>";
@@ -348,19 +301,6 @@ export function esLluviaActiva(
   if ((tiempoActual.precipitacionMm ?? 0) > 0) return true;
   const c = (tiempoActual.cielo ?? '').toLowerCase();
   return /lluvia|llovizna|chubasc|tormenta/.test(c);
-}
-
-/** "HH:MM" time in Europe/Madrid from an ISO; null if it doesn't parse. */
-export function horaLocalMadrid(iso: string | null | undefined): string | null {
-  if (!iso) return null;
-  const fecha = new Date(iso);
-  if (Number.isNaN(fecha.getTime())) return null;
-  return new Intl.DateTimeFormat('en-GB', {
-    timeZone: 'Europe/Madrid',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).format(fecha);
 }
 
 /**

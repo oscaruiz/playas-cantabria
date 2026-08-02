@@ -3,11 +3,11 @@ import { IonPage, IonContent, IonFooter, IonSpinner, IonIcon } from '@ionic/reac
 import { chevronBackOutline } from 'ionicons/icons';
 import { useParams, useHistory } from 'react-router-dom';
 import { Playa } from '../../services/api';
-import { useIdioma } from '../../i18n/IdiomaContext';
-import SeoHead from '../../seo/SeoHead';
-import { playasDeMunicipioSlug, rutaMunicipio } from '../../seo/landings';
-import BottomNavBar from '../../components/BottomNavBar';
-import SelectorIdioma from '../../components/SelectorIdioma';
+import { useIdioma } from '../../shared/i18n/IdiomaContext';
+import SeoHead from '../../shared/seo/SeoHead';
+import { playasDeMunicipioSlug, rutaMunicipio } from '../../shared/seo/landings';
+import BottomNavBar from '../../shared/ui/BottomNavBar';
+import SelectorIdioma from '../../shared/ui/SelectorIdioma';
 import BeachCard from '../../components/BeachCard';
 import { useCatalogo } from './useCatalogo';
 import { FreshnessLabel } from '../../features/provenance/SourceAndFreshness';

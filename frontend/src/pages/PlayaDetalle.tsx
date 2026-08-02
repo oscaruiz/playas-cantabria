@@ -17,12 +17,12 @@ import {
   SubPuntuaciones,
   PlayaDetalle as PlayaDetalleData,
 } from '../services/api';
-import { rutaPlaya, encontrarPorSlugs } from '../seo/beachUrls';
-import SeoHead, { urlCanonica } from '../seo/SeoHead';
-import BottomNavBar from '../components/BottomNavBar';
-import SelectorIdioma from '../components/SelectorIdioma';
+import { rutaPlaya, encontrarPorSlugs } from '../shared/seo/beachUrls';
+import SeoHead, { urlCanonica } from '../shared/seo/SeoHead';
+import BottomNavBar from '../shared/ui/BottomNavBar';
+import SelectorIdioma from '../shared/ui/SelectorIdioma';
 import './PlayaDetalle.css';
-import { useIdioma } from '../i18n/IdiomaContext';
+import { useIdioma } from '../shared/i18n/IdiomaContext';
 import { isToday } from './playa-detalle/dates';
 import FlagBanner from './playa-detalle/FlagBanner';
 import ScoreCard from './playa-detalle/ScoreCard';
@@ -38,8 +38,8 @@ import CruzRojaCard from './playa-detalle/CruzRojaCard';
 import { BeachInfoSection, BeachAttributesSection } from './playa-detalle/BeachInfoSection';
 import { WebcamCard } from './playa-detalle/WebcamCard';
 import { nombreFuenteMeteo } from '../features/provenance/procedencia';
-import { rutaMunicipio } from '../seo/landings';
-import FavoriteButton from '../features/favorites/FavoriteButton';
+import { rutaMunicipio } from '../shared/seo/landings';
+import { FavoriteButton } from '../modules/favorites';
 
 const PlayaDetallePage: React.FC = () => {
   // Two routes land here: canonical /playas/:municipio/:playa and legacy

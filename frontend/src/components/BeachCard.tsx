@@ -10,19 +10,19 @@ import {
   operadorVigilancia,
   webcamDisponible,
 } from '../utils/beachHelpers';
-import { useIdioma } from '../i18n/IdiomaContext';
-import { ClaveTexto } from '../i18n/es';
+import { useIdioma } from '../shared/i18n/IdiomaContext';
+import { ClaveTexto } from '../shared/i18n/es';
 import {
   traducirTextoApi,
   razonLegible,
   traducirOperador,
   sinFragmentoDePronostico,
-} from '../i18n/apiText';
+} from '../shared/i18n/apiText';
 import ScoreBadge from './ScoreBadge';
 import TrendBadge from './TrendBadge';
-import FavoriteButton from '../features/favorites/FavoriteButton';
-import { rutaPlaya } from '../seo/beachUrls';
-import { rutaMunicipio } from '../seo/landings';
+import { FavoriteButton } from '../modules/favorites';
+import { rutaPlaya } from '../shared/seo/beachUrls';
+import { rutaMunicipio } from '../shared/seo/landings';
 
 /**
  * One beach row — THE beach row: extracted from PlayasList so the

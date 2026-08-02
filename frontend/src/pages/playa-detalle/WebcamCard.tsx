@@ -3,7 +3,7 @@ import { IonIcon } from '@ionic/react';
 import { videocamOutline } from 'ionicons/icons';
 import { PlayaDetalle as PlayaDetalleData } from '../../services/api';
 import { claveCoberturaWebcam } from '../../utils/beachHelpers';
-import { useIdioma } from '../../i18n/IdiomaContext';
+import { useIdioma } from '../../shared/i18n/IdiomaContext';
 import { DataStatus } from '../../features/provenance/SourceAndFreshness';
 
 /**

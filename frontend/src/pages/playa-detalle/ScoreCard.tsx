@@ -4,14 +4,14 @@ import { warningOutline, chevronDownOutline } from 'ionicons/icons';
 import { FeaturedBeach, SubPuntuaciones } from '../../services/api';
 import ScoreBadge from '../../components/ScoreBadge';
 import TrendBadge from '../../components/TrendBadge';
-import { useIdioma } from '../../i18n/IdiomaContext';
-import { ClaveTexto } from '../../i18n/es';
+import { useIdioma } from '../../shared/i18n/IdiomaContext';
+import { ClaveTexto } from '../../shared/i18n/es';
 import {
   traducirTextoApi,
   razonLegible,
   claveNivelVientoMs,
   sinFragmentoDePronostico,
-} from '../../i18n/apiText';
+} from '../../shared/i18n/apiText';
 
 /** Cap values applied by the backend (`RAIN_SCORE_CAP` / `RAIN_FORECAST_SCORE_CAP`). */
 const TOPES: Record<'lluvia' | 'lluvia_prevista', { clave: ClaveTexto; valor: number }> = {

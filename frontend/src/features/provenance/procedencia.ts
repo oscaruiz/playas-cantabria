@@ -13,7 +13,7 @@
  */
 
 import type { PlayaDetalle } from '../../services/api';
-import type { Idioma } from '../../i18n/IdiomaContext';
+import type { Idioma } from '../../shared/i18n/IdiomaContext';
 
 /** Nature of a displayed value. Mirrors the plan's live/forecast/static/unavailable. */
 export type TipoDato = 'directo' | 'prevision' | 'estatico' | 'sinDatos';

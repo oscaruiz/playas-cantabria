@@ -6,16 +6,16 @@ import {
 } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
 import { Route } from 'react-router-dom';
-import HomePage from './pages/HomePage';
-import PlayasList from './pages/PlayasList';
-import PlayaDetallePage from './pages/PlayaDetalle';
-import MapaPage from './pages/MapaPage';
-import MunicipioPage from './pages/landings/MunicipioPage';
-import MunicipiosIndex from './pages/landings/MunicipiosIndex';
-import NoEncontrada from './pages/NoEncontrada';
-import LandingPlayas, { LandingId } from './pages/landings/LandingPlayas';
-import { LANDINGS } from './seo/landings';
-import { IdiomaProvider } from './i18n/IdiomaContext';
+import HomePage from '../pages/HomePage';
+import PlayasList from '../pages/PlayasList';
+import PlayaDetallePage from '../pages/PlayaDetalle';
+import MapaPage from '../pages/MapaPage';
+import MunicipioPage from '../pages/landings/MunicipioPage';
+import MunicipiosIndex from '../pages/landings/MunicipiosIndex';
+import NoEncontrada from '../pages/NoEncontrada';
+import LandingPlayas, { LandingId } from '../pages/landings/LandingPlayas';
+import { LANDINGS } from '../shared/seo/landings';
+import { IdiomaProvider } from '../shared/i18n/IdiomaContext';
 
 // Routes are imported statically on purpose: IonRouterOutlet keeps
 // its own view stack and does not tolerate an ancestor Suspense unmounting it

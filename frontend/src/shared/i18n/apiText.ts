@@ -1,6 +1,12 @@
 import type { Idioma } from './IdiomaContext';
 import type { ClaveTexto } from './es';
-import type { EstadoBandera } from '../utils/beachHelpers';
+// KNOWN TEMPORARY EDGE (shared → domain), the only one left after Phase 1.
+// `claveEstadoBandera` is a conditions-specific mapper that has not moved yet;
+// Phase 4 takes it (with `claveBandera`, `claveNivelVientoMs`, `razonLegible`,
+// `traducirOperador` and `sinFragmentoDePronostico`) to modules/conditions/ui,
+// leaving only `traducirTextoApi` + TABLAS_API here. The disable goes with it.
+// eslint-disable-next-line no-restricted-imports
+import type { EstadoBandera } from '../../utils/beachHelpers';
 
 /**
  * es→en translation of the texts coming from the backend (AEMET,

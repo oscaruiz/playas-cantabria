@@ -1,6 +1,6 @@
-import { TraducirFn, Idioma } from '../../i18n/IdiomaContext';
-import { capitalizar } from '../../utils/beachHelpers';
-import { nombreDia, traducirNombreDiaApi, formatearFechaCorta } from '../../i18n/fechas';
+import { TraducirFn, Idioma } from '../../shared/i18n/IdiomaContext';
+import { capitalizar } from '../../shared/format/texto';
+import { nombreDia, traducirNombreDiaApi, formatearFechaCorta } from '../../shared/i18n/fechas';
 
 /**
  * Extract day-of-month from fecha string.

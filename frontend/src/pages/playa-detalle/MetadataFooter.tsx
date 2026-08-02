@@ -1,5 +1,5 @@
 import React from 'react';
-import { useIdioma } from '../../i18n/IdiomaContext';
+import { useIdioma } from '../../shared/i18n/IdiomaContext';
 
 /** Warning zone and AEMET elaboration timestamp, under the forecast. */
 const MetadataFooter: React.FC<{

@@ -6,8 +6,8 @@ import {
   resumenMunicipios,
   playasDeMunicipioSlug,
 } from './landings';
-import { beachesResponse } from '../test/fixtures/beaches';
-import catalogoReal from '../data/beaches.json';
+import { beachesResponse } from '../../test/fixtures/beaches';
+import catalogoReal from '../../data/beaches.json';
 
 function porId(id: string): { id: string; filtro: (p: unknown) => boolean } {
   const landing = LANDINGS.find((l: { id: string }) => l.id === id);

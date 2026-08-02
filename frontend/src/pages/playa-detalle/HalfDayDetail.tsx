@@ -1,8 +1,9 @@
 import React from 'react';
 import { HalfDayDTO } from '../../services/api';
-import { capitalizar, emojiCielo } from '../../utils/beachHelpers';
-import { useIdioma } from '../../i18n/IdiomaContext';
-import { traducirTextoApi } from '../../i18n/apiText';
+import { emojiCielo } from '../../utils/beachHelpers';
+import { capitalizar } from '../../shared/format/texto';
+import { useIdioma } from '../../shared/i18n/IdiomaContext';
+import { traducirTextoApi } from '../../shared/i18n/apiText';
 
 export function hasHalfDayData(h: HalfDayDTO): boolean {
   return h.cielo != null || h.viento != null || h.oleaje != null;

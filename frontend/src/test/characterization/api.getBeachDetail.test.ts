@@ -14,7 +14,7 @@ import { installFetchMock, restoreFetch, route } from '../http/fakeFetch';
 import { buildAemetDetail } from '../fixtures/beachDetail';
 import { localNoon } from '../time';
 import { RUTA_DETALLE as DETAILS } from '../apiRoutes';
-import { REGION_API_PATH } from '../../config/region';
+import { REGION_API_PATH } from '../../shared/config/region';
 
 
 async function loadApi() {

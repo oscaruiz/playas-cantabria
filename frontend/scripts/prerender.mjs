@@ -4,8 +4,8 @@
  * template so the hashed asset references stay intact:
  *
  *   - route-specific <title>, description, canonical and og:* — from the
- *     SAME templates the app uses (src/seo/metadata.js) and the SAME URL
- *     module (src/seo/beachUrls.js);
+ *     SAME templates the app uses (src/shared/seo/metadata.js) and the SAME URL
+ *     module (src/shared/seo/beachUrls.js);
  *   - server-visible STATIC content inside #root: name, municipality,
  *     catalog facts and crawlable links. React replaces it on mount
  *     (createRoot.render), so there is no hydration to mismatch.
@@ -29,15 +29,15 @@ import { origenPublico } from './lib/site-origin.mjs';
 const require = createRequire(import.meta.url);
 const frontend = join(dirname(fileURLToPath(import.meta.url)), '..');
 
-const { rutaPlaya, detectarColisiones } = require('../src/seo/beachUrls.js');
-const { PLANTILLAS_SEO, ETIQUETAS_ATTR, rellenar } = require('../src/seo/metadata.js');
+const { rutaPlaya, detectarColisiones } = require('../src/shared/seo/beachUrls.js');
+const { PLANTILLAS_SEO, ETIQUETAS_ATTR, rellenar } = require('../src/shared/seo/metadata.js');
 const {
   landingsNoVacias,
   municipiosDe,
   rutaMunicipio,
   resumenMunicipios,
   playasDeMunicipioSlug,
-} = require('../src/seo/landings.js');
+} = require('../src/shared/seo/landings.js');
 
 const rutaBuild = process.argv[2] ? resolve(process.cwd(), process.argv[2]) : join(frontend, 'build');
 const plantillaHtml = join(rutaBuild, 'index.html');

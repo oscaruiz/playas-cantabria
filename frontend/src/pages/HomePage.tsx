@@ -12,23 +12,24 @@ import {
 import { emojiCielo, flagColorClass } from '../utils/beachHelpers';
 import { normalizarInstante } from '../features/provenance/procedencia';
 import { FreshnessLabel } from '../features/provenance/SourceAndFreshness';
-import { haversineKm, rankearPlayas, codigoMejorPuntuacionNoHero } from '../utils/beachRanking';
+import { rankearPlayas, codigoMejorPuntuacionNoHero } from '../utils/beachRanking';
+import { haversineKm } from '../shared/geo/haversine';
 import { useUserLocation } from '../hooks/useUserLocation';
-import BottomNavBar from '../components/BottomNavBar';
-import SelectorIdioma from '../components/SelectorIdioma';
-import { useIdioma } from '../i18n/IdiomaContext';
+import BottomNavBar from '../shared/ui/BottomNavBar';
+import SelectorIdioma from '../shared/ui/SelectorIdioma';
+import { useIdioma } from '../shared/i18n/IdiomaContext';
 import {
   traducirTextoApi,
   razonLegible,
   claveBandera,
   claveNivelVientoMs,
   sinFragmentoDePronostico,
-} from '../i18n/apiText';
+} from '../shared/i18n/apiText';
 import ScoreBadge from '../components/ScoreBadge';
 import TrendBadge from '../components/TrendBadge';
-import { rutaPlaya } from '../seo/beachUrls';
-import SeoHead from '../seo/SeoHead';
-import { useFavoritas } from '../features/favorites/useFavorites';
+import { rutaPlaya } from '../shared/seo/beachUrls';
+import SeoHead from '../shared/seo/SeoHead';
+import { useFavoritas } from '../modules/favorites';
 import './HomePage.css';
 
 /**

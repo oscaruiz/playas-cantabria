@@ -2,7 +2,7 @@
  * Generates build/sitemap.xml and build/robots.txt for the region that was
  * just built. Runs as the last step of `npm run build`.
  *
- * URLs come from src/seo/beachUrls.js — the SAME module the app navigates
+ * URLs come from src/shared/seo/beachUrls.js — the SAME module the app navigates
  * with — so the sitemap can never drift from the routes the app serves.
  * A slug collision or an empty slug is a catalog error and FAILS the build
  * here, loudly, before anything ships.
@@ -25,8 +25,8 @@ const require = createRequire(import.meta.url);
 const raiz = dirname(fileURLToPath(import.meta.url));
 const frontend = join(raiz, '..');
 
-const { rutaPlaya, detectarColisiones } = require('../src/seo/beachUrls.js');
-const { landingsNoVacias, municipiosDe, rutaMunicipio } = require('../src/seo/landings.js');
+const { rutaPlaya, detectarColisiones } = require('../src/shared/seo/beachUrls.js');
+const { landingsNoVacias, municipiosDe, rutaMunicipio } = require('../src/shared/seo/landings.js');
 
 const rutaBuild = join(frontend, 'build');
 if (!existsSync(join(rutaBuild, 'index.html'))) {

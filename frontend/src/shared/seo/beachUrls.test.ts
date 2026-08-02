@@ -1,6 +1,6 @@
 import { slugify, rutaPlaya, encontrarPorSlugs, detectarColisiones } from './beachUrls';
-import { beachesResponse } from '../test/fixtures/beaches';
-import catalogoReal from '../data/beaches.json';
+import { beachesResponse } from '../../test/fixtures/beaches';
+import catalogoReal from '../../data/beaches.json';
 
 describe('slugify', () => {
   it('quita tildes y diéresis', () => {

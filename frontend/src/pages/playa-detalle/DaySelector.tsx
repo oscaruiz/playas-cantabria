@@ -1,5 +1,5 @@
 import React from 'react';
-import { useIdioma } from '../../i18n/IdiomaContext';
+import { useIdioma } from '../../shared/i18n/IdiomaContext';
 import { dayTitle, daySubtitle } from './dates';
 
 /** Editorial tabs with underline: Today / Tomorrow / Day after tomorrow. */

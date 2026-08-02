@@ -1,14 +1,14 @@
 import React from 'react';
 import { PlayaDetalle as PlayaDetalleData, DiaPrediccionDTO } from '../../services/api';
 import {
-  capitalizar,
   emojiCielo,
   esLluviaActiva,
   lluviaPrevista,
-  horaLocalMadrid,
 } from '../../utils/beachHelpers';
-import { useIdioma } from '../../i18n/IdiomaContext';
-import { traducirTextoApi } from '../../i18n/apiText';
+import { horaLocalMadrid } from '../../shared/format/tiempo';
+import { capitalizar } from '../../shared/format/texto';
+import { useIdioma } from '../../shared/i18n/IdiomaContext';
+import { traducirTextoApi } from '../../shared/i18n/apiText';
 import { procedenciaObservacion } from '../../features/provenance/procedencia';
 import { SourceAndFreshness } from '../../features/provenance/SourceAndFreshness';
 

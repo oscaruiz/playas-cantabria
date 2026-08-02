@@ -1,4 +1,4 @@
-import regionData from '../data/region.json';
+import regionData from '../../data/region.json';
 
 /**
  * The region this build serves. Written by `scripts/sync-region.mjs` from root
