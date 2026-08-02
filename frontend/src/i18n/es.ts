@@ -236,7 +236,7 @@ export const es = {
 
   // ---- Municipality and curated landing pages (Spanish texts shared with
   // the prerender script via seo/landings.js) ----
-  'municipio.titulo': 'Playas de {municipio}',
+  'municipio.titulo': 'Playas del Municipio de {municipio}',
   'municipio.intro': 'Las playas de {municipio} con enlace al estado de hoy de cada una.',
   'municipio.desconocido': 'No conocemos ese municipio. Consulta el listado completo de playas.',
   'landing.playas-con-webcam.titulo': TEXTOS_LANDINGS['playas-con-webcam'].titulo,

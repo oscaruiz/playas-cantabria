@@ -221,7 +221,7 @@ export const en = {
   'seo.descNoEncontrada': 'This address does not match any beach or municipality in the {region} catalog.',
 
   // ---- Municipality and curated landing pages ----
-  'municipio.titulo': 'Beaches in {municipio}',
+  'municipio.titulo': 'Beaches of the municipality of {municipio}',
   'municipio.intro': 'The beaches of {municipio}, each linking to today\'s conditions.',
   'municipio.desconocido': 'We do not know that municipality. See the full beach list.',
   'landing.playas-con-webcam.titulo': 'Beaches with a webcam in {region}',

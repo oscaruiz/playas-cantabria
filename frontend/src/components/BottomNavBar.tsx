@@ -7,7 +7,9 @@ import './BottomNavBar.css';
 
 function deriveTab(pathname: string): 'home' | 'lista' | 'mapa' {
   if (pathname === '/') return 'home';
-  if (pathname.startsWith('/playas')) return 'lista';
+  // Municipality pages (and the curated /playas-* landings, which the
+  // prefix already covers) are ways of browsing beaches: Playas stays lit.
+  if (pathname.startsWith('/playas') || pathname.startsWith('/municipios')) return 'lista';
   if (pathname.startsWith('/mapa')) return 'mapa';
   return 'home';
 }

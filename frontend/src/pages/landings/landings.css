@@ -1,3 +1,26 @@
+/* Header with a back control: same white chevron as the detail page. */
+.ld-header-volver {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ld-header-volver .ld-header-textos {
+  flex: 1;
+  min-width: 0;
+}
+
+/* The page headline, in the same serif voice as the detail titles. */
+.ld-titular {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 600;
+  font-size: 1.55rem;
+  line-height: 1.2;
+  margin: 18px auto 0;
+  padding: 0 20px;
+  max-width: 640px;
+}
+
 /* Same 640px column as the beach list: these pages ARE beach lists. */
 .ld-intro {
   margin: 12px auto 4px;

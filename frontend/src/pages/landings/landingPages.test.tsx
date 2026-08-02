@@ -31,9 +31,26 @@ describe('MunicipioPage', () => {
     expect(await screen.findByText('El Sardinero')).toBeInTheDocument();
     expect(screen.getByText('La Maruca')).toBeInTheDocument();
     expect(screen.queryByText('La Concha')).not.toBeInTheDocument();
-    expect(screen.getByText('Playas de Santander')).toBeInTheDocument();
+    // Headline format, requested explicitly: "Playas del Municipio de X".
+    expect(
+      screen.getByRole('heading', { name: 'Playas del Municipio de Santander' })
+    ).toBeInTheDocument();
     // The title lands with SeoHead's effect, a tick after the data render.
     await waitFor(() => expect(document.title).toContain('Santander'));
+  });
+
+  it('marca la pestaña Playas y ofrece volver atrás', async () => {
+    renderWithProviders(<MunicipioPage />, {
+      route: '/municipios/santander',
+      path: '/municipios/:municipio',
+    });
+
+    await screen.findByText('El Sardinero');
+    expect(screen.getByRole('button', { name: 'Playas' })).toHaveAttribute(
+      'aria-current',
+      'page'
+    );
+    expect(screen.getByRole('button', { name: 'Volver' })).toBeInTheDocument();
   });
 
   it('un municipio desconocido explica y ofrece el listado', async () => {

@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
-import { IonPage, IonContent, IonFooter, IonSpinner } from '@ionic/react';
+import { IonPage, IonContent, IonFooter, IonSpinner, IonIcon } from '@ionic/react';
+import { chevronBackOutline } from 'ionicons/icons';
 import { useParams, useHistory } from 'react-router-dom';
 import { Playa } from '../../services/api';
 import { useIdioma } from '../../i18n/IdiomaContext';
@@ -45,11 +46,18 @@ const MunicipioPage: React.FC = () => {
           noindex
         />
       )}
-      <div className="home-sticky-header">
-        <h1 className="home-sticky-title">
-          {nombreMunicipio ? t('municipio.titulo', { municipio: nombreMunicipio }) : t('app.titulo')}
-        </h1>
-        <p className="home-sticky-subtitle">{t('app.titulo')}</p>
+      <div className="home-sticky-header ld-header-volver">
+        <button
+          className="pd-back-btn"
+          onClick={() => history.goBack()}
+          aria-label={t('detalle.volver')}
+        >
+          <IonIcon icon={chevronBackOutline} aria-hidden="true" />
+        </button>
+        <div className="ld-header-textos">
+          <p className="home-sticky-title">{nombreMunicipio ?? t('app.titulo')}</p>
+          <p className="home-sticky-subtitle">{t('app.titulo')}</p>
+        </div>
         <SelectorIdioma />
       </div>
       <IonContent fullscreen>
@@ -61,6 +69,9 @@ const MunicipioPage: React.FC = () => {
         )}
         {playas && nombreMunicipio && (
           <>
+            <h1 className="ld-titular">
+              {t('municipio.titulo', { municipio: nombreMunicipio })}
+            </h1>
             <p className="ld-intro">{t('municipio.intro', { municipio: nombreMunicipio })}</p>
             <div className="beach-count">
               {tPlural('lista.contador', lista.length)}
