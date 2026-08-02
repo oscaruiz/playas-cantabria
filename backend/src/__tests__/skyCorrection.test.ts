@@ -255,6 +255,24 @@ describe('decidirCorreccionCielo — guardas', () => {
     ).toMatchObject({ aplicar: false, motivo: 'estacion-lejos-para-mejorar' });
   });
 
+  it('el límite 40/50 km exige una cuarta hora despejada sin crear un salto artificial', () => {
+    const cubierto = despejado({ icon: '04d', description: 'muy nuboso' });
+    const decision = (distanciaKm: number, horas: number) => decidirCorreccionCielo(
+      cubierto,
+      [obs({ insoMin: 58, fraccion: 0.97, distanciaKm })],
+      ctx({ nubesInmediatasPct: 0, horasDespejadasConsecutivas: horas }),
+    );
+
+    expect(decision(40, 3)).toMatchObject({ aplicar: true, nivel: 'despejado' });
+    expect(decision(41, 3)).toMatchObject({
+      aplicar: false,
+      motivo: 'estacion-lejos-para-mejorar',
+    });
+    expect(decision(41, 4)).toMatchObject({ aplicar: true, nivel: 'despejado' });
+    expect(decision(50, 4)).toMatchObject({ aplicar: true, nivel: 'despejado' });
+    expect(decision(51, 4)).toMatchObject({ aplicar: false, motivo: 'estacion-lejos' });
+  });
+
   it('no corrige si el modelo ya dice algo igual o más nublado', () => {
     const cubierto = despejado({ icon: '04d', description: 'muy nuboso' });
     expect(decidirCorreccionCielo(cubierto, [obs()], ctx())).toMatchObject({

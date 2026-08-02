@@ -40,8 +40,10 @@ const SEVERIDAD_MODELO: Record<string, number> = {
   '04d': 3, '04n': 3, // overcast
 };
 
-/** Beyond this the station no longer says anything useful about that beach. */
-const MAX_KM = 40;
+/** Worsening a sky needs a physically close observation. */
+const MAX_KM_PARA_EMPEORAR = 40;
+/** A farther station is accepted only to improve with sustained local corroboration. */
+const MAX_KM_MEJORA_EXCEPCIONAL = 50;
 /** Below this one station is enough; above it two are required. */
 const KM_SIN_CORROBORAR = 30;
 /** Improving a cloudy model needs a closer station than worsening it. */
@@ -157,8 +159,9 @@ export function decidirCorreccionCielo(
     return { aplicar: false, motivo: 'lloviendo', ...base };
   }
 
-  // 4. Distance.
-  if (observacion.distanciaKm > MAX_KM) {
+  // 4. No station beyond 50 km is useful for either direction. The stricter
+  // 40 km downgrade limit is applied below once the direction is known.
+  if (observacion.distanciaKm > MAX_KM_MEJORA_EXCEPCIONAL) {
     return { aplicar: false, motivo: 'estacion-lejos', ...base };
   }
 
@@ -180,13 +183,23 @@ export function decidirCorreccionCielo(
   if (esMejora && severidadModelo === NIVELES.despejado.severidad) {
     return { aplicar: false, motivo: 'sol-suficiente', ...base };
   }
+  if (!esMejora && observacion.distanciaKm > MAX_KM_PARA_EMPEORAR) {
+    return { aplicar: false, motivo: 'estacion-lejos', ...base };
+  }
+
   const mejoraLejanaCorroborada =
     observacion.fraccion >= UMBRAL_DESPEJADO
     && (ctx.horasDespejadasConsecutivas ?? 0) >= 3;
+  const mejoraExcepcionalCorroborada =
+    observacion.fraccion >= UMBRAL_DESPEJADO
+    && (ctx.horasDespejadasConsecutivas ?? 0) >= 4;
+  const mejoraLejanaPermitida = observacion.distanciaKm <= MAX_KM_PARA_EMPEORAR
+    ? mejoraLejanaCorroborada
+    : mejoraExcepcionalCorroborada;
   if (
     esMejora
     && observacion.distanciaKm > MAX_KM_PARA_MEJORAR
-    && !mejoraLejanaCorroborada
+    && !mejoraLejanaPermitida
   ) {
     return { aplicar: false, motivo: 'estacion-lejos-para-mejorar', ...base };
   }
@@ -202,7 +215,7 @@ export function decidirCorreccionCielo(
     // of what it confirms.
     const corrobora = observaciones.some((o) => {
       if (o.idema === observacion.idema) return false;
-      if (o.distanciaKm > MAX_KM) return false;
+      if (o.distanciaKm > MAX_KM_PARA_EMPEORAR) return false;
       if (ctx.ahora - o.observadoEn > FRESCURA_MAX_MS) return false;
       if (o.observadoEn - ctx.ahora > FUTURO_MAX_MS) return false;
       const suNivel = nivelPara(o.fraccion);
