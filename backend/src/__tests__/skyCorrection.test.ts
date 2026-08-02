@@ -90,6 +90,14 @@ describe('decidirCorreccionCielo — guardas', () => {
     });
   });
 
+  it('no corrige con una observación fechada claramente en el futuro', () => {
+    const futura = obs({ observadoEn: AHORA + 30 * 60 * 1000 });
+    expect(decidirCorreccionCielo(despejado(), [futura], ctx())).toMatchObject({
+      aplicar: false,
+      motivo: 'observacion-futura',
+    });
+  });
+
   it('no corrige si está lloviendo (manda el icono de lluvia)', () => {
     const porNowcast = decidirCorreccionCielo(despejado(), [obs()], ctx({ lloviendo: true }));
     expect(porNowcast).toMatchObject({ aplicar: false, motivo: 'lloviendo' });
@@ -168,7 +176,7 @@ describe('decidirCorreccionCielo — guardas', () => {
   it('mejora un cielo nublado cuando una estación cercana registra sol sostenido', () => {
     const conSol = obs({ insoMin: 55, fraccion: 55 / 60, distanciaKm: 20 });
     const cubierto = despejado({ icon: '04d', description: 'muy nuboso' });
-    expect(decidirCorreccionCielo(cubierto, [conSol], ctx())).toMatchObject({
+    expect(decidirCorreccionCielo(cubierto, [conSol], ctx({ nubesInmediatasPct: 0 }))).toMatchObject({
       aplicar: true,
       nivel: 'despejado',
     });
@@ -212,7 +220,37 @@ describe('decidirCorreccionCielo — guardas', () => {
       decidirCorreccionCielo(
         cubierto,
         [obs({ insoMin: 55, fraccion: 55 / 60, distanciaKm: 26 })],
-        ctx(),
+        ctx({ nubesInmediatasPct: 0, horasDespejadasConsecutivas: 2 }),
+      ),
+    ).toMatchObject({ aplicar: false, motivo: 'estacion-lejos-para-mejorar' });
+  });
+
+  it('un segundo testigo a más de 40 km tampoco corrobora', () => {
+    const lejos = obs({ distanciaKm: 35 });
+    const fueraDeRadio = obs({ idema: '1109X', distanciaKm: 48 });
+    expect(decidirCorreccionCielo(despejado(), [lejos, fueraDeRadio], ctx())).toMatchObject({
+      aplicar: false,
+      motivo: 'sin-segundo-testigo',
+    });
+  });
+
+  it('mejora entre 25 y 40 km solo con sol fuerte y tres horas despejadas', () => {
+    const cubierto = despejado({ icon: '04d', description: 'muy nuboso' });
+    const lejanaSoleada = obs({ insoMin: 58, fraccion: 0.97, distanciaKm: 32 });
+    expect(
+      decidirCorreccionCielo(
+        cubierto,
+        [lejanaSoleada],
+        ctx({ nubesInmediatasPct: 0, horasDespejadasConsecutivas: 3 }),
+      ),
+    ).toMatchObject({ aplicar: true, nivel: 'despejado' });
+
+    const solModerado = obs({ insoMin: 33, fraccion: 0.55, distanciaKm: 32 });
+    expect(
+      decidirCorreccionCielo(
+        cubierto,
+        [solModerado],
+        ctx({ nubesInmediatasPct: 0, horasDespejadasConsecutivas: 4 }),
       ),
     ).toMatchObject({ aplicar: false, motivo: 'estacion-lejos-para-mejorar' });
   });
@@ -284,7 +322,10 @@ describe('aplicarCorreccionCielo', () => {
   it('aplica la mejora a despejado sin tocar el resto del dato meteorológico', () => {
     const w = despejado({ icon: '04d', description: 'muy nuboso', cloudinessPct: 90 });
     const conSol = obs({ insoMin: 55, fraccion: 55 / 60, distanciaKm: 20 });
-    const corregido = aplicarCorreccionCielo(w, decidirCorreccionCielo(w, [conSol], ctx()));
+    const corregido = aplicarCorreccionCielo(
+      w,
+      decidirCorreccionCielo(w, [conSol], ctx({ nubesInmediatasPct: 0 })),
+    );
 
     expect(corregido.description).toBe('cielo claro');
     expect(corregido.icon).toBe('01d');
