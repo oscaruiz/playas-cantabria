@@ -11,6 +11,7 @@
  * the product's base language; en.ts keeps its own English strings.
  */
 
+/* eslint-env node, commonjs */
 'use strict';
 
 const PLANTILLAS_SEO = {
@@ -25,6 +26,9 @@ const PLANTILLAS_SEO = {
   tituloDetalle: '{nombre}: bandera, tiempo y mareas hoy | Playas {region}',
   descDetalle:
     'Estado de la playa de {nombre}, en {municipio}: bandera actual, tiempo, previsión y mareas de hoy.',
+  tituloMunicipio: 'Playas de {municipio}: estado actual | Playas {region}',
+  descMunicipio:
+    'Las playas de {municipio}, en {region}, con enlace al estado de hoy de cada una: bandera, tiempo y mareas.',
 };
 
 /**

@@ -64,6 +64,18 @@ describe('scripts/prerender.mjs', () => {
     expect(inicio).not.toContain('<div id="root"></div>');
   });
 
+  it('genera páginas de municipio y de landings (Fase 6) desde los mismos selectores', () => {
+    ejecutarPrerender(dir);
+
+    const municipio = readFileSync(join(dir, 'municipios', 'suances', 'index.html'), 'utf8');
+    expect(municipio).toContain('<h1>Playas de Suances</h1>');
+    expect(municipio).toContain('href="/playas/suances/la-concha"');
+
+    const webcam = readFileSync(join(dir, 'playas-con-webcam', 'index.html'), 'utf8');
+    expect(webcam).toContain('Playas con webcam en Cantabria');
+    expect(webcam).toContain('la app no comprueba si emite');
+  });
+
   it('falla en alto si la plantilla no tiene el root vacío', () => {
     writeFileSync(join(dir, 'index.html'), PLANTILLA.replace('<div id="root"></div>', '<div id="app"></div>'));
     expect(() => ejecutarPrerender(dir)).toThrow();

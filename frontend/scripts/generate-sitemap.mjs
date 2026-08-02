@@ -26,6 +26,7 @@ const raiz = dirname(fileURLToPath(import.meta.url));
 const frontend = join(raiz, '..');
 
 const { rutaPlaya, detectarColisiones } = require('../src/seo/beachUrls.js');
+const { landingsNoVacias, municipiosDe, rutaMunicipio } = require('../src/seo/landings.js');
 
 const rutaBuild = join(frontend, 'build');
 if (!existsSync(join(rutaBuild, 'index.html'))) {
@@ -57,7 +58,14 @@ if (!origen) {
   process.exit(0);
 }
 
-const rutas = ['/', '/playas', '/mapa', ...playas.map((p) => rutaPlaya(p))];
+const rutas = [
+  '/',
+  '/playas',
+  '/mapa',
+  ...playas.map((p) => rutaPlaya(p)),
+  ...municipiosDe(playas).map((m) => rutaMunicipio(m)),
+  ...landingsNoVacias(playas).map((l) => `/${l.id}`),
+];
 const hoy = new Date().toISOString().slice(0, 10);
 
 const sitemap =

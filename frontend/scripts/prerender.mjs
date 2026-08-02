@@ -31,6 +31,12 @@ const frontend = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 const { rutaPlaya, detectarColisiones } = require('../src/seo/beachUrls.js');
 const { PLANTILLAS_SEO, ETIQUETAS_ATTR, rellenar } = require('../src/seo/metadata.js');
+const {
+  landingsNoVacias,
+  municipiosDe,
+  rutaMunicipio,
+  playasDeMunicipioSlug,
+} = require('../src/seo/landings.js');
 
 const rutaBuild = process.argv[2] ? resolve(process.cwd(), process.argv[2]) : join(frontend, 'build');
 const plantillaHtml = join(rutaBuild, 'index.html');
@@ -223,13 +229,53 @@ try {
     );
     generadas += 1;
   }
+
+  // Phase 6: municipality pages — one per municipality in the catalog.
+  for (const municipio of municipiosDe(playas)) {
+    const ruta = rutaMunicipio(municipio);
+    const propias = playasDeMunicipioSlug(playas, ruta.split('/')[2]);
+    escribirRuta(
+      ruta,
+      rellenar(PLANTILLAS_SEO.tituloMunicipio, { ...vars, municipio }),
+      rellenar(PLANTILLAS_SEO.descMunicipio, { ...vars, municipio }),
+      bloqueContenido(
+        `<h1>Playas de ${escaparHtml(municipio)}</h1>
+      <p>${escaparHtml(municipio)} · ${escaparHtml(region.name)}</p>
+      <ul>
+        ${enlacesPlayas(propias)}
+      </ul>
+      ${AVISO_ESTATICO}`
+      )
+    );
+    generadas += 1;
+  }
+
+  // Phase 6: curated landings — empty categories are never published.
+  for (const landing of landingsNoVacias(playas)) {
+    const titulo = rellenar(landing.textos.titulo, vars);
+    const intro = rellenar(landing.textos.intro, vars);
+    const propias = playas.filter(landing.filtro);
+    escribirRuta(
+      `/${landing.id}`,
+      `${titulo} | Playas ${region.name}`,
+      intro,
+      bloqueContenido(
+        `<h1>${escaparHtml(titulo)}</h1>
+      <p>${escaparHtml(intro)}</p>
+      <ul>
+        ${enlacesPlayas(propias)}
+      </ul>`
+      )
+    );
+    generadas += 1;
+  }
 } catch (e) {
   console.error(`[prerender] FALLO generando rutas: ${e instanceof Error ? e.message : e}`);
   process.exit(1);
 }
 
 // The count must be exact: a silently skipped beach is a missing page.
-const esperadas = 3 + playas.length;
+const esperadas = 3 + playas.length + municipiosDe(playas).length + landingsNoVacias(playas).length;
 if (generadas !== esperadas) {
   console.error(`[prerender] generadas ${generadas} rutas, esperadas ${esperadas}.`);
   process.exit(1);

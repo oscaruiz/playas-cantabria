@@ -10,6 +10,9 @@ import HomePage from './pages/HomePage';
 import PlayasList from './pages/PlayasList';
 import PlayaDetallePage from './pages/PlayaDetalle';
 import MapaPage from './pages/MapaPage';
+import MunicipioPage from './pages/landings/MunicipioPage';
+import LandingPlayas, { LandingId } from './pages/landings/LandingPlayas';
+import { LANDINGS } from './seo/landings';
 import { IdiomaProvider } from './i18n/IdiomaContext';
 
 // Routes are imported statically on purpose: IonRouterOutlet keeps
@@ -44,6 +47,15 @@ const App: React.FC = () => (
           <Route exact path="/playas/:municipio/:playa" component={PlayaDetallePage} />
           <Route exact path="/playas/:codigo" component={PlayaDetallePage} />
           <Route path="/mapa" component={MapaPage} exact />
+          <Route exact path="/municipios/:municipio" component={MunicipioPage} />
+          {LANDINGS.map((l: { id: string }) => (
+            <Route
+              key={l.id}
+              exact
+              path={`/${l.id}`}
+              render={() => <LandingPlayas id={l.id as LandingId} />}
+            />
+          ))}
         </IonRouterOutlet>
       </IonReactRouter>
     </IdiomaProvider>

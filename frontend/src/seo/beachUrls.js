@@ -17,6 +17,7 @@
  * legacy route /playas/:codigo keeps working forever.
  */
 
+/* eslint-env node, commonjs */
 'use strict';
 
 /**

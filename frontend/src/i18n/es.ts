@@ -8,6 +8,9 @@
  * are plural forms and are resolved with tPlural().
  */
 import { PLANTILLAS_SEO, ETIQUETAS_ATTR } from '../seo/metadata';
+import { LANDINGS } from '../seo/landings';
+
+const TEXTOS_LANDINGS = Object.fromEntries(LANDINGS.map((l) => [l.id, l.textos]));
 
 export const es = {
   // ---- App / global ----
@@ -220,6 +223,22 @@ export const es = {
   'seo.descMapa': PLANTILLAS_SEO.descMapa,
   'seo.tituloDetalle': PLANTILLAS_SEO.tituloDetalle,
   'seo.descDetalle': PLANTILLAS_SEO.descDetalle,
+  'seo.tituloMunicipio': PLANTILLAS_SEO.tituloMunicipio,
+  'seo.descMunicipio': PLANTILLAS_SEO.descMunicipio,
+
+  // ---- Municipality and curated landing pages (Spanish texts shared with
+  // the prerender script via seo/landings.js) ----
+  'municipio.titulo': 'Playas de {municipio}',
+  'municipio.intro': 'Las playas de {municipio} con enlace al estado de hoy de cada una.',
+  'municipio.desconocido': 'No conocemos ese municipio. Consulta el listado completo de playas.',
+  'landing.playas-con-webcam.titulo': TEXTOS_LANDINGS['playas-con-webcam'].titulo,
+  'landing.playas-con-webcam.intro': TEXTOS_LANDINGS['playas-con-webcam'].intro,
+  'landing.playas-accesibles.titulo': TEXTOS_LANDINGS['playas-accesibles'].titulo,
+  'landing.playas-accesibles.intro': TEXTOS_LANDINGS['playas-accesibles'].intro,
+  'landing.playas-con-socorrista.titulo': TEXTOS_LANDINGS['playas-con-socorrista'].titulo,
+  'landing.playas-con-socorrista.intro': TEXTOS_LANDINGS['playas-con-socorrista'].intro,
+  'landing.playas-para-surf.titulo': TEXTOS_LANDINGS['playas-para-surf'].titulo,
+  'landing.playas-para-surf.intro': TEXTOS_LANDINGS['playas-para-surf'].intro,
 
   // ---- Data provenance ----
   'datos.enDirectoFuente': 'Observación en directo de {fuente}',

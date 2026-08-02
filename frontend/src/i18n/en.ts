@@ -209,6 +209,21 @@ export const en = {
   'seo.descMapa': 'Interactive map with every beach in {region} and its status.',
   'seo.tituloDetalle': '{nombre}: flag, weather and tides today | {region} Beaches',
   'seo.descDetalle': 'Status of {nombre} beach, in {municipio}: current flag, weather, forecast and today\'s tides.',
+  'seo.tituloMunicipio': 'Beaches in {municipio}: current conditions | {region} Beaches',
+  'seo.descMunicipio': 'The beaches of {municipio}, in {region}, each linking to today\'s flag, weather and tides.',
+
+  // ---- Municipality and curated landing pages ----
+  'municipio.titulo': 'Beaches in {municipio}',
+  'municipio.intro': 'The beaches of {municipio}, each linking to today\'s conditions.',
+  'municipio.desconocido': 'We do not know that municipality. See the full beach list.',
+  'landing.playas-con-webcam.titulo': 'Beaches with a webcam in {region}',
+  'landing.playas-con-webcam.intro': 'Beaches in {region} with a public webcam to check the area before going. The link opens each camera\'s external service; the app does not check whether it is live.',
+  'landing.playas-accesibles.titulo': 'Accessible beaches in {region}',
+  'landing.playas-accesibles.intro': 'Beaches marked accessible in the {region} catalog. Fixed beach information: services may be seasonal.',
+  'landing.playas-con-socorrista.titulo': 'Lifeguarded beaches in {region}',
+  'landing.playas-con-socorrista.intro': 'Beaches in {region} with a registered lifeguard post. Today\'s flag and hours load on each beach\'s page.',
+  'landing.playas-para-surf.titulo': 'Surf beaches in {region}',
+  'landing.playas-para-surf.intro': 'Beaches flagged for surf in the {region} catalog. Today\'s sea conditions are on each beach\'s page.',
 
   // ---- Data provenance ----
   'datos.enDirectoFuente': 'Live observation from {fuente}',
