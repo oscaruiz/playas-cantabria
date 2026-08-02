@@ -254,6 +254,25 @@ describe('PlayasList — badges de la tarjeta', () => {
     expect(byName('La Salvé').querySelector('.badge-webcam')).toBeNull();
   });
 
+  it('cada tarjeta dice si la playa va a mejor y por qué', async () => {
+    const { container } = await renderList();
+    const cards = Array.from(container.querySelectorAll('.beach-card'));
+    const byName = (nombre: string) =>
+      cards.find((c) => c.querySelector('.beach-card-name')?.textContent === nombre) as HTMLElement;
+
+    const chip = byName('La Concha').querySelector('.trend-badge');
+    expect(chip).toHaveTextContent('Está mejorando');
+    expect(chip).toHaveTextContent('se despeja');
+    // El backend ya lo dice en razonRanking; con el chip se diría dos veces.
+    expect(byName('La Concha').querySelector('.beach-card-reason')).not.toHaveTextContent(
+      'próximas horas',
+    );
+
+    // La Arnía viene "estable": en una lista eso es una línea de ruido por
+    // tarjeta, así que no se pinta.
+    expect(byName('La Arnía').querySelector('.trend-badge')).toBeNull();
+  });
+
   it('muestra como mucho 4 iconos de atributos', async () => {
     const { container } = await renderList();
     const laConcha = Array.from(container.querySelectorAll('.beach-card')).find(

@@ -46,7 +46,7 @@ export const featuredLaConcha: FeaturedBeach = {
   subpuntuaciones: {
     cielo: 25, temperatura: 22, bandera: 20, viento: 15, oleaje: 6, datos: 5,
   },
-  pronostico: { direccion: 'mejora', delta: 6 },
+  pronostico: { direccion: 'mejora', delta: 6, causa: 'despeja' },
   topeAplicado: null,
   oleaje: 'marejadilla',
 };
@@ -79,6 +79,12 @@ export const featuredLaArnia: FeaturedBeach = {
   bandera: null,
   puntuacion: 60,
   razonRanking: 'cielo despejado, sin datos de bandera',
+  /**
+   * Sin cambios en las próximas horas: en una lista no debe pintar nada. Va
+   * aquí y no en La Salvé porque esa es la playa "de backend antiguo" con la
+   * que se comprueba que un cliente instalado sigue funcionando sin el bloque.
+   */
+  pronostico: { direccion: 'estable', delta: 0, causa: null },
 };
 
 /** Just BELOW 60: outside "recommended", `--medium` on the map. */
@@ -111,7 +117,8 @@ export const featuredBerria: FeaturedBeach = {
   bandera: 'Roja',
   puntuacion: 40,
   razonRanking: 'cielo nuboso, bandera roja',
-  motivoBaja: 'bandera roja',
+  motivoBaja: 'bandera roja, empeora en las próximas horas',
+  pronostico: { direccion: 'empeora', delta: -5, causa: 'arrecia_viento' },
 };
 
 /** Between the two low cutoffs (35 ≤ 38 < 40): `--medium` on the map, low band on the badge. */
@@ -129,6 +136,12 @@ export const featuredSomo: FeaturedBeach = {
   puntuacion: 38,
   razonRanking: 'lluvia ligera, viento fuerte',
   motivoBaja: 'lluvia',
+  /**
+   * El caso incómodo: el cielo se abre (delta +4) pero va a llover, y la lluvia
+   * manda en el pronóstico publicado. Dirección y delta se contradicen a
+   * propósito — es lo que obliga al chip a callarse los puntos.
+   */
+  pronostico: { direccion: 'empeora', delta: 4, causa: 'lluvia_prevista' },
 };
 
 /** Below both low cutoffs: `--bad` on the map. */

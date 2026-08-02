@@ -1044,32 +1044,9 @@
    --------------------------------------------------------------------------- */
 
 /* Hacia dónde va el día, visible sin desplegar nada. */
-.pd-trend {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 5px;
-  font-size: 0.82rem;
-  font-weight: 600;
-  margin: 6px 0 0;
-  line-height: 1.35;
-}
-
-.pd-trend--mejora { color: var(--playa-flag-green); }
-.pd-trend--empeora { color: var(--playa-flag-red); }
-.pd-trend--estable { color: var(--playa-text-muted); }
-
-.pd-trend-sep,
-.pd-trend-hint,
-.pd-trend-delta {
-  color: var(--playa-text-muted);
-  font-weight: 500;
-}
-
-.pd-trend-delta {
-  margin-left: auto;
-  font-variant-numeric: tabular-nums;
-}
+/* El chip de tendencia vive ahora en components/TrendBadge.css: lo pintan
+   también la lista, el mapa y la portada, y una copia por pantalla acabaría
+   con cuatro verdes distintos. */
 
 .pd-score-info-sub {
   font-size: 0.8rem;

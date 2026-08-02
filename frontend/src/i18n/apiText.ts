@@ -368,6 +368,25 @@ export function razonLegible(razonRanking: string): string {
 }
 
 /**
+ * Drops "mejora / empeora en las próximas horas" from a reason.
+ *
+ * The backend says it in `razonRanking` and `motivoBaja`, and `TrendBadge` says
+ * it too. Wherever both are painted the fragment has to go, or the card reads
+ * "Sol, 22°, mejora en las próximas horas" with "Mejora · se despeja" right
+ * underneath. It is removed HERE and not in the API because that text is a
+ * contract other clients read. Always applied to the API's Spanish, BEFORE
+ * `traducirTextoApi`.
+ */
+export function sinFragmentoDePronostico(razon: string): string {
+  return razon
+    .split(',')
+    .filter((f) => !/\b(mejora|empeora) en las próximas horas\b/i.test(f.trim()))
+    .join(',')
+    .replace(/^\s*,\s*/, '')
+    .trim();
+}
+
+/**
  * Names of the lifeguard operators that have an established name in English.
  * Anything else is a proper noun and is left alone — better an untranslated
  * name than an invented one.

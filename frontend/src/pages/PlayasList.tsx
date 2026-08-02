@@ -19,8 +19,14 @@ import {
 import { useUserLocation } from '../hooks/useUserLocation';
 import { useIdioma } from '../i18n/IdiomaContext';
 import { ClaveTexto } from '../i18n/es';
-import { traducirTextoApi, razonLegible, traducirOperador } from '../i18n/apiText';
+import {
+  traducirTextoApi,
+  razonLegible,
+  traducirOperador,
+  sinFragmentoDePronostico,
+} from '../i18n/apiText';
 import ScoreBadge from '../components/ScoreBadge';
+import TrendBadge from '../components/TrendBadge';
 import BottomNavBar from '../components/BottomNavBar';
 import SelectorIdioma from '../components/SelectorIdioma';
 import { useHistory } from 'react-router-dom';
@@ -306,9 +312,15 @@ const PlayasList: React.FC = () => {
                   })()}
                   {weather?.razonRanking && (
                     <p className="beach-card-reason">
-                      {traducirTextoApi(razonLegible(weather.razonRanking), idioma)}
+                      {traducirTextoApi(
+                        weather.pronostico
+                          ? sinFragmentoDePronostico(razonLegible(weather.razonRanking))
+                          : razonLegible(weather.razonRanking),
+                        idioma,
+                      )}
                     </p>
                   )}
+                  <TrendBadge pronostico={weather?.pronostico} />
                 </div>
                 {weather && <ScoreBadge puntuacion={weather.puntuacion} />}
                 {(() => {

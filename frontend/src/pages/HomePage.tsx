@@ -15,9 +15,26 @@ import { useUserLocation } from '../hooks/useUserLocation';
 import BottomNavBar from '../components/BottomNavBar';
 import SelectorIdioma from '../components/SelectorIdioma';
 import { useIdioma } from '../i18n/IdiomaContext';
-import { traducirTextoApi, razonLegible, claveBandera, claveNivelVientoMs } from '../i18n/apiText';
+import {
+  traducirTextoApi,
+  razonLegible,
+  claveBandera,
+  claveNivelVientoMs,
+  sinFragmentoDePronostico,
+} from '../i18n/apiText';
 import ScoreBadge from '../components/ScoreBadge';
+import TrendBadge from '../components/TrendBadge';
 import './HomePage.css';
+
+/**
+ * The reason as the card must read it: with the outlook fragment removed,
+ * because `TrendBadge` is right underneath saying the same thing (and saying
+ * it better, with the cause).
+ */
+function razonSinPronostico(beach: FeaturedBeach, texto: string | null): string {
+  if (!texto) return '';
+  return beach.pronostico ? sinFragmentoDePronostico(texto) : texto;
+}
 
 // ---- Helpers ----
 
@@ -52,8 +69,11 @@ const NearestCard: React.FC<{
         <p className="hp-nearest-name">{beach.nombre}</p>
         <p className="hp-nearest-sub">{beach.municipio} &middot; {t('comun.aKm', { km: Math.round(beach.distKm) })}</p>
         {beach.razonRanking && (
-          <p className="hp-nearest-reason">{traducirTextoApi(razonLegible(beach.razonRanking), idioma)}</p>
+          <p className="hp-nearest-reason">
+            {traducirTextoApi(razonSinPronostico(beach, razonLegible(beach.razonRanking)), idioma)}
+          </p>
         )}
+        <TrendBadge pronostico={beach.pronostico} />
       </div>
       <ScoreBadge puntuacion={beach.puntuacion} />
       <span className="hp-nearest-arrow" aria-hidden="true">&#8250;</span>
@@ -101,7 +121,7 @@ const HeroBeachCard: React.FC<{
   const { t, idioma } = useIdioma();
   const emoji = emojiCielo(beach.descripcionClima);
   const flagClass = beach.bandera ? flagColorClass(beach.bandera) : null;
-  const razon = razonLegible(beach.razonRanking);
+  const razon = razonSinPronostico(beach, razonLegible(beach.razonRanking));
 
   return (
     <article className="hp-hero-card" aria-labelledby="hp-hero-nombre">
@@ -124,15 +144,20 @@ const HeroBeachCard: React.FC<{
 
       <p className="hp-hero-reason">{traducirTextoApi(razon, idioma)}</p>
 
+      {/* Lo más accionable de la portada: si la mejor playa de hoy va a peor
+          dentro de dos horas, hay que decirlo aquí y no en el detalle. */}
+      <TrendBadge pronostico={beach.pronostico} />
+
       {priorizadaPorCercania && (
         <p className="hp-hero-caveat hp-hero-caveat--info">
           <IonIcon icon={locationOutline} aria-hidden="true" /> {t('home.notaCercania')}
         </p>
       )}
 
-      {beach.motivoBaja && (
+      {beach.motivoBaja && razonSinPronostico(beach, beach.motivoBaja) && (
         <p className="hp-hero-caveat">
-          <IonIcon icon={warningOutline} aria-hidden="true" /> {traducirTextoApi(beach.motivoBaja, idioma)}
+          <IonIcon icon={warningOutline} aria-hidden="true" />{' '}
+          {traducirTextoApi(razonSinPronostico(beach, beach.motivoBaja), idioma)}
         </p>
       )}
 
@@ -180,7 +205,7 @@ const AlternativeRow: React.FC<{
   const { t, idioma } = useIdioma();
   const emoji = emojiCielo(beach.descripcionClima);
   const flagClass = beach.bandera ? flagColorClass(beach.bandera) : null;
-  const razon = razonLegible(beach.razonRanking);
+  const razon = razonSinPronostico(beach, razonLegible(beach.razonRanking));
 
   return (
     <div
@@ -222,6 +247,7 @@ const AlternativeRow: React.FC<{
             <span className="hp-alt-dist">{t('comun.aKm', { km: Math.round(distKm) })}</span>
           )}
         </div>
+        <TrendBadge pronostico={beach.pronostico} />
       </div>
       <span className="hp-alt-score" aria-label={t('home.puntuacionAria', { n: beach.puntuacion })}>
         <span aria-hidden="true">{beach.puntuacion}</span>
@@ -252,7 +278,13 @@ const CautionCard: React.FC<{
     >
       <div className="hp-caution-info">
         <p className="hp-caution-name">{beach.nombre}</p>
-        <p className="hp-caution-sub">{beach.municipio} &middot; {traducirTextoApi(razonLegible(beach.razonRanking), idioma)}</p>
+        <p className="hp-caution-sub">
+          {beach.municipio} &middot;{' '}
+          {traducirTextoApi(razonSinPronostico(beach, razonLegible(beach.razonRanking)), idioma)}
+        </p>
+        {/* Aquí importa el sentido contrario: una playa ya floja que además va
+            a peor no es lo mismo que una que simplemente está floja. */}
+        <TrendBadge pronostico={beach.pronostico} />
       </div>
       <span className="hp-caution-arrow" aria-hidden="true">&#8250;</span>
     </div>

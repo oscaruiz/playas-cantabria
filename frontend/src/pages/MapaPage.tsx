@@ -15,7 +15,14 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Playa, FeaturedBeach, getPlayas, getFeaturedBeaches } from '../services/api';
 import { emojiCielo, flagColorClass, webcamDisponible, vigilanciaDisponible, operadorVigilancia } from '../utils/beachHelpers';
 import { useIdioma } from '../i18n/IdiomaContext';
-import { traducirTextoApi, claveNivelVientoMs, claveBandera, traducirOperador } from '../i18n/apiText';
+import {
+  traducirTextoApi,
+  claveNivelVientoMs,
+  claveBandera,
+  traducirOperador,
+  sinFragmentoDePronostico,
+} from '../i18n/apiText';
+import TrendBadge from '../components/TrendBadge';
 import { REGION } from '../config/region';
 import { useUserLocation } from '../hooks/useUserLocation';
 import BottomNavBar from '../components/BottomNavBar';
@@ -222,6 +229,10 @@ const MapaPage: React.FC = () => {
                       </p>
                       {weather && (() => {
                         const status = markerStatus(weather.puntuacion);
+                        // El chip de tendencia dice lo mismo justo debajo, as\u00ED
+                        // que el fragmento sale del texto (ver `TrendBadge`).
+                        const sinRepetir = (texto: string) =>
+                          weather.pronostico ? sinFragmentoDePronostico(texto) : texto;
                         return (
                           <>
                             <p className="mapa-popup-row">
@@ -231,19 +242,21 @@ const MapaPage: React.FC = () => {
                             </p>
                             {status === 'good' && (
                               <p className="mapa-popup-status mapa-popup-status--good">
-                                {traducirTextoApi(weather.razonRanking, idioma)}
+                                {traducirTextoApi(sinRepetir(weather.razonRanking), idioma)}
                               </p>
                             )}
                             {status === 'medium' && weather.motivoBaja && (
                               <p className="mapa-popup-status mapa-popup-status--medium">
-                                {traducirTextoApi(weather.motivoBaja, idioma)}
+                                {traducirTextoApi(sinRepetir(weather.motivoBaja), idioma)}
                               </p>
                             )}
                             {status === 'bad' && weather.motivoBaja && (
                               <p className="mapa-popup-status mapa-popup-status--bad">
-                                {traducirTextoApi(weather.motivoBaja, idioma)}
+                                {traducirTextoApi(sinRepetir(weather.motivoBaja), idioma)}
                               </p>
                             )}
+                            {/* Al abrir la playa: hacia d\u00F3nde va y por qu\u00E9. */}
+                            <TrendBadge pronostico={weather.pronostico} />
                             {weather.bandera && (
                               <p className="mapa-popup-flag">
                                 <span className={`mapa-pennant mapa-pennant--${flagColorClass(weather.bandera)}`} aria-hidden="true" />

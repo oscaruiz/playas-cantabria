@@ -106,7 +106,9 @@ function featured(
   };
 }
 
-const enElCorte = featured('EnElCorte', 'C-60', 60);
+const enElCorte = featured('EnElCorte', 'C-60', 60, {
+  pronostico: { direccion: 'mejora', delta: 6, causa: 'despeja' },
+});
 const justoDebajo = featured('JustoDebajo', 'C-59', 59, { motivoBaja: 'oleaje' });
 const medioBajo = featured('MedioBajo', 'C-35', 35, { motivoBaja: 'viento' });
 const malo = featured('Malo', 'C-34', 34, { motivoBaja: 'bandera roja' });
@@ -260,6 +262,20 @@ describe('MapaPage — popup', () => {
     expect(markerByName('Malo').querySelector('.mapa-popup-status--bad')).toHaveTextContent(
       'bandera roja',
     );
+  });
+
+  it('al abrir una playa dice hacia dónde va y por qué', async () => {
+    await renderMap();
+    const chip = markerByName('EnElCorte').querySelector('.trend-badge');
+
+    expect(chip).toHaveTextContent('Está mejorando');
+    expect(chip).toHaveTextContent('se despeja');
+  });
+
+  it('sin pronóstico el popup queda como estaba', async () => {
+    await renderMap();
+
+    expect(markerByName('Malo').querySelector('.trend-badge')).toBeNull();
   });
 
   it('avisa del viento fuerte en km/h', async () => {

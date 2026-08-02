@@ -493,10 +493,27 @@ export interface SubPuntuaciones {
   datos: number;
 }
 
+/**
+ * Where the next few hours are heading. `causa` says WHY, as a key and not as
+ * text: unlike `razonRanking`, it does not go through `traducirTextoApi`.
+ *
+ * Optional because a backend that predates it (or a response still in cache
+ * from one) simply does not send it — the chip then shows the direction alone.
+ */
 export interface Pronostico {
   direccion: 'mejora' | 'empeora' | 'estable';
   delta: number;
+  causa?: CausaPronostico | null;
 }
+
+export type CausaPronostico =
+  | 'despeja'
+  | 'nubla'
+  | 'sube_temperatura'
+  | 'baja_temperatura'
+  | 'amaina_viento'
+  | 'arrecia_viento'
+  | 'lluvia_prevista';
 
 export interface FeaturedBeachesResponse {
   timestamp: number;

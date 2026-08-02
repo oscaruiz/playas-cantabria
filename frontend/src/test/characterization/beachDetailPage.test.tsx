@@ -496,9 +496,11 @@ describe('PlayaDetalle — puntuación', () => {
     const { container } = renderDetalle('3908503');
     await screen.findByText('Puntuación de hoy');
 
-    const chip = container.querySelector('.pd-trend');
-    expect(chip).toHaveTextContent('Mejora');
+    const chip = container.querySelector('.trend-badge');
+    expect(chip).toHaveTextContent('Está mejorando');
     expect(chip).toHaveTextContent('+6 puntos');
+    // Y por qué mejora: "Mejora" a secas no dice si merece la pena esperar.
+    expect(chip).toHaveTextContent('se despeja');
     // El backend ya lo dice en razonRanking; con el chip se diría dos veces.
     expect(container.querySelector('.pd-score-reason')).not.toHaveTextContent('próximas horas');
   });
@@ -545,7 +547,7 @@ describe('PlayaDetalle — puntuación', () => {
 
     expect(container.querySelectorAll('.pd-factor')).toHaveLength(0);
     expect(container.querySelectorAll('.beach-info-row').length).toBeGreaterThan(0);
-    expect(container.querySelector('.pd-trend')).toBeNull();
+    expect(container.querySelector('.trend-badge')).toBeNull();
   });
 
   it('no muestra bloque de puntuación si la playa no está en el ranking', async () => {

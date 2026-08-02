@@ -1,0 +1,48 @@
+/* Where the beach is heading in the next few hours. Same colours in every
+   surface (home, list, map popup, detail): the direction IS the colour, so it
+   cannot drift between screens. */
+
+.trend-badge {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  font-weight: 600;
+  line-height: 1.35;
+  margin: 0;
+}
+
+.trend-badge--mejora { color: var(--playa-flag-green); }
+.trend-badge--empeora { color: var(--playa-flag-red); }
+.trend-badge--estable { color: var(--playa-text-muted); }
+
+.trend-badge-sep,
+.trend-badge-hint,
+.trend-badge-delta {
+  color: var(--playa-text-muted);
+  font-weight: 500;
+}
+
+/* Lists, cards and the map popup. */
+.trend-badge--sm {
+  font-size: 0.76rem;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+/* The cause is the useful half, so it survives a narrow card: the direction
+   word wraps first and the whole line never pushes the score badge out. */
+.trend-badge--sm .trend-badge-causa {
+  font-weight: 500;
+}
+
+/* Detail header. */
+.trend-badge--lg {
+  font-size: 0.82rem;
+  margin-top: 6px;
+}
+
+.trend-badge-delta {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}

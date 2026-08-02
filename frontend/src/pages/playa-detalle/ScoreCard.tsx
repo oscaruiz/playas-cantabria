@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
 import { IonIcon } from '@ionic/react';
-import {
-  warningOutline,
-  chevronDownOutline,
-  trendingUpOutline,
-  trendingDownOutline,
-  removeOutline,
-} from 'ionicons/icons';
+import { warningOutline, chevronDownOutline } from 'ionicons/icons';
 import { FeaturedBeach, SubPuntuaciones } from '../../services/api';
 import ScoreBadge from '../../components/ScoreBadge';
+import TrendBadge from '../../components/TrendBadge';
 import { useIdioma } from '../../i18n/IdiomaContext';
 import { ClaveTexto } from '../../i18n/es';
-import { traducirTextoApi, razonLegible, claveNivelVientoMs } from '../../i18n/apiText';
+import {
+  traducirTextoApi,
+  razonLegible,
+  claveNivelVientoMs,
+  sinFragmentoDePronostico,
+} from '../../i18n/apiText';
 
 /** Cap values applied by the backend (`RAIN_SCORE_CAP` / `RAIN_FORECAST_SCORE_CAP`). */
 const TOPES: Record<'lluvia' | 'lluvia_prevista', { clave: ClaveTexto; valor: number }> = {
@@ -46,36 +46,12 @@ const FACTORES: Array<{ campo: keyof SubPuntuaciones; clave: ClaveTexto }> = [
 /** Rules that cap or exclude: they do not score, so they carry no points. */
 const REGLAS: ClaveTexto[] = ['detalle.scoreInfo.lluvia', 'detalle.scoreInfo.peligro'];
 
-const PRONOSTICO: Record<
-  'mejora' | 'empeora' | 'estable',
-  { clave: ClaveTexto; icono: string }
-> = {
-  mejora: { clave: 'detalle.pronostico.mejora', icono: trendingUpOutline },
-  empeora: { clave: 'detalle.pronostico.empeora', icono: trendingDownOutline },
-  estable: { clave: 'detalle.pronostico.estable', icono: removeOutline },
-};
-
 /** "Concept: description" → the two halves the row paints. */
 function partirTexto(texto: string): { etiqueta: string; descripcion: string } {
   const sep = texto.indexOf(':');
   return sep >= 0
     ? { etiqueta: texto.slice(0, sep), descripcion: texto.slice(sep + 1).trim() }
     : { etiqueta: texto, descripcion: '' };
-}
-
-/**
- * The backend already says it in `razonRanking` ("mejora en las próximas
- * horas"). With the chip on the card it would be said twice, so the fragment
- * is dropped HERE and not in the API: that text is a contract other clients
- * read.
- */
-function sinFragmentoDePronostico(razon: string): string {
-  return razon
-    .split(',')
-    .filter((f) => !/\b(mejora|empeora) en las próximas horas\b/i.test(f.trim()))
-    .join(',')
-    .replace(/^\s*,\s*/, '')
-    .trim();
 }
 
 /** Today's score with its reason, and a disclosure explaining how it is computed. */
@@ -157,24 +133,7 @@ const ScoreCard: React.FC<{
           )}
           {/* Where the day is going, visible without opening anything: it is the
               most actionable line on the screen. */}
-          {pronostico && (
-            <p className={`pd-trend pd-trend--${pronostico.direccion}`}>
-              <IonIcon icon={PRONOSTICO[pronostico.direccion].icono} aria-hidden="true" />{' '}
-              <span>{t(PRONOSTICO[pronostico.direccion].clave)}</span>
-              <span className="pd-trend-sep">·</span>
-              <span className="pd-trend-hint">{t('detalle.pronostico.titulo')}</span>
-              {/* Only when it is worth saying: the backend zeroes out any
-                  change too small to name, so there is never a "no change"
-                  next to a number. */}
-              {pronostico.direccion !== 'estable' && pronostico.delta !== 0 && (
-                <span className="pd-trend-delta">
-                  {t('detalle.pronostico.puntos', {
-                    n: pronostico.delta > 0 ? `+${pronostico.delta}` : `${pronostico.delta}`,
-                  })}
-                </span>
-              )}
-            </p>
-          )}
+          <TrendBadge pronostico={pronostico} size="lg" />
           {motivo && (
             <p className="pd-score-caveat">
               <IonIcon icon={warningOutline} aria-hidden="true" />{' '}

@@ -80,6 +80,27 @@ describe('HomePage — sin ubicación', () => {
     expect(container.querySelector('.hp-hero-score-num')).toHaveTextContent('93');
   });
 
+  it('dice hacia dónde va el día y por qué, sin repetirlo en la razón', async () => {
+    const { container } = await renderHome();
+    const hero = container.querySelector('.hp-hero-card') as HTMLElement;
+
+    // La nota ya lleva el ajuste del pronóstico dentro; sin esto la playa subía
+    // en el ranking sin nada en pantalla que lo explicara.
+    const chip = hero.querySelector('.trend-badge');
+    expect(chip).toHaveTextContent('Está mejorando');
+    expect(chip).toHaveTextContent('se despeja');
+    expect(hero.querySelector('.hp-hero-reason')).not.toHaveTextContent('próximas horas');
+  });
+
+  it('una alternativa sin cambios previstos no gasta una línea en decirlo', async () => {
+    const { container } = await renderHome();
+    const arnia = Array.from(container.querySelectorAll('.hp-alt-row')).find(
+      (row) => row.querySelector('.hp-alt-name')?.textContent === 'La Arnía',
+    ) as HTMLElement;
+
+    expect(arnia.querySelector('.trend-badge')).toBeNull();
+  });
+
   it('muestra como alternativas el resto del pool, sin La Salvé (59 < 60)', async () => {
     const { container } = await renderHome();
 
