@@ -6,8 +6,9 @@ import SeoHead from '../../seo/SeoHead';
 import { LANDINGS } from '../../seo/landings';
 import BottomNavBar from '../../components/BottomNavBar';
 import SelectorIdioma from '../../components/SelectorIdioma';
-import FilaPlaya from './FilaPlaya';
+import BeachCard from '../../components/BeachCard';
 import { useCatalogo } from './useCatalogo';
+import { FreshnessLabel } from '../../features/provenance/SourceAndFreshness';
 import './landings.css';
 
 export type LandingId =
@@ -25,7 +26,7 @@ export type LandingId =
  */
 const LandingPlayas: React.FC<{ id: LandingId }> = ({ id }) => {
   const { t, tPlural } = useIdioma();
-  const { playas, condiciones } = useCatalogo();
+  const { playas, condiciones, instanteCondiciones } = useCatalogo();
   const filtro = LANDINGS.find((l: { id: string }) => l.id === id)?.filtro as
     | ((p: unknown) => boolean)
     | undefined;
@@ -60,10 +61,20 @@ const LandingPlayas: React.FC<{ id: LandingId }> = ({ id }) => {
         )}
         {playas && (
           <>
-            <div className="beach-count">{tPlural('lista.contador', lista.length)}</div>
-            <div className="ld-lista">
+            <div className="beach-count">
+              {tPlural('lista.contador', lista.length)}
+              {/* The rows show conditions from the featured snapshot; say
+                  how old that snapshot is (it can come from the SW cache). */}
+              {condiciones.size > 0 && instanteCondiciones != null && (
+                <>
+                  {' · '}
+                  <FreshnessLabel instante={instanteCondiciones} />
+                </>
+              )}
+            </div>
+            <div className="beach-list">
               {lista.map((p) => (
-                <FilaPlaya key={p.codigo} playa={p} condiciones={condiciones.get(p.codigo) ?? null} />
+                <BeachCard key={p.codigo} playa={p} weather={condiciones.get(p.codigo)} />
               ))}
             </div>
           </>

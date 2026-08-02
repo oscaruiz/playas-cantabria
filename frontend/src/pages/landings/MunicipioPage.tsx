@@ -7,8 +7,9 @@ import SeoHead from '../../seo/SeoHead';
 import { playasDeMunicipioSlug, rutaMunicipio } from '../../seo/landings';
 import BottomNavBar from '../../components/BottomNavBar';
 import SelectorIdioma from '../../components/SelectorIdioma';
-import FilaPlaya from './FilaPlaya';
+import BeachCard from '../../components/BeachCard';
 import { useCatalogo } from './useCatalogo';
+import { FreshnessLabel } from '../../features/provenance/SourceAndFreshness';
 import './landings.css';
 
 /** The beaches of one municipality, each linking to its canonical page. */
@@ -16,7 +17,7 @@ const MunicipioPage: React.FC = () => {
   const { municipio } = useParams<{ municipio: string }>();
   const history = useHistory();
   const { t, tPlural } = useIdioma();
-  const { playas, condiciones } = useCatalogo();
+  const { playas, condiciones, instanteCondiciones } = useCatalogo();
 
   const lista = useMemo(
     () =>
@@ -36,6 +37,14 @@ const MunicipioPage: React.FC = () => {
           rutaCanonica={rutaMunicipio(nombreMunicipio)}
         />
       )}
+      {playas && !nombreMunicipio && (
+        <SeoHead
+          titulo={t('seo.tituloNoEncontrada')}
+          descripcion={t('seo.descNoEncontrada')}
+          rutaCanonica=""
+          noindex
+        />
+      )}
       <div className="home-sticky-header">
         <h1 className="home-sticky-title">
           {nombreMunicipio ? t('municipio.titulo', { municipio: nombreMunicipio }) : t('app.titulo')}
@@ -53,10 +62,18 @@ const MunicipioPage: React.FC = () => {
         {playas && nombreMunicipio && (
           <>
             <p className="ld-intro">{t('municipio.intro', { municipio: nombreMunicipio })}</p>
-            <div className="beach-count">{tPlural('lista.contador', lista.length)}</div>
-            <div className="ld-lista">
+            <div className="beach-count">
+              {tPlural('lista.contador', lista.length)}
+              {condiciones.size > 0 && instanteCondiciones != null && (
+                <>
+                  {' · '}
+                  <FreshnessLabel instante={instanteCondiciones} />
+                </>
+              )}
+            </div>
+            <div className="beach-list">
               {lista.map((p: Playa) => (
-                <FilaPlaya key={p.codigo} playa={p} condiciones={condiciones.get(p.codigo) ?? null} />
+                <BeachCard key={p.codigo} playa={p} weather={condiciones.get(p.codigo)} />
               ))}
             </div>
           </>

@@ -231,6 +231,8 @@ export const es = {
   'municipios.intro': 'Los municipios de {region} con playa en el catálogo. Cada uno lleva a sus playas y su estado.',
   'municipio.verPlayas': 'Ver todas las playas de {municipio}',
   'detalle.municipio': 'Municipio',
+  'seo.tituloNoEncontrada': 'Página no encontrada | Playas {region}',
+  'seo.descNoEncontrada': 'Esta dirección no corresponde a ninguna playa ni municipio del catálogo de {region}.',
 
   // ---- Municipality and curated landing pages (Spanish texts shared with
   // the prerender script via seo/landings.js) ----

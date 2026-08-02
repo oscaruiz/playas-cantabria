@@ -1,15 +1,21 @@
+/* Same 640px column as the beach list: these pages ARE beach lists. */
 .ld-intro {
-  margin: 12px 16px 4px;
+  margin: 12px auto 4px;
+  padding: 0 20px;
+  max-width: 640px;
   font-size: 0.85rem;
   color: var(--playa-text-muted);
   line-height: 1.5;
 }
 
+/* Municipality-index rows (the only list here that is not beaches). */
 .ld-lista {
   display: flex;
   flex-direction: column;
   gap: 8px;
   padding: 8px 16px 16px;
+  max-width: 640px;
+  margin: 0 auto;
 }
 
 .ld-fila {
@@ -21,11 +27,6 @@
   background: var(--playa-card-bg, #ffffff);
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
   cursor: pointer;
-}
-
-.ld-fila-clima {
-  font-size: 0.9rem;
-  white-space: nowrap;
 }
 
 .ld-fila-nombre {

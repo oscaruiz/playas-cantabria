@@ -3,6 +3,7 @@
     {
       "target": "cantabria",
       "public": "build",
+      "trailingSlash": false,
       "ignore": [
         "firebase.json",
         "**/.*",

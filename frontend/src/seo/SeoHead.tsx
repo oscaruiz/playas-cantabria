@@ -35,7 +35,13 @@ const SeoHead: React.FC<{
   descripcion: string;
   /** Canonical PATH of this page (e.g. `/playas/suances/la-concha`). */
   rutaCanonica: string;
-}> = ({ titulo, descripcion, rutaCanonica }) => {
+  /**
+   * Not-found/error pages: emits robots=noindex and REMOVES the canonical
+   * and og:url instead of inheriting the previous view's — an unknown slug
+   * must never keep declaring another beach's URL as its own.
+   */
+  noindex?: boolean;
+}> = ({ titulo, descripcion, rutaCanonica, noindex }) => {
   useEffect(() => {
     const origen = ORIGEN_CANONICO ?? window.location.origin;
     const urlCanonica = `${origen}${rutaCanonica}`;
@@ -44,18 +50,33 @@ const SeoHead: React.FC<{
     metaPorNombre('name', 'description').setAttribute('content', descripcion);
     metaPorNombre('property', 'og:title').setAttribute('content', titulo);
     metaPorNombre('property', 'og:description').setAttribute('content', descripcion);
-    metaPorNombre('property', 'og:url').setAttribute('content', urlCanonica);
     metaPorNombre('property', 'og:type').setAttribute('content', 'website');
     metaPorNombre('name', 'twitter:card').setAttribute('content', 'summary');
 
-    let canonical = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+    const canonicalExistente =
+      document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+    const robotsExistente =
+      document.head.querySelector<HTMLMetaElement>('meta[name="robots"]');
+    const ogUrlExistente =
+      document.head.querySelector<HTMLMetaElement>('meta[property="og:url"]');
+
+    if (noindex) {
+      canonicalExistente?.remove();
+      ogUrlExistente?.remove();
+      metaPorNombre('name', 'robots').setAttribute('content', 'noindex');
+      return;
+    }
+
+    robotsExistente?.remove();
+    metaPorNombre('property', 'og:url').setAttribute('content', urlCanonica);
+    let canonical = canonicalExistente;
     if (!canonical) {
       canonical = document.createElement('link');
       canonical.rel = 'canonical';
       document.head.appendChild(canonical);
     }
     canonical.href = urlCanonica;
-  }, [titulo, descripcion, rutaCanonica]);
+  }, [titulo, descripcion, rutaCanonica, noindex]);
 
   return null;
 };

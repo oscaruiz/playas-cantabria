@@ -6,7 +6,8 @@
  */
 
 import React from 'react';
-import { screen } from '@testing-library/react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { useHistory } from 'react-router-dom';
 import PlayaDetallePage from '../pages/PlayaDetalle';
 import { renderWithProviders } from '../test/render';
 import { installFetchMock, restoreFetch, route } from '../test/http/fakeFetch';
@@ -51,6 +52,49 @@ describe('ruta canónica /playas/:municipio/:playa', () => {
     });
 
     expect(await screen.findByText('HTTP 404')).toBeInTheDocument();
+    // Not-found pages must never present themselves as another page.
+    await waitFor(() =>
+      expect(
+        document.head.querySelector('meta[name="robots"]')?.getAttribute('content')
+      ).toBe('noindex')
+    );
+    expect(document.head.querySelector('link[rel="canonical"]')).toBeNull();
+  });
+});
+
+/** Pushes a new route without unmounting the page — Ionic's view reuse. */
+const CambiarRuta: React.FC<{ a: string }> = ({ a }) => {
+  const history = useHistory();
+  return <button onClick={() => history.push(a)}>cambiar-ruta</button>;
+};
+
+describe('reutilización de la vista entre playas', () => {
+  it('al cambiar de playa, la anterior desaparece aunque la nueva falle', async () => {
+    let llamadas = 0;
+    fetchMock = installFetchMock([
+      route(RUTA_DESTACADAS, { json: featuredResponse }),
+      route(RUTA_PLAYAS, { json: beachesResponse }),
+      route(RUTA_DETALLE, () =>
+        llamadas++ === 0
+          ? { json: buildOpenWeatherDetail(localNoon('2026-07-27')) }
+          : { status: 404, json: {} }
+      ),
+    ]);
+
+    renderWithProviders(
+      <>
+        <PlayaDetallePage />
+        <CambiarRuta a="/playas/9999999" />
+      </>,
+      { route: '/playas/3905201', path: '/playas/:codigo' }
+    );
+    await screen.findByText('La Arnía');
+
+    fireEvent.click(screen.getByText('cambiar-ruta'));
+
+    // The failed beach shows its error — never the previous beach's data.
+    expect(await screen.findByText('HTTP 404')).toBeInTheDocument();
+    expect(screen.queryByText('La Arnía')).not.toBeInTheDocument();
   });
 });
 
@@ -62,9 +106,13 @@ describe('ruta heredada /playas/:codigo', () => {
     });
 
     await screen.findByText('La Arnía');
-    const canonical = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
     // buildOpenWeatherDetail is La Arnía (Piélagos): the canonical URL is
-    // derived from the SAME beachUrls module the app navigates with.
-    expect(canonical?.href).toBe(`${window.location.origin}/playas/pielagos/la-arnia`);
+    // derived from the SAME beachUrls module the app navigates with. SeoHead
+    // applies it in an effect, one tick after the data render.
+    await waitFor(() =>
+      expect(
+        document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.href
+      ).toBe(`${window.location.origin}/playas/pielagos/la-arnia`)
+    );
   });
 });

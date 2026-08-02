@@ -90,6 +90,8 @@ describe('LandingPlayas', () => {
     expect(document.title).toContain('webcam');
     // The intro carries the data-source honesty note.
     expect(screen.getByText(/la app no comprueba si emite/)).toBeInTheDocument();
+    // And the conditions say how old the featured snapshot is.
+    expect(await screen.findByText(/actualizado hace/)).toBeInTheDocument();
   });
 
   it('la landing de socorrismo usa el criterio del catálogo', async () => {
@@ -100,7 +102,7 @@ describe('LandingPlayas', () => {
 
     await screen.findByText('La Concha');
     // Row TITLES only — "Laredo" is also a municipality label under La Salvé.
-    const nombres = Array.from(container.querySelectorAll('.ld-fila-titulo')).map(
+    const nombres = Array.from(container.querySelectorAll('.beach-card-name')).map(
       (el) => el.textContent
     );
     // Laredo (idCruzRoja 310) and La Concha (two posts) are in; La Arnía out.

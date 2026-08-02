@@ -75,7 +75,17 @@ const PlayaDetallePage: React.FC = () => {
    * el resultado de una petición que ya no interesa no toca el estado.
    */
   // Canonical route: slugs → codigo. The legacy route resolves synchronously.
+  // On EVERY route identity change the beach-specific state is cleared first:
+  // Ionic reuses the mounted view when only the params change, and without
+  // this reset the previous beach would stay on screen (with its canonical
+  // URL and favorite star) while — or even after — the new one fails to load.
   useEffect(() => {
+    setDatos(null);
+    setPuntuada(null);
+    setMaximos(null);
+    setSelectedDay(0);
+    setError(false);
+    setStatusError(null);
     if (codigo) {
       setCodigoResuelto(codigo);
       return;
@@ -143,6 +153,16 @@ const PlayaDetallePage: React.FC = () => {
           titulo={t('seo.tituloDetalle', { nombre: datos.nombre })}
           descripcion={t('seo.descDetalle', { nombre: datos.nombre, municipio: datos.municipio })}
           rutaCanonica={rutaPlaya(datos)}
+        />
+      )}
+      {/* Unknown beach: noindex and no inherited canonical — this URL must
+          not present itself to crawlers as some other page. */}
+      {error && !datos && statusError === 404 && (
+        <SeoHead
+          titulo={t('seo.tituloNoEncontrada')}
+          descripcion={t('seo.descNoEncontrada')}
+          rutaCanonica=""
+          noindex
         />
       )}
       <div className="pd-sticky-header">

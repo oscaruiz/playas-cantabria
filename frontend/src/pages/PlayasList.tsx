@@ -6,34 +6,15 @@ import {
   IonSpinner,
   IonIcon,
 } from '@ionic/react';
-import { searchOutline, locateOutline, videocamOutline, starOutline } from 'ionicons/icons';
+import { searchOutline, locateOutline, starOutline } from 'ionicons/icons';
 import { Playa, FeaturedBeach, getPlayas, getFeaturedBeaches } from '../services/api';
-import {
-  getActiveAttrs,
-  emojiCielo,
-  webcamDisponible,
-  vigilanciaDisponible,
-  operadorVigilancia,
-  coincidePlaya,
-} from '../utils/beachHelpers';
+import { coincidePlaya } from '../utils/beachHelpers';
 import { useUserLocation } from '../hooks/useUserLocation';
 import { useIdioma } from '../i18n/IdiomaContext';
-import { ClaveTexto } from '../i18n/es';
-import {
-  traducirTextoApi,
-  razonLegible,
-  traducirOperador,
-  sinFragmentoDePronostico,
-} from '../i18n/apiText';
-import ScoreBadge from '../components/ScoreBadge';
-import TrendBadge from '../components/TrendBadge';
+import BeachCard from '../components/BeachCard';
 import BottomNavBar from '../components/BottomNavBar';
 import SelectorIdioma from '../components/SelectorIdioma';
-import { useHistory } from 'react-router-dom';
-import FavoriteButton from '../features/favorites/FavoriteButton';
 import { useFavoritas } from '../features/favorites/useFavorites';
-import { rutaPlaya } from '../seo/beachUrls';
-import { rutaMunicipio } from '../seo/landings';
 import SeoHead from '../seo/SeoHead';
 import './PlayasList.css';
 
@@ -62,12 +43,11 @@ const PlayasList: React.FC = () => {
   // JSON. What does need to be conveyed is that the data is not fresh.
   const [esFallback, setEsFallback] = useState(false);
   const [datosNoDisponibles, setDatosNoDisponibles] = useState(false);
-  const { t, tPlural, idioma } = useIdioma();
+  const { t, tPlural } = useIdioma();
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeIdx, setActiveIdx] = useState(-1);
   const { userLocation } = useUserLocation();
   const blurTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const history = useHistory();
 
   useEffect(() => {
     getPlayas({
@@ -276,126 +256,22 @@ const PlayasList: React.FC = () => {
           </div>
         )}
 
-        {/* Beach list */}
+        {/* Beach list — the shared BeachCard, same row as municipality and
+            landing pages. */}
         {playas && filtradas.length > 0 && (
           <div className="beach-list">
-            {filtradas.map((playa) => {
-              const weather = weatherMap.get(playa.codigo);
-              const skyEmoji = weather ? emojiCielo(weather.descripcionClima) : null;
-              const distKm = userLocation
-                ? haversineKm(userLocation[0], userLocation[1], playa.lat, playa.lon)
-                : null;
-              return (
-              <div
+            {filtradas.map((playa) => (
+              <BeachCard
                 key={playa.codigo}
-                className="beach-card"
-                onClick={() => history.push(rutaPlaya(playa))}
-                role="link"
-                tabIndex={0}
-                aria-label={t('comun.verDetalleDe', { nombre: `${playa.nombre}, ${playa.municipio}` })}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    history.push(rutaPlaya(playa));
-                  }
-                }}
-              >
-                <div className="beach-card-icon" aria-hidden="true">
-                  {skyEmoji && <span className="beach-card-sky">{skyEmoji}</span>}
-                  {weather?.temperatura != null && (
-                    <span className="beach-card-temp">{Math.round(weather.temperatura)}{'°'}</span>
-                  )}
-                </div>
-                <div className="beach-card-info">
-                  <p className="beach-card-name">{playa.nombre}</p>
-                  <p className="beach-card-municipio">
-                    {/* The card navigates to the beach; the municipality name
-                        navigates to the municipality — so it stops the row. */}
-                    <button
-                      className="ld-enlace-municipio"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        history.push(rutaMunicipio(playa.municipio));
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') e.stopPropagation();
-                      }}
-                      aria-label={t('municipio.verPlayas', { municipio: playa.municipio })}
-                    >
-                      {playa.municipio}
-                    </button>
-                    {distKm != null && (
-                      <span className="beach-card-dist">
-                        {' · '}
-                        {t('comun.aKm', { km: Math.round(distKm) })}
-                      </span>
-                    )}
-                  </p>
-                  {(() => {
-                    const attrs = getActiveAttrs(playa.atributos).slice(0, 4);
-                    return attrs.length > 0 ? (
-                      <div className="beach-card-attrs">
-                        {attrs.map((a) => (
-                          <IonIcon
-                            key={a.key}
-                            className="beach-attr-mini"
-                            icon={a.icon}
-                            title={t(`attr.${a.key}` as ClaveTexto)}
-                            aria-hidden="true"
-                          />
-                        ))}
-                      </div>
-                    ) : null;
-                  })()}
-                  {weather?.razonRanking && (
-                    <p className="beach-card-reason">
-                      {traducirTextoApi(
-                        weather.pronostico
-                          ? sinFragmentoDePronostico(razonLegible(weather.razonRanking))
-                          : razonLegible(weather.razonRanking),
-                        idioma,
-                      )}
-                    </p>
-                  )}
-                  <TrendBadge pronostico={weather?.pronostico} />
-                </div>
-                {weather && <ScoreBadge puntuacion={weather.puntuacion} />}
-                {(() => {
-                  const vigilada = vigilanciaDisponible(playa);
-                  // Named by the beach's own operator: a region without
-                  // Cruz Roja must not be labelled with somebody else's badge.
-                  const operador = operadorVigilancia(playa);
-                  const conWebcam = webcamDisponible(playa.webcam);
-                  return vigilada || conWebcam ? (
-                    <div className="beach-card-badges">
-                      {vigilada && operador && (
-                        <span
-                          className="badge-vigilada"
-                          aria-label={t('lista.vigiladaAria', {
-                            operador: traducirOperador(operador, idioma),
-                          })}
-                        >
-                          <span className="badge-vigilada-dot" aria-hidden="true" />
-                          {traducirOperador(operador, idioma)}
-                        </span>
-                      )}
-                      {conWebcam && (
-                        <span className="badge-webcam" aria-label={t('lista.webcamAria')}>
-                          <IonIcon icon={videocamOutline} aria-hidden="true" />
-                        </span>
-                      )}
-                    </div>
-                  ) : null;
-                })()}
-                <FavoriteButton
-                  codigo={playa.codigo}
-                  nombre={playa.nombre}
-                  className="beach-card-fav"
-                />
-                <span className="beach-card-arrow" aria-hidden="true">&#8250;</span>
-              </div>
-              );
-            })}
+                playa={playa}
+                weather={weatherMap.get(playa.codigo)}
+                distKm={
+                  userLocation
+                    ? haversineKm(userLocation[0], userLocation[1], playa.lat, playa.lon)
+                    : null
+                }
+              />
+            ))}
           </div>
         )}
 
