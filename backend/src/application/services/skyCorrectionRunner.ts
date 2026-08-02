@@ -27,11 +27,13 @@ export function corregirCieloObservado(
   const modo = skyCorrectionMode();
   if (modo === 'off' || !weather) return weather;
 
+  const evidencia = evidenciaHoraria(outlook, ahora);
   const decision = decidirCorreccionCielo(weather, sol, {
     enFranjaDePlaya: enFranjaDePlaya(new Date(ahora)),
     ahora,
     lloviendo,
-    nubesInmediatasPct: nubesInmediatas(outlook, ahora),
+    nubesInmediatasPct: evidencia.nubesInmediatasPct,
+    horasDespejadasConsecutivas: evidencia.horasDespejadasConsecutivas,
   });
   skyCorrectionMetrics.record(playa, decision);
 
@@ -39,16 +41,33 @@ export function corregirCieloObservado(
 }
 
 /** The next hourly slot is corroboration only while it still describes "now". */
-function nubesInmediatas(
+function evidenciaHoraria(
   outlook: readonly HourlyOutlookSlot[] | null,
   ahora: number,
-): number | null {
-  const LIMITE_MS = 90 * 60 * 1000;
-  const slot = [...(outlook ?? [])]
+): { nubesInmediatasPct: number | null; horasDespejadasConsecutivas: number } {
+  const HORA_MS = 60 * 60 * 1000;
+  const LIMITE_INMEDIATO_MS = 90 * 60 * 1000;
+  const slots = [...(outlook ?? [])]
     .filter((item) =>
       item.timestamp >= ahora
-      && item.timestamp - ahora <= LIMITE_MS
+      && item.timestamp - ahora <= 4 * HORA_MS
       && typeof item.cloudCoverPct === 'number')
-    .sort((a, b) => a.timestamp - b.timestamp)[0];
-  return slot?.cloudCoverPct ?? null;
+    .sort((a, b) => a.timestamp - b.timestamp);
+  const inmediato = slots[0];
+  if (!inmediato || inmediato.timestamp - ahora > LIMITE_INMEDIATO_MS) {
+    return { nubesInmediatasPct: null, horasDespejadasConsecutivas: 0 };
+  }
+
+  let consecutivas = 0;
+  let anterior: number | null = null;
+  for (const slot of slots) {
+    if (anterior !== null && slot.timestamp - anterior > 90 * 60 * 1000) break;
+    if ((slot.cloudCoverPct ?? 100) > 10) break;
+    consecutivas += 1;
+    anterior = slot.timestamp;
+  }
+  return {
+    nubesInmediatasPct: inmediato.cloudCoverPct,
+    horasDespejadasConsecutivas: consecutivas,
+  };
 }

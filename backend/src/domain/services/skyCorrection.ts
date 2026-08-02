@@ -52,12 +52,14 @@ const MAX_KM_PARA_MEJORAR = 25;
  * "nublado" based on a three-hour-old observation.
  */
 const FRESCURA_MAX_MS = 2 * 60 * 60 * 1000;
+/** Small clock skew is harmless; a future hourly observation is not. */
+const FUTURO_MAX_MS = 15 * 60 * 1000;
 
 /** Below 1/4 of an hour of sun the sky is genuinely covered. */
 const UMBRAL_MUY_NUBOSO = 0.25;
 /** Between this and the clear threshold the signal is intentionally inconclusive. */
 const UMBRAL_SIN_TOCAR = 0.75;
-/** Strong sunshine can disprove a cloudy current observation. */
+/** Strong sunshine is required when the station is farther than 25 km. */
 const UMBRAL_DESPEJADO = 0.85;
 /** Moderate sunshine is enough only when the immediate local model also says clear. */
 const UMBRAL_SOL_CON_CORROBORACION = 0.5;
@@ -69,6 +71,7 @@ export type MotivoDecision =
   | 'fuera-de-franja'
   | 'sin-observacion'
   | 'observacion-vieja'
+  | 'observacion-futura'
   | 'estacion-lejos'
   | 'estacion-lejos-para-mejorar'
   | 'sin-segundo-testigo'
@@ -84,6 +87,8 @@ export interface ContextoCorreccion {
   lloviendo?: boolean;
   /** Nearest Open-Meteo hourly slot (max 90 min away), used only as corroboration. */
   nubesInmediatasPct?: number | null;
+  /** Consecutive clear Open-Meteo slots starting with that immediate slot. */
+  horasDespejadasConsecutivas?: number;
 }
 
 export interface DecisionCielo {
@@ -100,7 +105,6 @@ export interface DecisionCielo {
 function nivelPara(fraccion: number): NivelCorregido | null {
   if (fraccion < UMBRAL_MUY_NUBOSO) return 'muyNuboso';
   if (fraccion <= UMBRAL_SIN_TOCAR) return 'dispersas';
-  if (fraccion >= UMBRAL_DESPEJADO) return 'despejado';
   return null;
 }
 
@@ -144,6 +148,9 @@ export function decidirCorreccionCielo(
   if (ctx.ahora - observacion.observadoEn > FRESCURA_MAX_MS) {
     return { aplicar: false, motivo: 'observacion-vieja', ...base };
   }
+  if (observacion.observadoEn - ctx.ahora > FUTURO_MAX_MS) {
+    return { aplicar: false, motivo: 'observacion-futura', ...base };
+  }
 
   // 3. Rain: the rain icon wins, we do not overwrite it with a clouds one.
   if (ctx.lloviendo || modeloDiceLluvia(weather)) {
@@ -173,7 +180,14 @@ export function decidirCorreccionCielo(
   if (esMejora && severidadModelo === NIVELES.despejado.severidad) {
     return { aplicar: false, motivo: 'sol-suficiente', ...base };
   }
-  if (esMejora && observacion.distanciaKm > MAX_KM_PARA_MEJORAR) {
+  const mejoraLejanaCorroborada =
+    observacion.fraccion >= UMBRAL_DESPEJADO
+    && (ctx.horasDespejadasConsecutivas ?? 0) >= 3;
+  if (
+    esMejora
+    && observacion.distanciaKm > MAX_KM_PARA_MEJORAR
+    && !mejoraLejanaCorroborada
+  ) {
     return { aplicar: false, motivo: 'estacion-lejos-para-mejorar', ...base };
   }
 
@@ -188,7 +202,9 @@ export function decidirCorreccionCielo(
     // of what it confirms.
     const corrobora = observaciones.some((o) => {
       if (o.idema === observacion.idema) return false;
+      if (o.distanciaKm > MAX_KM) return false;
       if (ctx.ahora - o.observadoEn > FRESCURA_MAX_MS) return false;
+      if (o.observadoEn - ctx.ahora > FUTURO_MAX_MS) return false;
       const suNivel = nivelPara(o.fraccion);
       return !!suNivel && NIVELES[suNivel].severidad >= NIVELES[nivel].severidad;
     });

@@ -83,7 +83,15 @@ describe('corregirCieloObservado — modos', () => {
   it('on: mejora a despejado cuando la insolación cercana contradice las nubes', () => {
     process.env.SKY_CORRECTION = 'on';
     const nublado = { ...DESPEJADO, description: 'muy nuboso', icon: '04d' };
-    const res = corregirCieloObservado('La Concha', nublado, SOL_SOSTENIDO, false, EN_FRANJA);
+    const outlook = [{
+      timestamp: EN_FRANJA + 30 * 60 * 1000,
+      cloudCoverPct: 0,
+      temperatureC: 24,
+      windSpeedMs: 3,
+    }];
+    const res = corregirCieloObservado(
+      'La Concha', nublado, SOL_SOSTENIDO, false, EN_FRANJA, outlook,
+    );
 
     expect(res?.description).toBe('cielo claro');
     expect(res?.icon).toBe('01d');
@@ -110,6 +118,23 @@ describe('corregirCieloObservado — modos', () => {
     expect(
       corregirCieloObservado('La Concha', nublado, solModerado, false, EN_FRANJA, lejana),
     ).toBe(nublado);
+  });
+
+  it('on: admite una estación a 32 km con sol fuerte y tres horas despejadas', () => {
+    process.env.SKY_CORRECTION = 'on';
+    const nublado = { ...DESPEJADO, description: 'nubes', icon: '04d' };
+    const solLejano = [{ ...SOL_SOSTENIDO[0], fraccion: 0.97, distanciaKm: 32 }];
+    const sostenida = Array.from({ length: 3 }, (_, i) => ({
+      timestamp: EN_FRANJA + (i + 1) * 60 * 60 * 1000,
+      cloudCoverPct: 0,
+      temperatureC: 24,
+      windSpeedMs: 3,
+    }));
+
+    expect(
+      corregirCieloObservado('Luaña-Cobreces', nublado, solLejano, false, EN_FRANJA, sostenida)
+        ?.description,
+    ).toBe('cielo claro');
   });
 
   it('off: ni calcula ni registra', () => {
