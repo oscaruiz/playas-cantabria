@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { IonPage, IonContent, IonFooter, IonSpinner } from '@ionic/react';
-import { useHistory } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useIdioma } from '../../i18n/IdiomaContext';
 import SeoHead from '../../seo/SeoHead';
 import { resumenMunicipios } from '../../seo/landings';
@@ -17,7 +17,6 @@ interface FilaMunicipio {
 
 /** Index of every municipality with beaches, each linking to its page. */
 const MunicipiosIndex: React.FC = () => {
-  const history = useHistory();
   const { t, tPlural } = useIdioma();
   const { playas } = useCatalogo();
 
@@ -49,26 +48,18 @@ const MunicipiosIndex: React.FC = () => {
         {playas && (
           <div className="ld-lista">
             {municipios.map((m) => (
-              <div
+              <Link
                 key={m.ruta}
+                to={m.ruta}
                 className="ld-fila"
-                role="link"
-                tabIndex={0}
                 aria-label={t('municipio.verPlayas', { municipio: m.municipio })}
-                onClick={() => history.push(m.ruta)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    history.push(m.ruta);
-                  }
-                }}
               >
                 <div className="ld-fila-nombre">
                   <p className="ld-fila-titulo">{m.municipio}</p>
                   <p className="ld-fila-municipio">{tPlural('lista.contador', m.total)}</p>
                 </div>
                 <span className="ld-fila-flecha" aria-hidden="true">&#8250;</span>
-              </div>
+              </Link>
             ))}
           </div>
         )}

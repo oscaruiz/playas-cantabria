@@ -12,6 +12,7 @@ import PlayaDetallePage from './pages/PlayaDetalle';
 import MapaPage from './pages/MapaPage';
 import MunicipioPage from './pages/landings/MunicipioPage';
 import MunicipiosIndex from './pages/landings/MunicipiosIndex';
+import NoEncontrada from './pages/NoEncontrada';
 import LandingPlayas, { LandingId } from './pages/landings/LandingPlayas';
 import { LANDINGS } from './seo/landings';
 import { IdiomaProvider } from './i18n/IdiomaContext';
@@ -58,6 +59,10 @@ const App: React.FC = () => (
               render={() => <LandingPlayas id={l.id as LandingId} />}
             />
           ))}
+          {/* Catch-all LAST: the outlet picks the first match, so every
+              exact route above wins; anything else is an honest not-found
+              with noindex instead of a silent app shell. */}
+          <Route component={NoEncontrada} />
         </IonRouterOutlet>
       </IonReactRouter>
     </IdiomaProvider>

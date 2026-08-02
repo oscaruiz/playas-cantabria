@@ -6,8 +6,8 @@ import {
   IonSpinner,
   IonIcon,
 } from '@ionic/react';
-import { chevronBackOutline, navigateOutline, mapOutline } from 'ionicons/icons';
-import { useHistory, useParams } from 'react-router-dom';
+import { chevronBackOutline, navigateOutline, mapOutline, shareSocialOutline } from 'ionicons/icons';
+import { useHistory, useParams, Link } from 'react-router-dom';
 import {
   getDetallePlaya,
   getFeaturedBeaches,
@@ -18,7 +18,7 @@ import {
   PlayaDetalle as PlayaDetalleData,
 } from '../services/api';
 import { rutaPlaya, encontrarPorSlugs } from '../seo/beachUrls';
-import SeoHead from '../seo/SeoHead';
+import SeoHead, { urlCanonica } from '../seo/SeoHead';
 import BottomNavBar from '../components/BottomNavBar';
 import SelectorIdioma from '../components/SelectorIdioma';
 import './PlayaDetalle.css';
@@ -38,6 +38,7 @@ import CruzRojaCard from './playa-detalle/CruzRojaCard';
 import { BeachInfoSection, BeachAttributesSection } from './playa-detalle/BeachInfoSection';
 import { WebcamCard } from './playa-detalle/WebcamCard';
 import { nombreFuenteMeteo } from '../features/provenance/procedencia';
+import { rutaMunicipio } from '../seo/landings';
 import FavoriteButton from '../features/favorites/FavoriteButton';
 
 const PlayaDetallePage: React.FC = () => {
@@ -52,7 +53,13 @@ const PlayaDetallePage: React.FC = () => {
   const [codigoResuelto, setCodigoResuelto] = useState<string | null>(codigo ?? null);
   const history = useHistory();
   const { t } = useIdioma();
-  const [datos, setDatos] = useState<PlayaDetalleData | null>(null);
+  // Loaded detail TAGGED with the route it belongs to. `datos` derives from
+  // it: the instant the route identity changes, the previous beach vanishes
+  // SYNCHRONOUSLY — no frame where the old beach (or its canonical URL and
+  // star) shows under the new route while effects catch up.
+  const identidadRuta = codigo ?? `${municipio ?? ''}/${playa ?? ''}`;
+  const [cargado, setCargado] = useState<{ ruta: string; detalle: PlayaDetalleData } | null>(null);
+  const datos = cargado && cargado.ruta === identidadRuta ? cargado.detalle : null;
   const [error, setError] = useState(false);
   /** Estado HTTP del fallo; null = la petición no volvió (red, CORS, SW). */
   const [statusError, setStatusError] = useState<number | null>(null);
@@ -80,7 +87,7 @@ const PlayaDetallePage: React.FC = () => {
   // this reset the previous beach would stay on screen (with its canonical
   // URL and favorite star) while — or even after — the new one fails to load.
   useEffect(() => {
-    setDatos(null);
+    setCargado(null);
     setPuntuada(null);
     setMaximos(null);
     setSelectedDay(0);
@@ -114,7 +121,7 @@ const PlayaDetallePage: React.FC = () => {
     getDetallePlaya(codigoResuelto)
       .then((detalle) => {
         if (!activo) return;
-        setDatos(detalle);
+        setCargado({ ruta: identidadRuta, detalle });
         setError(false);
       })
       .catch((e) => {
@@ -139,6 +146,24 @@ const PlayaDetallePage: React.FC = () => {
   }, [codigoResuelto]);
 
   const [selectedDay, setSelectedDay] = useState(0);
+  // Share: native sheet when the platform has one; otherwise copy the
+  // canonical URL and say so for a moment. Never a third-party SDK.
+  const [enlaceCopiado, setEnlaceCopiado] = useState(false);
+  const compartir = async (playaActual: PlayaDetalleData) => {
+    const url = urlCanonica(rutaPlaya(playaActual));
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: t('seo.tituloDetalle', { nombre: playaActual.nombre }), url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        setEnlaceCopiado(true);
+        setTimeout(() => setEnlaceCopiado(false), 2000);
+      }
+    } catch {
+      // The user dismissed the share sheet (or clipboard was denied):
+      // nothing to report.
+    }
+  };
   const pred = datos?.prediccionCompleta;
   const fuente = pred?.fuente ?? datos?.clima?.fuente ?? '';
   const safeDayIndex = pred ? Math.min(selectedDay, pred.dias.length - 1) : 0;
@@ -218,6 +243,14 @@ const PlayaDetallePage: React.FC = () => {
                   >
                     <IonIcon icon={mapOutline} aria-hidden="true" /> {t('detalle.verEnMapa')}
                   </button>
+                  <button
+                    className="hero-directions-link"
+                    onClick={() => compartir(datos)}
+                    aria-live="polite"
+                  >
+                    <IonIcon icon={shareSocialOutline} aria-hidden="true" />{' '}
+                    {enlaceCopiado ? t('detalle.enlaceCopiado') : t('detalle.compartir')}
+                  </button>
                 </div>
               )}
 
@@ -293,6 +326,13 @@ const PlayaDetallePage: React.FC = () => {
                   atributos={{ ...datos.atributos, ...(datos.submarinismo ? { submarinismo: true } : {}) }}
                 />
               )}
+
+              {/* Sibling beaches: the canonical municipality page. */}
+              <div className="pd-otras-playas">
+                <Link className="ld-enlace" to={rutaMunicipio(datos.municipio)}>
+                  {t('detalle.otrasPlayasMunicipio', { municipio: datos.municipio })} &#8250;
+                </Link>
+              </div>
               </div>
 
               {pred && (

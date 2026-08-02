@@ -217,6 +217,10 @@ export const en = {
   'municipios.intro': 'The municipalities of {region} with beaches in the catalog. Each one leads to its beaches and their status.',
   'municipio.verPlayas': 'See all the beaches of {municipio}',
   'detalle.municipio': 'Municipality',
+  'noEncontrada.texto': 'This address does not exist in the app.',
+  'detalle.compartir': 'Share',
+  'detalle.otrasPlayasMunicipio': 'Other beaches in the municipality of {municipio}',
+  'detalle.enlaceCopiado': 'Link copied',
   'seo.tituloNoEncontrada': 'Page not found | {region} Beaches',
   'seo.descNoEncontrada': 'This address does not match any beach or municipality in the {region} catalog.',
 

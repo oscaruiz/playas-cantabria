@@ -175,6 +175,9 @@ describe('PlayasList — sugerencias', () => {
 
     fireEvent.keyDown(input, { key: 'ArrowDown' });
     expect(screen.getAllByRole('option')[0]).toHaveAttribute('aria-selected', 'true');
+    // The combobox tells assistive tech WHICH option is active.
+    expect(input).toHaveAttribute('aria-activedescendant', 'sugerencia-0');
+    expect(screen.getAllByRole('option')[0]).toHaveAttribute('id', 'sugerencia-0');
 
     for (let i = 0; i < 4; i += 1) fireEvent.keyDown(input, { key: 'ArrowDown' });
     expect(screen.getAllByRole('option')[4]).toHaveAttribute('aria-selected', 'true');

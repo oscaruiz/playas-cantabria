@@ -29,3 +29,21 @@ test('renders without crashing', async () => {
     ).not.toBeInTheDocument();
   });
 });
+
+test('una URL arbitraria cae en la página de no encontrada, con noindex', async () => {
+  window.history.pushState(null, '', '/esto-no-existe');
+  try {
+    render(<App />);
+    expect(
+      await screen.findByText('Esta dirección no existe en la aplicación.'),
+    ).toBeInTheDocument();
+    await waitFor(() =>
+      expect(
+        document.head.querySelector('meta[name="robots"]')?.getAttribute('content'),
+      ).toBe('noindex'),
+    );
+    expect(document.head.querySelector('link[rel="canonical"]')).toBeNull();
+  } finally {
+    window.history.pushState(null, '', '/');
+  }
+});

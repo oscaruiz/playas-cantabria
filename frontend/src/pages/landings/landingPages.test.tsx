@@ -1,5 +1,5 @@
 import React from 'react';
-import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import MunicipioPage from './MunicipioPage';
 import MunicipiosIndex from './MunicipiosIndex';
 import LandingPlayas from './LandingPlayas';
@@ -70,9 +70,12 @@ describe('MunicipiosIndex', () => {
     renderWithProviders(<MunicipiosIndex />, { route: '/municipios' });
 
     expect(await screen.findByText('Suances')).toBeInTheDocument();
-    // Santander has 2 beaches in the fixture; its row says so.
+    // Santander has 2 beaches in the fixture; its row says so — and the row
+    // is a REAL link with a copyable href.
     const santander = screen.getByText('Santander').closest('.ld-fila');
     expect(santander).toHaveTextContent('2 playas');
+    expect(santander?.tagName).toBe('A');
+    expect(santander).toHaveAttribute('href', '/municipios/santander');
     // 5 unique municipalities in the fixture → 5 rows.
     expect(document.querySelectorAll('.ld-fila')).toHaveLength(5);
     await waitFor(() => expect(document.title).toContain('Municipios'));
@@ -80,18 +83,16 @@ describe('MunicipiosIndex', () => {
 });
 
 describe('acceso al municipio desde el listado de playas', () => {
-  it('el nombre del municipio navega al municipio, no a la playa', async () => {
+  it('el nombre del municipio es un enlace real a su página', async () => {
     renderWithProviders(<PlayasList />, { route: '/playas' });
     await screen.findByText('La Concha');
 
-    const enlace = screen.getByRole('button', {
+    // A real <a>: copyable, middle-clickable, honest role — and pointing
+    // at the municipality, not the beach.
+    const enlace = screen.getByRole('link', {
       name: 'Ver todas las playas de Suances',
     });
-    fireEvent.click(enlace);
-    // The list page unmounts nothing here (no Route switch in the harness),
-    // but the row click handler must NOT have fired: the search box is
-    // still there and no detail fetch happened.
-    expect(screen.getByRole('combobox')).toBeInTheDocument();
+    expect(enlace).toHaveAttribute('href', '/municipios/suances');
   });
 });
 

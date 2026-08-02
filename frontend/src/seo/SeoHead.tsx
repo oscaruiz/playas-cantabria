@@ -20,6 +20,11 @@ import React, { useEffect } from 'react';
 const ORIGEN_CANONICO =
   process.env.REACT_APP_SITE_ORIGIN?.trim().replace(/\/+$/, '') || null;
 
+/** Absolute canonical URL of a path — also what the share button shares. */
+export function urlCanonica(ruta: string): string {
+  return `${ORIGEN_CANONICO ?? window.location.origin}${ruta}`;
+}
+
 function metaPorNombre(atributo: 'name' | 'property', valor: string): HTMLMetaElement {
   let el = document.head.querySelector<HTMLMetaElement>(`meta[${atributo}="${valor}"]`);
   if (!el) {
@@ -43,8 +48,7 @@ const SeoHead: React.FC<{
   noindex?: boolean;
 }> = ({ titulo, descripcion, rutaCanonica, noindex }) => {
   useEffect(() => {
-    const origen = ORIGEN_CANONICO ?? window.location.origin;
-    const urlCanonica = `${origen}${rutaCanonica}`;
+    const urlAbsoluta = urlCanonica(rutaCanonica);
 
     document.title = titulo;
     metaPorNombre('name', 'description').setAttribute('content', descripcion);
@@ -68,14 +72,14 @@ const SeoHead: React.FC<{
     }
 
     robotsExistente?.remove();
-    metaPorNombre('property', 'og:url').setAttribute('content', urlCanonica);
+    metaPorNombre('property', 'og:url').setAttribute('content', urlAbsoluta);
     let canonical = canonicalExistente;
     if (!canonical) {
       canonical = document.createElement('link');
       canonical.rel = 'canonical';
       document.head.appendChild(canonical);
     }
-    canonical.href = urlCanonica;
+    canonical.href = urlAbsoluta;
   }, [titulo, descripcion, rutaCanonica, noindex]);
 
   return null;

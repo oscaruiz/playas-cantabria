@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { IonPage, IonContent, IonFooter, IonSpinner, IonIcon } from '@ionic/react';
 import { locationOutline, warningOutline } from 'ionicons/icons';
-import { useHistory } from 'react-router-dom';
+import { useHistory, Link } from 'react-router-dom';
 import {
   Playa,
   FeaturedBeach,
@@ -427,25 +427,17 @@ const HomePage: React.FC = () => {
                       onClick={() => history.push(rutaPlaya(playa))}
                     />
                   ) : (
-                    <div
+                    <Link
                       key={playa.codigo}
+                      to={rutaPlaya(playa)}
                       className="hp-alt-row"
-                      role="link"
-                      tabIndex={0}
                       aria-label={t('comun.verDetalleDe', { nombre: playa.nombre })}
-                      onClick={() => history.push(rutaPlaya(playa))}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault();
-                          history.push(rutaPlaya(playa));
-                        }
-                      }}
                     >
                       <div className="hp-alt-body">
                         <p className="hp-alt-name">{playa.nombre}</p>
                         <p className="hp-alt-municipio">{playa.municipio}</p>
                       </div>
-                    </div>
+                    </Link>
                   )
                 )}
               </div>

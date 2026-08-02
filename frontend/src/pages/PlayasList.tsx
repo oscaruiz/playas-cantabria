@@ -187,6 +187,10 @@ const PlayasList: React.FC = () => {
               role="combobox"
               aria-expanded={showSuggestions && suggestions.length > 0}
               aria-autocomplete="list"
+              aria-controls="sugerencias-lista"
+              aria-activedescendant={
+                showSuggestions && activeIdx >= 0 ? `sugerencia-${activeIdx}` : undefined
+              }
             />
             {filtro.length > 0 && (
               <button
@@ -233,10 +237,11 @@ const PlayasList: React.FC = () => {
             </button>
           </div>
           {showSuggestions && suggestions.length > 0 && (
-            <ul className="search-suggestions" role="listbox">
+            <ul className="search-suggestions" role="listbox" id="sugerencias-lista">
               {suggestions.map((s, i) => (
                 <li
                   key={s.tipo === 'municipio' ? `municipio-${s.ruta}` : s.playa.codigo}
+                  id={`sugerencia-${i}`}
                   className={`search-suggestion-item${i === activeIdx ? ' search-suggestion-item--active' : ''}`}
                   role="option"
                   aria-selected={i === activeIdx}

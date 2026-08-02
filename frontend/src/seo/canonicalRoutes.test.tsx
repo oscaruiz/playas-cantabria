@@ -10,7 +10,7 @@ import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { useHistory } from 'react-router-dom';
 import PlayaDetallePage from '../pages/PlayaDetalle';
 import { renderWithProviders } from '../test/render';
-import { installFetchMock, restoreFetch, route } from '../test/http/fakeFetch';
+import { installFetchMock, restoreFetch, route, deferred, RouteSpec } from '../test/http/fakeFetch';
 import { beachesResponse } from '../test/fixtures/beaches';
 import { featuredResponse } from '../test/fixtures/featured';
 import { buildOpenWeatherDetail } from '../test/fixtures/beachDetail';
@@ -69,7 +69,12 @@ const CambiarRuta: React.FC<{ a: string }> = ({ a }) => {
 };
 
 describe('reutilización de la vista entre playas', () => {
-  it('al cambiar de playa, la anterior desaparece aunque la nueva falle', async () => {
+  // The harness router is plain MemoryRouter ON PURPOSE (see
+  // src/test/render.tsx): the page only needs React Router's params, and
+  // what this pins is the page's own guarantee — the derived-state guard
+  // clears the previous beach the moment the route identity changes.
+  it('al cambiar de playa, la anterior desaparece EN EL ACTO, y su fallo no la resucita', async () => {
+    const respuestaB = deferred<RouteSpec>();
     let llamadas = 0;
     fetchMock = installFetchMock([
       route(RUTA_DESTACADAS, { json: featuredResponse }),
@@ -77,11 +82,11 @@ describe('reutilización de la vista entre playas', () => {
       route(RUTA_DETALLE, () =>
         llamadas++ === 0
           ? { json: buildOpenWeatherDetail(localNoon('2026-07-27')) }
-          : { status: 404, json: {} }
+          : respuestaB.promise
       ),
     ]);
 
-    renderWithProviders(
+    const { container } = renderWithProviders(
       <>
         <PlayaDetallePage />
         <CambiarRuta a="/playas/9999999" />
@@ -92,9 +97,37 @@ describe('reutilización de la vista entre playas', () => {
 
     fireEvent.click(screen.getByText('cambiar-ruta'));
 
-    // The failed beach shows its error — never the previous beach's data.
+    // IMMEDIATELY — with B still pending — the old beach is gone and the
+    // loading state shows. Not one paint of A under B's URL.
+    expect(screen.queryByText('La Arnía')).not.toBeInTheDocument();
+    expect(container.querySelector('.loading-container')).not.toBeNull();
+
+    respuestaB.resolve({ status: 404, json: {} });
     expect(await screen.findByText('HTTP 404')).toBeInTheDocument();
     expect(screen.queryByText('La Arnía')).not.toBeInTheDocument();
+  });
+});
+
+describe('compartir desde el detalle', () => {
+  it('sin Web Share API copia la URL canónica y lo dice un momento', async () => {
+    const escribir = jest.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText: escribir },
+    });
+
+    renderWithProviders(<PlayaDetallePage />, {
+      route: '/playas/3905201',
+      path: '/playas/:codigo',
+    });
+    await screen.findByText('La Arnía');
+
+    fireEvent.click(screen.getByRole('button', { name: /Compartir/ }));
+
+    await screen.findByText('Enlace copiado');
+    expect(escribir).toHaveBeenCalledWith(
+      `${window.location.origin}/playas/pielagos/la-arnia`
+    );
   });
 });
 
@@ -114,5 +147,9 @@ describe('ruta heredada /playas/:codigo', () => {
         document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.href
       ).toBe(`${window.location.origin}/playas/pielagos/la-arnia`)
     );
+    // And the sibling-beaches link points at the municipality page.
+    expect(
+      screen.getByRole('link', { name: /Otras playas del municipio de Piélagos/ })
+    ).toHaveAttribute('href', '/municipios/pielagos');
   });
 });

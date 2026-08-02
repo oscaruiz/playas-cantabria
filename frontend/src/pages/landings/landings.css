@@ -1,3 +1,58 @@
+/* Accessible "cover link" cards: the beach-name anchor stretches over the
+   whole card; nested controls (municipality link, favorite star) sit above
+   the cover. Real links — copyable, middle-clickable, honest roles. */
+.beach-card {
+  position: relative;
+}
+
+.beach-card-enlace {
+  color: inherit;
+  text-decoration: none;
+}
+
+.beach-card-enlace::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+.beach-card-enlace:focus-visible::after {
+  outline: 2px solid var(--ion-color-primary);
+  outline-offset: -2px;
+  border-radius: 10px;
+}
+
+.beach-card .ld-enlace-municipio,
+.beach-card .fav-btn {
+  position: relative;
+  z-index: 1;
+}
+
+/* Rows that are links keep their card look. */
+a.ld-fila,
+a.hp-alt-row {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Suspense fallback while the Leaflet chunk downloads. */
+.mapa-cargando {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* "Other beaches of the municipality" link at the end of the detail info
+   column: the same outlined pill as the rest of the app, centered. */
+.pd-otras-playas {
+  text-align: center;
+  margin: 4px 0 8px;
+}
+
 /* Header with a back control: same white chevron as the detail page. */
 .ld-header-volver {
   display: flex;
@@ -90,6 +145,7 @@
 }
 
 .ld-enlace {
+  display: inline-block;
   margin-top: 12px;
   background: none;
   border: 1px solid var(--ion-color-primary);
@@ -97,4 +153,5 @@
   border-radius: 999px;
   padding: 8px 18px;
   cursor: pointer;
+  text-decoration: none;
 }

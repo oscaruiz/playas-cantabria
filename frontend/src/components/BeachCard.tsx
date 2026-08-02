@@ -1,7 +1,7 @@
 import React from 'react';
 import { IonIcon } from '@ionic/react';
 import { videocamOutline } from 'ionicons/icons';
-import { useHistory } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Playa, FeaturedBeach } from '../services/api';
 import {
   emojiCielo,
@@ -25,35 +25,28 @@ import { rutaPlaya } from '../seo/beachUrls';
 import { rutaMunicipio } from '../seo/landings';
 
 /**
- * One beach row — THE beach row: extracted verbatim from PlayasList so the
+ * One beach row — THE beach row: extracted from PlayasList so the
  * municipality and landing pages show exactly the same card (sky+temp,
  * attributes, ranking reason, trend, score, badges, favorite star) instead
  * of a poorer copy. Conditions render only when the featured ranking
  * provided them; nothing is inferred.
+ *
+ * Interaction is the accessible "cover link" pattern: the beach name is a
+ * REAL anchor whose ::after stretches over the whole card (copyable URL,
+ * middle-click, context menu, honest role for assistive tech), while the
+ * municipality link and the favorite star sit ABOVE the cover — nested
+ * interactive-inside-interactive never happens.
  */
 const BeachCard: React.FC<{
   playa: Playa;
   weather?: FeaturedBeach;
   distKm?: number | null;
 }> = ({ playa, weather, distKm = null }) => {
-  const history = useHistory();
   const { t, idioma } = useIdioma();
   const skyEmoji = weather ? emojiCielo(weather.descripcionClima) : null;
 
   return (
-    <div
-      className="beach-card"
-      onClick={() => history.push(rutaPlaya(playa))}
-      role="link"
-      tabIndex={0}
-      aria-label={t('comun.verDetalleDe', { nombre: `${playa.nombre}, ${playa.municipio}` })}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          history.push(rutaPlaya(playa));
-        }
-      }}
-    >
+    <div className="beach-card">
       <div className="beach-card-icon" aria-hidden="true">
         {skyEmoji && <span className="beach-card-sky">{skyEmoji}</span>}
         {weather?.temperatura != null && (
@@ -61,23 +54,23 @@ const BeachCard: React.FC<{
         )}
       </div>
       <div className="beach-card-info">
-        <p className="beach-card-name">{playa.nombre}</p>
+        <p className="beach-card-name">
+          <Link
+            to={rutaPlaya(playa)}
+            className="beach-card-enlace"
+            aria-label={t('comun.verDetalleDe', { nombre: `${playa.nombre}, ${playa.municipio}` })}
+          >
+            {playa.nombre}
+          </Link>
+        </p>
         <p className="beach-card-municipio">
-          {/* The card navigates to the beach; the municipality name
-              navigates to the municipality — so it stops the row. */}
-          <button
+          <Link
+            to={rutaMunicipio(playa.municipio)}
             className="ld-enlace-municipio"
-            onClick={(e) => {
-              e.stopPropagation();
-              history.push(rutaMunicipio(playa.municipio));
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') e.stopPropagation();
-            }}
             aria-label={t('municipio.verPlayas', { municipio: playa.municipio })}
           >
             {playa.municipio}
-          </button>
+          </Link>
           {distKm != null && (
             <span className="beach-card-dist">
               {' · '}

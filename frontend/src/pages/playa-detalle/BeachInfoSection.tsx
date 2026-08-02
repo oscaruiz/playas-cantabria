@@ -1,6 +1,6 @@
 import React from 'react';
 import { IonIcon } from '@ionic/react';
-import { useHistory } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { PlayaDetalle as PlayaDetalleData } from '../../services/api';
 import { rutaMunicipio } from '../../seo/landings';
 import { getActiveAttrs } from '../../utils/beachHelpers';
@@ -12,7 +12,6 @@ import { traducirTextoApi } from '../../i18n/apiText';
 /** Static editorial data: dimensions, sand, access, parking, bus, hospital. */
 export const BeachInfoSection: React.FC<{ datos: PlayaDetalleData }> = ({ datos }) => {
   const { t, idioma } = useIdioma();
-  const history = useHistory();
   const hasAny = datos.longitud || datos.anchura || datos.tipoPlaya || datos.arena
     || (datos.acceso && datos.acceso.length > 0) || datos.parkingDescripcion || datos.bus || datos.hospitalDistancia != null;
   if (!hasAny) return null;
@@ -25,13 +24,13 @@ export const BeachInfoSection: React.FC<{ datos: PlayaDetalleData }> = ({ datos 
             one tap away from any detail page. */}
         <div className="beach-info-row">
           <span className="beach-info-label">{t('detalle.municipio')}</span>
-          <button
+          <Link
             className="beach-info-value ld-enlace-municipio"
-            onClick={() => history.push(rutaMunicipio(datos.municipio))}
+            to={rutaMunicipio(datos.municipio)}
             aria-label={t('municipio.verPlayas', { municipio: datos.municipio })}
           >
             {datos.municipio} &#8250;
-          </button>
+          </Link>
         </div>
         {(datos.longitud || datos.anchura) && (
           <div className="beach-info-row">
