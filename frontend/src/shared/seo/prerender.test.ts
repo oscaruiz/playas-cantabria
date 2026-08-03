@@ -64,6 +64,18 @@ describe('scripts/prerender.mjs', () => {
     expect(inicio).not.toContain('<div id="root"></div>');
   });
 
+  it('oculta el bloque estático en cuanto hay JS, pero lo deja en el HTML', () => {
+    ejecutarPrerender(dir);
+    const inicio = readFileSync(join(dir, 'index.html'), 'utf8');
+
+    // The rule is in the head, so the block never gets painted while the
+    // bundle loads: that flash of unstyled links read as a broken page.
+    expect(inicio).toContain('html.con-js .prerender{display:none}');
+    expect(inicio.indexOf('con-js')).toBeLessThan(inicio.indexOf('class="prerender"'));
+    // Hidden for the user, still there for whoever parses the HTML.
+    expect(inicio).toContain('<h1>Playas de Cantabria</h1>');
+  });
+
   it('genera páginas de municipio y de landings (Fase 6) desde los mismos selectores', () => {
     ejecutarPrerender(dir);
 

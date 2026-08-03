@@ -170,6 +170,23 @@ function contenidoMapa() {
   );
 }
 
+/**
+ * The static block is written for crawlers, which read the raw HTML. A browser
+ * with JS gets it replaced by the real app on mount (createRoot.render), but
+ * until then it was PAINTED: the user saw a bare list of links with none of the
+ * app's styles and read it as a broken page. Hiding it costs the crawler
+ * nothing —the markup is still in the HTML it parses, and a crawler that does
+ * render sees the mounted app, same as before.
+ *
+ * The class is added by script on purpose: a browser WITHOUT JS never gets the
+ * app, so for it the block stays visible, which is the whole point of writing
+ * it. The <style> goes in the head, so the block is hidden at the first paint
+ * and there is nothing to flash.
+ */
+const OCULTAR_CON_JS =
+  '<script>document.documentElement.classList.add("con-js")</script>\n    ' +
+  '<style>html.con-js .prerender{display:none}</style>';
+
 /** Injects head tags + title + root content into the built template. */
 function paginaHtml(titulo, descripcion, ruta, contenido) {
   let html = plantilla;
@@ -177,7 +194,10 @@ function paginaHtml(titulo, descripcion, ruta, contenido) {
   if (conTitulo === html) {
     throw new Error('la plantilla no tiene <title>');
   }
-  html = conTitulo.replace('</head>', `    ${etiquetasHead(titulo, descripcion, ruta)}\n  </head>`);
+  html = conTitulo.replace(
+    '</head>',
+    `    ${etiquetasHead(titulo, descripcion, ruta)}\n    ${OCULTAR_CON_JS}\n  </head>`
+  );
   const conRoot = html.replace('<div id="root"></div>', `<div id="root">${contenido}</div>`);
   if (conRoot === html) {
     throw new Error('la plantilla no tiene <div id="root"></div> vacío');
