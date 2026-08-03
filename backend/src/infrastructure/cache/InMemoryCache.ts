@@ -159,4 +159,12 @@ export const CacheKeys = {
   flagByRedCrossId: (regionId: string, id: number) => `flag:${regionId}:cr:${id}`,
   featuredBeaches: (regionId: string) => `featured:${regionId}:beaches`,
   detailsByBeachId: (regionId: string, id: string) => `details:${regionId}:${id}`,
+  /**
+   * Sky-correction decision for a beach. The model's icon and whether it is
+   * raining are part of the KEY, not of the value: they are the inputs the
+   * decision guards on, so a decision taken for one sky must never be reused
+   * for a different one.
+   */
+  skyDecision: (regionId: string, playa: string, icono: string, lloviendo: boolean) =>
+    `sky:${regionId}:${playa}:${icono}:${lloviendo ? 'r' : 'x'}`,
 };

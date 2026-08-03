@@ -1,9 +1,23 @@
 import { Weather } from '../../domain/entities/Weather';
 import { SunshineObservation } from '../../domain/entities/Sunshine';
 import type { HourlyOutlookSlot } from '../../domain/entities/RainNowcast';
-import { decidirCorreccionCielo, aplicarCorreccionCielo } from '../../domain/services/skyCorrection';
-import { enFranjaDePlaya, skyCorrectionMode } from '../../infrastructure/config/config';
+import {
+  decidirCorreccionCielo,
+  aplicarCorreccionCielo,
+  DecisionCielo,
+} from '../../domain/services/skyCorrection';
+import { Config, enFranjaDePlaya, skyCorrectionMode } from '../../infrastructure/config/config';
+import { CacheKeys } from '../../infrastructure/cache/InMemoryCache';
 import { skyCorrectionMetrics } from '../../infrastructure/observability/skyCorrectionMetrics';
+
+/**
+ * Where a taken decision is remembered so every caller reuses it. Structural,
+ * so `InMemoryCache` satisfies it without this module depending on it.
+ */
+export interface MemoriaDecisionCielo {
+  get<T>(key: string): T | undefined;
+  set<T>(key: string, value: T, ttlSeconds: number): void;
+}
 
 /**
  * Applies (or only records) the sky correction from observed sunshine.
@@ -14,6 +28,14 @@ import { skyCorrectionMetrics } from '../../infrastructure/observability/skyCorr
  * pure and lives in `domain/services/skyCorrection`; this only adds clock, mode
  * and counters.
  *
+ * Sharing the criterion was not enough. Both callers read the SAME cached
+ * OpenWeather observation, but each decided at its own instant with its own
+ * snapshot of the sunshine, so the listing could show the sky from before a
+ * correction while the detail showed the one after it — the same beach saying
+ * two things on two screens. With `memoria` the FIRST caller decides and the
+ * rest reuse that decision until it expires, which is what makes both screens
+ * agree instead of merely agreeing on how to disagree.
+ *
  * In `shadow` mode it decides and counts, but returns the `Weather` untouched.
  */
 export function corregirCieloObservado(
@@ -23,19 +45,36 @@ export function corregirCieloObservado(
   lloviendo: boolean,
   ahora: number = Date.now(),
   outlook: readonly HourlyOutlookSlot[] | null = null,
+  memoria?: MemoriaDecisionCielo,
+  regionId = 'cantabria',
 ): Weather | null {
   const modo = skyCorrectionMode();
   if (modo === 'off' || !weather) return weather;
 
-  const evidencia = evidenciaHoraria(outlook, ahora);
-  const decision = decidirCorreccionCielo(weather, sol, {
-    enFranjaDePlaya: enFranjaDePlaya(new Date(ahora)),
-    ahora,
-    lloviendo,
-    nubesInmediatasPct: evidencia.nubesInmediatasPct,
-    horasDespejadasConsecutivas: evidencia.horasDespejadasConsecutivas,
-  });
-  skyCorrectionMetrics.record(playa, decision);
+  // The model's icon and the rain are in the key because the decision guards
+  // on them: reusing a decision taken for a different sky would be worse than
+  // taking a fresh one.
+  const clave = CacheKeys.skyDecision(regionId, playa, weather.icon ?? '', lloviendo);
+  const recordada = memoria?.get<DecisionCielo>(clave);
+
+  let decision: DecisionCielo;
+  if (recordada) {
+    decision = recordada;
+  } else {
+    const evidencia = evidenciaHoraria(outlook, ahora);
+    decision = decidirCorreccionCielo(weather, sol, {
+      enFranjaDePlaya: enFranjaDePlaya(new Date(ahora)),
+      ahora,
+      lloviendo,
+      nubesInmediatasPct: evidencia.nubesInmediatasPct,
+      horasDespejadasConsecutivas: evidencia.horasDespejadasConsecutivas,
+    });
+    // Counted only when a decision is actually TAKEN. Counting reuses would
+    // multiply the same call by however many screens looked at the beach, and
+    // `/api/_diag/sky` exists to judge the criterion, not the traffic.
+    skyCorrectionMetrics.record(playa, decision);
+    memoria?.set(clave, decision, Config.skyDecisionTtlSeconds());
+  }
 
   return modo === 'on' ? aplicarCorreccionCielo(weather, decision) : weather;
 }

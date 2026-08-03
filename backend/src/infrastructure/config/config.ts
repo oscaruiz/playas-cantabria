@@ -19,6 +19,7 @@ function readFirebaseRuntimeConfig():
       featured_stale_ttl_seconds?: string | number;
       details_fresh_ttl_seconds?: string | number;
       details_stale_ttl_seconds?: string | number;
+      sky_decision_ttl_seconds?: string | number;
     }
   | undefined {
   try {
@@ -41,6 +42,8 @@ function readFirebaseRuntimeConfig():
       flat.details_fresh_ttl_seconds ?? ns.details_fresh_ttl_seconds;
     const details_stale_ttl_seconds =
       flat.details_stale_ttl_seconds ?? ns.details_stale_ttl_seconds;
+    const sky_decision_ttl_seconds =
+      flat.sky_decision_ttl_seconds ?? ns.sky_decision_ttl_seconds;
 
     if (
       port === undefined &&
@@ -51,7 +54,8 @@ function readFirebaseRuntimeConfig():
       featured_fresh_ttl_seconds === undefined &&
       featured_stale_ttl_seconds === undefined &&
       details_fresh_ttl_seconds === undefined &&
-      details_stale_ttl_seconds === undefined
+      details_stale_ttl_seconds === undefined &&
+      sky_decision_ttl_seconds === undefined
     ) {
       return undefined;
     }
@@ -66,6 +70,7 @@ function readFirebaseRuntimeConfig():
       featured_stale_ttl_seconds,
       details_fresh_ttl_seconds,
       details_stale_ttl_seconds,
+      sky_decision_ttl_seconds,
     };
   } catch {
     return undefined;
@@ -83,6 +88,7 @@ function readEnvConfig() {
     featured_stale_ttl_seconds: process.env.FEATURED_STALE_TTL_SECONDS,
     details_fresh_ttl_seconds: process.env.DETAILS_FRESH_TTL_SECONDS,
     details_stale_ttl_seconds: process.env.DETAILS_STALE_TTL_SECONDS,
+    sky_decision_ttl_seconds: process.env.SKY_DECISION_TTL_SECONDS,
   };
 }
 
@@ -92,10 +98,16 @@ const ConfigSchema = z.object({
   aemetApiKey: z.string().min(1).optional(),
   openWeatherApiKey: z.string().min(1).optional(),
   cacheTtlSeconds: z.coerce.number().int().positive().default(1800),
-  featuredFreshTtlSeconds: z.coerce.number().int().positive().default(300),
+  // Same window as the detail ON PURPOSE. When it was five times longer, the
+  // home page and the detail of the same beach sampled the sky at different
+  // moments and said different things — the ranking is 46 beaches read from
+  // the per-coordinate provider cache, so refreshing it as often as the
+  // detail costs CPU, not quota (quota is set by `providerTtlSeconds`).
+  featuredFreshTtlSeconds: z.coerce.number().int().positive().default(60),
   featuredStaleTtlSeconds: z.coerce.number().int().positive().default(3600),
   detailsFreshTtlSeconds: z.coerce.number().int().positive().default(60),
   detailsStaleTtlSeconds: z.coerce.number().int().positive().default(600),
+  skyDecisionTtlSeconds: z.coerce.number().int().positive().default(300),
 });
 
 export type AppConfig = z.infer<typeof ConfigSchema>;
@@ -132,6 +144,8 @@ export function loadConfig(): AppConfig {
       fromFirebase?.details_fresh_ttl_seconds ?? fromEnv.details_fresh_ttl_seconds,
     detailsStaleTtlSeconds:
       fromFirebase?.details_stale_ttl_seconds ?? fromEnv.details_stale_ttl_seconds,
+    skyDecisionTtlSeconds:
+      fromFirebase?.sky_decision_ttl_seconds ?? fromEnv.sky_decision_ttl_seconds,
   };
 
   const parsed = ConfigSchema.parse(merged);
@@ -282,6 +296,18 @@ export const Config = {
   },
   featuredFreshTtlSeconds(): number {
     return loadConfig().featuredFreshTtlSeconds;
+  },
+  /**
+   * How long a sky-correction decision is reused by every caller.
+   *
+   * The rule: it must OUTLIVE the longest response window of the two screens.
+   * Only then are two responses assembled at different moments guaranteed to
+   * fall inside the same decision — which is what stops the listing and the
+   * detail from showing two skies for one beach. It is therefore deliberately
+   * longer than `featuredFreshTtlSeconds`, not equal to it.
+   */
+  skyDecisionTtlSeconds(): number {
+    return loadConfig().skyDecisionTtlSeconds;
   },
   featuredStaleTtlSeconds(): number {
     return loadConfig().featuredStaleTtlSeconds;

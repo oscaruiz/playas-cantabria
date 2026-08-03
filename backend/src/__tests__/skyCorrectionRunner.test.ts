@@ -176,3 +176,105 @@ describe('corregirCieloObservado — sin datos', () => {
     expect(corregirCieloObservado('Sardinero', DESPEJADO, [], false, EN_FRANJA)).toBe(DESPEJADO);
   });
 });
+
+/**
+ * Two screens, one sky.
+ *
+ * The listing and the detail read the SAME cached observation, but each used
+ * to decide at its own instant with its own snapshot of the sunshine — so the
+ * home page could show "parcialmente soleado" while the detail of the same
+ * beach, seconds later, said "muy nuboso". These tests pin that the first
+ * caller decides and the rest reuse that decision.
+ */
+describe('corregirCieloObservado — memoria compartida entre pantallas', () => {
+  /** The bit of `InMemoryCache` the runner uses, with a controllable clock. */
+  function memoriaFalsa(ahora = () => Date.now()) {
+    const store = new Map<string, { value: unknown; expiraEn: number }>();
+    return {
+      guardadas: () => [...store.keys()],
+      get<T>(key: string): T | undefined {
+        const rec = store.get(key);
+        if (!rec || rec.expiraEn <= ahora()) return undefined;
+        return rec.value as T;
+      },
+      set<T>(key: string, value: T, ttlSeconds: number): void {
+        store.set(key, { value, expiraEn: ahora() + ttlSeconds * 1000 });
+      },
+    };
+  }
+
+  it('la segunda pantalla reusa la decisión de la primera, aunque el sol ya diga otra cosa', () => {
+    process.env.SKY_CORRECTION = 'on';
+    const memoria = memoriaFalsa();
+
+    // Portada: sin sol medido → corrige a muy nuboso.
+    const listado = corregirCieloObservado(
+      'La Concha', DESPEJADO, SIN_SOL, false, EN_FRANJA, null, memoria, 'cantabria',
+    );
+    expect(listado?.description).toBe('muy nuboso');
+
+    // Detalle instantes después, con la estación ya reportando sol pleno: sin
+    // memoria decidiría distinto y las dos pantallas se contradirían.
+    const detalle = corregirCieloObservado(
+      'La Concha', DESPEJADO, SOL_SOSTENIDO, false, EN_FRANJA, null, memoria, 'cantabria',
+    );
+    expect(detalle?.description).toBe('muy nuboso');
+    expect(detalle?.icon).toBe(listado?.icon);
+  });
+
+  it('cuenta UNA decisión por muchas visitas: el diagnóstico mide el criterio, no el tráfico', () => {
+    process.env.SKY_CORRECTION = 'on';
+    const memoria = memoriaFalsa();
+
+    for (let i = 0; i < 5; i++) {
+      corregirCieloObservado(
+        'La Concha', DESPEJADO, SIN_SOL, false, EN_FRANJA, null, memoria, 'cantabria',
+      );
+    }
+
+    expect(skyCorrectionMetrics.snapshot().total).toBe(1);
+  });
+
+  it('no reusa la decisión para un cielo distinto del modelo', () => {
+    process.env.SKY_CORRECTION = 'on';
+    const memoria = memoriaFalsa();
+    const NUBLADO: Weather = { ...DESPEJADO, description: 'muy nuboso', icon: '04d' };
+
+    corregirCieloObservado(
+      'La Concha', DESPEJADO, SIN_SOL, false, EN_FRANJA, null, memoria, 'cantabria',
+    );
+    corregirCieloObservado(
+      'La Concha', NUBLADO, SIN_SOL, false, EN_FRANJA, null, memoria, 'cantabria',
+    );
+
+    // Dos entradas: el icono del modelo es parte de la clave porque la
+    // decisión se guarda sobre él ("modelo-ya-nublado").
+    expect(memoria.guardadas()).toHaveLength(2);
+    expect(skyCorrectionMetrics.snapshot().total).toBe(2);
+  });
+
+  it('playas distintas de la misma región no comparten decisión', () => {
+    process.env.SKY_CORRECTION = 'on';
+    const memoria = memoriaFalsa();
+
+    corregirCieloObservado(
+      'La Concha', DESPEJADO, SIN_SOL, false, EN_FRANJA, null, memoria, 'cantabria',
+    );
+    corregirCieloObservado(
+      'Berria', DESPEJADO, SIN_SOL, false, EN_FRANJA, null, memoria, 'cantabria',
+    );
+
+    expect(memoria.guardadas()).toHaveLength(2);
+  });
+
+  it('sin memoria sigue funcionando: cada llamada decide, como antes', () => {
+    process.env.SKY_CORRECTION = 'on';
+
+    const a = corregirCieloObservado('La Concha', DESPEJADO, SIN_SOL, false, EN_FRANJA);
+    const b = corregirCieloObservado('La Concha', DESPEJADO, SOL_SOSTENIDO, false, EN_FRANJA);
+
+    expect(a?.description).toBe('muy nuboso');
+    expect(b).toBe(DESPEJADO);
+    expect(skyCorrectionMetrics.snapshot().total).toBe(2);
+  });
+});

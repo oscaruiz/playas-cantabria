@@ -232,6 +232,10 @@ export class GetFeaturedBeaches {
         rain?.status === 'raining',
         Date.now(),
         rain?.outlook,
+        // Shared with the detail: whoever gets here first decides, and the
+        // other screen shows the same sky instead of its own.
+        this.cache,
+        this.regionId,
       ),
       flag,
       enrichment,
