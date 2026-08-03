@@ -3,6 +3,7 @@ import {
   suscribirInstalacion,
   ofertaActual,
   lanzarPrompt,
+  abrirApp,
 } from '../infrastructure/promptInstalacion';
 import type { Oferta } from '../domain/queOfrecer';
 
@@ -11,7 +12,7 @@ import type { Oferta } from '../domain/queOfrecer';
  * page load, so there is one store: every component that asks gets the same
  * answer without a provider.
  */
-export function useInstalacion(): { oferta: Oferta; instalar: () => void } {
+export function useInstalacion(): { oferta: Oferta; instalar: () => void; abrir: () => void } {
   // Third argument: the prerendered HTML has no browser to ask, and offering
   // an install button in a static page would be a lie.
   const oferta = useSyncExternalStore(suscribirInstalacion, ofertaActual, () => null);
@@ -21,5 +22,6 @@ export function useInstalacion(): { oferta: Oferta; instalar: () => void } {
     instalar: () => {
       void lanzarPrompt();
     },
+    abrir: abrirApp,
   };
 }

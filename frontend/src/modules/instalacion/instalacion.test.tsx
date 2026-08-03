@@ -38,16 +38,20 @@ function dispararBeforeInstallPrompt(): { prompt: jest.Mock } {
 
 describe('queOfrecer', () => {
   it('no ofrece nada dentro de la app ya instalada, ni con evento ni en iOS', () => {
-    expect(queOfrecer({ hayEvento: true, esIOS: true, enModoApp: true })).toBeNull();
+    expect(queOfrecer({ hayEvento: true, esIOS: true, enModoApp: true, instalada: true })).toBeNull();
   });
 
   it('prefiere el evento del navegador a las instrucciones manuales', () => {
-    expect(queOfrecer({ hayEvento: true, esIOS: true, enModoApp: false })).toBe('prompt');
+    expect(queOfrecer({ hayEvento: true, esIOS: true, enModoApp: false, instalada: false })).toBe('prompt');
   });
 
   it('cae a las instrucciones solo en iOS, y a nada en el resto', () => {
-    expect(queOfrecer({ hayEvento: false, esIOS: true, enModoApp: false })).toBe('ios');
-    expect(queOfrecer({ hayEvento: false, esIOS: false, enModoApp: false })).toBeNull();
+    expect(queOfrecer({ hayEvento: false, esIOS: true, enModoApp: false, instalada: false })).toBe('ios');
+    expect(queOfrecer({ hayEvento: false, esIOS: false, enModoApp: false, instalada: false })).toBeNull();
+  });
+
+  it('ofrece abrir cuando el navegador acaba de confirmar la instalación', () => {
+    expect(queOfrecer({ hayEvento: false, esIOS: false, enModoApp: false, instalada: true })).toBe('open');
   });
 });
 
@@ -91,7 +95,7 @@ describe('BotonInstalar', () => {
     expect(screen.queryByRole('button', { name: /instalar app/i })).not.toBeInTheDocument();
   });
 
-  it('desaparece si la app se instala por otra vía (menú de Chrome, otra pestaña)', async () => {
+  it('se convierte en Abrir app cuando el navegador confirma la instalación', async () => {
     renderWithProviders(<BotonInstalar />);
     dispararBeforeInstallPrompt();
     await screen.findByRole('button', { name: /instalar app/i });
@@ -101,6 +105,7 @@ describe('BotonInstalar', () => {
     });
 
     expect(screen.queryByRole('button', { name: /instalar app/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /abrir app/i })).toBeInTheDocument();
   });
 
   it('en iOS, donde no hay API, despliega las instrucciones manuales', () => {

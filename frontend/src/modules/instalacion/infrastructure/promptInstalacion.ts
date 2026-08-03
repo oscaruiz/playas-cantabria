@@ -44,7 +44,6 @@ function esIOS(): boolean {
 
 /** Already launched as an app: standalone window (or iOS's own flag). */
 function enModoApp(): boolean {
-  if (instalada) return true;
   if ((navigator as { standalone?: boolean }).standalone === true) return true;
   return window.matchMedia?.('(display-mode: standalone)').matches === true;
 }
@@ -55,7 +54,12 @@ function enModoApp(): boolean {
  * forever.
  */
 export function ofertaActual(): Oferta {
-  return queOfrecer({ hayEvento: evento !== null, esIOS: esIOS(), enModoApp: enModoApp() });
+  return queOfrecer({
+    hayEvento: evento !== null,
+    esIOS: esIOS(),
+    enModoApp: enModoApp(),
+    instalada,
+  });
 }
 
 export function escucharInstalacion(): void {
@@ -88,6 +92,11 @@ export async function lanzarPrompt(): Promise<void> {
   emitir();
   await actual.prompt();
   await actual.userChoice;
+}
+
+/** Ask the browser/OS to handle the PWA start URL as a new app launch. */
+export function abrirApp(): void {
+  window.open(new URL('.', document.baseURI).href, '_blank', 'noopener');
 }
 
 /** Test seam: the listeners live on `window`, the state lives here. */
