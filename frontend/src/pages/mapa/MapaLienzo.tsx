@@ -172,9 +172,16 @@ const MapaLienzo: React.FC<{
           if (mapInstance) mapRef.current = mapInstance;
         }}
       >
+        {/*
+          Community tile server, under the OSMF tile usage policy: no {s}
+          subdomains (deprecated, and pointless over HTTP/2), and attribution
+          that must stay visible and linked to the copyright page. Anything
+          bulk —prefetching areas, offline maps— goes to a commercial provider,
+          not here.
+        */}
         <TileLayer
-          attribution='&copy; OpenStreetMap contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>'
+          url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
         {playas.map((playa, index) => {

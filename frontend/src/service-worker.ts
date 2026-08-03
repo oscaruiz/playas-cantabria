@@ -57,6 +57,10 @@ registerRoute(
 
 // An example runtime caching route for requests that aren't handled by the
 // precache, in this case same-origin .png requests like those from in public/
+//
+// The same-origin check is not incidental: OSM tiles are .png too, and caching
+// them here would turn the app into the offline map the tile usage policy
+// forbids. Do not widen this route to other origins.
 registerRoute(
   // Add in any other file extensions or routing criteria as needed.
   ({ url }) => url.origin === self.location.origin && url.pathname.endsWith('.png'),
