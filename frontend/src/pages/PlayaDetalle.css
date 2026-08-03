@@ -1040,15 +1040,24 @@
 
 /* --- Metadata / fuente --- */
 .forecast-metadata {
-  font-size: 0.68rem;
-  color: var(--playa-text-muted);
-  margin-bottom: 6px;
+  margin: 10px 0 6px;
 }
 
 .source-label {
   font-size: 0.68rem;
   color: var(--playa-text-muted);
   margin: 0;
+}
+
+/* El aviso encabeza la explicación de la nota: es lo primero que se lee al
+   abrir "cómo se calcula", no una nota al pie. */
+.pd-score-aviso {
+  margin: 0 0 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--playa-border, rgba(0, 0, 0, 0.08));
+  font-size: 0.74rem;
+  line-height: 1.45;
+  color: var(--playa-text-muted);
 }
 
 /* --- Responsive --- */
@@ -1089,7 +1098,8 @@
     min-width: 0;
   }
 
-  .forecast-metadata,
+  /* `.forecast-metadata` ya no está aquí: vive dentro de la columna de la
+     previsión, pegado a los datos que acredita. */
   .source-label {
     grid-column: 1 / -1;
   }

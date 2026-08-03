@@ -9,8 +9,11 @@ import { horaLocalMadrid } from '../../shared/format/tiempo';
 import { capitalizar } from '../../shared/format/texto';
 import { useIdioma } from '../../shared/i18n/IdiomaContext';
 import { traducirTextoApi } from '../../shared/i18n/apiText';
-import { procedenciaObservacion } from '../../features/provenance/procedencia';
-import { SourceAndFreshness } from '../../features/provenance/SourceAndFreshness';
+import { procedenciaObservacion, observacionVigente } from '../../features/provenance/procedencia';
+import {
+  FreshnessLabel,
+  SourceAndFreshness,
+} from '../../features/provenance/SourceAndFreshness';
 
 /** Map wind description text to a speed level 0–4 for animation. */
 function windSpeedLevel(text: string): number {
@@ -88,8 +91,15 @@ const ForecastHero: React.FC<{
   dia: DiaPrediccionDTO;
   climaActual?: number | null;
   tiempoActual?: PlayaDetalleData['tiempoActual'];
-}> = ({ dia, climaActual, tiempoActual }) => {
+}> = ({ dia, climaActual, tiempoActual: recibido }) => {
   const { t, idioma } = useIdioma();
+  // An observation older than the limit is NOT "now": it is dropped here, at
+  // the single point where it enters the headline, so no downstream line
+  // (sky, temperature, rain badges, freshness) can keep presenting it as
+  // current. What it was is reported below, in its own line.
+  const vigente = observacionVigente(recibido);
+  const tiempoActual = vigente ? recibido : undefined;
+  const caducada = recibido != null && !vigente;
   // skyText/viento/oleaje are the raw Spanish from the API: emojiCielo and
   // windSpeedLevel run regexes over it — translate only when displaying.
   // For TODAY we prioritize the real observation ("now") over the afternoon
@@ -99,8 +109,12 @@ const ForecastHero: React.FC<{
   const oleaje = capitalizar(dia.tarde.oleaje ?? dia.manana.oleaje ?? '');
   const skyEmoji = emojiCielo(skyText || null);
 
-  const tempPrincipal = climaActual ?? dia.temperaturaMaxima;
-  const showMax = climaActual != null && dia.temperaturaMaxima != null && climaActual <= dia.temperaturaMaxima;
+  // The headline temperature is part of the same "right now" reading: if that
+  // reading is too old, it falls back to the forecast maximum, and where there
+  // is none (beaches with no AEMET sheet) it simply is not shown.
+  const tempObservada = vigente ? climaActual : null;
+  const tempPrincipal = tempObservada ?? dia.temperaturaMaxima;
+  const showMax = tempObservada != null && dia.temperaturaMaxima != null && tempObservada <= dia.temperaturaMaxima;
   const wLevel = viento ? windSpeedLevel(viento) : 1;
 
   // Rain detected NOW (multi-source signal from the backend). `tiempoActual`
@@ -146,10 +160,22 @@ const ForecastHero: React.FC<{
       </div>
       {/* The headline mixes observation over forecast (skyText above): say
           who observed it and when, or the freshest value has no face. */}
-      <SourceAndFreshness
-        procedencia={procedenciaObservacion(tiempoActual)}
-        claveFuente="datos.enDirectoFuente"
-      />
+      {caducada ? (
+        /* Se dice que falta, y desde cuándo: callarlo dejaría la previsión
+           pasando por observación sin que nadie pueda notarlo. */
+        <p className="procedencia-linea procedencia-caducada">
+          {t('datos.noDisponible')}{' '}
+          <FreshnessLabel instante={recibido?.timestamp} />
+        </p>
+      ) : (
+        <SourceAndFreshness
+          procedencia={procedenciaObservacion(tiempoActual)}
+          claveFuente="datos.enDirectoFuente"
+        />
+      )}
+      {/* La nota de licencia del observador ya no se pinta aquí: viaja con el
+          resto de lo que declara esta columna, bajo la ⓘ que la cierra. Lo
+          que queda es la frescura, que no es letra pequeña sino el dato. */}
     </div>
   );
 };

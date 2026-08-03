@@ -15,6 +15,7 @@ import { FreshnessLabel } from '../features/provenance/SourceAndFreshness';
 import { rankearPlayas, codigoMejorPuntuacionNoHero } from '../utils/beachRanking';
 import { haversineKm } from '../shared/geo/haversine';
 import { useUserLocation } from '../hooks/useUserLocation';
+import { useRevalidarAlVolver } from '../hooks/useRevalidarAlVolver';
 import BottomNavBar from '../shared/ui/BottomNavBar';
 import SelectorIdioma from '../shared/ui/SelectorIdioma';
 import { useIdioma } from '../shared/i18n/IdiomaContext';
@@ -27,6 +28,7 @@ import {
 } from '../shared/i18n/apiText';
 import ScoreBadge from '../components/ScoreBadge';
 import TrendBadge from '../components/TrendBadge';
+import InfoDatos from '../features/provenance/InfoDatos';
 import { rutaPlaya } from '../shared/seo/beachUrls';
 import SeoHead from '../shared/seo/SeoHead';
 import { useFavoritas } from '../modules/favorites';
@@ -335,6 +337,16 @@ const HomePage: React.FC = () => {
     return () => { mounted = false; };
   }, []);
 
+  // Al volver a la pestaña: la portada seguía pintando el ranking que cargó al
+  // abrirla, y entrar en una playa enseñaba un cielo más nuevo que la tarjeta
+  // que se acababa de tocar. No fuerza nada — si la copia sigue fresca, esto
+  // no llega a pedir al servidor.
+  useRevalidarAlVolver(() => {
+    getFeaturedBeaches()
+      .then(setFeatured)
+      .catch(() => { /* la portada ya pintada sigue valiendo */ });
+  });
+
   const cautionBeaches = featured?.revisar ?? [];
 
   // Recommended: all green beaches (>= 60) from resumenTodas, ranked by
@@ -495,6 +507,19 @@ const HomePage: React.FC = () => {
                   onVerDetalles={() => history.push(rutaPlaya(mejorPlaya))}
                   onVerEnMapa={() => history.push(`/mapa?lat=${mejorPlaya.lat}&lon=${mejorPlaya.lon}&codigo=${mejorPlaya.codigo}`)}
                 />
+                {/* Colgado de la recomendación, no en una fila propia del
+                    grid: ahí abría una banda vacía de ~70 px (margen de
+                    sección + gap) bajo las dos columnas. Aquí además ocupa el
+                    blanco que la columna izquierda ya deja por ser la corta.
+                    Sigue siendo UNO para todo el ranking: alternativas y
+                    "revisar antes" salen del mismo cálculo. */}
+                <InfoDatos
+                  etiqueta="info.aviso"
+                  aria="info.aria.ranking"
+                  className="hp-aviso-ranking"
+                >
+                  <p>{t('aviso.ranking')}</p>
+                </InfoDatos>
               </section>
 
               {alternativas.length > 0 && (

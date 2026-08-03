@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { PlayaDetalle as PlayaDetalleData } from '../../services/api';
 import { estadoBandera, operadorVigilancia } from '../../utils/beachHelpers';
-import { FreshnessLabel } from '../../features/provenance/SourceAndFreshness';
+import { AttributionNote, FreshnessLabel } from '../../features/provenance/SourceAndFreshness';
+import InfoDatos from '../../features/provenance/InfoDatos';
 import { normalizarInstante } from '../../features/provenance/procedencia';
 import { useIdioma, TraducirFn } from '../../shared/i18n/IdiomaContext';
 import { traducirTextoApi, traducirOperador } from '../../shared/i18n/apiText';
@@ -99,6 +100,13 @@ const CruzRojaCard: React.FC<{
               <FreshnessLabel instante={cruzRoja?.ultimaActualizacion} capitalizado />
             </p>
           )}
+          {/* Quién publica esto, enlazado a su propio servicio. Va aquí y no
+              solo en el banner porque esta tarjeta se pinta también cuando no
+              hay bandera vigente: la cobertura y el horario siguen siendo
+              suyos y hay que acreditarlos igual. */}
+          <InfoDatos etiqueta="info.fuente" aria="info.aria.vigilancia">
+            <AttributionNote fuente={operador} />
+          </InfoDatos>
         </div>
       )}
     </div>

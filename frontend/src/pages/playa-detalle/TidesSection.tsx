@@ -40,6 +40,7 @@ function getTideStatus(
 /** Tides for the selected day only, sorted by time. */
 const TidesSection: React.FC<{
   marea: { pleamar: string[]; bajamar: string[] };
+  /** Reference port the times belong to (AEMET's own annotation). */
   fuenteMareas: string | null;
   isToday: boolean;
 }> = ({ marea, fuenteMareas, isToday }) => {
@@ -73,6 +74,9 @@ const TidesSection: React.FC<{
           </div>
         ))}
       </div>
+      {/* El puerto de referencia es DATO, no letra pequeña: sin él las horas
+          no significan nada. El crédito de AEMET, que publica esta tabla, va
+          en la ⓘ que cierra la columna — es la misma hoja que la previsión. */}
       {fuenteMareas && (
         <div className="tides-source">{fuenteMareas.replace(/^\*/, '')}</div>
       )}

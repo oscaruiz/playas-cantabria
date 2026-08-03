@@ -60,6 +60,31 @@ export function nombreFuenteMeteo(fuente: string): string {
 }
 
 /**
+ * How old an observation may be and still be presented as "now".
+ *
+ * Three hours: enough slack for a Render free instance waking up or a
+ * provider down for a while, and short enough that this morning's sky is
+ * never shown as the current sky. Past it the value is not aged with a
+ * warning — it is WITHDRAWN, because a wrong "it is sunny" is worse than
+ * "dato no disponible" on the screen someone uses to decide whether to go.
+ */
+export const MAX_EDAD_OBSERVACION_MS = 3 * 60 * 60 * 1000;
+
+/**
+ * Whether an observation is recent enough to be shown as the current state.
+ * An observation with NO timestamp cannot be vouched for, so it is not
+ * current either.
+ */
+export function observacionVigente(
+  tiempoActual: PlayaDetalle['tiempoActual'],
+  ahoraMs: number = Date.now()
+): boolean {
+  const ms = normalizarInstante(tiempoActual?.timestamp);
+  if (ms == null) return false;
+  return ahoraMs - ms <= MAX_EDAD_OBSERVACION_MS;
+}
+
+/**
  * Provenance of the real-time observation block (`tiempoActual`): a live
  * value, credited to its provider, stamped when the backend captured it.
  * Null when there is no observation at all — never a fabricated source.

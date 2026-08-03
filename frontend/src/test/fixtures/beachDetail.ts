@@ -120,6 +120,9 @@ export function buildAemetDetail(now: Date): PlayaDetalle {
       ],
       previsionHorasFuente: 'Open-Meteo',
     },
+    // Cuándo montó el backend esta respuesta, no cuándo la sirvió: el detalle
+    // sale de una caché stale-while-revalidate y la ficha lo declara.
+    generadoEn: now.toISOString(),
     fuenteBanderas: 'Cruz Roja',
     cruzRoja: {
       bandera: 'Verde',
@@ -273,6 +276,7 @@ export function buildOutOfHoursDetail(): PlayaDetalle {
     codigo: '3907501',
     lat: 43.47,
     lon: -3.78,
+    generadoEn: '2026-07-28T05:00:00.000Z',
     fuenteBanderas: 'Cruz Roja',
     cruzRoja: {
       bandera: 'Verde',

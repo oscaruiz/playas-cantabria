@@ -145,6 +145,10 @@ const ScoreCard: React.FC<{
 
       {scoreInfoOpen && (
         <div id="pd-score-info" className="pd-score-info">
+          {/* Lo primero de la explicación, y no una segunda ⓘ compitiendo con
+              esta: quien abre "cómo se calcula" ya está preguntando cuánto
+              puede fiarse del número. */}
+          <p className="pd-score-aviso" role="note">{t('aviso.ranking')}</p>
           <p className="pd-score-info-intro">{t('detalle.scoreInfo.intro')}</p>
 
           {/* Why THIS beach scored what it scored. */}

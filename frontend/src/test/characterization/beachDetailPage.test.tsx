@@ -56,6 +56,15 @@ function renderDetalle(codigo = '3908503') {
   });
 }
 
+/**
+ * The ⓘ of a block, by its accessible name. Each one says WHAT it holds and
+ * WHICH block it belongs to ("Aviso sobre la bandera", "Fuente de la
+ * previsión"), so the tests open them the same way a reader does.
+ */
+function abrirInfo(nombreAccesible: string): HTMLElement {
+  return screen.getByLabelText(nombreAccesible);
+}
+
 afterEach(() => {
   restoreFetch();
   jest.useRealTimers();
@@ -169,19 +178,84 @@ describe('PlayaDetalle — previsión AEMET', () => {
 
     expect(container.querySelector('.tides-source')).toHaveTextContent('Puerto de Santander');
     expect(container.querySelector('.tides-source')?.textContent).not.toContain('*');
-    // AEMET_HTML is presented as AEMET.
-    expect(container.querySelector('.source-label')).toHaveTextContent(
-      'Datos meteorológicos: AEMET',
-    );
   });
 
-  it('muestra la zona de avisos y la elaboración', async () => {
+  it('la previsión no lleva letra pequeña a la vista: va toda bajo su ⓘ', async () => {
     const { container } = renderDetalle();
     await screen.findByText('Hoy');
 
-    const meta = container.querySelector('.forecast-metadata');
-    expect(meta).toHaveTextContent('Zona de avisos: Litoral de Cantabria');
-    expect(meta).toHaveTextContent('Elaborado el 27-07-2026 a las 10:00');
+    const meta = container.querySelector('.detail-col--forecast .forecast-metadata');
+    // Cerrada por defecto: el panel no existe hasta que se pide.
+    expect(meta).not.toHaveTextContent('Agencia Estatal de Meteorología');
+    expect(meta?.querySelector('.info-datos-panel')).toBeNull();
+    expect(meta?.querySelector('.info-datos-btn')).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('al abrir esa ⓘ salen la atribución de AEMET, su hora y la zona de avisos', async () => {
+    const { container } = renderDetalle();
+    await screen.findByText('Hoy');
+
+    fireEvent.click(abrirInfo('Fuente de la previsión'));
+
+    // Dentro de la columna de la previsión, no en un pie perdido al final.
+    const panel = container.querySelector(
+      '.detail-col--forecast .forecast-metadata .info-datos-panel',
+    );
+    expect(panel).toHaveTextContent(
+      'Información elaborada utilizando, entre otras, la obtenida de la Agencia Estatal de Meteorología.',
+    );
+    expect(panel).toHaveTextContent('Zona de avisos: Litoral de Cantabria');
+    expect(panel).toHaveTextContent('Elaborado el 27-07-2026 a las 10:00');
+    expect(panel?.querySelector('a.procedencia-enlace')).toHaveAttribute(
+      'href',
+      'https://www.aemet.es',
+    );
+  });
+
+  it('el aviso de la bandera está bajo la ⓘ del banner, y solo ahí', async () => {
+    const { container } = renderDetalle();
+    await screen.findByText('Hoy');
+
+    expect(container).not.toHaveTextContent('Información orientativa');
+
+    fireEvent.click(abrirInfo('Aviso sobre la bandera'));
+
+    const paneles = Array.from(container.querySelectorAll('.info-datos-panel')).map(
+      (n) => n.textContent ?? '',
+    );
+    // Uno por afirmación, no uno por componente: la bandera se afirma en el
+    // banner y otra vez en la tarjeta, y el aviso viaja solo con el banner.
+    expect(paneles.filter((p) => p.includes('Información orientativa'))).toHaveLength(1);
+    expect(container.querySelector('.flag-banner .info-datos-panel')).toHaveTextContent(
+      'Comprueba siempre la bandera presente en la playa',
+    );
+  });
+
+  it('el aviso del ranking encabeza «cómo se calcula», sin una segunda ⓘ', async () => {
+    const { container } = renderDetalle();
+    await screen.findByText('Hoy');
+
+    expect(container).not.toHaveTextContent('Recomendación automática');
+
+    fireEvent.click(screen.getByText('Cómo se calcula'));
+
+    expect(container.querySelector('.pd-score-aviso')).toHaveTextContent(
+      'No garantiza la seguridad ni las condiciones reales de la playa.',
+    );
+    expect(container.querySelectorAll('.pd-score-block .info-datos-btn')).toHaveLength(0);
+  });
+
+  it('la ficha se declara independiente, bajo la ⓘ del pie', async () => {
+    const { container } = renderDetalle();
+    await screen.findByText('Hoy');
+
+    fireEvent.click(abrirInfo('Sobre los datos de esta ficha'));
+
+    const panel = container.querySelector('.pd-info-ficha .info-datos-panel');
+    expect(panel).toHaveTextContent(
+      'Playas Cantabria es un proyecto independiente: ninguna de estas fuentes lo respalda ni colabora con él.',
+    );
+    expect(panel).toHaveTextContent('Datos calculados el');
   });
 
   it('al cambiar de día usa la máxima prevista y muestra los dos medios días', async () => {
@@ -321,9 +395,14 @@ describe('PlayaDetalle — playas sin ficha AEMET', () => {
     const { container } = renderDetalle('3905201');
     await screen.findByText('La Arnía');
 
-    expect(container.querySelector('.source-label')).toHaveTextContent(
-      'Datos meteorológicos: AEMET',
+    // Sin hoja de AEMET la fuente la declara `clima`, y se acredita bajo la ⓘ
+    // del propio panel: no hay una etiqueta de página que lo repita al pie.
+    fireEvent.click(abrirInfo('Fuente de la previsión'));
+
+    const notas = Array.from(container.querySelectorAll('.procedencia-atribucion')).map(
+      (n) => n.textContent ?? '',
     );
+    expect(notas.some((n) => n.includes('Agencia Estatal de Meteorología'))).toBe(true);
   });
 });
 
@@ -387,7 +466,7 @@ describe('PlayaDetalle — bandera de Cruz Roja', () => {
     mockDetalle(buildAemetDetail(ahora));
 
     const { container } = renderDetalle();
-    await screen.findByText('Cruz Roja');
+    await screen.findByText('Cruz Roja', { selector: '.card-header-title' });
 
     expect(container.querySelector('.card-body')).not.toBeNull();
     expect(screen.getByText('Bandera actual').nextElementSibling).toHaveTextContent('Verde');
@@ -400,7 +479,7 @@ describe('PlayaDetalle — bandera de Cruz Roja', () => {
     mockDetalle(buildAemetDetail(ahora));
 
     const { container } = renderDetalle();
-    await screen.findByText('Cruz Roja');
+    await screen.findByText('Cruz Roja', { selector: '.card-header-title' });
 
     fireEvent.click(container.querySelector('.card-header') as HTMLElement);
     expect(container.querySelector('.card-body')).toBeNull();
@@ -526,9 +605,16 @@ describe('PlayaDetalle — puntuación', () => {
     const { container } = renderDetalle('3908503');
     await screen.findByText('Puntuación de hoy');
 
-    expect(container.querySelector('.proximas-horas-fuente')).toHaveTextContent(
-      'Datos meteorológicos: Open-Meteo',
+    // Acreditar y decir que van adaptados es UNA frase: la nota de la licencia
+    // ya enlaza a Open-Meteo, así que no se repite el crédito genérico encima.
+    fireEvent.click(abrirInfo('Fuente de las próximas horas'));
+
+    const fuente = container.querySelector('.proximas-horas-fuente .info-datos-panel');
+    expect(fuente).toHaveTextContent(
+      'Datos meteorológicos de Open-Meteo, adaptados por Playas Cantabria: se transforman para calcular la puntuación.',
     );
+    expect(fuente?.querySelector('a')).toHaveAttribute('href', 'https://open-meteo.com');
+    expect(container.querySelectorAll('.proximas-horas-fuente')).toHaveLength(1);
   });
 
   it('el desplegable de la puntuación ya no repite la tira', async () => {

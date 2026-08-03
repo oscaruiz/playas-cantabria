@@ -12,3 +12,108 @@
   color: var(--playa-text-muted);
   margin: 8px 0 0;
 }
+
+/* Legal notice of a source, next to its data: same muted voice, but it has to
+   stay legible — it is an obligation, not a footnote to hide. */
+.procedencia-atribucion {
+  font-size: 0.68rem;
+  line-height: 1.45;
+  color: var(--playa-text-muted);
+  margin: 6px 0 0;
+}
+
+/* Dato retirado por antiguo. No es un error de carga, así que no se pinta
+   como tal: es una ausencia declarada. */
+.procedencia-caducada {
+  font-style: italic;
+}
+
+/* El control ⓘ: discreto, pero un control — se toca, así que se ve que se
+   puede tocar. Todo lo que declara el bloque vive dentro. */
+.info-datos {
+  margin-top: 8px;
+}
+
+.info-datos-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 0;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.68rem;
+  color: var(--playa-text-muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.info-datos-btn ion-icon {
+  font-size: 0.95rem;
+  text-decoration: none;
+}
+
+.info-datos-btn:hover,
+.info-datos-btn:focus-visible {
+  color: var(--ion-color-primary);
+}
+
+.info-datos-panel {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--playa-border, rgba(0, 0, 0, 0.08));
+  font-size: 0.68rem;
+  line-height: 1.45;
+  color: var(--playa-text-muted);
+}
+
+/* Los párrafos sueltos del panel (avisos) comparten la voz del resto. */
+.info-datos-panel > p {
+  margin: 0 0 6px;
+}
+
+.info-datos-panel > p:last-child,
+.info-datos-panel > *:last-child {
+  margin-bottom: 0;
+}
+
+/* Sobre el fondo oceánico del hero el texto apagado no se lee. Las notas de
+   dentro traen su propio color apagado, así que no basta con heredar: hay que
+   ganarles, o la atribución queda ilegible sobre el azul. */
+.info-datos--hero .info-datos-btn,
+.info-datos--hero .info-datos-panel,
+.info-datos--hero .info-datos-panel p,
+.info-datos--hero .info-datos-panel time {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.info-datos--hero .info-datos-panel {
+  border-top-color: rgba(255, 255, 255, 0.28);
+}
+
+.info-datos--hero .info-datos-btn:hover,
+.info-datos--hero .info-datos-btn:focus-visible {
+  color: #fff;
+}
+
+/* Dentro del banner de bandera, que es una fila flex, la ⓘ ocupa su
+   propia línea en vez de meterse entre el banderín y el texto. */
+.flag-banner {
+  flex-wrap: wrap;
+}
+
+.flag-banner .info-datos {
+  flex-basis: 100%;
+}
+
+/* The credited name is a link and must look like one, muted text or not. */
+.procedencia-enlace {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.procedencia-enlace:hover,
+.procedencia-enlace:focus-visible {
+  color: var(--ion-color-primary);
+}

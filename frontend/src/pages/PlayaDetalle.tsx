@@ -37,7 +37,8 @@ import MetadataFooter from './playa-detalle/MetadataFooter';
 import CruzRojaCard from './playa-detalle/CruzRojaCard';
 import { BeachInfoSection, BeachAttributesSection } from './playa-detalle/BeachInfoSection';
 import { WebcamCard } from './playa-detalle/WebcamCard';
-import { nombreFuenteMeteo } from '../features/provenance/procedencia';
+import { ComputedAt } from '../features/provenance/SourceAndFreshness';
+import InfoDatos from '../features/provenance/InfoDatos';
 import { rutaMunicipio } from '../shared/seo/landings';
 import { FavoriteButton } from '../modules/favorites';
 
@@ -165,7 +166,6 @@ const PlayaDetallePage: React.FC = () => {
     }
   };
   const pred = datos?.prediccionCompleta;
-  const fuente = pred?.fuente ?? datos?.clima?.fuente ?? '';
   const safeDayIndex = pred ? Math.min(selectedDay, pred.dias.length - 1) : 0;
 
   return (
@@ -297,6 +297,15 @@ const PlayaDetallePage: React.FC = () => {
                       isToday={safeDayIndex === 0}
                     />
                   )}
+                  {/* Cierra la columna de AEMET, no la página: la atribución
+                      tiene que acompañar a la información que elabora, y su
+                      hora de elaboración con ella. */}
+                  <MetadataFooter
+                    zonaAvisos={pred.zonaAvisos}
+                    elaboracion={pred.elaboracion}
+                    fuente={pred.fuente}
+                    fuenteObservacion={datos.tiempoActual?.fuente}
+                  />
                 </>
               ) : datos.clima ? (
                 <>
@@ -335,18 +344,15 @@ const PlayaDetallePage: React.FC = () => {
               </div>
               </div>
 
-              {pred && (
-                <MetadataFooter
-                  zonaAvisos={pred.zonaAvisos}
-                  elaboracion={pred.elaboracion}
-                />
-              )}
-
-              {fuente && (
-                <p className="source-label">
-                  {t('detalle.datosMeteo', { fuente: nombreFuenteMeteo(fuente) })}
-                </p>
-              )}
+              {/* Lo que es de la ficha entera y no de un bloque: cuándo se
+                  calculó de verdad (el backend responde desde una caché
+                  stale-while-revalidate, así que "acabo de abrir la página" no
+                  dice nada de la edad de los números) y que acreditar a estas
+                  fuentes no es decir que colaboren. */}
+              <InfoDatos etiqueta="info.sobreDatos" aria="info.aria.ficha" className="pd-info-ficha">
+                <ComputedAt generadoEn={datos.generadoEn} />
+                <p className="procedencia-estatica">{t('atribucion.independiente')}</p>
+              </InfoDatos>
             </div>
           </>
         )}

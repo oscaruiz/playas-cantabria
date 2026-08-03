@@ -39,6 +39,7 @@ export const en = {
 
   // ---- Install as an app (PWA) ----
   'instalar.chip': 'Install app',
+  'instalar.abrir': 'Open app',
   'instalar.iosTitulo': 'Add to Home Screen',
   'instalar.iosPaso1': 'Tap the Share button in the browser bar.',
   'instalar.iosPaso2': 'Choose "Add to Home Screen".',
@@ -243,9 +244,47 @@ export const en = {
   'landing.playas-para-surf.titulo': 'Surf beaches in {region}',
   'landing.playas-para-surf.intro': 'Beaches flagged for surf in the {region} catalog. Today\'s sea conditions are on each beach\'s page.',
 
+  // ---- Attributions required by each source ----
+  // AEMET's notice keeps its official Spanish wording: it is the phrase the
+  // agency requires, not a label of ours to translate.
+  'atribucion.aemet':
+    'Información elaborada utilizando, entre otras, la obtenida de la Agencia Estatal de Meteorología. Source: {fuente}.',
+  'atribucion.openweather': 'Weather data provided by {fuente}.',
+  'atribucion.openmeteo':
+    'Weather data by {fuente}, adapted by {region} Beaches: it is transformed to compute the score.',
+  'atribucion.banderas': 'Flag status published by {fuente}.',
+  'atribucion.independiente':
+    '{region} Beaches is an independent project: none of these sources endorses it or collaborates with it.',
+
+  // ---- ⓘ control labels ----
+  'info.aviso': 'Notice',
+  'info.fuente': 'Source',
+  'info.sobreDatos': 'About this data',
+  'info.aria.bandera': 'Notice about the flag',
+  'info.aria.ranking': 'Notice about the recommendation',
+  'info.aria.prevision': 'Source of the forecast',
+  'info.aria.horas': 'Source of the next hours',
+  'info.aria.vigilancia': 'Source of the lifeguard service',
+  'info.aria.ficha': 'About the data on this page',
+
+  // ---- Notices next to sensitive information ----
+  'aviso.banderas':
+    'Indicative information that may be out of date. Always check the flag flying at the beach and follow the instructions of the lifeguards and the authorities.',
+  'aviso.ranking':
+    'Automatic recommendation based on forecasts and available data. It does not guarantee the safety or the actual conditions of the beach.',
+
   // ---- Data provenance ----
+  'datos.fuente': 'Data from {fuente}',
+  'datos.noDisponible': 'Data not available: the latest observation is too old,',
+  'datos.estimados': 'Values estimated from other data: {campos}.',
+  'datos.estimado.sensacion': 'feels like',
+  'datos.estimado.viento': 'wind',
+  'datos.estimado.oleaje': 'waves',
+  'datos.estimado.uv': 'UV index',
+  'datos.estimado.agua': 'water temperature',
+  'datos.calculado': 'Data computed on',
+  'datos.desdeCache': 'served from cache',
   'datos.enDirectoFuente': 'Live observation from {fuente}',
-  'datos.estatico': 'Fixed beach information, does not change daily',
   'datos.webcamExterna': 'External service: the app does not check if it is live',
 
   // ---- Tides ----

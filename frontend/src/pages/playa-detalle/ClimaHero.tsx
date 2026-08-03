@@ -8,6 +8,9 @@ import {
 import DaySelector from './DaySelector';
 import ForecastHero from './ForecastHero';
 import DailyStats from './DailyStats';
+import { AttributionNote, EstimatedValues } from '../../features/provenance/SourceAndFreshness';
+import InfoDatos from '../../features/provenance/InfoDatos';
+import { mismaFuente } from '../../features/provenance/atribuciones';
 
 /**
  * UV level (translatable label) derived from the index, WHO scale. OpenWeather
@@ -90,6 +93,18 @@ const ClimaHero: React.FC<{
           tiempoActual={actual.esHoy ? tiempoActual : undefined}
         />
         <DailyStats dia={dia} embedded />
+        {/* Ésta es la ficha SIN hoja de AEMET: la que más valores rellena el
+            backend por su cuenta, y donde más falta hace poder mirar de dónde
+            sale cada cosa. Todo bajo la misma ⓘ que el resto de bloques. */}
+        <InfoDatos etiqueta="info.fuente" aria="info.aria.prevision">
+          <AttributionNote fuente={clima.fuente} />
+          {/* El observador solo se acredita aparte cuando NO es el mismo que
+              firma la previsión: repetirlo sería decir dos veces lo mismo. */}
+          {actual.esHoy && !mismaFuente(clima.fuente, tiempoActual?.fuente) && (
+            <AttributionNote fuente={tiempoActual?.fuente} />
+          )}
+          <EstimatedValues campos={actual.clima.estimados} />
+        </InfoDatos>
       </div>
     </>
   );

@@ -9,6 +9,7 @@ import {
 import { fechaMadrid, horaLocalMadrid } from '../../shared/format/tiempo';
 import { capitalizar } from '../../shared/format/texto';
 import { FreshnessLabel } from '../../features/provenance/SourceAndFreshness';
+import InfoDatos from '../../features/provenance/InfoDatos';
 import { normalizarInstante } from '../../features/provenance/procedencia';
 import { useIdioma, Idioma, TraducirFn } from '../../shared/i18n/IdiomaContext';
 import { traducirTextoApi, claveEstadoBandera, traducirOperador } from '../../shared/i18n/apiText';
@@ -84,6 +85,17 @@ const FlagBanner: React.FC<{
           </div>
         )}
       </div>
+      {/* Solo el aviso, y por eso se llama «Aviso». El crédito del operador
+          vive en la tarjeta de vigilancia, que se pinta siempre que hay
+          operador —también cuando este banner no— así que allí cubre todos
+          los casos y aquí solo sería un duplicado. */}
+      <InfoDatos
+        etiqueta="info.aviso"
+        aria="info.aria.bandera"
+        className="info-datos--hero"
+      >
+        <p>{t('aviso.banderas')}</p>
+      </InfoDatos>
     </div>
   );
 };

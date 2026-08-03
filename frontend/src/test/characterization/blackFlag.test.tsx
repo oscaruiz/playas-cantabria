@@ -62,7 +62,7 @@ it('la tarjeta de Cruz Roja conserva el valor negro recibido', async () => {
     route: '/playas/3906002',
     path: '/playas/:codigo',
   });
-  await screen.findByText('Cruz Roja');
+  await screen.findByText('Cruz Roja', { selector: '.card-header-title' });
 
   expect(screen.queryByText('Información de Cruz Roja aún no disponible')).not.toBeInTheDocument();
   expect(screen.getByText('Negra')).toBeInTheDocument();

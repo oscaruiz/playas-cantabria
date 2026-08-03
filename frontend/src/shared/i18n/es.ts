@@ -46,6 +46,7 @@ export const es = {
 
   // ---- Install as an app (PWA) ----
   'instalar.chip': 'Instalar app',
+  'instalar.abrir': 'Abrir app',
   'instalar.iosTitulo': 'Añadir a la pantalla de inicio',
   'instalar.iosPaso1': 'Toca el botón Compartir de la barra del navegador.',
   'instalar.iosPaso2': 'Elige «Añadir a pantalla de inicio».',
@@ -258,9 +259,59 @@ export const es = {
   'landing.playas-para-surf.titulo': TEXTOS_LANDINGS['playas-para-surf'].titulo,
   'landing.playas-para-surf.intro': TEXTOS_LANDINGS['playas-para-surf'].intro,
 
+  // ---- Atribuciones exigidas por cada fuente ----
+  // El `{fuente}` de cada frase es el nombre acreditado, y va enlazado a los
+  // términos de esa fuente. La frase de AEMET es la suya, literal: solo se le
+  // añade detrás el crédito enlazado.
+  'atribucion.aemet':
+    'Información elaborada utilizando, entre otras, la obtenida de la Agencia Estatal de Meteorología. Fuente: {fuente}.',
+  'atribucion.openweather': 'Datos meteorológicos proporcionados por {fuente}.',
+  'atribucion.openmeteo':
+    'Datos meteorológicos de {fuente}, adaptados por Playas {region}: se transforman para calcular la puntuación.',
+  'atribucion.banderas': 'Estado de las banderas publicado por {fuente}.',
+  'atribucion.independiente':
+    'Playas {region} es un proyecto independiente: ninguna de estas fuentes lo respalda ni colabora con él.',
+
+  // ---- Etiquetas del control ⓘ ----
+  // Cortas y por CONTENIDO: quien ve la ficha tiene que poder decidir cuál
+  // abrir sin abrirlas. Un rótulo genérico repetido en cinco tarjetas no
+  // distingue el aviso de seguridad del crédito de una fuente.
+  'info.aviso': 'Aviso',
+  'info.fuente': 'Fuente',
+  'info.sobreDatos': 'Sobre estos datos',
+  // El nombre accesible sí dice a qué bloque pertenece: con cinco botones en
+  // la pantalla, «Aviso» a secas no ubica a quien navega con lector.
+  'info.aria.bandera': 'Aviso sobre la bandera',
+  'info.aria.ranking': 'Aviso sobre la recomendación',
+  'info.aria.prevision': 'Fuente de la previsión',
+  'info.aria.horas': 'Fuente de las próximas horas',
+  'info.aria.vigilancia': 'Fuente del servicio de vigilancia',
+  'info.aria.ficha': 'Sobre los datos de esta ficha',
+
+  // ---- Avisos junto a la información sensible ----
+  // Uno por pantalla y pegado a lo que matiza: la bandera y la puntuación son
+  // lo único sobre lo que alguien decide meterse al agua.
+  'aviso.banderas':
+    'Información orientativa y potencialmente desactualizada. Comprueba siempre la bandera presente en la playa y sigue las indicaciones del personal de vigilancia y de las autoridades.',
+  'aviso.ranking':
+    'Recomendación automática basada en previsiones y datos disponibles. No garantiza la seguridad ni las condiciones reales de la playa.',
+
   // ---- Data provenance ----
+  'datos.fuente': 'Datos de {fuente}',
+  // Retirada por antigüedad: el valor no se envejece con un aviso, se quita.
+  'datos.noDisponible': 'Dato no disponible: la última observación es de hace demasiado tiempo,',
+  // Naturaleza de lo que se enseña. «Estimado» es lo único que no se deduce
+  // mirando la pantalla, así que es lo único que se nombra valor por valor.
+  'datos.estimados': 'Valores estimados a partir de otros datos: {campos}.',
+  'datos.estimado.sensacion': 'sensación térmica',
+  'datos.estimado.viento': 'viento',
+  'datos.estimado.oleaje': 'oleaje',
+  'datos.estimado.uv': 'índice UV',
+  'datos.estimado.agua': 'temperatura del agua',
+  // Caché: la respuesta puede ser bastante más vieja que la petición.
+  'datos.calculado': 'Datos calculados el',
+  'datos.desdeCache': 'servidos desde caché',
   'datos.enDirectoFuente': 'Observación en directo de {fuente}',
-  'datos.estatico': 'Información fija de la playa, no cambia a diario',
   'datos.webcamExterna': 'Servicio externo: la app no comprueba si emite',
 
   // ---- Tides ----

@@ -1,7 +1,16 @@
 import { buildRegionApiUrl } from '../shared/config/api';
 
 const PLAYAS_FALLBACK_TIMEOUT_MS = 2500;
+/** The catalog: names, coordinates and services. It does not change during a visit. */
 const CLIENT_CACHE_TTL_MS = 5 * 60 * 1000;
+/**
+ * The ranking DOES change, and it is the sky the home page shows. It is kept
+ * on the same 60 s window the backend gives to `/featured` and `/details`: the
+ * bug this closes was the home page showing the sky from ten minutes earlier
+ * (5 min of backend cache plus 5 min of this one) while the detail of the same
+ * beach, one tap later, showed the current one.
+ */
+const FEATURED_CACHE_TTL_MS = 60 * 1000;
 
 const CLAVE_PLAYAS_GUARDADAS = 'playas:ultimoListado';
 /** After a day, the saved copy stops being better than the build's JSON. */
@@ -266,6 +275,14 @@ export interface DatosAEMET {
 // ------------------------------
 // Weather forecast
 // ------------------------------
+/**
+ * A value of the day nobody measured and no model forecast: the backend
+ * derived it (waves from wind, sensation from temperature, UV from
+ * cloudiness) or filled it with a default (water). The list travels so the UI
+ * can stop showing a guess with the same face as an observation.
+ */
+export type CampoEstimado = 'sensacion' | 'viento' | 'oleaje' | 'uv' | 'agua';
+
 export interface PrediccionDia {
   summary: string;
   temperature: number;
@@ -275,6 +292,8 @@ export interface PrediccionDia {
   waves: string;
   uvIndex?: number;
   icon: string;
+  /** Optional: a backend that predates it simply marks nothing. */
+  estimados?: CampoEstimado[] | null;
 }
 
 export interface DatosClima {
@@ -412,6 +431,15 @@ export interface PlayaDetalle {
 
   // Beach webcam (may be absent). External link only.
   webcam?: WebcamPlaya | null;
+
+  /**
+   * When the backend ASSEMBLED this payload, not when it answered. The details
+   * endpoint serves from a stale-while-revalidate cache, so a response can be
+   * much older than the request that got it — this is the only way to tell the
+   * user which of the two they are looking at. Optional: an older backend
+   * sends nothing and the UI simply says nothing.
+   */
+  generadoEn?: string | null;
 }
 
 /**
@@ -541,7 +569,7 @@ export async function getFeaturedBeaches(
       return res.json() as Promise<FeaturedBeachesResponse>;
     })
     .then((value) => {
-      featuredCache = { value, expiresAt: Date.now() + CLIENT_CACHE_TTL_MS };
+      featuredCache = { value, expiresAt: Date.now() + FEATURED_CACHE_TTL_MS };
       return value;
     })
     .finally(() => {

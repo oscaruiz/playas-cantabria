@@ -5,7 +5,9 @@ import { PrevisionHora } from '../../services/api';
 import { useIdioma } from '../../shared/i18n/IdiomaContext';
 import { horaLocalMadrid } from '../../shared/format/tiempo';
 import { procedenciaPrevisionHoras } from '../../features/provenance/procedencia';
-import { SourceAndFreshness } from '../../features/provenance/SourceAndFreshness';
+import { atribucionDeFuente } from '../../features/provenance/atribuciones';
+import { AttributionNote, SourceAndFreshness } from '../../features/provenance/SourceAndFreshness';
+import InfoDatos from '../../features/provenance/InfoDatos';
 
 /** Cloud cover → the same three states the score uses (clear / scattered / broken). */
 function iconoDeNubes(pct: number | null): string {
@@ -61,13 +63,19 @@ const ProximasHoras: React.FC<{
           </li>
         ))}
       </ul>
-      {/* Quién lo pronostica. Misma frase que el pie de la ficha, para no
-          inventar una segunda forma de decir lo mismo. The API sends no
-          emission time for the outlook, so none is shown. */}
-      <SourceAndFreshness
-        procedencia={procedenciaPrevisionHoras(fuente)}
-        className="proximas-horas-fuente"
-      />
+      {/* Quién lo pronostica, y qué hacemos con ello: estas mismas horas
+          alimentan la puntuación, así que la licencia obliga a decir que los
+          datos van adaptados. Esa nota ya acredita y enlaza la fuente, de modo
+          que el crédito genérico solo sale cuando no hay nota — repetirlo
+          sería decir dos veces lo mismo. The API sends no emission time for
+          the outlook, so none is shown either way. */}
+      <InfoDatos etiqueta="info.fuente" aria="info.aria.horas" className="proximas-horas-fuente">
+        {atribucionDeFuente(fuente)?.nota ? (
+          <AttributionNote fuente={fuente} />
+        ) : (
+          <SourceAndFreshness procedencia={procedenciaPrevisionHoras(fuente)} />
+        )}
+      </InfoDatos>
     </section>
   );
 };
