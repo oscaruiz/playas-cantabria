@@ -14,7 +14,7 @@
  * with no variable puts Cantabria back.
  */
 
-import { copyFile, readFile, writeFile, mkdir } from 'node:fs/promises';
+import { copyFile, readFile, writeFile, mkdir, rm } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { readdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
@@ -69,20 +69,56 @@ await writeFile(
   'utf8',
 );
 
+/**
+ * The region's icon, if it ships one: `regions/<id>/icon.png`, square and 512px
+ * (the size the manifest declares and the one an installed app uses for its
+ * splash). It is copied verbatim — this script cannot resize anything without
+ * dragging an image library into the build, and every consumer downscales.
+ *
+ * A region without an icon keeps the generic `favicon.svg`, which is a real
+ * case and not a broken one: the Cantabrian lábaro must not end up as the
+ * icon of Asturias just because Cantabria was built first.
+ */
+const iconoRegion = path.join(regionDir, 'icon.png');
+const iconoPublico = path.join(frontendRoot, 'public/icon.png');
+const tieneIcono = existsSync(iconoRegion);
+if (tieneIcono) {
+  await copyFile(iconoRegion, iconoPublico);
+} else if (existsSync(iconoPublico)) {
+  // Deleted, not left behind: `public/` is copied verbatim into the build, so
+  // the previous region's icon would otherwise ship inside this one — unused
+  // but present, and downloadable at /icon.png.
+  await rm(iconoPublico);
+}
+
+const iconosManifest = tieneIcono
+  ? [
+      {
+        src: 'icon.png',
+        type: 'image/png',
+        sizes: '512x512',
+        // The symbol sits inside a full-bleed background, which is exactly what
+        // a maskable icon needs: Android can crop it to any shape without
+        // eating into the drawing.
+        purpose: 'any maskable',
+      },
+    ]
+  : [
+      {
+        src: 'favicon.svg',
+        type: 'image/svg+xml',
+        sizes: 'any',
+        purpose: 'any',
+      },
+    ];
+
 // The manifest is what the browser reads to install the PWA: name, colours and
 // icon have to be the region's, or every region would install as "Cantabria".
 const manifest = {
   short_name: region.branding.shortName,
   name: region.branding.appName,
   description: `Estado de las playas de ${region.name}: tiempo, banderas y mareas.`,
-  icons: [
-    {
-      src: 'favicon.svg',
-      type: 'image/svg+xml',
-      sizes: 'any',
-      purpose: 'any',
-    },
-  ],
+  icons: iconosManifest,
   start_url: '.',
   scope: '.',
   display: 'standalone',
@@ -129,6 +165,25 @@ for (const pattern of shellRules) {
   }
   indexHtml = indexHtml.replace(pattern, (_m, open, close) => `${open}${shellTitle}${close}`);
 }
+
+/**
+ * The icon links live between markers instead of being matched by tag: the
+ * region decides HOW MANY there are (a PNG also declares an apple-touch-icon,
+ * the SVG fallback does not), and a marked block stays idempotent whichever
+ * region was synchronized last.
+ */
+const bloqueIcono = tieneIcono
+  ? '<link rel="icon" type="image/png" href="/icon.png" />\n    <link rel="apple-touch-icon" href="/icon.png" />'
+  : '<link rel="icon" type="image/svg+xml" href="/favicon.svg" />';
+const patronIcono = /(<!-- icono:inicio -->)[\s\S]*?(<!-- icono:fin -->)/;
+if (!patronIcono.test(indexHtml)) {
+  throw new Error('public/index.html no longer has the icono:inicio/icono:fin markers');
+}
+indexHtml = indexHtml.replace(
+  patronIcono,
+  (_m, abre, cierra) => `${abre}\n    ${bloqueIcono}\n    ${cierra}`,
+);
+
 await writeFile(indexPath, indexHtml, 'utf8');
 
 process.stdout.write(`[sync-region] ${region.name} (${region.id})\n`);

@@ -43,7 +43,7 @@ jobs:
         env:
           CI: "true"
       - name: Verify committed Cantabria artifacts
-        run: git diff --exit-code -- src/data/beaches.json src/data/region.json public/manifest.json public/index.html
+        run: git diff --exit-code -- src/data/beaches.json src/data/region.json public/manifest.json public/index.html public/icon.png
 
   # Gate on the contributed DATA, separate from the engine's tests: it is what
   # a region PR actually changes, and what can break every other region.
