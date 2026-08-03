@@ -6,7 +6,6 @@ import { rutaMunicipio } from '../../shared/seo/landings';
 import { getActiveAttrs } from '../../utils/beachHelpers';
 import { useIdioma } from '../../shared/i18n/IdiomaContext';
 import { ClaveTexto } from '../../shared/i18n/es';
-import { DataStatus } from '../../features/provenance/SourceAndFreshness';
 import { traducirTextoApi } from '../../shared/i18n/apiText';
 
 /** Static editorial data: dimensions, sand, access, parking, bus, hospital. */
@@ -81,7 +80,6 @@ export const BeachInfoSection: React.FC<{ datos: PlayaDetalleData }> = ({ datos 
           </div>
         )}
       </div>
-      <DataStatus clave="datos.estatico" />
     </section>
   );
 };
@@ -105,7 +103,6 @@ export const BeachAttributesSection: React.FC<{ atributos: PlayaDetalleData['atr
           );
         })}
       </div>
-      <DataStatus clave="datos.estatico" />
     </section>
   );
 };
