@@ -37,6 +37,12 @@ export const en = {
   'fav.vacio': 'No favorite beaches yet. Tap the star on a beach to save it here.',
   'home.favoritas': 'Your favorite beaches',
 
+  // ---- Install as an app (PWA) ----
+  'instalar.chip': 'Install app',
+  'instalar.iosTitulo': 'Add to Home Screen',
+  'instalar.iosPaso1': 'Tap the Share button in the browser bar.',
+  'instalar.iosPaso2': 'Choose "Add to Home Screen".',
+
   // ---- Home ----
   'home.subtitulo': 'Discover the best beaches in {region}',
   'home.mediaTemp': '{temp}° average',

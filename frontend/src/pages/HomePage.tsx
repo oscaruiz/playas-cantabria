@@ -30,6 +30,7 @@ import TrendBadge from '../components/TrendBadge';
 import { rutaPlaya } from '../shared/seo/beachUrls';
 import SeoHead from '../shared/seo/SeoHead';
 import { useFavoritas } from '../modules/favorites';
+import { BotonInstalar } from '../modules/instalacion';
 import './HomePage.css';
 
 /**
@@ -114,6 +115,8 @@ const HeroBody: React.FC<{
             <FreshnessLabel instante={actualizadoMs} />
           </span>
         )}
+        {/* Renders nothing unless this browser can really install the app. */}
+        <BotonInstalar className="hp-badge" />
       </div>
     </div>
   );

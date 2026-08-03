@@ -44,6 +44,12 @@ export const es = {
   'fav.vacio': 'Aún no tienes playas favoritas. Toca la estrella de una playa para guardarla aquí.',
   'home.favoritas': 'Tus playas favoritas',
 
+  // ---- Install as an app (PWA) ----
+  'instalar.chip': 'Instalar app',
+  'instalar.iosTitulo': 'Añadir a la pantalla de inicio',
+  'instalar.iosPaso1': 'Toca el botón Compartir de la barra del navegador.',
+  'instalar.iosPaso2': 'Elige «Añadir a pantalla de inicio».',
+
   // ---- Home ----
   'home.subtitulo': 'Descubre las mejores playas de {region}',
   'home.mediaTemp': '{temp}° media',
