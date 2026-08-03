@@ -79,6 +79,7 @@ export type MotivoDecision =
   | 'estacion-lejos'
   | 'estacion-lejos-para-mejorar'
   | 'sin-segundo-testigo'
+  | 'sin-consenso'
   | 'lloviendo'
   | 'modelo-ya-nublado'
   | 'sol-suficiente';
@@ -110,6 +111,20 @@ function nivelPara(fraccion: number): NivelCorregido | null {
   if (fraccion < UMBRAL_MUY_NUBOSO) return 'muyNuboso';
   if (fraccion <= UMBRAL_SIN_TOCAR) return 'dispersas';
   return null;
+}
+
+/**
+ * Whether two stations flatly disagree about the sky.
+ *
+ * "Disagree" is not any gap: it is one seeing a genuinely covered sky and the
+ * other genuinely abundant sun — the two ends the module already treats as
+ * unambiguous, with its own inconclusive band in between. Two readings
+ * straddling that band are not sensor noise, they are a contradiction.
+ */
+function seContradicen(a: SunshineObservation, b: SunshineObservation): boolean {
+  const cubierto = (o: SunshineObservation) => o.fraccion < UMBRAL_MUY_NUBOSO;
+  const soleado = (o: SunshineObservation) => o.fraccion > UMBRAL_SIN_TOCAR;
+  return (cubierto(a) && soleado(b)) || (soleado(a) && cubierto(b));
 }
 
 function modeloDiceLluvia(weather: Weather): boolean {
@@ -166,6 +181,33 @@ export function decidirCorreccionCielo(
   if (observacion.distanciaKm > MAX_KM_MEJORA_EXCEPCIONAL) {
     return { aplicar: false, motivo: 'estacion-lejos', ...base };
   }
+
+  // 4 bis. Consensus. The nearest station decides, and below KM_SIN_CORROBORAR
+  // nobody used to check it — which left the corrector at its most confident
+  // exactly where a peer WAS available to contradict it.
+  //
+  // The Cantabrian coast has two sunshine stations 7 km apart (Santander
+  // Aeropuerto and Santander CMT). On 3-aug they reported 0 and 54 minutes of
+  // sun in the same hour, and since almost every beach has one of them under
+  // 30 km, the verdict was decided by geometry: 36 of the 46 beaches were
+  // corrected on the word of a station its own neighbour flatly denied.
+  //
+  // Requiring two witnesses only beyond 30 km protected the far case, where
+  // one would distrust a lone station anyway, and left the near one open. So
+  // the check now runs whenever a usable witness EXISTS, at any distance.
+  //
+  // It does not disarm the case the corrector was built for: on 29-jul the
+  // whole coast recorded zero sun, the stations agreed, and the correction
+  // still fires. This only stops it when its own witnesses are fighting.
+  const discrepante = observaciones.find(
+    (o) =>
+      o.idema !== observacion.idema
+      && o.distanciaKm <= MAX_KM_PARA_EMPEORAR
+      && ctx.ahora - o.observadoEn <= FRESCURA_MAX_MS
+      && o.observadoEn - ctx.ahora <= FUTURO_MAX_MS
+      && seContradicen(observacion, o),
+  );
+  if (discrepante) return { aplicar: false, motivo: 'sin-consenso', ...base };
 
   // 5. Low sunshine can expose swallowed stratus. Very high sunshine can also
   // disprove a cloudy current observation; the gap between both thresholds is
