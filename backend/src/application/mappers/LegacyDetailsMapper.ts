@@ -6,6 +6,17 @@ import { Weather } from '../../domain/entities/Weather';
 import { HourlyOutlookSlot, RainNowcast } from '../../domain/entities/RainNowcast';
 import { RainForecastSignal } from '../../domain/use-cases/RainForecast';
 
+/**
+ * A value of the day that nobody measured and no model forecast: this backend
+ * DERIVED it from another value (waves from wind, thermal sensation from
+ * temperature, UV from cloudiness) or filled it with a default (water).
+ *
+ * It travels because the client cannot tell the difference by looking at the
+ * number, and showing a derived value as if it were an observation is the one
+ * thing a beach app must not do.
+ */
+export type CampoEstimado = 'sensacion' | 'viento' | 'oleaje' | 'uv' | 'agua';
+
 export type ClimaDiaDTO = {
   summary: string | null;
   temperature: number | null;
@@ -15,6 +26,8 @@ export type ClimaDiaDTO = {
   waves: string | null;
   uvIndex: number | null;
   icon: number | null;
+  /** Fields of this day that were derived, not observed or forecast. */
+  estimados?: CampoEstimado[];
 };
 
 export type ClimaDTO = {
@@ -139,6 +152,13 @@ export type LegacyDetailsDTO = {
   fuenteBanderas: string | null;
   cruzRoja: CruzRojaDTO | null;
   prediccionCompleta: PrediccionCompletaDTO | null;
+  /**
+   * When this payload was actually ASSEMBLED, not when it was served. The
+   * details endpoint answers from a stale-while-revalidate cache, so a
+   * response can be minutes or hours older than the request that got it — and
+   * only this field lets the client say so instead of implying "just now".
+   */
+  generadoEn?: string;
 };
 
 export class LegacyDetailsMapper {
@@ -235,6 +255,9 @@ export class LegacyDetailsMapper {
       waves: null,
       uvIndex: null,
       icon: this.iconToLegacy(w.source, w.icon),
+      // The wind DESCRIBES a measured speed; the sensation is derived from the
+      // temperature, and nobody reported it.
+      ...(w.temperatureC != null ? { estimados: ['sensacion' as const] } : {}),
     };
     return {
       fuente: w.source,

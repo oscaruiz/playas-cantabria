@@ -4,6 +4,7 @@ import {
   LegacyDetailsMapper,
   ClimaDTO,
   ClimaDiaDTO,
+  CampoEstimado,
   LluviaDTO,
   PrediccionCompletaDTO,
 } from '../mappers/LegacyDetailsMapper';
@@ -63,6 +64,17 @@ export class LegacyDetailsAssembler {
   // -----------------------------------------------------------------------
   // Helpers shared across fallback layers
   // -----------------------------------------------------------------------
+
+  /**
+   * Adds a field to a day's `estimados` without duplicating it. Every place
+   * that DERIVES a value has to go through here, or the client will show a
+   * guess with the same face as a measurement.
+   */
+  private marcarEstimado(dia: ClimaDiaDTO, ...campos: CampoEstimado[]): ClimaDiaDTO {
+    const ya = new Set(dia.estimados ?? []);
+    campos.forEach((c) => ya.add(c));
+    return { ...dia, estimados: [...ya] };
+  }
 
   private wavesFromWind(windMs: number | null): string | null {
     if (windMs == null) return null;
@@ -280,6 +292,10 @@ export class LegacyDetailsAssembler {
           lluvia?.status === 'raining',
           Date.now(),
           lluvia?.outlook,
+          // Shared with the listing: whoever gets here first decides, and the
+          // other screen shows the same sky instead of its own.
+          this.cache,
+          this.regionId,
         ) ?? now;
       base.tiempoActual = LegacyDetailsMapper.mapTiempoActual(conCieloReal);
     } catch {
@@ -383,6 +399,13 @@ export class LegacyDetailsAssembler {
 
       const chosenTemp = existing?.temperature ?? owTomorrow.temperatureC ?? null;
 
+      // Whatever AEMET did not fill is DERIVED here from the temperature and
+      // the wind; each fallback that actually fires has to say so.
+      const derivados: CampoEstimado[] = [];
+      if (!existing?.sensation && this.sensationFromTemp(chosenTemp)) derivados.push('sensacion');
+      if (!existing?.wind && this.guessWind(owTomorrow.windSpeedMs)) derivados.push('viento');
+      if (!existing?.waves && this.wavesFromWind(owTomorrow.windSpeedMs)) derivados.push('oleaje');
+
       const manana: ClimaDiaDTO = {
         summary: existing?.summary ?? owSummary ?? null,
         temperature: chosenTemp,
@@ -392,15 +415,17 @@ export class LegacyDetailsAssembler {
         waves: existing?.waves ?? this.wavesFromWind(owTomorrow.windSpeedMs),
         uvIndex: existing?.uvIndex ?? null,
         icon: existing?.icon ?? mapIcon(owTomorrow.icon) ?? null,
+        ...(existing?.estimados ? { estimados: existing.estimados } : {}),
       };
+      const mananaMarcada = derivados.length > 0 ? this.marcarEstimado(manana, ...derivados) : manana;
 
       base.clima = base.clima
-        ? { ...base.clima, manana }
+        ? { ...base.clima, manana: mananaMarcada }
         : {
             fuente: 'OpenWeather',
             ultimaActualizacion: new Date(owTomorrow.timestamp).toISOString(),
-            hoy: manana,
-            manana,
+            hoy: mananaMarcada,
+            manana: mananaMarcada,
           };
     } catch {
       // forecast failed -> keep current value
@@ -420,6 +445,11 @@ export class LegacyDetailsAssembler {
         mananaUv = base.clima.manana ? (mananaUv ?? uvOpenMeteo.tomorrow ?? null) : null;
       }
 
+      // Only the cloudiness branch ESTIMATES: AEMET's index is a forecast and
+      // Open-Meteo's is a model's, so neither is marked.
+      let hoyUvEstimado = false;
+      let mananaUvEstimado = false;
+
       if (hoyUv == null || (base.clima.manana && mananaUv == null)) {
         try {
           const clouds = await this.openWeather.getCloudinessTodayAndTomorrow(
@@ -430,13 +460,22 @@ export class LegacyDetailsAssembler {
             if (c == null) return null;
             return Math.max(1, Math.round(10 * (1 - c / 100)));
           };
-          hoyUv = hoyUv ?? est(clouds.today);
-          mananaUv = base.clima.manana ? (mananaUv ?? est(clouds.tomorrow)) : null;
+          if (hoyUv == null && est(clouds.today) != null) {
+            hoyUv = est(clouds.today);
+            hoyUvEstimado = true;
+          }
+          if (base.clima.manana && mananaUv == null && est(clouds.tomorrow) != null) {
+            mananaUv = est(clouds.tomorrow);
+            mananaUvEstimado = true;
+          }
+          mananaUv = base.clima.manana ? mananaUv : null;
         } catch {}
       }
 
-      const hoy = { ...base.clima.hoy, uvIndex: hoyUv };
-      const manana = base.clima.manana ? { ...base.clima.manana, uvIndex: mananaUv } : null;
+      let hoy: ClimaDiaDTO = { ...base.clima.hoy, uvIndex: hoyUv };
+      if (hoyUvEstimado) hoy = this.marcarEstimado(hoy, 'uv');
+      let manana = base.clima.manana ? { ...base.clima.manana, uvIndex: mananaUv } : null;
+      if (manana && mananaUvEstimado) manana = this.marcarEstimado(manana, 'uv');
       base.clima = { ...base.clima, hoy, manana };
     }
 
@@ -445,21 +484,33 @@ export class LegacyDetailsAssembler {
       if (base.clima && !base.clima.hoy.waves) {
         const waves = this.wavesFromWind(details.weather?.windSpeedMs ?? null);
         if (waves) {
-          base.clima = { ...base.clima, hoy: { ...base.clima.hoy, waves } };
+          base.clima = {
+            ...base.clima,
+            hoy: this.marcarEstimado({ ...base.clima.hoy, waves }, 'oleaje'),
+          };
         }
       }
     } catch {}
 
-    // Step 7: Water temperature fallback
+    // Step 7: Water temperature fallback. The default is not a measurement of
+    // anything: it is a plausible summer number so the row is not empty, and
+    // it is marked as estimated precisely because it is indistinguishable
+    // from a real reading once it is on screen.
     try {
       const DEFAULT_WATER_TEMP = 22;
       if (base.clima) {
+        const hoyPorDefecto = base.clima.hoy.waterTemperature == null;
+        const mananaPorDefecto = base.clima.manana != null && base.clima.manana.waterTemperature == null;
         const hoyWT = base.clima.hoy.waterTemperature ?? DEFAULT_WATER_TEMP;
         const mananaWT = base.clima.manana ? (base.clima.manana.waterTemperature ?? DEFAULT_WATER_TEMP) : null;
+        const hoy: ClimaDiaDTO = { ...base.clima.hoy, waterTemperature: hoyWT };
+        const manana = base.clima.manana
+          ? { ...base.clima.manana, waterTemperature: mananaWT }
+          : null;
         base.clima = {
           ...base.clima,
-          hoy: { ...base.clima.hoy, waterTemperature: hoyWT },
-          manana: base.clima.manana ? { ...base.clima.manana, waterTemperature: mananaWT } : null,
+          hoy: hoyPorDefecto ? this.marcarEstimado(hoy, 'agua') : hoy,
+          manana: manana && mananaPorDefecto ? this.marcarEstimado(manana, 'agua') : manana,
         };
       }
     } catch {}
@@ -526,6 +577,12 @@ export class LegacyDetailsAssembler {
     ) {
       base.prediccionCompleta = null;
     }
+
+    // Stamped HERE, at the end of the only path that really calls the
+    // providers. `assemble` answers from a stale-while-revalidate cache, so
+    // this is the difference between "computed just now" and "served from a
+    // copy made two hours ago" — which the client cannot deduce on its own.
+    base.generadoEn = new Date().toISOString();
 
     return base;
   }

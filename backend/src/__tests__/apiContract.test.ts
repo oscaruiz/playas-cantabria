@@ -274,6 +274,8 @@ describe('API contract — GET /api/beaches/:id/details', () => {
           waves: 'tranquilo',
           uvIndex: 6,
           icon: 120,
+          // No `estimados`: AEMET reported sensation, wind, waves, water and
+          // UV, so nothing here was derived by us.
         },
         manana: null,
       },
@@ -305,6 +307,9 @@ describe('API contract — GET /api/beaches/:id/details', () => {
         mareas: [{ pleamar: ['04:30', '16:50'], bajamar: ['10:40', '23:00'] }],
         fuenteMareas: '*Puerto de Santander',
       },
+      // When the backend ASSEMBLED this, which is not when it served it: the
+      // endpoint answers from a stale-while-revalidate cache.
+      generadoEn: expect.any(String),
     });
   });
 
@@ -349,6 +354,10 @@ describe('API contract — GET /api/beaches/:id/details', () => {
           waves: 'moderado',
           uvIndex: null,
           icon: 200,
+          // Nobody reported these three: the sensation comes from the
+          // temperature, the waves from the wind and the water is the default.
+          // Without this list they would look measured on screen.
+          estimados: ['sensacion', 'oleaje', 'agua'],
         },
         manana: null,
       },
@@ -357,6 +366,7 @@ describe('API contract — GET /api/beaches/:id/details', () => {
       fuenteBanderas: null,
       cruzRoja: null,
       prediccionCompleta: null,
+      generadoEn: expect.any(String),
     });
   });
 });
