@@ -20,7 +20,7 @@ import {
 import { rutaPlaya, encontrarPorSlugs } from '../shared/seo/beachUrls';
 import SeoHead, { urlCanonica } from '../shared/seo/SeoHead';
 import BottomNavBar from '../shared/ui/BottomNavBar';
-import SelectorIdioma from '../shared/ui/SelectorIdioma';
+import HeaderActions from '../shared/ui/HeaderActions';
 import './PlayaDetalle.css';
 import { useIdioma } from '../shared/i18n/IdiomaContext';
 import { isToday } from './playa-detalle/dates';
@@ -199,7 +199,7 @@ const PlayaDetallePage: React.FC = () => {
           <p className="pd-sticky-subtitle">{datos?.municipio || ''}</p>
         </div>
         {datos && <FavoriteButton codigo={datos.codigo} nombre={datos.nombre} />}
-        <SelectorIdioma />
+        <HeaderActions />
       </div>
 
       <IonContent>

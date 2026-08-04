@@ -5,7 +5,7 @@ import { ClaveTexto } from '../../shared/i18n/es';
 import SeoHead from '../../shared/seo/SeoHead';
 import { LANDINGS } from '../../shared/seo/landings';
 import BottomNavBar from '../../shared/ui/BottomNavBar';
-import SelectorIdioma from '../../shared/ui/SelectorIdioma';
+import HeaderActions from '../../shared/ui/HeaderActions';
 import BeachCard from '../../components/BeachCard';
 import { useCatalogo } from './useCatalogo';
 import { FreshnessLabel } from '../../features/provenance/SourceAndFreshness';
@@ -49,7 +49,7 @@ const LandingPlayas: React.FC<{ id: LandingId }> = ({ id }) => {
       <div className="home-sticky-header">
         <h1 className="home-sticky-title">{t(`landing.${id}.titulo` as ClaveTexto)}</h1>
         <p className="home-sticky-subtitle">{t('app.titulo')}</p>
-        <SelectorIdioma />
+        <HeaderActions />
       </div>
       <IonContent fullscreen>
         <div className="home-hero"><div className="home-hero-spacer" /></div>

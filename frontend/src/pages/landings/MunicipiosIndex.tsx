@@ -5,7 +5,7 @@ import { useIdioma } from '../../shared/i18n/IdiomaContext';
 import SeoHead from '../../shared/seo/SeoHead';
 import { resumenMunicipios } from '../../shared/seo/landings';
 import BottomNavBar from '../../shared/ui/BottomNavBar';
-import SelectorIdioma from '../../shared/ui/SelectorIdioma';
+import HeaderActions from '../../shared/ui/HeaderActions';
 import { useCatalogo } from './useCatalogo';
 import './landings.css';
 
@@ -35,7 +35,7 @@ const MunicipiosIndex: React.FC = () => {
       <div className="home-sticky-header">
         <h1 className="home-sticky-title">{t('municipios.titulo')}</h1>
         <p className="home-sticky-subtitle">{t('app.titulo')}</p>
-        <SelectorIdioma />
+        <HeaderActions />
       </div>
       <IonContent fullscreen>
         <div className="home-hero"><div className="home-hero-spacer" /></div>

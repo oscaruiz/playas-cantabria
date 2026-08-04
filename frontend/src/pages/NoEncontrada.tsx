@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { useIdioma } from '../shared/i18n/IdiomaContext';
 import SeoHead from '../shared/seo/SeoHead';
 import BottomNavBar from '../shared/ui/BottomNavBar';
-import SelectorIdioma from '../shared/ui/SelectorIdioma';
+import HeaderActions from '../shared/ui/HeaderActions';
 import './landings/landings.css';
 
 /**
@@ -23,7 +23,7 @@ const NoEncontrada: React.FC = () => {
       />
       <div className="home-sticky-header">
         <p className="home-sticky-title">{t('app.titulo')}</p>
-        <SelectorIdioma />
+        <HeaderActions />
       </div>
       <IonContent fullscreen>
         <div className="home-hero"><div className="home-hero-spacer" /></div>

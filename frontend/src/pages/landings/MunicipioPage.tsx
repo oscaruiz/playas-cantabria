@@ -7,7 +7,7 @@ import { useIdioma } from '../../shared/i18n/IdiomaContext';
 import SeoHead from '../../shared/seo/SeoHead';
 import { playasDeMunicipioSlug, rutaMunicipio } from '../../shared/seo/landings';
 import BottomNavBar from '../../shared/ui/BottomNavBar';
-import SelectorIdioma from '../../shared/ui/SelectorIdioma';
+import HeaderActions from '../../shared/ui/HeaderActions';
 import BeachCard from '../../components/BeachCard';
 import { useCatalogo } from './useCatalogo';
 import { FreshnessLabel } from '../../features/provenance/SourceAndFreshness';
@@ -58,7 +58,7 @@ const MunicipioPage: React.FC = () => {
           <p className="home-sticky-title">{nombreMunicipio ?? t('app.titulo')}</p>
           <p className="home-sticky-subtitle">{t('app.titulo')}</p>
         </div>
-        <SelectorIdioma />
+        <HeaderActions />
       </div>
       <IonContent fullscreen>
         <div className="home-hero"><div className="home-hero-spacer" /></div>

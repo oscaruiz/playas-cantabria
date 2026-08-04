@@ -37,7 +37,12 @@
     padding-right: max(20px, calc((100% - 1080px) / 2 + 20px));
   }
 
-  .mapa-sticky-header .selector-idioma {
+  /* El mismo margen que alinea el título a la izquierda, aplicado al borde
+     derecho: así las acciones acaban justo donde acaban las fichas y no
+     pegadas al filo de la ventana. Apunta a `.header-actions` porque el
+     selector de idioma vive dentro y allí es `static`; la regla que lo
+     apuntaba a él directamente ya no hacía nada. */
+  .mapa-sticky-header .header-actions {
     right: max(16px, calc((100% - 1080px) / 2 + 16px));
   }
 }

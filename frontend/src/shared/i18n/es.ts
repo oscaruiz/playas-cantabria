@@ -22,6 +22,13 @@ export const es = {
   'nav.inicio': 'Inicio',
   'nav.playas': 'Playas',
   'nav.mapa': 'Mapa',
+  'nav.informacion': 'Información del proyecto',
+  'nav.sobre': 'Sobre la app',
+  'nav.acerca': 'Acerca de y condiciones',
+  'nav.privacidad': 'Privacidad y almacenamiento',
+  /** Sufijo del nombre accesible en los enlaces que salen de la app. */
+  'nav.abreFuera': '(se abre fuera de la app)',
+  'nav.enviarEmail': 'Enviar email',
 
   // ---- Language selector ----
   'selector.idioma': 'Idioma',

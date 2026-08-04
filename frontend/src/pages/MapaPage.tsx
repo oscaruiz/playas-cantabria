@@ -3,7 +3,7 @@ import React, { Suspense, useEffect, useState } from 'react';
 import { Playa, FeaturedBeach, getPlayas, getFeaturedBeaches } from '../services/api';
 import { useIdioma } from '../shared/i18n/IdiomaContext';
 import BottomNavBar from '../shared/ui/BottomNavBar';
-import SelectorIdioma from '../shared/ui/SelectorIdioma';
+import HeaderActions from '../shared/ui/HeaderActions';
 import SeoHead from '../shared/seo/SeoHead';
 import './MapaPage.css';
 
@@ -50,10 +50,21 @@ const MapaPage: React.FC = () => {
         descripcion={t('seo.descMapa')}
         rutaCanonica="/mapa"
       />
-      <div className="mapa-sticky-header" onClick={() => window.location.reload()} style={{ cursor: 'pointer' }}>
-        <h1 className="mapa-sticky-title">{t('app.titulo')}</h1>
-        <p className="mapa-sticky-subtitle">{t('mapa.subtitulo')}</p>
-        <SelectorIdioma />
+      {/* Recargar al tocar el encabezado, pero SOLO sobre el título: cuando el
+          manejador estaba en el contenedor, el clic en la ⓘ y en el selector
+          de idioma burbujeaba hasta aquí y recargaba la página en vez de
+          abrir el menú. `.header-actions` va en absoluto, así que envolver el
+          texto no mueve nada. */}
+      <div className="mapa-sticky-header">
+        <div
+          className="mapa-sticky-marca"
+          onClick={() => window.location.reload()}
+          style={{ cursor: 'pointer' }}
+        >
+          <h1 className="mapa-sticky-title">{t('app.titulo')}</h1>
+          <p className="mapa-sticky-subtitle">{t('mapa.subtitulo')}</p>
+        </div>
+        <HeaderActions />
       </div>
 
       <IonContent className="mapa-content">

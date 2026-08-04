@@ -15,6 +15,12 @@ export const en = {
   'nav.inicio': 'Home',
   'nav.playas': 'Beaches',
   'nav.mapa': 'Map',
+  'nav.informacion': 'Project information',
+  'nav.sobre': 'About the app',
+  'nav.acerca': 'About and terms',
+  'nav.privacidad': 'Privacy and storage',
+  'nav.abreFuera': '(opens outside the app)',
+  'nav.enviarEmail': 'Send email',
 
   // ---- Language selector ----
   'selector.idioma': 'Language',
