@@ -56,15 +56,19 @@ const LegalPage: React.FC<{ tipo: 'acerca' | 'privacidad' }> = ({ tipo }) => {
   const { idioma, t } = useIdioma();
   const history = useHistory();
   const acerca = tipo === 'acerca';
-  const tituloEs = acerca ? 'Acerca de y condiciones' : 'Privacidad y almacenamiento';
-  const titulo = idioma === 'es' ? tituloEs : (acerca ? 'About and terms' : 'Privacy and storage');
-  const descripcion = idioma === 'es'
-    ? (acerca ? 'Información, condiciones, seguridad, fuentes y contacto de Playas Cantabria.' : 'Privacidad, geolocalización y almacenamiento local de Playas Cantabria.')
-    : (acerca ? 'Information, terms, safety, sources and contact for Playas Cantabria.' : 'Privacy, geolocation and local storage in Playas Cantabria.');
+  // Title and description come from the SAME templates the prerender bakes
+  // into the HTML (shared/seo/metadata.js), so the tag a crawler reads and the
+  // one the app sets cannot drift. They also carry `{region}`: the title used
+  // to say "Playas Cantabria" verbatim, which breaks the moment another region
+  // is built.
+  const titulo = t(acerca ? 'seo.tituloAcerca' : 'seo.tituloPrivacidad');
+  const descripcion = t(acerca ? 'seo.descAcerca' : 'seo.descPrivacidad');
+  // The heading is the title without the "| Playas <region>" suffix.
+  const encabezado = titulo.split(' | ')[0];
 
   return (
     <IonPage className="legal-page">
-      <SeoHead titulo={`${titulo} | Playas Cantabria`} descripcion={descripcion} rutaCanonica={acerca ? '/acerca-de' : '/privacidad'} />
+      <SeoHead titulo={titulo} descripcion={descripcion} rutaCanonica={acerca ? '/acerca-de' : '/privacidad'} />
       <header className="legal-header">
         <div className="legal-header-izq">
           {/* Estas páginas se abren desde el menú ⓘ de cualquier pantalla, así
@@ -88,7 +92,7 @@ const LegalPage: React.FC<{ tipo: 'acerca' | 'privacidad' }> = ({ tipo }) => {
           de inicio, y dejaba las acciones flotando en blanco sobre el crema. */}
       <IonContent>
         <main className="legal-main">
-          <h1>{titulo}</h1>
+          <h1>{encabezado}</h1>
           {idioma === 'es' ? (acerca ? <AcercaEs /> : <PrivacidadEs />) : <EnglishContent tipo={tipo} />}
         </main>
       </IonContent>

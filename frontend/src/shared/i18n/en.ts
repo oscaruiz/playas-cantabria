@@ -218,6 +218,12 @@ export const en = {
   'seo.descInicio': 'Compare {region} beaches right now: score, flag, weather and forecast to pick a beach today.',
   'seo.tituloLista': 'All the beaches of {region} | {region} Beaches',
   'seo.descLista': 'Full list of {region} beaches, with search, distance, flags and services.',
+  'seo.tituloAcerca': 'About and terms | {region} Beaches',
+  'seo.descAcerca':
+    'What {region} Beaches is, its independence, limits of liability, data sources and contact.',
+  'seo.tituloPrivacidad': 'Privacy and storage | {region} Beaches',
+  'seo.descPrivacidad':
+    'What {region} Beaches processes: optional geolocation, local storage, providers and your rights.',
   'seo.tituloMapa': '{region} beach map | {region} Beaches',
   'seo.descMapa': 'Interactive map with every beach in {region} and its status.',
   'seo.tituloDetalle': '{nombre}: flag, weather and tides today | {region} Beaches',

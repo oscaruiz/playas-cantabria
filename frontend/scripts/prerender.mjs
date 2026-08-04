@@ -251,6 +251,31 @@ try {
     generadas += 1;
   }
 
+  // Legal pages. Only the head and a summary are baked: the full text lives in
+  // LegalPage.tsx and copying it here would give it a second home, free to
+  // drift — and it is the text that promises how to exercise data-protection
+  // rights, so two versions of it is the last thing this needs. What matters
+  // is that a crawler stops receiving the HOME page's title and canonical for
+  // these URLs, which is what it got until now.
+  for (const [ruta, tituloKey, descKey] of [
+    ['/acerca-de', 'tituloAcerca', 'descAcerca'],
+    ['/privacidad', 'tituloPrivacidad', 'descPrivacidad'],
+  ]) {
+    const titulo = rellenar(PLANTILLAS_SEO[tituloKey], vars);
+    const descripcion = rellenar(PLANTILLAS_SEO[descKey], vars);
+    escribirRuta(
+      ruta,
+      titulo,
+      descripcion,
+      bloqueContenido(
+        `<h1>${escaparHtml(titulo.split(' | ')[0])}</h1>
+      <p>${escaparHtml(descripcion)}</p>
+      <p><em>El texto completo se carga al abrir la aplicación.</em></p>`
+      )
+    );
+    generadas += 1;
+  }
+
   // Municipalities index: the global access point to the 18 pages below.
   escribirRuta(
     '/municipios',
@@ -312,8 +337,9 @@ try {
 }
 
 // The count must be exact: a silently skipped beach is a missing page.
+// 4 fixed (home, list, map, municipalities index) + 2 legal.
 const esperadas =
-  4 + playas.length + municipiosDe(playas).length + landingsNoVacias(playas).length;
+  6 + playas.length + municipiosDe(playas).length + landingsNoVacias(playas).length;
 if (generadas !== esperadas) {
   console.error(`[prerender] generadas ${generadas} rutas, esperadas ${esperadas}.`);
   process.exit(1);
