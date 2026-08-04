@@ -46,7 +46,35 @@ function detectColor(alt: string): string | null {
   return null;
 }
 
+/** Pause between fiches: 69 POSTs back to back is what the WAF reads as a bot. */
+const PAUSA_MS = 400;
+/** Attempts per fiche. The block is intermittent, so a second try often lands. */
+const INTENTOS = 3;
+
+const dormir = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
 async function fetchOne(id: number): Promise<{ status: number | null; flag: StoredFlag | null; err?: string }> {
+  let ultimo: { status: number | null; flag: StoredFlag | null; err?: string } = {
+    status: null,
+    flag: null,
+    err: 'sin intentos',
+  };
+
+  for (let intento = 1; intento <= INTENTOS; intento++) {
+    ultimo = await fetchOneOnce(id);
+    // A fiche that answered is done — including a 200 with no flag, which is
+    // an answer ("No hay informacion"), not a failure to reach the site.
+    if (ultimo.status === 200) return ultimo;
+    // Only a block or a network error is worth insisting on. Backoff with
+    // jitter so the retries of 69 fiches do not line up into a new burst.
+    if (ultimo.status !== 403 && !ultimo.err) return ultimo;
+    if (intento < INTENTOS) await dormir(1000 * 2 ** (intento - 1) + Math.random() * 500);
+  }
+
+  return ultimo;
+}
+
+async function fetchOneOnce(id: number): Promise<{ status: number | null; flag: StoredFlag | null; err?: string }> {
   try {
     const resp = await axios.post(
       `${BASE}/fichaPlaya.do`,
@@ -96,7 +124,10 @@ async function main() {
   let blocked = 0;
   const statusCount: Record<string, number> = {};
 
+  let primera = true;
   for (const id of ids) {
+    if (!primera) await dormir(PAUSA_MS);
+    primera = false;
     const r = await fetchOne(id);
     const key = r.err ? `ERR:${r.err}` : String(r.status);
     statusCount[key] = (statusCount[key] ?? 0) + 1;
@@ -128,13 +159,19 @@ async function main() {
   // the hoisting (11:30 Madrid) or the site does not reflect it yet. Writing this
   // would overwrite the last good flags.json with "all Desconocida" and leave the
   // app without flags.
+  // Nada izado NO es un fallo de entrega: es lo que se ve antes del izado
+  // (11:30 Madrid) y fuera de temporada. Salia con codigo 1, asi que la pasada
+  // de las 11:30 —la primera del dia, justo en el izado— pintaba el workflow en
+  // rojo casi a diario y enterraba los fallos de verdad entre el ruido. Se
+  // conserva el ultimo estado bueno y se sale en verde; que la ausencia se
+  // prolongue lo vigila `flags-freshness`, que para eso esta.
   if (colored === 0) {
-    console.error(
+    console.warn(
       `\n⚠️  0 banderas con color (todas "No hay información"). Probablemente el scrape\n` +
         `   corrió ANTES del izado (11:30 Madrid) o la web no lo refleja todavía.\n` +
         `   No se sobrescribe flags.json para conservar el último estado bueno.`
     );
-    process.exit(1);
+    return;
   }
 
   const out = { generatedAt: new Date().toISOString(), flags };
