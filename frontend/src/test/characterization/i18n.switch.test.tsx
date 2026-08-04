@@ -76,7 +76,8 @@ describe('i18n — contenido que viene del backend', () => {
     expect(container.querySelector('.tide-status')).toHaveTextContent('Rising');
 
     // traducirTextoApi() — backend content, respecting the initial capital letter
-    expect(container.querySelector('.forecast-hero-sky')).toHaveTextContent('Clear sky');
+    // "cielo despejado" se normaliza a "Sol" y el diccionario lo traduce.
+    expect(container.querySelector('.forecast-hero-sky')).toHaveTextContent('Sun');
     expect(screen.getByText('Type').nextElementSibling).toHaveTextContent('Urban');
     expect(screen.getByText('Sand').nextElementSibling).toHaveTextContent('Golden sand');
     expect(screen.getByText('Access').nextElementSibling).toHaveTextContent('On foot · By car');

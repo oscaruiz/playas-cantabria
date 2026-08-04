@@ -4,6 +4,7 @@ import {
   emojiCielo,
   esLluviaActiva,
   lluviaPrevista,
+  palabraCielo,
 } from '../../utils/beachHelpers';
 import { horaLocalMadrid } from '../../shared/format/tiempo';
 import { capitalizar } from '../../shared/format/texto';
@@ -107,7 +108,10 @@ const ForecastHero: React.FC<{
   const skyText = capitalizar(tiempoActual?.cielo ?? dia.tarde.cielo ?? dia.manana.cielo ?? '');
   const viento = capitalizar(dia.tarde.viento ?? dia.manana.viento ?? '');
   const oleaje = capitalizar(dia.tarde.oleaje ?? dia.manana.oleaje ?? '');
-  const skyEmoji = emojiCielo(skyText || null);
+  // Solo la observación de HOY sabe si es de noche; una previsión de pasado
+  // mañana no describe un instante concreto, así que se pinta como día.
+  const esNoche = tiempoActual?.esNoche === true;
+  const skyEmoji = emojiCielo(skyText || null, esNoche);
 
   // The headline temperature is part of the same "right now" reading: if that
   // reading is too old, it falls back to the forecast maximum, and where there
@@ -150,7 +154,15 @@ const ForecastHero: React.FC<{
                 : t('detalle.lluviaPrevistaHoy')}
             </span>
           )}
-          {skyText && <span className="forecast-hero-sky">{traducirTextoApi(skyText, idioma)}</span>}
+          {/* La palabra de la app, no la del proveedor: la tarjeta de
+              puntuación de esta MISMA pantalla dice "Sol" y aquí se leía
+              "Cielo claro" para el mismo cielo. Si no la reconocemos, se
+              enseña el texto crudo antes que perder el dato. */}
+          {skyText && (
+            <span className="forecast-hero-sky">
+              {traducirTextoApi(palabraCielo(skyText, esNoche) ?? skyText, idioma)}
+            </span>
+          )}
           {dia.temperaturaAgua != null && (
             <span className="forecast-hero-agua">{t('detalle.aguaGrados', { temp: dia.temperaturaAgua })}</span>
           )}

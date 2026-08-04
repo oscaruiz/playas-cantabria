@@ -11,6 +11,8 @@ import {
   coincidePlaya,
   normalizarBusqueda,
   emojiCielo,
+  palabraCielo,
+  esNocheEn,
   operadorVigilancia,
 } from './beachHelpers';
 
@@ -78,22 +80,23 @@ describe('estadoBandera', () => {
     ).toBe('color');
   });
 
-  it("'color' con bandera de ayer tarde vista hoy a mediodía (≤24h, franja mañanera)", () => {
-    // Regression: the cron captured green yesterday 18:35 Madrid (16:35Z); today at 11:45
-    // Madrid (09:45Z) it is the freshest available and we are within hours → it is shown.
+  it("'sinDatos' con la bandera de ayer tarde vista hoy a mediodía", () => {
+    // Antes salía en color: con 24h, la captura de ayer 18:35 Madrid era la más
+    // fresca al abrir hoy. Son 17 h — nadie ha confirmado ese color desde ayer,
+    // así que no se pinta en ninguna pantalla.
     expect(
       estadoBandera(
         { ...cruzRoja, bandera: 'Verde', ultimaActualizacion: '2026-06-21T16:35:00Z' },
         new Date('2026-06-22T09:45:00Z')
       )
-    ).toBe('color');
+    ).toBe('sinDatos');
   });
 
-  it("'sinDatos' con bandera de hace más de 24h aunque sea dentro del horario (frescura)", () => {
+  it("'sinDatos' con bandera de más de 8h aunque sea dentro del horario (frescura)", () => {
     expect(
       estadoBandera(
-        { ...cruzRoja, bandera: 'Verde', ultimaActualizacion: '2026-06-21T09:00:00Z' },
-        new Date('2026-06-22T12:00:00Z') // 27h later
+        { ...cruzRoja, bandera: 'Verde', ultimaActualizacion: '2026-06-22T02:00:00Z' },
+        new Date('2026-06-22T12:00:00Z') // 10h después
       )
     ).toBe('sinDatos');
   });
@@ -122,13 +125,23 @@ describe('ultimaBanderaRegistrada', () => {
     expect(r?.registradaIso).toBe('2026-06-22T17:30:00.000Z'); // 19:30 Madrid
   });
 
-  it('antes del izado, la última bandera es la del cierre de ayer', () => {
-    // 09:00 Madrid (07:00Z), capture from that early morning → closed yesterday at 19:30.
+  it('antes del izado ya no se enseña la de ayer: pasa de 8h', () => {
+    // 09:00 Madrid (07:00Z). La bandera dejó de ondear ayer a las 19:30, hace
+    // 13,5 h. Se sigue diciendo "Fuera de horario", pero sin color.
     const r = ultimaBanderaRegistrada(
       { ...verde, ultimaActualizacion: '2026-06-22T05:00:00Z' },
       new Date('2026-06-22T07:00:00Z')
     );
-    expect(r?.registradaIso).toBe('2026-06-21T17:30:00.000Z');
+    expect(r).toBeNull();
+  });
+
+  it('la noche del mismo día sí: aún no han pasado 8h desde el cierre', () => {
+    // 23:00 Madrid (21:00Z): cerró a las 19:30, hace 3,5 h.
+    const r = ultimaBanderaRegistrada(
+      { ...verde, ultimaActualizacion: '2026-06-22T21:00:00Z' },
+      new Date('2026-06-22T21:00:00Z')
+    );
+    expect(r?.bandera).toBe('Verde');
   });
 
   it('conserva la hora exacta si la captura fue dentro del horario', () => {
@@ -148,11 +161,11 @@ describe('ultimaBanderaRegistrada', () => {
     ).toBeNull();
   });
 
-  it('null si el registro tiene más de 36h', () => {
+  it('null si el registro pasa de 8h', () => {
     expect(
       ultimaBanderaRegistrada(
-        { ...verde, ultimaActualizacion: '2026-06-20T16:00:00Z' }, // 18:00 Madrid on the 20th
-        new Date('2026-06-22T07:00:00Z') // 09:00 Madrid on the 22nd → 39h
+        { ...verde, ultimaActualizacion: '2026-06-20T16:00:00Z' }, // 18:00 Madrid del 20
+        new Date('2026-06-22T07:00:00Z') // 09:00 Madrid del 22
       )
     ).toBeNull();
   });
@@ -176,13 +189,14 @@ describe('ultimaBanderaRegistrada', () => {
 describe('esInfoReciente', () => {
   const ahora = new Date('2026-06-22T12:00:00Z'); // 14:00 Madrid, on the 22nd
 
-  it('true si la captura tiene ≤24h', () => {
+  it('true si la captura tiene ≤8h', () => {
     expect(esInfoReciente('2026-06-22T09:00:00Z', ahora)).toBe(true); // 3h
-    expect(esInfoReciente('2026-06-21T16:00:00Z', ahora)).toBe(true); // 20h
+    expect(esInfoReciente('2026-06-22T04:30:00Z', ahora)).toBe(true); // 7,5h
   });
 
-  it('false si la captura tiene más de 24h', () => {
-    expect(esInfoReciente('2026-06-21T09:00:00Z', ahora)).toBe(false); // 27h
+  it('false si la captura pasa de 8h', () => {
+    expect(esInfoReciente('2026-06-22T03:00:00Z', ahora)).toBe(false); // 9h
+    expect(esInfoReciente('2026-06-21T16:00:00Z', ahora)).toBe(false); // 20h
   });
 
   it('true (lenient) si el ISO no parsea', () => {
@@ -429,5 +443,100 @@ describe('operadorVigilancia', () => {
     // carry no field at all: they must keep showing what they always showed.
     expect(operadorVigilancia({})).toBe('Cruz Roja');
     expect(operadorVigilancia(undefined)).toBe('Cruz Roja');
+  });
+});
+
+/**
+ * One sky, one word.
+ *
+ * The listing and the detail described the same sky with two vocabularies —
+ * "Sol" against "cielo claro", "Parcialmente soleado" against "algo de
+ * nubes" — on 46 of 46 beaches, and both wordings appeared together on the
+ * detail page.
+ */
+describe('palabraCielo', () => {
+  it('da la misma palabra para los sinónimos de AEMET y de OpenWeather', () => {
+    // Lo que de verdad divergía: la portada decía la izquierda y el detalle
+    // imprimía la derecha.
+    expect(palabraCielo('cielo claro')).toBe('Sol');
+    expect(palabraCielo('despejado')).toBe('Sol');
+    expect(palabraCielo('algo de nubes')).toBe('Parcialmente soleado');
+    expect(palabraCielo('nubes dispersas')).toBe('Parcialmente soleado');
+    expect(palabraCielo('intervalos nubosos')).toBe('Parcialmente soleado');
+    expect(palabraCielo('muy nuboso')).toBe('Nublado');
+    expect(palabraCielo('cubierto')).toBe('Nublado');
+  });
+
+  it('el fenómeno manda sobre la nubosidad', () => {
+    // AEMET mete cobertura y precipitación en la misma cadena: mirar primero
+    // las nubes daría "Nublado" sobre un cielo que está lloviendo.
+    expect(palabraCielo('Cubierto con lluvia')).toBe('Lluvia');
+    expect(palabraCielo('Intervalos nubosos con lluvia escasa')).toBe('Lluvia');
+    expect(palabraCielo('chubascos tormentosos')).toBe('Tormenta');
+    expect(palabraCielo('Nuboso con niebla')).toBe('Niebla');
+  });
+
+  it('«parcialmente soleado» no se lee como despejado', () => {
+    expect(palabraCielo('parcialmente soleado')).toBe('Parcialmente soleado');
+  });
+
+  it('devuelve null en vez de inventar: el llamante enseña el texto crudo', () => {
+    expect(palabraCielo('calima')).toBeNull();
+    expect(palabraCielo('')).toBeNull();
+    expect(palabraCielo(null)).toBeNull();
+    expect(palabraCielo(undefined)).toBeNull();
+  });
+});
+
+/**
+ * Night.
+ *
+ * The provider's own icon carries the `d`/`n` suffix, so it follows the real
+ * sunset at those coordinates. Before this, a clear sky at 3 a.m. showed a
+ * sun and read "Sol".
+ */
+describe('cielo de noche', () => {
+  it('un cielo despejado de noche no es «Sol», es «Despejado»', () => {
+    expect(palabraCielo('cielo claro', true)).toBe('Despejado');
+    expect(palabraCielo('despejado', true)).toBe('Despejado');
+    expect(palabraCielo('algo de nubes', true)).toBe('Parcialmente despejado');
+  });
+
+  it('y lleva luna, no sol', () => {
+    expect(emojiCielo('cielo claro', true)).toBe('\u{1F319}');
+    expect(emojiCielo('algo de nubes', true)).toBe('\u{1F319}');
+    expect(emojiCielo(null, true)).toBe('\u{1F319}');
+  });
+
+  it('el fenómeno sigue mandando: de noche también llueve', () => {
+    expect(palabraCielo('Cubierto con lluvia', true)).toBe('Lluvia');
+    expect(emojiCielo('lluvia', true)).toBe('\u{1F327}\uFE0F');
+    expect(emojiCielo('niebla', true)).toBe('\u{1F32B}\uFE0F');
+  });
+
+  it('nublado no cambia: no había sol que quitar', () => {
+    expect(palabraCielo('muy nuboso', true)).toBe('Nublado');
+    expect(emojiCielo('muy nuboso', true)).toBe('\u2601\uFE0F');
+  });
+
+  it('de día se comporta igual que antes', () => {
+    expect(palabraCielo('cielo claro')).toBe('Sol');
+    expect(emojiCielo('cielo claro')).toBe('\u2600\uFE0F');
+    expect(emojiCielo('algo de nubes')).toBe('\u{1F324}\uFE0F');
+  });
+});
+
+describe('esNocheEn', () => {
+  it('lee el sufijo del icono del proveedor', () => {
+    expect(esNocheEn({ iconoClima: '01n' })).toBe(true);
+    expect(esNocheEn({ iconoClima: '04n' })).toBe(true);
+    expect(esNocheEn({ iconoClima: '01d' })).toBe(false);
+  });
+
+  it('sin icono asume de día en vez de inventar', () => {
+    expect(esNocheEn({ iconoClima: null })).toBe(false);
+    expect(esNocheEn({})).toBe(false);
+    expect(esNocheEn(null)).toBe(false);
+    expect(esNocheEn(undefined)).toBe(false);
   });
 });

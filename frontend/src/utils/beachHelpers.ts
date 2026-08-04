@@ -66,11 +66,18 @@ function isoDesdeDDMMYYYY(fecha?: string | null): string | null {
   return m ? `${m[3]}-${m[2]}-${m[1]}` : null;
 }
 
-/** Freshness window: a capture older than this is no longer shown. */
-const MAX_EDAD_BANDERA_MS = 24 * 60 * 60 * 1000; // 24h — mirror of flagVigencia.ts
+/**
+ * Freshness window: a flag older than this is not shown on ANY screen.
+ *
+ * ONE number for both the flag in force and the last recorded one: they are
+ * the same question — how old may a colour be and still be painted — and two
+ * numbers meant the detail could still show a flag the home page had already
+ * dropped. Mirror of `MAX_EDAD_BANDERA_MS` in flagVigencia.ts; keep in sync.
+ */
+const MAX_EDAD_BANDERA_MS = 8 * 60 * 60 * 1000; // 8h — mirror of flagVigencia.ts
 
 /**
- * Is the flag capture (ISO) recent (≤24h)?
+ * Is the flag capture (ISO) recent (≤8h)?
  * If the ISO doesn't parse, it is assumed fresh (lenient) so as not to hide good data.
  */
 export function esInfoReciente(iso: string, ahora: Date = new Date()): boolean {
@@ -112,7 +119,7 @@ export function dentroDeHorario(
  *                       capture or no known schedule)
  *
  * The flag is only painted with color if it is CURRENT: within hours/season AND
- * with recent data (≤24h). A color from an older capture no longer reflects what
+ * with recent data (≤8h). A color from an older capture no longer reflects what
  * is flying now → it is not shown.
  * MIRROR of the backend: same rule in `domain/services/flagVigencia.ts`, whose
  * `vigenciaBandera` draws the same three states ('sin-servicio' / 'caducada').
@@ -129,9 +136,6 @@ export function estadoBandera(
   return 'sinDatos';
 }
 
-/** Maximum age of the last recorded flag: the current lifeguard day or the previous one. */
-const MAX_EDAD_ULTIMA_BANDERA_MS = 36 * 60 * 60 * 1000; // 36h
-
 /**
  * Last recorded flag, to show it OUTSIDE lifeguard hours (when there is no longer
  * a current flag to paint). Returns the latest moment it could have been
@@ -141,7 +145,8 @@ const MAX_EDAD_ULTIMA_BANDERA_MS = 36 * 60 * 60 * 1000; // 36h
  *
  * null if there is no color, if we are still within hours, if the schedule is
  * unknown, if the record falls outside the coverage season, or if it is older
- * than ~36h (then the detail keeps showing plain "Fuera de horario").
+ * than the freshness window (then the detail keeps showing plain "Fuera de
+ * horario", with no colour).
  */
 export function ultimaBanderaRegistrada(
   cruzRoja?: {
@@ -169,7 +174,7 @@ export function ultimaBanderaRegistrada(
   if (capturaMin > fin) registrada -= (capturaMin - fin) * 60000; // closed that same day
   else if (capturaMin < ini) registrada -= (capturaMin + 1440 - fin) * 60000; // closed the previous day
 
-  if (ahora.getTime() - registrada > MAX_EDAD_ULTIMA_BANDERA_MS) return null;
+  if (ahora.getTime() - registrada > MAX_EDAD_BANDERA_MS) return null;
 
   // A record outside the coverage season does not correspond to real lifeguarding.
   const dia = fechaMadrid(new Date(registrada));
@@ -319,8 +324,8 @@ export function lluviaPrevista(
   return tiempoActual.lluvia?.prevista ?? null;
 }
 
-export function emojiCielo(cielo: string | null): string {
-  if (!cielo) return '\u26C5';
+export function emojiCielo(cielo: string | null, esNoche = false): string {
+  if (!cielo) return esNoche ? '\u{1F319}' : '\u26C5';
   const c = cielo.toLowerCase();
 
   // Significant weather goes FIRST. AEMET puts cloud cover and
@@ -333,6 +338,13 @@ export function emojiCielo(cielo: string | null): string {
   if (/lluvia|llovizna|chubascos/.test(c)) return '\u{1F327}\uFE0F';
   if (/niebla|bruma|neblina/.test(c)) return '\u{1F32B}\uFE0F';
 
+  // At night a sun is simply wrong, and there is no widely supported
+  // moon-behind-cloud emoji: clear and partly clear both become the moon.
+  // Nothing is lost — `palabraCielo` still tells them apart in words.
+  if (esNoche && /poco nuboso|intervalos|parcial|nubes dispersas|algo de nubes|despejado|soleado|claro/.test(c)) {
+    return '\u{1F319}';
+  }
+
   // Cloud cover, from least to most. Partials go BEFORE clear so
   // that the 'soleado' in "parcialmente soleado" doesn't take it.
   if (/poco nuboso|intervalos|parcial|nubes dispersas|algo de nubes/.test(c)) return '\u{1F324}\uFE0F';
@@ -342,4 +354,61 @@ export function emojiCielo(cielo: string | null): string {
   if (/muy nuboso|cubierto|nubes/.test(c)) return '\u2601\uFE0F';
   if (/nuboso|nublado/.test(c)) return '\u26C5';
   return '\u26C5';
+}
+
+/**
+ * The app's own word for a sky, whatever the provider called it.
+ *
+ * The listing and the detail were describing the SAME sky with two
+ * vocabularies: the ranking reason said "Sol" or "Parcialmente soleado"
+ * (normalized in the backend, because AEMET and OpenWeather do not name
+ * skies alike) while the detail headline printed the provider's raw string \u2014
+ * "cielo claro", "algo de nubes", "nubes dispersas". On 46 of 46 beaches the
+ * two screens used different words, and both appear TOGETHER on the detail:
+ * the score card with one, the headline with the other.
+ *
+ * Normalizing here and not in the API keeps `cielo` carrying what the
+ * provider actually said \u2014 `emojiCielo` classifies on that raw text, and so
+ * does the backend's scorer. This is a presentation problem, so it is fixed
+ * at presentation.
+ *
+ * Returns null for a sky it does not recognize, so the caller shows the raw
+ * text rather than dropping information.
+ */
+/**
+ * Whether a ranked beach's reading is at NIGHT, per the provider's own icon
+ * suffix (`01d` / `01n`). It lives here so every surface asks the same
+ * question the same way: the listing, the map and the home card all render a
+ * sky and all used to draw a sun at 3 a.m.
+ *
+ * The detail does not go through here — its observation carries an explicit
+ * `esNoche`, because `iconToLegacy` drops the suffix on that path.
+ */
+export function esNocheEn(weather?: { iconoClima?: string | null } | null): boolean {
+  return weather?.iconoClima?.endsWith('n') === true;
+}
+
+export function palabraCielo(
+  cielo: string | null | undefined,
+  esNoche = false,
+): string | null {
+  if (!cielo) return null;
+  const c = cielo.toLowerCase();
+
+  // Significant weather FIRST, same trap as `emojiCielo`: AEMET packs cover
+  // and precipitation into one string ("Cubierto con lluvia"), so checking
+  // cloudiness first would report a cloudy sky on a rainy one.
+  if (/torment|el[e\u00E9]ctrica|rayos/.test(c)) return 'Tormenta';
+  if (/nieve|nevada|aguanieve/.test(c)) return 'Nieve';
+  if (/lluvia|llovizna|chubasc/.test(c)) return 'Lluvia';
+  if (/niebla|bruma|neblina/.test(c)) return 'Niebla';
+
+  // Partials BEFORE clear, or the "soleado" in "parcialmente soleado" wins.
+  if (/poco nuboso|intervalos|parcial|nubes dispersas|algo de nubes/.test(c)) {
+    return esNoche ? 'Parcialmente despejado' : 'Parcialmente soleado';
+  }
+  // At night there is no sun to name: the same sky is "Despejado".
+  if (/despejado|soleado|claro/.test(c)) return esNoche ? 'Despejado' : 'Sol';
+  if (/muy nuboso|cubierto|nuboso|nublado|nubes/.test(c)) return 'Nublado';
+  return null;
 }

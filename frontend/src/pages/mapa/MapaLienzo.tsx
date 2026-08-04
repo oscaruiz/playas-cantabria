@@ -7,6 +7,8 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Playa, FeaturedBeach } from '../../services/api';
 import {
   emojiCielo,
+  esNocheEn,
+  palabraCielo,
   flagColorClass,
   webcamDisponible,
   vigilanciaDisponible,
@@ -49,7 +51,7 @@ function secondaryBadge(weather: FeaturedBeach): string {
 
 function getBeachIcon(weather: FeaturedBeach, isBest: boolean): DivIcon {
   const status = markerStatus(weather.puntuacion);
-  const sky = emojiCielo(weather.descripcionClima);
+  const sky = emojiCielo(weather.descripcionClima, esNocheEn(weather));
   const temp = weather.temperatura != null ? `${Math.round(weather.temperatura)}°` : '';
   const badge = secondaryBadge(weather);
   const flag = weather.bandera ? flagColorClass(weather.bandera) : '';
@@ -214,9 +216,16 @@ const MapaLienzo: React.FC<{
                     return (
                       <>
                         <p className="mapa-popup-row">
-                          {emojiCielo(weather.descripcionClima)}{' '}
+                          {emojiCielo(weather.descripcionClima, esNocheEn(weather))}{' '}
                           {weather.temperatura != null ? `${Math.round(weather.temperatura)}°` : ''}{' '}
-                          {traducirTextoApi(weather.descripcionClima, idioma)}{weather.vientoMs != null ? `, ${t(claveNivelVientoMs(weather.vientoMs))}` : ''}
+                          {/* La palabra de la app: aquí se leía la cadena cruda
+                              del proveedor ("nubes dispersas") mientras la
+                              portada y el detalle decían "Parcialmente soleado". */}
+                          {traducirTextoApi(
+                            palabraCielo(weather.descripcionClima, esNocheEn(weather))
+                              ?? weather.descripcionClima,
+                            idioma,
+                          )}{weather.vientoMs != null ? `, ${t(claveNivelVientoMs(weather.vientoMs))}` : ''}
                         </p>
                         {status === 'good' && (
                           <p className="mapa-popup-status mapa-popup-status--good">

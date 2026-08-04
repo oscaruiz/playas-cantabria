@@ -45,7 +45,7 @@ describe('ForecastHero — observación caducada', () => {
       <ForecastHero dia={DIA} climaActual={28} tiempoActual={observacion(10 * 60_000)} />
     );
     expect(container.querySelector('.forecast-hero-temp')).toHaveTextContent('28');
-    expect(screen.getByText(/Despejado/)).toBeInTheDocument();
+    expect(screen.getByText('Sol')).toBeInTheDocument();
   });
 
   it('withdraws it once it is too old: neither its sky nor its temperature is shown as now', () => {
@@ -56,7 +56,7 @@ describe('ForecastHero — observación caducada', () => {
     // Falls back to the forecast: 21°, "Nuboso" — not the 28° "Despejado"
     // that was observed hours ago.
     expect(container.querySelector('.forecast-hero-temp')).toHaveTextContent('21');
-    expect(screen.queryByText(/Despejado/)).not.toBeInTheDocument();
+    expect(screen.queryByText('Sol')).not.toBeInTheDocument();
     // And it says so, instead of silently swapping the value.
     expect(container.querySelector('.procedencia-caducada')).toHaveTextContent(
       'Dato no disponible'

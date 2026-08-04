@@ -379,6 +379,13 @@ export interface TiempoActual {
   previsionHoras?: PrevisionHora[] | null;
   /** Who forecast those hours, as the API credits it. */
   previsionHorasFuente?: string | null;
+  /**
+   * Whether the provider considers this observation to be at night. It is its
+   * own day/night call, so it follows the real sunset at these coordinates
+   * instead of an hour threshold that would be wrong for half the year.
+   * Optional: an older backend sends nothing and the UI assumes daytime.
+   */
+  esNoche?: boolean | null;
 }
 
 // ------------------------------
