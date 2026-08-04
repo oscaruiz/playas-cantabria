@@ -260,6 +260,8 @@ describe('API contract — GET /api/beaches/:id/details', () => {
         temperatura: 18,
         precipitacionMm: 0.5,
         fuente: 'OpenWeather',
+        // The provider's own day/night call, from the `n` suffix on its icon.
+        esNoche: false,
         timestamp: T_ISO,
       },
       clima: {
@@ -340,6 +342,8 @@ describe('API contract — GET /api/beaches/:id/details', () => {
         temperatura: 18,
         precipitacionMm: 0.5,
         fuente: 'OpenWeather',
+        // The provider's own day/night call, from the `n` suffix on its icon.
+        esNoche: false,
         timestamp: T_ISO,
       },
       clima: {

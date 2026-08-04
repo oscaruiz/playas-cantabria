@@ -200,11 +200,14 @@ function skyScoreFromDescription(desc: string): number {
  * "cielo claro", "algo de nubes", "muy nuboso"). Returns null if it does not
  * recognize the term (the caller will use the raw text).
  */
-function skyWordFromDescription(desc: string): string | null {
+function skyWordFromDescription(desc: string, esNoche = false): string | null {
   const s = desc.toLowerCase();
-  if (/(despejado|soleado|cielo claro)/.test(s)) return 'Sol';
+  // After sunset there is no sun to name: the same sky is "Despejado". The
+  // client shows the very same words next to this reason, so naming a sun at
+  // 3 a.m. here would contradict the beach headline one tap away.
+  if (/(despejado|soleado|cielo claro)/.test(s)) return esNoche ? 'Despejado' : 'Sol';
   if (/(poco\s*nuboso|intervalos|parcial|algo de nubes|nubes\s*dispersas|claro)/.test(s))
-    return 'Parcialmente soleado';
+    return esNoche ? 'Parcialmente despejado' : 'Parcialmente soleado';
   if (/(muy nuboso|nuboso|nublado|cubierto|nubes)/.test(s)) return 'Nublado';
   if (/(lluvia|chubasc|llovizna)/.test(s)) return 'Lluvia';
   if (/(tormenta|eléctrica|rayos)/.test(s)) return 'Tormenta';
@@ -492,15 +495,18 @@ export function buildRankingReason(
   // so the "reason" matches the current sky (and the detail view).
   const skyDesc =
     (weather?.source === 'OpenWeather' ? weather.description : null) ?? enrichment?.summary ?? null;
-  const skyWord = skyDesc ? skyWordFromDescription(skyDesc) : null;
+  // The provider's own day/night call (the `d`/`n` suffix on its icon), which
+  // follows the real sunset at these coordinates.
+  const esNoche = weather?.icon?.endsWith('n') === true;
+  const skyWord = skyDesc ? skyWordFromDescription(skyDesc, esNoche) : null;
   if (rainPart) {
     parts.push(rainPart.charAt(0).toUpperCase() + rainPart.slice(1));
   } else if (skyWord) {
     parts.push(skyWord);
   } else if (subScores.cielo >= 20) {
-    parts.push('Sol');
+    parts.push(esNoche ? 'Despejado' : 'Sol');
   } else if (subScores.cielo >= 15) {
-    parts.push('Parcialmente soleado');
+    parts.push(esNoche ? 'Parcialmente despejado' : 'Parcialmente soleado');
   } else if (subScores.cielo >= 10) {
     parts.push('Nublado');
   } else if (skyDesc) {

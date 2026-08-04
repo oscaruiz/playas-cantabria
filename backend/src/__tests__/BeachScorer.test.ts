@@ -9,6 +9,7 @@ import {
   computeBeachScore,
   buildRankingReason,
   buildCautionReason,
+  SubScores,
   buildDowngradeFactors,
   isExcluded,
   ForecastEnrichment,
@@ -821,5 +822,49 @@ describe('computeBeachScore — el tope que se aplicó', () => {
 
     expect(r.score).toBeLessThan(RAIN_SCORE_CAP);
     expect(r.tope).toBeNull();
+  });
+});
+
+/**
+ * Night in the ranking reason.
+ *
+ * The client prints these very words next to the beach headline, which is
+ * night-aware: naming a sun at 3 a.m. here would contradict the same sky one
+ * tap away. The day/night call is the provider's own, from the `d`/`n` suffix
+ * on its icon.
+ */
+describe('buildRankingReason — de noche no hay sol que nombrar', () => {
+  const base: SubScores = {
+    cielo: 25, temperatura: 25, bandera: 20, viento: 15, oleaje: 10, datos: 5,
+  };
+  const cielo = (icon: string, description: string): Weather => ({
+    source: 'OpenWeather',
+    timestamp: Date.parse('2026-08-03T21:00:00.000Z'),
+    temperatureC: 23,
+    description,
+    icon,
+    conditionCode: 800,
+    precipitationMm: null,
+    windSpeedMs: 2,
+    windDirectionDeg: 310,
+    humidityPct: 70,
+    pressureHPa: 1018,
+  });
+
+  it('«Sol» de día, «Despejado» de noche, para el mismo cielo', () => {
+    expect(buildRankingReason(base, cielo('01d', 'cielo claro'), null)).toContain('Sol');
+    expect(buildRankingReason(base, cielo('01n', 'cielo claro'), null)).toContain('Despejado');
+    expect(buildRankingReason(base, cielo('01n', 'cielo claro'), null)).not.toContain('Sol');
+  });
+
+  it('lo mismo con el cielo parcialmente cubierto', () => {
+    expect(buildRankingReason(base, cielo('02d', 'algo de nubes'), null))
+      .toContain('Parcialmente soleado');
+    expect(buildRankingReason(base, cielo('02n', 'algo de nubes'), null))
+      .toContain('Parcialmente despejado');
+  });
+
+  it('«Nublado» no cambia: no había sol que quitar', () => {
+    expect(buildRankingReason(base, cielo('04n', 'muy nuboso'), null)).toContain('Nublado');
   });
 });

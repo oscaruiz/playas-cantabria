@@ -93,6 +93,15 @@ export type TiempoActualDTO = {
    * the day this falls back to another source, the label follows on its own.
    */
   previsionHorasFuente?: string | null;
+  /**
+   * Whether the provider considers this observation to be at NIGHT. It is the
+   * provider's own day/night call (the `d`/`n` suffix on its icon), which
+   * accounts for the real sunrise and sunset at these coordinates — far better
+   * than the client guessing from an hour threshold that would be wrong for
+   * half the year. `iconToLegacy` collapses both suffixes into one number, so
+   * without this the detail could not tell 3 a.m. from midday.
+   */
+  esNoche?: boolean;
 };
 
 type CruzRojaDTO = {
@@ -217,6 +226,7 @@ export class LegacyDetailsMapper {
     return {
       cielo: w.description ?? null,
       icono: this.iconToLegacy(w.source, w.icon),
+      ...(w.icon ? { esNoche: w.icon.endsWith('n') } : {}),
       temperatura: w.temperatureC ?? null,
       precipitacionMm: w.precipitationMm ?? null,
       fuente: w.source,
