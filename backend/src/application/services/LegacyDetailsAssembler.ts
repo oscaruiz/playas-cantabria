@@ -15,7 +15,7 @@ import { AemetBeachWebScraper } from '../../infrastructure/providers/AemetBeachW
 import { GetRainNowcast } from '../../domain/use-cases/GetRainNowcast';
 import { buildRainForecastSignal, textosRestantesHoy } from '../../domain/use-cases/RainForecast';
 import { ventanaOutlook } from '../../domain/use-cases/WeatherOutlook';
-import type { RainNowcast } from '../../domain/entities/RainNowcast';
+import type { HourlyOutlookSlot, RainNowcast } from '../../domain/entities/RainNowcast';
 import type { BeachFullForecast } from '../../domain/entities/BeachForecast';
 import { CacheKeys, InMemoryCache } from '../../infrastructure/cache/InMemoryCache';
 import { Config, skyCorrectionMode } from '../../infrastructure/config/config';
@@ -43,6 +43,39 @@ export class LegacyDetailsAssembler {
     private readonly regionId = 'cantabria',
   ) {}
 
+
+  /**
+   * The hourly strip, with a second source standing behind the first.
+   *
+   * Open-Meteo carries these slots inside the nowcast request, so while it
+   * answers this costs nothing extra. When it does NOT — it is a free service
+   * and it rate-limits, which is precisely what left every beach without the
+   * block in production — OpenWeather's 5d/3h forecast is already fetched and
+   * cached for the half-days, so the fallback adds no request either.
+   *
+   * Coarser, and it says so: three-hour steps mean fewer points inside the
+   * same window. The name of whoever answered travels with the data, so the
+   * client credits the right one instead of putting one provider's numbers
+   * under another's name.
+   */
+  private async resolverPrevisionHoras(
+    lat: number,
+    lon: number,
+    delNowcast: readonly HourlyOutlookSlot[] | null | undefined,
+  ): Promise<{ horas: HourlyOutlookSlot[]; fuente: string } | null> {
+    const ahora = new Date();
+    const preferidas = ventanaOutlook(delNowcast ?? [], ahora);
+    if (preferidas.length > 0) return { horas: preferidas, fuente: OPEN_METEO_NOMBRE };
+
+    try {
+      const horas = ventanaOutlook(await this.openWeather.getOutlookSlots(lat, lon), ahora);
+      return horas.length > 0 ? { horas, fuente: 'OpenWeather' } : null;
+    } catch {
+      // Both sources silent, or simply out of the beach window: an empty
+      // strip is the honest answer. Nothing here is ever invented.
+      return null;
+    }
+  }
 
   // -----------------------------------------------------------------------
   // Icon mapping
@@ -312,16 +345,20 @@ export class LegacyDetailsAssembler {
     try {
       rainSignal = await rainPromise;
       if (rainSignal && base.tiempoActual) {
-        // The hourly slots ride in the same nowcast (same Open-Meteo request),
-        // and they are trimmed with the very function the score uses, so the
+        // The slots are trimmed with the very function the score uses, so the
         // strip shown and the adjustment applied cannot describe different
-        // hours. Empty out of the beach window or with Open-Meteo down.
-        const horas = ventanaOutlook(rainSignal.outlook ?? [], new Date());
+        // hours. Empty only when BOTH sources are silent or we are out of the
+        // beach window.
+        const prevision = await this.resolverPrevisionHoras(
+          details.beach.latitude,
+          details.beach.longitude,
+          rainSignal.outlook,
+        );
         base.tiempoActual = {
           ...base.tiempoActual,
           lluvia: LegacyDetailsMapper.mapLluvia(rainSignal),
-          previsionHoras: horas.length > 0 ? LegacyDetailsMapper.mapPrevisionHoras(horas) : null,
-          previsionHorasFuente: horas.length > 0 ? OPEN_METEO_NOMBRE : null,
+          previsionHoras: prevision ? LegacyDetailsMapper.mapPrevisionHoras(prevision.horas) : null,
+          previsionHorasFuente: prevision?.fuente ?? null,
         };
       }
     } catch {

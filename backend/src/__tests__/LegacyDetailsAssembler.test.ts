@@ -78,6 +78,8 @@ function buildAssembler(opts: {
   owCurrent: Weather | (() => Promise<Weather>);
   rain?: RainNowcast | (() => Promise<RainNowcast>);
   owHalfDays?: Array<{ manana: any; tarde: any }>;
+  /** OpenWeather's own slots — the source that stands in when Open-Meteo is silent. */
+  owOutlook?: any[] | (() => Promise<any[]>);
 }) {
   const getDetails = {
     execute: async () => opts.details,
@@ -111,6 +113,8 @@ function buildAssembler(opts: {
       throw new Error('skip');
     },
     getForecastHalfDays: async () => opts.owHalfDays ?? [],
+    getOutlookSlots: async () =>
+      typeof opts.owOutlook === 'function' ? opts.owOutlook() : opts.owOutlook ?? [],
   } as unknown as OpenWeatherWeatherProvider;
 
   const rainNowcast = {
@@ -440,18 +444,60 @@ describe('LegacyDetailsAssembler — previsión horaria en tiempoActual', () => 
     expect(dto.tiempoActual?.previsionHoras).toBeNull();
   });
 
-  it('sin Open-Meteo el resto del endpoint no se entera', async () => {
+  it('sin Open-Meteo NI suplente el resto del endpoint no se entera', async () => {
     vi.setSystemTime(MEDIODIA);
     const assembler = buildAssembler({
       details: { beach: COBRECES, weather: makeOwCurrent(), flag: null, tides: null },
       forecast: makeForecast(),
       owCurrent: makeOwCurrent(),
       rain: { ...rainCon(0), outlook: null },
+      owOutlook: [],
     });
 
     const dto = await assembler.assemble('3902401');
 
     expect(dto.tiempoActual?.previsionHoras).toBeNull();
     expect(dto.tiempoActual?.lluvia).not.toBeNull();
+  });
+
+  it('si Open-Meteo calla, la tira la sirve OpenWeather y se acredita a OpenWeather', async () => {
+    // Regresión de producción: Open-Meteo empezó a devolver 429 a la IP de
+    // Render y las «próximas 4 h» desaparecieron de las 46 playas a la vez.
+    // Una sola fuente gratuita no puede ser un punto único de fallo para un
+    // bloque entero de la ficha.
+    vi.setSystemTime(MEDIODIA);
+    const assembler = buildAssembler({
+      details: { beach: COBRECES, weather: makeOwCurrent(), flag: null, tides: null },
+      forecast: makeForecast(),
+      owCurrent: makeOwCurrent(),
+      rain: { ...rainCon(0), outlook: null },
+      owOutlook: [
+        { timestamp: MEDIODIA.getTime() + 3_600_000, cloudCoverPct: 40, temperatureC: 22, windSpeedMs: 4 },
+        { timestamp: MEDIODIA.getTime() + 3 * 3_600_000, cloudCoverPct: 60, temperatureC: 21, windSpeedMs: 5 },
+        // Fuera de la ventana: la recorta la misma función de siempre.
+        { timestamp: MEDIODIA.getTime() + 9 * 3_600_000, cloudCoverPct: 10, temperatureC: 18, windSpeedMs: 2 },
+      ],
+    });
+
+    const dto = await assembler.assemble('3902401');
+
+    expect(dto.tiempoActual?.previsionHoras).toHaveLength(2);
+    expect(dto.tiempoActual?.previsionHorasFuente).toBe('OpenWeather');
+  });
+
+  it('mientras Open-Meteo responda, manda Open-Meteo: el suplente no se toca', async () => {
+    vi.setSystemTime(MEDIODIA);
+    const assembler = buildAssembler({
+      details: { beach: COBRECES, weather: makeOwCurrent(), flag: null, tides: null },
+      forecast: makeForecast(),
+      owCurrent: makeOwCurrent(),
+      rain: rainCon(4),
+      owOutlook: () => Promise.reject(new Error('no debería pedirse')),
+    });
+
+    const dto = await assembler.assemble('3902401');
+
+    expect(dto.tiempoActual?.previsionHoras).toHaveLength(4);
+    expect(dto.tiempoActual?.previsionHorasFuente).toBe('Open-Meteo');
   });
 });

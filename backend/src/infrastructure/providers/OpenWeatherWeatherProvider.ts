@@ -1,4 +1,5 @@
 import { Weather } from '../../domain/entities/Weather';
+import type { HourlyOutlookSlot } from '../../domain/entities/RainNowcast';
 import { ProviderError, WeatherProvider } from '../../domain/ports/WeatherProvider';
 import { http } from '../http/axiosClient';
 import { InMemoryCache, CacheKeys } from '../cache/InMemoryCache';
@@ -92,6 +93,32 @@ export class OpenWeatherWeatherProvider implements WeatherProvider {
         throw new ProviderError('OpenWeather', e?.message || 'OpenWeather forecast failed', name);
       }
     });
+  }
+
+  /**
+   * Hourly-outlook slots from the 5d/3h forecast, in the SAME shape Open-Meteo
+   * produces — so `ventanaOutlook`, the score's outlook and the detail's strip
+   * consume them without knowing which provider they came from.
+   *
+   * It exists because Open-Meteo is a single free source that can rate-limit
+   * us, and when it does the whole "next hours" block vanishes from every
+   * beach. This rides on `getForecastRaw`, already fetched and cached for the
+   * half-days and tomorrow, so the fallback costs ZERO extra requests.
+   *
+   * Coarser on purpose: three-hour steps instead of one. Fewer points in the
+   * same window is a worse forecast, not a wrong one — and it is the honest
+   * limit of the data we already have.
+   */
+  async getOutlookSlots(lat: number, lon: number): Promise<HourlyOutlookSlot[]> {
+    const { list } = await this.getForecastRaw(lat, lon);
+    return list
+      .map((s) => ({
+        timestamp: typeof s?.dt === 'number' ? s.dt * 1000 : NaN,
+        cloudCoverPct: typeof s?.clouds?.all === 'number' ? s.clouds.all : null,
+        temperatureC: typeof s?.main?.temp === 'number' ? s.main.temp : null,
+        windSpeedMs: typeof s?.wind?.speed === 'number' ? s.wind.speed : null,
+      }))
+      .filter((s) => Number.isFinite(s.timestamp));
   }
 
   /** Most representative forecast slot for tomorrow (midday if available). */
