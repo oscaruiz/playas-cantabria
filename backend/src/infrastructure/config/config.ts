@@ -98,16 +98,25 @@ const ConfigSchema = z.object({
   aemetApiKey: z.string().min(1).optional(),
   openWeatherApiKey: z.string().min(1).optional(),
   cacheTtlSeconds: z.coerce.number().int().positive().default(1800),
-  // Same window as the detail ON PURPOSE. When it was five times longer, the
-  // home page and the detail of the same beach sampled the sky at different
-  // moments and said different things — the ranking is 46 beaches read from
-  // the per-coordinate provider cache, so refreshing it as often as the
-  // detail costs CPU, not quota (quota is set by `providerTtlSeconds`).
-  featuredFreshTtlSeconds: z.coerce.number().int().positive().default(60),
+  // Back to 300 s after a day at 60.
+  //
+  // The reasoning for 60 was sound while every provider answered: the ranking
+  // reads 46 beaches from the per-coordinate cache, so recomputing it as often
+  // as the detail costs CPU, not quota. What it missed is what happens when a
+  // provider starts REFUSING. A failed call is not cached, so every recompute
+  // retries all 46 coordinates and stores nothing — and at 60 s that is five
+  // times the pressure on a source that is already rate-limiting us, which is
+  // exactly what Open-Meteo did (16 requests, 16 × 429, hourly outlook and UV
+  // gone from the whole app).
+  //
+  // The consistency this bought is mostly still there: the sky decision is
+  // shared through `skyDecisionTtlSeconds`, which is what actually kept the
+  // listing and the detail from telling two different stories.
+  featuredFreshTtlSeconds: z.coerce.number().int().positive().default(300),
   featuredStaleTtlSeconds: z.coerce.number().int().positive().default(3600),
   detailsFreshTtlSeconds: z.coerce.number().int().positive().default(60),
   detailsStaleTtlSeconds: z.coerce.number().int().positive().default(600),
-  skyDecisionTtlSeconds: z.coerce.number().int().positive().default(300),
+  skyDecisionTtlSeconds: z.coerce.number().int().positive().default(600),
 });
 
 export type AppConfig = z.infer<typeof ConfigSchema>;
@@ -304,7 +313,9 @@ export const Config = {
    * Only then are two responses assembled at different moments guaranteed to
    * fall inside the same decision — which is what stops the listing and the
    * detail from showing two skies for one beach. It is therefore deliberately
-   * longer than `featuredFreshTtlSeconds`, not equal to it.
+   * longer than `featuredFreshTtlSeconds`, not equal to it: equal would leave
+   * a gap whenever the detail seeds the decision first and the listing then
+   * caches a response that outlives it.
    */
   skyDecisionTtlSeconds(): number {
     return loadConfig().skyDecisionTtlSeconds;
