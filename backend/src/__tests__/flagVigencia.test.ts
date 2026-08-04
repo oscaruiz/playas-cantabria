@@ -28,16 +28,22 @@ describe('esBanderaVigente', () => {
     expect(esBanderaVigente(flag('2026-07-10T16:00:00Z'), ahora)).toBe(false);
   });
 
-  it('vigente: dato de ayer tarde visto hoy a mediodía (≤24h, franja mañanera)', () => {
-    // Regression: the cron captured yesterday 18:35 Madrid (16:35Z); today at 11:45
-    // Madrid (09:45Z) it is the freshest available → it must be shown.
-    const ahora = new Date('2026-07-10T09:45:00Z'); // 11:45 Madrid, within schedule
-    expect(esBanderaVigente(flag('2026-07-09T16:35:00Z'), ahora)).toBe(true);
+  it('NO vigente: el dato de ayer tarde ya no vale para hoy a mediodía', () => {
+    // Antes se aceptaba: con 24h, la captura de ayer 18:35 Madrid era la más
+    // fresca al abrir hoy y se pintaba como la que ondea. Son 17 h: nadie ha
+    // confirmado ese color desde ayer por la tarde.
+    const ahora = new Date('2026-07-10T09:45:00Z'); // 11:45 Madrid, dentro de horario
+    expect(esBanderaVigente(flag('2026-07-09T16:35:00Z'), ahora)).toBe(false);
   });
 
-  it('no vigente: dentro de horario pero el dato tiene más de 24h', () => {
+  it('vigente con la captura de hace un rato: el cron pasa cada hora en franja', () => {
     const ahora = new Date('2026-07-10T13:00:00Z'); // 15:00 Madrid
-    expect(esBanderaVigente(flag('2026-07-09T09:00:00Z'), ahora)).toBe(false); // 28h
+    expect(esBanderaVigente(flag('2026-07-10T12:30:00Z'), ahora)).toBe(true); // 30 min
+  });
+
+  it('no vigente: dentro de horario pero el dato pasa de 8h', () => {
+    const ahora = new Date('2026-07-10T13:00:00Z'); // 15:00 Madrid
+    expect(esBanderaVigente(flag('2026-07-10T04:00:00Z'), ahora)).toBe(false); // 9h
   });
 
   it('no vigente: fuera de temporada', () => {

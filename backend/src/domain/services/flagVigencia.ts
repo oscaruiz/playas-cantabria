@@ -4,10 +4,10 @@ import { FlagColor, FlagStatus } from '../entities/Flag';
  * Validity of the Cruz Roja flag: should the color be shown NOW?
  *
  * A flag is only real while there is surveillance (daily schedule within the
- * coverage season) and if the data is recent. The primary source in prod
- * (`regions/<id>/flags.json`) is refreshed by cron a few times a day and not at all
- * overnight, so the last capture from the past ~24h is accepted; beyond that,
- * the color no longer reflects what is flying and must not be painted.
+ * coverage season) and if the data is recent. The cron scrapes EVERY HOUR
+ * through the whole surveillance window, so within hours a capture is minutes
+ * old; anything much older means the delivery broke, and a colour nobody has
+ * confirmed in eight hours must not be painted as what is flying.
  *
  * MIRROR of the frontend: the same rule lives in
  * `frontend/src/utils/beachHelpers.ts` (`dentroDeHorario` + `esInfoReciente`,
@@ -16,13 +16,16 @@ import { FlagColor, FlagStatus } from '../entities/Flag';
  */
 
 /**
- * Freshness window: a capture older than this is no longer shown.
+ * Freshness window: a capture older than this is no longer shown, on ANY
+ * screen. It was 24h, which accepted yesterday evening's flag as this
+ * morning's — the cron does not run overnight, so at opening time the freshest
+ * capture could be sixteen hours old and was painted as current.
  *
  * Exported because a reader that cannot date its source has to be able to say
  * so in the only language this rule understands — a timestamp already outside
  * the window (see `RedCrossFlagProvider.loadFileFlags`).
  */
-export const MAX_EDAD_BANDERA_MS = 24 * 60 * 60 * 1000; // 24h
+export const MAX_EDAD_BANDERA_MS = 8 * 60 * 60 * 1000; // 8h
 
 /** "YYYY-MM-DD" date in Europe/Madrid (robust to the server's TZ). */
 function fechaMadrid(fecha: Date): string {
@@ -75,7 +78,7 @@ function dentroDeHorario(flag: FlagStatus, ahora: Date): boolean | null {
   return cur >= ini && cur <= fin;
 }
 
-/** Is the flag capture recent (≤24h)? No valid timestamp → assumed fresh. */
+/** Is the flag capture recent (≤8h)? No valid timestamp → assumed fresh. */
 function esInfoReciente(timestamp: number, ahora: Date): boolean {
   if (!timestamp || Number.isNaN(timestamp)) return true;
   return ahora.getTime() - timestamp <= MAX_EDAD_BANDERA_MS;
@@ -88,7 +91,7 @@ function esInfoReciente(timestamp: number, ahora: Date): boolean {
  * - `sin-servicio` — out of hours or out of season: there is no flag flying,
  *   and there is not supposed to be one. Nothing was lost.
  * - `caducada`    — the service IS active (or its schedule is unknown) and the
- *   last capture is older than 24 h: a flag is flying and we do not know which.
+ *   last capture is older than 8 h: a flag is flying and we do not know which.
  *
  * Collapsing the last two into "not current" was a silent safety failure: a
  * black flag whose delivery broke looked exactly like a beach with no flag,
@@ -104,7 +107,7 @@ export function vigenciaBandera(flag: FlagStatus, ahora: Date = new Date()): Vig
 /**
  * Should the flag color be shown NOW? (it does not check that a color exists;
  * the caller decides that). True if we are within schedule/season — or the
- * schedule is unknown — and the data is recent (≤24h).
+ * schedule is unknown — and the data is recent (≤8h).
  */
 export function esBanderaVigente(flag: FlagStatus, ahora: Date = new Date()): boolean {
   return vigenciaBandera(flag, ahora) === 'vigente';
