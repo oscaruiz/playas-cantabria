@@ -4,8 +4,12 @@ import { MemoryRouter, Route } from 'react-router-dom';
 import { IdiomaProvider, Idioma } from '../shared/i18n/IdiomaContext';
 
 interface RenderOptions {
-  /** Initial router entry, with a query string if needed. */
-  route?: string;
+  /**
+   * Initial router entry, with a query string if needed. An ARRAY mounts a
+   * history with several entries (last one current), which is what lets a
+   * "go back" be tested instead of only asserted on a spy.
+   */
+  route?: string | string[];
   /** Route pattern, needed when the page reads `useParams` (e.g. `/playas/:codigo`). */
   path?: string;
   /** Initial language. It is written to localStorage BEFORE mounting the provider. */
@@ -28,7 +32,10 @@ export function renderWithProviders(
 
   return render(
     <IdiomaProvider>
-      <MemoryRouter initialEntries={[route]}>
+      <MemoryRouter
+        initialEntries={Array.isArray(route) ? route : [route]}
+        initialIndex={Array.isArray(route) ? route.length - 1 : 0}
+      >
         {path ? <Route path={path}>{ui}</Route> : ui}
       </MemoryRouter>
     </IdiomaProvider>,

@@ -16,6 +16,7 @@ import NoEncontrada from '../pages/NoEncontrada';
 import LandingPlayas, { LandingId } from '../pages/landings/LandingPlayas';
 import { LANDINGS } from '../shared/seo/landings';
 import { IdiomaProvider } from '../shared/i18n/IdiomaContext';
+import LegalPage from '../pages/LegalPage';
 
 // Routes are imported statically on purpose: IonRouterOutlet keeps
 // its own view stack and does not tolerate an ancestor Suspense unmounting it
@@ -51,6 +52,8 @@ const App: React.FC = () => (
           <Route path="/mapa" component={MapaPage} exact />
           <Route exact path="/municipios" component={MunicipiosIndex} />
           <Route exact path="/municipios/:municipio" component={MunicipioPage} />
+          <Route exact path="/acerca-de" render={() => <LegalPage tipo="acerca" />} />
+          <Route exact path="/privacidad" render={() => <LegalPage tipo="privacidad" />} />
           {LANDINGS.map((l: { id: string }) => (
             <Route
               key={l.id}

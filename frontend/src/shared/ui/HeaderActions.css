@@ -1,0 +1,92 @@
+.header-actions {
+  position: absolute;
+  z-index: 20;
+  top: calc(env(safe-area-inset-top, 0px) + 14px);
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-actions .selector-idioma {
+  position: static;
+}
+
+.header-info-button {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 8px;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+}
+
+.header-info-button {
+  width: auto;
+  gap: 5px;
+  padding: 0 9px;
+  font: 600 0.75rem 'Poppins', sans-serif;
+}
+
+.header-info-button ion-icon { font-size: 1.05rem; }
+.header-info-button:hover, .header-info-button:focus-visible { background: rgba(255, 255, 255, 0.14); }
+
+.header-info-menu {
+  position: absolute;
+  top: 42px;
+  right: 58px;
+  min-width: 220px;
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+  border: 1px solid var(--playa-border);
+  border-radius: 9px;
+  background: var(--playa-card-bg);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.header-info-menu a {
+  padding: 10px 11px;
+  color: var(--playa-text);
+  font-size: 0.8rem;
+  line-height: 1.25;
+  text-decoration: none;
+  border-radius: 6px;
+}
+
+/* Los enlaces que salen de la app: icono a la izquierda, flecha de salida
+   pegada al borde derecho para que se lea igual en todas las filas. */
+.header-info-externo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-info-externo ion-icon {
+  flex: none;
+  font-size: 1rem;
+}
+
+.header-info-externo span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.header-info-salida {
+  opacity: 0.55;
+  font-size: 0.85rem !important;
+}
+
+.header-info-menu a:hover, .header-info-menu a:focus-visible { background: var(--playa-ocean-light); color: var(--playa-ocean); }
+
+@media (max-width: 390px) {
+  .header-actions { right: 10px; gap: 5px; }
+  .header-info-menu { right: 48px; min-width: 200px; }
+}
