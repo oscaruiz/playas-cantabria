@@ -107,6 +107,8 @@
   flex-basis: 100%;
 }
 
+.flag-banner .safety-notice { flex-basis: 100%; }
+
 /* The credited name is a link and must look like one, muted text or not. */
 .procedencia-enlace {
   color: inherit;

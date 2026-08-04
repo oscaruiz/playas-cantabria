@@ -111,8 +111,14 @@ describe('PlayaDetalle — previsión AEMET', () => {
     const { container } = renderDetalle();
     await screen.findByText('Hoy');
 
-    // tiempoActual.cielo = "cielo despejado"; dias[0].tarde.cielo = "intervalos nubosos".
-    expect(container.querySelector('.forecast-hero-sky')).toHaveTextContent('Cielo despejado');
+    // tiempoActual.cielo = "cielo despejado" -> "Sol";
+    // dias[0].tarde.cielo = "intervalos nubosos" -> "Parcialmente soleado".
+    // El titular usa la palabra de la app, no la del proveedor, para no decir
+    // "Cielo despejado" donde la tarjeta de puntuación dice "Sol".
+    expect(container.querySelector('.forecast-hero-sky')).toHaveTextContent('Sol');
+    expect(container.querySelector('.forecast-hero-sky')).not.toHaveTextContent(
+      'Parcialmente soleado',
+    );
     expect(container.querySelector('.forecast-hero-icon-emoji')).toHaveTextContent('☀️');
   });
 
@@ -216,17 +222,13 @@ describe('PlayaDetalle — previsión AEMET', () => {
     const { container } = renderDetalle();
     await screen.findByText('Hoy');
 
-    expect(container).not.toHaveTextContent('Información orientativa');
-
-    fireEvent.click(abrirInfo('Aviso sobre la bandera'));
-
-    const paneles = Array.from(container.querySelectorAll('.info-datos-panel')).map(
+    const paneles = Array.from(container.querySelectorAll('.safety-notice')).map(
       (n) => n.textContent ?? '',
     );
     // Uno por afirmación, no uno por componente: la bandera se afirma en el
     // banner y otra vez en la tarjeta, y el aviso viaja solo con el banner.
     expect(paneles.filter((p) => p.includes('Información orientativa'))).toHaveLength(1);
-    expect(container.querySelector('.flag-banner .info-datos-panel')).toHaveTextContent(
+    expect(container.querySelector('.flag-banner .safety-notice')).toHaveTextContent(
       'Comprueba siempre la bandera presente en la playa',
     );
   });
@@ -235,11 +237,7 @@ describe('PlayaDetalle — previsión AEMET', () => {
     const { container } = renderDetalle();
     await screen.findByText('Hoy');
 
-    expect(container).not.toHaveTextContent('Recomendación automática');
-
-    fireEvent.click(screen.getByText('Cómo se calcula'));
-
-    expect(container.querySelector('.pd-score-aviso')).toHaveTextContent(
+    expect(container.querySelector('.pd-score-block > .safety-notice')).toHaveTextContent(
       'No garantiza la seguridad ni las condiciones reales de la playa.',
     );
     expect(container.querySelectorAll('.pd-score-block .info-datos-btn')).toHaveLength(0);
@@ -425,9 +423,9 @@ describe('PlayaDetalle — bandera de Cruz Roja', () => {
     expect(container.querySelector('.flag-info')).toHaveTextContent('Vigilancia: 11:00 - 20:00');
   });
 
-  it('fuera de horario enseña la última registrada, atenuada y fechada', async () => {
-    // 05:00Z = 07:00 in Madrid, before opening. Capture at 19:30 yesterday.
-    jest.useFakeTimers().setSystemTime(new Date('2026-07-28T05:00:00.000Z'));
+  it('recién cerrado enseña la última registrada, atenuada y fechada', async () => {
+    // 21:00Z = 23:00 en Madrid. Izada hasta las 19:30: hace 3,5 h.
+    jest.useFakeTimers().setSystemTime(new Date('2026-07-27T21:00:00.000Z'));
     mockDetalle(buildOutOfHoursDetail());
 
     const { container } = renderDetalle('3907501');
@@ -440,8 +438,22 @@ describe('PlayaDetalle — bandera de Cruz Roja', () => {
       'Última bandera registrada: Verde',
     );
     expect(container.querySelector('.flag-info')).toHaveTextContent(
-      'Registrada ayer a las 19:30',
+      'Registrada hoy a las 19:30',
     );
+  });
+
+  it('a la mañana siguiente ya no hay color: la bandera pasa de 8h', async () => {
+    // 05:00Z = 07:00 en Madrid. Dejó de ondear ayer a las 19:30, hace 13,5 h.
+    // Se sigue diciendo que está fuera de horario, pero sin pintar bandera.
+    jest.useFakeTimers().setSystemTime(new Date('2026-07-28T05:00:00.000Z'));
+    mockDetalle(buildOutOfHoursDetail());
+
+    const { container } = renderDetalle('3907501');
+    await screen.findByText('Estado para bañarse (según Cruz Roja)');
+
+    expect(container.querySelector('.flag-pennant')).not.toHaveClass('green');
+    expect(container.querySelector('.flag-value')).toHaveTextContent('Fuera de horario');
+    expect(container.querySelector('.flag-value')).not.toHaveTextContent('Verde');
   });
 
   it('oculta el banner cuando no hay bandera vigente dentro de horario', async () => {

@@ -6,6 +6,7 @@ import ScoreBadge from '../../components/ScoreBadge';
 import TrendBadge from '../../components/TrendBadge';
 import { useIdioma } from '../../shared/i18n/IdiomaContext';
 import { ClaveTexto } from '../../shared/i18n/es';
+import SafetyNotice from '../../shared/ui/SafetyNotice';
 import {
   traducirTextoApi,
   razonLegible,
@@ -143,12 +144,13 @@ const ScoreCard: React.FC<{
         </div>
       </button>
 
+      <SafetyNotice tipo="ranking" sobreOscuro />
+
       {scoreInfoOpen && (
         <div id="pd-score-info" className="pd-score-info">
           {/* Lo primero de la explicación, y no una segunda ⓘ compitiendo con
               esta: quien abre "cómo se calcula" ya está preguntando cuánto
               puede fiarse del número. */}
-          <p className="pd-score-aviso" role="note">{t('aviso.ranking')}</p>
           <p className="pd-score-info-intro">{t('detalle.scoreInfo.intro')}</p>
 
           {/* Why THIS beach scored what it scored. */}

@@ -9,7 +9,7 @@ import {
   getPlayas,
   getFeaturedBeaches,
 } from '../services/api';
-import { emojiCielo, flagColorClass } from '../utils/beachHelpers';
+import { emojiCielo, esNocheEn, flagColorClass } from '../utils/beachHelpers';
 import { normalizarInstante } from '../features/provenance/procedencia';
 import { FreshnessLabel } from '../features/provenance/SourceAndFreshness';
 import { rankearPlayas, codigoMejorPuntuacionNoHero } from '../utils/beachRanking';
@@ -17,7 +17,7 @@ import { haversineKm } from '../shared/geo/haversine';
 import { useUserLocation } from '../hooks/useUserLocation';
 import { useRevalidarAlVolver } from '../hooks/useRevalidarAlVolver';
 import BottomNavBar from '../shared/ui/BottomNavBar';
-import SelectorIdioma from '../shared/ui/SelectorIdioma';
+import HeaderActions from '../shared/ui/HeaderActions';
 import { useIdioma } from '../shared/i18n/IdiomaContext';
 import {
   traducirTextoApi,
@@ -28,7 +28,7 @@ import {
 } from '../shared/i18n/apiText';
 import ScoreBadge from '../components/ScoreBadge';
 import TrendBadge from '../components/TrendBadge';
-import InfoDatos from '../features/provenance/InfoDatos';
+import SafetyNotice from '../shared/ui/SafetyNotice';
 import { rutaPlaya } from '../shared/seo/beachUrls';
 import SeoHead from '../shared/seo/SeoHead';
 import { useFavoritas } from '../modules/favorites';
@@ -132,7 +132,9 @@ const HeroBeachCard: React.FC<{
   onVerEnMapa: () => void;
 }> = ({ beach, distKm, priorizadaPorCercania, onVerDetalles, onVerEnMapa }) => {
   const { t, idioma } = useIdioma();
-  const emoji = emojiCielo(beach.descripcionClima);
+  // `iconoClima` es el icono de OpenWeather ('01d'/'01n'): trae su propia
+  // decisión de día o noche, que sigue al ocaso real de esas coordenadas.
+  const emoji = emojiCielo(beach.descripcionClima, esNocheEn(beach));
   const flagClass = beach.bandera ? flagColorClass(beach.bandera) : null;
   const razon = razonSinPronostico(beach, razonLegible(beach.razonRanking));
 
@@ -216,7 +218,9 @@ const AlternativeRow: React.FC<{
   onClick: () => void;
 }> = ({ beach, distKm, esMejorPuntuacion, onClick }) => {
   const { t, idioma } = useIdioma();
-  const emoji = emojiCielo(beach.descripcionClima);
+  // `iconoClima` es el icono de OpenWeather ('01d'/'01n'): trae su propia
+  // decisión de día o noche, que sigue al ocaso real de esas coordenadas.
+  const emoji = emojiCielo(beach.descripcionClima, esNocheEn(beach));
   const flagClass = beach.bandera ? flagColorClass(beach.bandera) : null;
   const razon = razonSinPronostico(beach, razonLegible(beach.razonRanking));
 
@@ -414,10 +418,21 @@ const HomePage: React.FC = () => {
         descripcion={t('seo.descInicio')}
         rutaCanonica="/"
       />
-      <div className="hp-sticky-header" onClick={() => window.location.reload()} style={{ cursor: 'pointer' }}>
-        <h1 className="hp-sticky-title">{t('app.titulo')}</h1>
-        <p className="hp-sticky-subtitle">{t('home.subtitulo')}</p>
-        <SelectorIdioma />
+      {/* Recargar al tocar el encabezado, pero SOLO sobre el título: cuando el
+          manejador estaba en el contenedor, el clic en la ⓘ y en el selector
+          de idioma burbujeaba hasta aquí y recargaba la página en vez de
+          abrir el menú. `.header-actions` va en absoluto, así que envolver el
+          texto no mueve nada. */}
+      <div className="hp-sticky-header">
+        <div
+          className="hp-sticky-marca"
+          onClick={() => window.location.reload()}
+          style={{ cursor: 'pointer' }}
+        >
+          <h1 className="hp-sticky-title">{t('app.titulo')}</h1>
+          <p className="hp-sticky-subtitle">{t('home.subtitulo')}</p>
+        </div>
+        <HeaderActions />
       </div>
 
       <IonContent fullscreen>
@@ -513,13 +528,7 @@ const HomePage: React.FC = () => {
                     blanco que la columna izquierda ya deja por ser la corta.
                     Sigue siendo UNO para todo el ranking: alternativas y
                     "revisar antes" salen del mismo cálculo. */}
-                <InfoDatos
-                  etiqueta="info.aviso"
-                  aria="info.aria.ranking"
-                  className="hp-aviso-ranking"
-                >
-                  <p>{t('aviso.ranking')}</p>
-                </InfoDatos>
+                <SafetyNotice tipo="ranking" />
               </section>
 
               {alternativas.length > 0 && (
