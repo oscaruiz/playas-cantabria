@@ -1,0 +1,42 @@
+name: Flags freshness
+
+# Vigila que la cadena de entrega de banderas siga viva.
+#
+# Vive APARTE de scrape-flags.yml a propósito. Antes era un job dentro de él, y
+# eso lo dejaba ciego justo cuando más falta hacía: si GitHub descartaba el
+# disparo programado —cosa que hace a menudo, de 9 pasadas al día se ejecutan
+# 3–5— no corría el scrape y tampoco el vigilante. Un centinela que solo se
+# despierta cuando se despierta el vigilado no puede avisar de que no se
+# despertó.
+#
+# Separados, hacen falta DOS disparos independientes para quedarse a oscuras, y
+# eso es mucho menos probable que uno.
+
+on:
+  schedule:
+    # 12:00 y 16:00 UTC = 14:00 y 18:00 Madrid en verano: bien entrada la franja
+    # de vigilancia (11:30–19:30) y con el izado hecho hace horas. Se comprueba
+    # CUANDO la frescura debe existir, en vez de tolerar el peor caso a todas
+    # horas: eso es lo que permite exigir las mismas 8 h que exige la app.
+    - cron: '0 12,16 * * *'
+  workflow_dispatch: {}
+
+jobs:
+  frescura:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # `main`, no el SHA del disparo: lo que se mide es la frescura de las
+          # banderas publicadas ahora, no las de cuando se programó esta pasada.
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - run: npm run flags:freshness

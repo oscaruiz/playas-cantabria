@@ -22,13 +22,16 @@ on:
     # Cruz Roja iza bandera en horario de vigilancia (11:30–19:30 Madrid, a diario,
     # en temporada de verano). Scrapeamos CADA HORA a :30 durante toda la franja para
     # reflejar cambios de bandera cuanto antes.
-    # Optimizado para VERANO (CEST = UTC+2): 09:30–17:30 UTC = 11:30–19:30 Madrid (9
-    # pasadas). El primer disparo (11:30 Madrid) coincide con el izado; si aún no hay
-    # bandera, scrape-flags.ts NO sobrescribe flags.json (0 con color) y la siguiente
-    # pasada la recoge — además el cron de GitHub suele retrasarse, cayendo tras el izado.
-    # En invierno (CET = UTC+1) esto sería 10:30–18:30 Madrid, pero fuera de temporada
-    # no hay banderas izadas, así que esas pasadas son no-op (no sobrescriben).
-    - cron: '30 9-17 * * *'
+    # Optimizado para VERANO (CEST = UTC+2). Empieza a las 07:30 UTC (09:30 Madrid),
+    # DOS HORAS ANTES del izado, y no por despiste: medido sobre las pasadas reales,
+    # GitHub descarta la mayoría de los disparos programados y los que ejecuta llegan
+    # con 1,5–2 h de retraso. Con el inicio a las 09:30 Madrid, la primera pasada
+    # aterrizaba hacia las 13:00 y las banderas de la mañana se perdían. Adelantando
+    # el arranque, el retraso juega a favor: retrasada cae en el izado, y puntual es
+    # un no-op inofensivo (sin banderas izadas no se sobrescribe nada).
+    # En invierno (CET = UTC+1) sería 08:30–18:30 Madrid, pero fuera de temporada no
+    # hay banderas izadas, así que esas pasadas también son no-op.
+    - cron: '30 7-17 * * *'
   workflow_dispatch: {}
 
 permissions:
@@ -118,25 +121,3 @@ jobs:
           else
             echo "Sin cambios en flags.json ni snapshot.json"
           fi
-
-  # Ruidoso a propósito: hoy una cadena de entrega rota se ve igual que una
-  # playa tranquila, y las banderas son el dato más sensible que servimos.
-  frescura:
-    needs: [regiones, scrape]
-    if: always() && needs.regiones.outputs.hay == 'true'
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: backend
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          # Tras los push de la matriz, o comprobaría la frescura del commit viejo.
-          ref: main
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: npm
-          cache-dependency-path: backend/package-lock.json
-      - run: npm ci
-      - run: npm run flags:freshness
