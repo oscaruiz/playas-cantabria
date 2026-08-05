@@ -261,15 +261,28 @@ const PlayaDetallePage: React.FC = () => {
                   </button>
                   {/* Solo con nota: lo que se comparte ES la lectura del día, y
                       una tarjeta sin ella no diría nada que el enlace no diga
-                      mejor. La ficha ya oculta igual el bloque de puntuación. */}
+                      mejor. La ficha ya oculta igual el bloque de puntuación.
+
+                      `prevision` sigue la misma cascada que pinta la ficha: la
+                      hoja de AEMET cuando la hay y, cuando no, el día de
+                      `clima` con el que `ClimaHero` arma el panel. Sin ese
+                      segundo tramo, una playa sin hoja compartía "Sin dato"
+                      mientras su propia ficha decía "Tranquilo" dos dedos más
+                      abajo. */}
                   {puntuada && (
                     <BotonCompartirEstado
                       playa={datos}
                       puntuada={puntuada}
                       url={urlCanonica(rutaPlaya(datos))}
                       prevision={{
-                        viento: diaDeHoy?.tarde.viento ?? diaDeHoy?.manana.viento,
-                        oleaje: diaDeHoy?.tarde.oleaje ?? diaDeHoy?.manana.oleaje,
+                        viento:
+                          diaDeHoy?.tarde.viento ??
+                          diaDeHoy?.manana.viento ??
+                          datos.clima?.hoy?.wind,
+                        oleaje:
+                          diaDeHoy?.tarde.oleaje ??
+                          diaDeHoy?.manana.oleaje ??
+                          datos.clima?.hoy?.waves,
                       }}
                       horas={datos.tiempoActual?.previsionHoras}
                       mareas={indiceDeHoy >= 0 ? pred?.mareas?.[indiceDeHoy] : undefined}
