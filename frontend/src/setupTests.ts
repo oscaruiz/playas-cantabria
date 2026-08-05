@@ -15,6 +15,14 @@ window.matchMedia = window.matchMedia || function() {
   };
 };
 
+// jsdom has no canvas: `getContext` raises a "not implemented" jsdomError that
+// reaches console.error asynchronously, landing on whichever test happens to
+// be running by then — that is how a click on "Compartir" in one test failed
+// an unrelated one further down the file. Returning null is what a browser
+// without 2d support does, and it is the path the share card already handles:
+// no image, the link goes out on its own.
+HTMLCanvasElement.prototype.getContext = () => null;
+
 // jsdom exposes navigator.language = 'en-US'; we pin Spanish so that
 // tests asserting Spanish text don't depend on language detection.
 // (The i18n tests do localStorage.clear() when they need to test it.)

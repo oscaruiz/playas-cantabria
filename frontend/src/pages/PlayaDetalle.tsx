@@ -6,7 +6,7 @@ import {
   IonSpinner,
   IonIcon,
 } from '@ionic/react';
-import { chevronBackOutline, navigateOutline, mapOutline, shareSocialOutline } from 'ionicons/icons';
+import { chevronBackOutline, navigateOutline, mapOutline } from 'ionicons/icons';
 import { useHistory, useParams, Link } from 'react-router-dom';
 import {
   getDetallePlaya,
@@ -21,7 +21,7 @@ import { rutaPlaya, encontrarPorSlugs } from '../shared/seo/beachUrls';
 import SeoHead, { urlCanonica } from '../shared/seo/SeoHead';
 import BottomNavBar from '../shared/ui/BottomNavBar';
 import HeaderActions from '../shared/ui/HeaderActions';
-import { BotonCompartirEstado } from '../modules/compartir';
+import { BotonCompartir } from '../modules/compartir';
 import './PlayaDetalle.css';
 import { useIdioma } from '../shared/i18n/IdiomaContext';
 import { isToday } from './playa-detalle/dates';
@@ -148,24 +148,6 @@ const PlayaDetallePage: React.FC = () => {
   }, [codigoResuelto]);
 
   const [selectedDay, setSelectedDay] = useState(0);
-  // Share: native sheet when the platform has one; otherwise copy the
-  // canonical URL and say so for a moment. Never a third-party SDK.
-  const [enlaceCopiado, setEnlaceCopiado] = useState(false);
-  const compartir = async (playaActual: PlayaDetalleData) => {
-    const url = urlCanonica(rutaPlaya(playaActual));
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: t('seo.tituloDetalle', { nombre: playaActual.nombre }), url });
-      } else {
-        await navigator.clipboard.writeText(url);
-        setEnlaceCopiado(true);
-        setTimeout(() => setEnlaceCopiado(false), 2000);
-      }
-    } catch {
-      // The user dismissed the share sheet (or clipboard was denied):
-      // nothing to report.
-    }
-  };
   const pred = datos?.prediccionCompleta;
   const safeDayIndex = pred ? Math.min(selectedDay, pred.dias.length - 1) : 0;
   // TODAY, not the tab that happens to be open: the shared card is always
@@ -251,17 +233,9 @@ const PlayaDetallePage: React.FC = () => {
                   >
                     <IonIcon icon={mapOutline} aria-hidden="true" /> {t('detalle.verEnMapa')}
                   </button>
-                  <button
-                    className="hero-directions-link"
-                    onClick={() => compartir(datos)}
-                    aria-live="polite"
-                  >
-                    <IonIcon icon={shareSocialOutline} aria-hidden="true" />{' '}
-                    {enlaceCopiado ? t('detalle.enlaceCopiado') : t('detalle.compartir')}
-                  </button>
-                  {/* Solo con nota: lo que se comparte ES la lectura del día, y
-                      una tarjeta sin ella no diría nada que el enlace no diga
-                      mejor. La ficha ya oculta igual el bloque de puntuación.
+                  {/* Un solo compartir: manda la tarjeta del día CON el enlace
+                      en el pie, y va degradando solo (enlace suelto, enlace al
+                      portapapeles) según lo que admita el aparato.
 
                       `prevision` sigue la misma cascada que pinta la ficha: la
                       hoja de AEMET cuando la hay y, cuando no, el día de
@@ -269,26 +243,24 @@ const PlayaDetallePage: React.FC = () => {
                       segundo tramo, una playa sin hoja compartía "Sin dato"
                       mientras su propia ficha decía "Tranquilo" dos dedos más
                       abajo. */}
-                  {puntuada && (
-                    <BotonCompartirEstado
-                      playa={datos}
-                      puntuada={puntuada}
-                      url={urlCanonica(rutaPlaya(datos))}
-                      prevision={{
-                        viento:
-                          diaDeHoy?.tarde.viento ??
-                          diaDeHoy?.manana.viento ??
-                          datos.clima?.hoy?.wind,
-                        oleaje:
-                          diaDeHoy?.tarde.oleaje ??
-                          diaDeHoy?.manana.oleaje ??
-                          datos.clima?.hoy?.waves,
-                      }}
-                      horas={datos.tiempoActual?.previsionHoras}
-                      mareas={indiceDeHoy >= 0 ? pred?.mareas?.[indiceDeHoy] : undefined}
-                      puertoMareas={pred?.fuenteMareas}
-                    />
-                  )}
+                  <BotonCompartir
+                    playa={datos}
+                    puntuada={puntuada}
+                    url={urlCanonica(rutaPlaya(datos))}
+                    prevision={{
+                      viento:
+                        diaDeHoy?.tarde.viento ??
+                        diaDeHoy?.manana.viento ??
+                        datos.clima?.hoy?.wind,
+                      oleaje:
+                        diaDeHoy?.tarde.oleaje ??
+                        diaDeHoy?.manana.oleaje ??
+                        datos.clima?.hoy?.waves,
+                    }}
+                    horas={datos.tiempoActual?.previsionHoras}
+                    mareas={indiceDeHoy >= 0 ? pred?.mareas?.[indiceDeHoy] : undefined}
+                    puertoMareas={pred?.fuenteMareas}
+                  />
                 </div>
               )}
 

@@ -1,51 +1,62 @@
 /** What actually happened, so the button can say it. */
-export type ResultadoCompartir = 'compartida' | 'descargada' | 'cancelada';
+export type ResultadoCompartir = 'conImagen' | 'soloEnlace' | 'enlaceCopiado' | 'cancelada';
 
 /** Combining marks left behind by NFD — written as escapes, not as the marks
     themselves, which are invisible in an editor and get mangled on edit. */
 const TILDES_SUELTAS = new RegExp('[\\u0300-\\u036f]', 'g');
 
-function descargar(blob: Blob, nombreArchivo: string): void {
-  const url = URL.createObjectURL(blob);
-  const enlace = document.createElement('a');
-  enlace.href = url;
-  enlace.download = nombreArchivo;
-  document.body.appendChild(enlace);
-  enlace.click();
-  enlace.remove();
-  // Revoked on the next tick: Safari cancels the download if the URL dies
-  // while the click is still being processed.
-  setTimeout(() => URL.revokeObjectURL(url), 0);
-}
-
 /**
- * Native share sheet with the image attached — that is the route to WhatsApp —
- * and a plain download where the platform has no such sheet (every desktop
- * browser, and Firefox on Android). It never fails silently: if sharing breaks
- * for any reason other than the user dismissing it, the image is downloaded so
- * it is not simply lost.
+ * One share, degrading in three steps: the card WITH the link, the link alone,
+ * and the link on the clipboard.
+ *
+ * They are steps of the same action and not separate buttons on purpose. Two
+ * buttons made the user choose between "link" and "image" before knowing what
+ * their own phone could do with either — and the honest answer is that the
+ * image is a bonus of the platform, not a different intention. What is being
+ * shared is the beach; how much of it travels is up to the share sheet.
  */
-export async function compartirImagen(
-  blob: Blob,
-  nombreArchivo: string,
-  titulo: string,
-  texto: string,
-): Promise<ResultadoCompartir> {
-  const archivo = new File([blob], nombreArchivo, { type: blob.type || 'image/png' });
+export async function compartirPlaya({
+  imagen,
+  nombreArchivo,
+  titulo,
+  url,
+}: {
+  imagen: Blob | null;
+  nombreArchivo: string;
+  titulo: string;
+  url: string;
+}): Promise<ResultadoCompartir> {
+  if (imagen && navigator.share) {
+    const archivo = new File([imagen], nombreArchivo, { type: imagen.type || 'image/png' });
+    // The URL travels as the text so it lands in the caption: a target that
+    // takes files often drops a separate `url`, and then the card would leave
+    // with no way back to the app.
+    const carga = { files: [archivo], title: titulo, text: url };
+    // `canShare` is the only honest check: a browser can have `share` and still
+    // refuse files, and calling `share` then throws after the user has tapped.
+    if (navigator.canShare?.(carga)) {
+      try {
+        await navigator.share(carga);
+        return 'conImagen';
+      } catch (error) {
+        if ((error as Error)?.name === 'AbortError') return 'cancelada';
+        // Anything else and we still owe them the link, which is the minimum
+        // this button promised long before the card existed.
+      }
+    }
+  }
 
-  // `canShare` is the only honest check: a browser can have `share` and still
-  // refuse files, and calling `share` then throws after the user has tapped.
-  if (navigator.share && navigator.canShare?.({ files: [archivo] })) {
+  if (navigator.share) {
     try {
-      await navigator.share({ files: [archivo], title: titulo, text: texto });
-      return 'compartida';
+      await navigator.share({ title: titulo, url });
+      return 'soloEnlace';
     } catch (error) {
       if ((error as Error)?.name === 'AbortError') return 'cancelada';
     }
   }
 
-  descargar(blob, nombreArchivo);
-  return 'descargada';
+  await navigator.clipboard.writeText(url);
+  return 'enlaceCopiado';
 }
 
 /** Filename the receiver ends up seeing: beach and day, no ids. */
