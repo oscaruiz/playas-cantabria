@@ -21,6 +21,7 @@ import { rutaPlaya, encontrarPorSlugs } from '../shared/seo/beachUrls';
 import SeoHead, { urlCanonica } from '../shared/seo/SeoHead';
 import BottomNavBar from '../shared/ui/BottomNavBar';
 import HeaderActions from '../shared/ui/HeaderActions';
+import { BotonCompartirEstado } from '../modules/compartir';
 import './PlayaDetalle.css';
 import { useIdioma } from '../shared/i18n/IdiomaContext';
 import { isToday } from './playa-detalle/dates';
@@ -167,6 +168,13 @@ const PlayaDetallePage: React.FC = () => {
   };
   const pred = datos?.prediccionCompleta;
   const safeDayIndex = pred ? Math.min(selectedDay, pred.dias.length - 1) : 0;
+  // TODAY, not the tab that happens to be open: the shared card is always
+  // today's reading, and it must not change because someone tapped "Tomorrow"
+  // before sharing. Same precedence as `ForecastHero` — afternoon, then morning.
+  // The tide table is indexed by the SAME position as the day, so the index is
+  // what travels, not the day: `mareas[i]` belongs to `dias[i]`.
+  const indiceDeHoy = pred ? Math.max(0, pred.dias.findIndex((d) => isToday(d.fecha))) : -1;
+  const diaDeHoy = indiceDeHoy >= 0 ? pred?.dias[indiceDeHoy] : undefined;
 
   return (
     <IonPage className="playa-detalle-page">
@@ -251,6 +259,23 @@ const PlayaDetallePage: React.FC = () => {
                     <IonIcon icon={shareSocialOutline} aria-hidden="true" />{' '}
                     {enlaceCopiado ? t('detalle.enlaceCopiado') : t('detalle.compartir')}
                   </button>
+                  {/* Solo con nota: lo que se comparte ES la lectura del día, y
+                      una tarjeta sin ella no diría nada que el enlace no diga
+                      mejor. La ficha ya oculta igual el bloque de puntuación. */}
+                  {puntuada && (
+                    <BotonCompartirEstado
+                      playa={datos}
+                      puntuada={puntuada}
+                      url={urlCanonica(rutaPlaya(datos))}
+                      prevision={{
+                        viento: diaDeHoy?.tarde.viento ?? diaDeHoy?.manana.viento,
+                        oleaje: diaDeHoy?.tarde.oleaje ?? diaDeHoy?.manana.oleaje,
+                      }}
+                      horas={datos.tiempoActual?.previsionHoras}
+                      mareas={indiceDeHoy >= 0 ? pred?.mareas?.[indiceDeHoy] : undefined}
+                      puertoMareas={pred?.fuenteMareas}
+                    />
+                  )}
                 </div>
               )}
 

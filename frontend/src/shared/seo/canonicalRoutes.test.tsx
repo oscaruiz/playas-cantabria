@@ -122,7 +122,9 @@ describe('compartir desde el detalle', () => {
     });
     await screen.findByText('La Arnía');
 
-    fireEvent.click(screen.getByRole('button', { name: /Compartir/ }));
+    // Anclado: al lado vive "Compartir el estado de hoy", que manda una imagen
+    // y no un enlace. Sin el ancla, la consulta encuentra los dos y falla.
+    fireEvent.click(screen.getByRole('button', { name: /^Compartir$/ }));
 
     await screen.findByText('Enlace copiado');
     expect(escribir).toHaveBeenCalledWith(
