@@ -52,10 +52,12 @@
   font-size: 1.5rem;
 }
 
-/* Takes the space the back button, the star and the language selector leave,
-   and no more: without flex-grow it sized itself to the title's content and
-   pushed the star on top of the selector. */
-.pd-sticky-header > div {
+/* Takes the space the back button, the star and the actions leave, and no
+   more: without flex-grow it sized itself to the title's content and pushed
+   the star on top of the selector. The `:not()` matters — the actions block is
+   a div of this same row, and growing it too would stretch the ⓘ across the
+   header instead of leaving it at the end. */
+.pd-sticky-header > div:not(.header-actions) {
   flex: 1;
   min-width: 0;
 }
@@ -72,19 +74,12 @@
   text-overflow: ellipsis;
 }
 
-/* The language selector is absolutely positioned (it is shared by the four
-   headers), so the flow has to reserve its width or whatever comes last lands
-   underneath it — which is exactly what happened to the star. Reserved here,
-   once, instead of padding the title: the star is now the item that stops
-   before the selector, and the title gets every pixel that is left.
-   Measured, not guessed: the selector renders 79px wide and sits 16px from
-   the edge, so the star clears it from 83px onwards — at the 72px this first
-   used, the two boxes still overlapped by 11px and the star was tappable on
-   top of the ES button, which is how the bug looked. 88px leaves 5px of air,
-   and every pixel above that comes straight out of the beach name. */
-.pd-sticky-header .fav-btn {
-  margin-right: 88px;
-}
+/* The reserved margin that used to live here is gone: the actions block was
+   absolutely positioned and the flow had to keep 88px free by hand or the star
+   landed on top of the selector. It was measured against a selector 79px wide,
+   and the day the ⓘ grew a text label the number was wrong — which is how the
+   bug came back, this time with the title underneath as well. The block is now
+   the last item of this same flex row, so the row does the reserving. */
 
 .pd-sticky-subtitle {
   font-size: 0.78rem;

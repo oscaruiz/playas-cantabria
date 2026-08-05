@@ -47,8 +47,10 @@ const LandingPlayas: React.FC<{ id: LandingId }> = ({ id }) => {
         rutaCanonica={`/${id}`}
       />
       <div className="home-sticky-header">
-        <h1 className="home-sticky-title">{t(`landing.${id}.titulo` as ClaveTexto)}</h1>
-        <p className="home-sticky-subtitle">{t('app.titulo')}</p>
+        <div className="home-sticky-marca">
+          <h1 className="home-sticky-title">{t(`landing.${id}.titulo` as ClaveTexto)}</h1>
+          <p className="home-sticky-subtitle">{t('app.titulo')}</p>
+        </div>
         <HeaderActions />
       </div>
       <IonContent fullscreen>

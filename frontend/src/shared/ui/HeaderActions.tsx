@@ -7,11 +7,37 @@ import SelectorIdioma from './SelectorIdioma';
 import { GITHUB, EMAIL } from '../config/contacto';
 import './HeaderActions.css';
 
+/* A phone header does not fit the brand title plus two controls: "Playas de
+   Cantabria" in Pacifico asks for ~313px on its own and the ⓘ and the pill ask
+   for another ~200. Above this width the pill rides in the bar; below it, it
+   drops into the menu. It is decided in JS and not with a media query on
+   purpose: rendering it twice and hiding one copy would put two ES/EN pairs in
+   the accessibility tree, which is worse than the layout it fixes. */
+const PILDORA_EN_LA_BARRA = '(min-width: 560px)';
+
+function usePildoraEnLaBarra(): boolean {
+  const [enLaBarra, setEnLaBarra] = useState(
+    () => window.matchMedia?.(PILDORA_EN_LA_BARRA).matches ?? true,
+  );
+
+  useEffect(() => {
+    const mq = window.matchMedia?.(PILDORA_EN_LA_BARRA);
+    if (!mq?.addEventListener) return undefined;
+    const alCambiar = (event: MediaQueryListEvent) => setEnLaBarra(event.matches);
+    setEnLaBarra(mq.matches);
+    mq.addEventListener('change', alCambiar);
+    return () => mq.removeEventListener('change', alCambiar);
+  }, []);
+
+  return enLaBarra;
+}
+
 /** Compact project-information menu, placed in the header like common content apps. */
 const HeaderActions: React.FC = () => {
   const { t } = useIdioma();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const pildoraEnLaBarra = usePildoraEnLaBarra();
 
   useEffect(() => {
     if (!open) return undefined;
@@ -64,9 +90,17 @@ const HeaderActions: React.FC = () => {
             <span>{t('nav.enviarEmail')}</span>
             <IonIcon className="header-info-salida" icon={openOutline} aria-hidden="true" />
           </a>
+          {/* El rótulo va decorativo: el propio selector ya se anuncia como un
+              grupo llamado "Idioma", y repetirlo lo diría dos veces. */}
+          {!pildoraEnLaBarra && (
+            <div className="header-info-idioma" role="none">
+              <span aria-hidden="true">{t('selector.idioma')}</span>
+              <SelectorIdioma />
+            </div>
+          )}
         </div>
       )}
-      <SelectorIdioma />
+      {pildoraEnLaBarra && <SelectorIdioma />}
     </div>
   );
 };

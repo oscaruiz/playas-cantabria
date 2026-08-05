@@ -1,8 +1,14 @@
+/* Las acciones son el último elemento de la fila de la cabecera y se pegan a su
+   extremo derecho. Antes iban en `absolute`, y eso obligaba a cada cabecera a
+   reservarles el hueco a mano (un `margin-right` medido, un `right:` por
+   breakpoint). Cuando la ⓘ se llevó una etiqueta de texto, esas medidas se
+   quedaron cortas de golpe y el título y la estrella acabaron debajo. En el
+   flujo el reparto lo hace la propia cabecera y no hay nada que mantener. */
 .header-actions {
-  position: absolute;
+  position: relative;
   z-index: 20;
-  top: calc(env(safe-area-inset-top, 0px) + 14px);
-  right: 16px;
+  flex: none;
+  margin-left: auto;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -13,23 +19,19 @@
 }
 
 .header-info-button {
-  width: 34px;
   height: 34px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 5px;
+  padding: 0 9px;
   border: 1px solid rgba(255, 255, 255, 0.35);
   border-radius: 8px;
   background: transparent;
   color: #fff;
-  cursor: pointer;
-}
-
-.header-info-button {
-  width: auto;
-  gap: 5px;
-  padding: 0 9px;
   font: 600 0.75rem 'Poppins', sans-serif;
+  white-space: nowrap;
+  cursor: pointer;
 }
 
 .header-info-button ion-icon { font-size: 1.05rem; }
@@ -37,8 +39,8 @@
 
 .header-info-menu {
   position: absolute;
-  top: 42px;
-  right: 58px;
+  top: calc(100% + 6px);
+  right: 0;
   min-width: 220px;
   display: flex;
   flex-direction: column;
@@ -86,7 +88,48 @@
 
 .header-info-menu a:hover, .header-info-menu a:focus-visible { background: var(--playa-ocean-light); color: var(--playa-ocean); }
 
+/* El selector cuando cae dentro del menú: la píldora está pintada para ir
+   sobre la cabecera azul (bordes y texto blancos), y aquí el fondo es papel. */
+.header-info-idioma {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 4px;
+  padding: 10px 11px 4px;
+  border-top: 1px solid var(--playa-border);
+}
+
+.header-info-idioma > span {
+  color: var(--playa-text-muted);
+  font-size: 0.8rem;
+}
+
+.header-info-idioma .selector-idioma {
+  border-color: var(--playa-border);
+}
+
+.header-info-idioma .selector-idioma-btn {
+  color: var(--playa-text-muted);
+}
+
+.header-info-idioma .selector-idioma-btn.active {
+  background: var(--playa-ocean);
+  color: #ffffff;
+}
+
+/* En el móvil la etiqueta es lo primero que sobra: el icono y el nombre
+   accesible del botón siguen diciendo qué es. */
+@media (max-width: 559px) {
+  .header-info-button {
+    width: 34px;
+    padding: 0;
+  }
+
+  .header-info-button span { display: none; }
+}
+
 @media (max-width: 390px) {
-  .header-actions { right: 10px; gap: 5px; }
-  .header-info-menu { right: 48px; min-width: 200px; }
+  .header-actions { gap: 5px; }
+  .header-info-menu { min-width: 200px; }
 }

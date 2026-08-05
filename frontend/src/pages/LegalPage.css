@@ -1,9 +1,5 @@
 .legal-page { color: var(--playa-text); }
 .legal-header {
-  /* Bloque contenedor de `.header-actions`, que va en absolute: sin esto se
-     anclaba al IonPage y flotaba sobre el contenido al hacer scroll. Las otras
-     cabeceras de la app son `fixed`, así que ya lo eran de por sí. */
-  position: relative;
   min-height: 64px;
   padding: 12px 20px;
   display: flex;
@@ -11,8 +7,6 @@
   justify-content: space-between;
   background: var(--playa-header-grad);
 }
-.legal-header .header-actions { top: 14px; }
-
 /* Mismo criterio que en portada, listado y mapa: el título y las acciones
    terminan justo donde termina el texto (760px centrados), no pegados al filo
    de la ventana. El `max(...)` deja el margen mínimo en pantallas estrechas. */
@@ -20,8 +14,10 @@
   /* El +20px es el padding de `.legal-main`: sin él se alinea con la caja del
      texto y no con el texto. Mismo truco que el +16px de la portada, que ahí
      es el padding de `.hp-body`. */
-  .legal-header { padding-left: max(20px, calc((100% - 760px) / 2 + 20px)); }
-  .legal-header .header-actions { right: max(16px, calc((100% - 760px) / 2 + 20px)); }
+  .legal-header {
+    padding-left: max(20px, calc((100% - 760px) / 2 + 20px));
+    padding-right: max(20px, calc((100% - 760px) / 2 + 20px));
+  }
 }
 .legal-header-izq { display: flex; align-items: center; gap: 10px; }
 /* `.pd-back-btn` se define en PlayaDetalle.css, que esta página no carga:

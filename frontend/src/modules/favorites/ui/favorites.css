@@ -27,6 +27,7 @@
    default state is invisible on the header's dark ocean gradient. The
    active gold keeps enough contrast on that background. */
 .pd-sticky-header .fav-btn {
+  flex: none;
   font-size: 1.55rem;
   padding: 8px;
   color: #ffffff;

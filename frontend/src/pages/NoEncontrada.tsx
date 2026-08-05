@@ -22,7 +22,9 @@ const NoEncontrada: React.FC = () => {
         noindex
       />
       <div className="home-sticky-header">
-        <p className="home-sticky-title">{t('app.titulo')}</p>
+        <div className="home-sticky-marca">
+          <p className="home-sticky-title">{t('app.titulo')}</p>
+        </div>
         <HeaderActions />
       </div>
       <IonContent fullscreen>

@@ -21,6 +21,16 @@
   background-size: 320px 96px, auto;
   padding: 16px 20px 14px;
   padding-top: calc(env(safe-area-inset-top, 0px) + 16px);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Igual que en la portada: la marca se queda con lo que dejan las acciones, y
+   el `min-width: 0` es lo que le permite encoger en vez de empujarlas fuera. */
+.home-sticky-marca {
+  flex: 1;
+  min-width: 0;
 }
 
 .home-sticky-title {
@@ -30,6 +40,9 @@
   margin: 0 0 4px;
   line-height: 1.2;
   color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .home-sticky-subtitle {
@@ -38,6 +51,15 @@
   margin: 0;
   font-weight: 400;
   color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Misma razón que en la portada: la cabecera son 84px fijos, el título no
+   puede pasar de una línea y en un móvil de 360px Pacifico a 1.6rem no cabe. */
+@media (max-width: 430px) {
+  .home-sticky-title { font-size: 1.4rem; }
 }
 
 /* --- Header hero area (banda bajo el header fijo) --- */
@@ -443,14 +465,8 @@
     padding-right: max(20px, calc((100% - 1080px) / 2 + 20px));
   }
 
-  /* El mismo margen que alinea el título a la izquierda, aplicado al borde
-     derecho: así las acciones acaban justo donde acaban las fichas y no
-     pegadas al filo de la ventana. Apunta a `.header-actions` porque el
-     selector de idioma vive dentro y allí es `static`; la regla que lo
-     apuntaba a él directamente ya no hacía nada. */
-  .home-sticky-header .header-actions {
-    right: max(16px, calc((100% - 1080px) / 2 + 16px));
-  }
+  /* Las acciones ya terminan donde termina el `padding-right` de arriba: van
+     en el flujo y no tienen un `right:` propio que mantener a juego. */
 }
 
 @media (min-width: 900px) {

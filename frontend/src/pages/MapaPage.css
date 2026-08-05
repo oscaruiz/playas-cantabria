@@ -10,6 +10,16 @@
   padding: 16px 20px 14px;
   padding-top: calc(env(safe-area-inset-top, 0px) + 16px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Igual que en la portada y el listado: la marca se queda con lo que dejan las
+   acciones, y el `min-width: 0` le deja encoger en vez de empujarlas fuera. */
+.mapa-sticky-marca {
+  flex: 1;
+  min-width: 0;
 }
 
 .mapa-sticky-title {
@@ -19,6 +29,9 @@
   margin: 0 0 4px;
   line-height: 1.2;
   color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .mapa-sticky-subtitle {
@@ -27,6 +40,13 @@
   margin: 0;
   font-weight: 400;
   color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 430px) {
+  .mapa-sticky-title { font-size: 1.4rem; }
 }
 
 /* Alinea el título/selector con el contenedor de las demás páginas
@@ -37,14 +57,8 @@
     padding-right: max(20px, calc((100% - 1080px) / 2 + 20px));
   }
 
-  /* El mismo margen que alinea el título a la izquierda, aplicado al borde
-     derecho: así las acciones acaban justo donde acaban las fichas y no
-     pegadas al filo de la ventana. Apunta a `.header-actions` porque el
-     selector de idioma vive dentro y allí es `static`; la regla que lo
-     apuntaba a él directamente ya no hacía nada. */
-  .mapa-sticky-header .header-actions {
-    right: max(16px, calc((100% - 1080px) / 2 + 16px));
-  }
+  /* Las acciones ya terminan donde termina el `padding-right` de arriba: van
+     en el flujo y no tienen un `right:` propio que mantener a juego. */
 }
 
 /* --- Content --- */
