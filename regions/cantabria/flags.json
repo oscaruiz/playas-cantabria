@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-12T13:55:56.908Z",
+  "generatedAt": "2026-08-12T15:28:39.213Z",
   "flags": {
     "30": {
       "color": "yellow",
@@ -373,8 +373,8 @@
       "schedule": "11:30 - 19:30"
     },
     "1119": {
-      "color": "yellow",
-      "message": "Amarilla",
+      "color": "red",
+      "message": "Roja",
       "coverageFrom": "12-06-2026",
       "coverageTo": "15-09-2026",
       "schedule": "11:30 - 19:30"
