@@ -40,3 +40,42 @@ jobs:
           cache-dependency-path: backend/package-lock.json
       - run: npm ci
       - run: npm run flags:freshness
+
+  # Un cron en rojo no avisa a nadie: del 14 al 16-ago-2026 este vigilante falló
+  # seis veces seguidas y la única señal que llegó fue la app sin banderas.
+  avisar:
+    needs: frescura
+    if: failure()
+    uses: ./.github/workflows/alerta-issue.yml
+    permissions:
+      issues: write
+    with:
+      titulo: 'Banderas: la cadena de entrega está caída'
+      cuerpo: |
+        `flags-freshness` ha fallado: el `flags.json` publicado en `main` es más viejo
+        que las 8 h que la app tolera antes de ocultar el color, así que **ahora mismo
+        la web no está enseñando banderas**.
+
+        Dónde mirar, por orden:
+        1. **`regions/<region>/flags-diag.json`** en `main`. Lo escribe cada pasada y
+           dice qué contestaron las fichas: `conColor: 0` con `alts` lleno de
+           «No hay información» significa que el sitio contestó pero sin banderas, y
+           no que no hayamos podido llegar.
+        2. Las últimas pasadas de **Scrape Cruz Roja flags**: salir en verde sin
+           commitear `flags.json` es lo esperado cuando no hay nada izado.
+        3. `npm run scrape:flags` en local, para ver si contesta distinto desde otra
+           conexión.
+
+  # El mismo aviso se apaga solo cuando la frescura vuelve. Cerrar al recuperarse
+  # la frescura —y no al recuperarse el scraper— es deliberado: lo que se vigila
+  # es que la app enseñe banderas, no que un job concreto termine bien.
+  cerrar-aviso:
+    needs: frescura
+    if: success()
+    uses: ./.github/workflows/alerta-issue.yml
+    permissions:
+      issues: write
+    with:
+      titulo: 'Banderas: la cadena de entrega está caída'
+      accion: cerrar
+      cuerpo: 'La frescura vuelve a estar dentro del límite: las banderas se están entregando.'

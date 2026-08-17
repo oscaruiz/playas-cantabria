@@ -3,14 +3,20 @@
  *
  * Meant to run:
  *  - in GitHub Actions (cron) → commits the flags.json that the backend serves, or
- *  - locally (Spanish residential IP) as a fallback if Azure/GitHub is blocked.
+ *  - locally, as a fallback when the scheduled run is not delivering.
  *
- * cruzroja.es (WAF F5) returns 403 to datacenter IPs. This script prints the
- * HTTP status of each beach to make it obvious whether the environment is blocked.
+ * Prints the HTTP status of every fiche so a pass that brings nothing says why.
+ *
+ * Cada pasada deja además `flags-diag.json` al lado del fichero de banderas, y lo
+ * deja SIEMPRE, también cuando la pasada falla. Del 14 al 16-ago-2026 la entrega
+ * estuvo rota 34 h y lo único que lo habría explicado —qué contestaron las
+ * fichas— vivía en el log de Actions, que hace falta autenticarse para leer.
+ * Commiteado al repo, un día malo deja prueba por sí solo.
  *
  *   Usage: npm run scrape:flags   (cwd = backend/)
  */
 import fs from 'fs/promises';
+import path from 'path';
 import axios from 'axios';
 import { load } from 'cheerio';
 import { resolveScriptRegion } from './scriptRegion';
@@ -46,9 +52,9 @@ function detectColor(alt: string): string | null {
   return null;
 }
 
-/** Pause between fiches: 69 POSTs back to back is what the WAF reads as a bot. */
+/** Pause between fiches: 69 POSTs back to back would be a burst on a small site. */
 const PAUSA_MS = 400;
-/** Attempts per fiche. The block is intermittent, so a second try often lands. */
+/** Attempts per fiche. The site fails intermittently, so a second try often lands. */
 const INTENTOS = 3;
 
 const dormir = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -102,6 +108,52 @@ async function fetchOneOnce(id: number): Promise<{ status: number | null; flag: 
   }
 }
 
+/**
+ * Lo que la pasada vio, para que un día malo se explique sin abrir el log de
+ * Actions (que hace falta autenticarse para descargar).
+ */
+interface Diagnostico {
+  ranAt: string;
+  region: string;
+  ids: number;
+  conFicha: number;
+  conColor: number;
+  rechazadas403: number;
+  estadosHttp: Record<string, number>;
+  /**
+   * What the fiches actually SAID when they said no colour. A real
+   * "No hay información" and a page that simply came back without the data are
+   * both 200-without-colour, and used to print the same `??`: the log could not
+   * tell a quiet beach from a pass that got nothing. Now it can.
+   */
+  alts: Record<string, number>;
+  escrito: boolean;
+  motivo: string;
+}
+
+const diagPath = path.join(region.regionDir, 'flags-diag.json');
+
+/**
+ * El fichero es la evidencia de lo que ve la pasada programada, y por eso sólo lo
+ * escribe Actions. Una ejecución a mano —que es la otra mitad de la comparación—
+ * machacaría con sus propios datos justo la captura del día malo que hay que
+ * comparar. En local va por consola, que es donde lo lee quien la lanzó.
+ */
+async function escribirDiag(diag: Diagnostico): Promise<void> {
+  const json = JSON.stringify(diag, null, 2);
+  if (process.env.GITHUB_ACTIONS !== 'true') {
+    console.log(`\nDiagnóstico de esta pasada (local: no se escribe el fichero):\n${json}`);
+    return;
+  }
+  try {
+    await fs.writeFile(diagPath, json + '\n', 'utf-8');
+    console.log(`Diagnóstico en ${diagPath}`);
+  } catch (e: any) {
+    // Nunca fatal: el diagnóstico existe para explicar un fallo, no para causarlo.
+    console.warn(`No se pudo escribir el diagnóstico (${e?.message}).`);
+  }
+}
+
 async function main() {
   const beaches = JSON.parse(await fs.readFile(region.catalogPath, 'utf-8')) as Array<{
     nombre: string;
@@ -123,6 +175,7 @@ async function main() {
   let ok = 0;
   let blocked = 0;
   const statusCount: Record<string, number> = {};
+  const altCount: Record<string, number> = {};
 
   let primera = true;
   for (const id of ids) {
@@ -134,7 +187,9 @@ async function main() {
     if (r.flag) {
       flags[String(id)] = r.flag;
       ok++;
-      console.log(`  id ${id}: ${r.status} -> ${r.flag.color ?? '??'}`);
+      const alt = r.flag.message ?? '(sin alt)';
+      altCount[alt] = (altCount[alt] ?? 0) + 1;
+      console.log(`  id ${id}: ${r.status} -> ${r.flag.color ?? `?? "${alt}"`}`);
     } else {
       if (r.status === 403) blocked++;
       console.log(`  id ${id}: ${r.status ?? r.err} -> (sin bandera)`);
@@ -147,10 +202,33 @@ async function main() {
     statusCount
   );
 
-  if (ok === 0) {
+  const diag: Diagnostico = {
+    ranAt: new Date().toISOString(),
+    region: region.id,
+    ids: ids.length,
+    conFicha: ok,
+    conColor: colored,
+    rechazadas403: blocked,
+    estadosHttp: statusCount,
+    alts: altCount,
+    escrito: false,
+    motivo: ''
+  };
+
+  // Ni 0 fichas ni "casi ninguna". Exigir el cero absoluto dejaba pasar la
+  // respuesta parcial: con que UNA ficha de 69 contestara, el script seguía y
+  // escribía un flags.json al que le faltaban las otras 68 playas —o, si esa
+  // única ficha venía sin color, se iba por la rama silenciosa de abajo—.
+  // `<` y no `<=`: la regla es "falla si contesta MENOS de la mitad". Con
+  // `<= Math.floor(n/2)` una región de 2 estaciones con 1 respuesta —media, no
+  // menos— salía en rojo. Con 69 el resultado es el mismo (hacen falta 35).
+  if (ok < ids.length / 2) {
+    diag.motivo = 'demasiadas fichas sin respuesta';
+    await escribirDiag(diag);
     console.error(
-      `\n❌ 0 fichas obtenidas (${blocked} con 403). El entorno parece BLOQUEADO por el WAF.\n` +
-        `   No se sobrescribe flags.json. Prueba a ejecutar este script desde una IP residencial española.`
+      `\n❌ Solo ${ok}/${ids.length} fichas obtenidas (${blocked} con 403).\n` +
+        `   Estados: ${JSON.stringify(statusCount)}\n` +
+        `   No se sobrescribe flags.json: se conserva el último estado bueno.`
     );
     process.exit(1);
   }
@@ -165,10 +243,25 @@ async function main() {
   // rojo casi a diario y enterraba los fallos de verdad entre el ruido. Se
   // conserva el ultimo estado bueno y se sale en verde; que la ausencia se
   // prolongue lo vigila `flags-freshness`, que para eso esta.
+  //
+  // Se probó a ponerlo en rojo cuando la franja de vigilancia ya está abierta, y
+  // no se sostiene: la franja abre a las 11:30 pero Cruz Roja no publica hasta
+  // las 12:01-12:44 (medido sobre nueve días buenos), así que una pasada de las
+  // 11:49 —las hubo el 15 y el 16-ago-2026— saldría roja en un día impecable.
+  // Esperar tres horas para no mentir deja el aviso a las 14:30, y
+  // `flags-freshness` ya avisa a las 14:00. Una alarma, en un sitio.
   if (colored === 0) {
+    const alts = Object.entries(altCount)
+      .sort((a, b) => b[1] - a[1])
+      .map(([alt, n]) => `"${alt}" ×${n}`)
+      .join(', ');
+    diag.motivo = 'sin banderas izadas';
+    await escribirDiag(diag);
     console.warn(
       `\n⚠️  0 banderas con color (todas "No hay información"). Probablemente el scrape\n` +
         `   corrió ANTES del izado (11:30 Madrid) o la web no lo refleja todavía.\n` +
+        `   ${ok}/${ids.length} fichas contestaron. Alt recibidos: ${alts || '(ninguno)'}\n` +
+        `   Estados: ${JSON.stringify(statusCount)}\n` +
         `   No se sobrescribe flags.json para conservar el último estado bueno.`
     );
     return;
@@ -177,6 +270,9 @@ async function main() {
   const out = { generatedAt: new Date().toISOString(), flags };
   const outPath = region.flagsPath;
   await fs.writeFile(outPath, JSON.stringify(out, null, 2) + '\n', 'utf-8');
+  diag.escrito = true;
+  diag.motivo = 'captura escrita';
+  await escribirDiag(diag);
   console.log(`\n✅ Escrito ${outPath} con ${ok} banderas.`);
 }
 

@@ -26,23 +26,22 @@ import { Config } from '../config/config';
 export class RedCrossFlagProvider implements FlagProvider {
   private readonly base = 'https://www.cruzroja.es/appjv/consPlayas';
 
-  // cruzroja.es (WAF F5) returns 403 to any datacenter IP (Render US and EU).
-  // To get around it, ONLY this request is routed through a residential proxy / scraping-API
-  // if SCRAPER_PROXY_URL is defined (e.g. http://user:pass@host:puerto). Without the env,
-  // it goes direct (and in prod will keep returning 403, degrading to null without breaking anything).
+  // ONLY this request goes through an HTTP proxy when SCRAPER_PROXY_URL is set
+  // (e.g. http://user:pass@host:puerto). Without the env it goes direct, and if the
+  // site answers 403 the flag degrades to null without breaking anything else.
   private readonly proxyAgent = process.env.SCRAPER_PROXY_URL
     ? new HttpsProxyAgent(process.env.SCRAPER_PROXY_URL)
     : undefined;
 
-  // Pre-scraped flags (by the GitHub Action / local script from a non-blocked
-  // IP) and committed in the active region's flags.json. It is the PRIMARY source in prod,
-  // where the live scrape returns 403. If a beach is not in the file, we fall
-  // back to the live scrape (which works locally).
+  // Pre-scraped flags (by the GitHub Action or the local script) and committed in
+  // the active region's flags.json. It is the PRIMARY source in prod, where the live
+  // scrape often answers nothing. If a beach is not in the file, we fall back to the
+  // live scrape.
   private fileFlags: Map<number, FlagStatus> | null = null;
 
-  // Circuit breaker for the live scrape. cruzroja.es responds in 10-12s and its
-  // WAF blocks datacenter IPs: with 69 stations, retrying on every request
-  // hijacks the single process (0.1 CPU on Render free) without getting anything.
+  // Circuit breaker for the live scrape. cruzroja.es responds in 10-12s and fails
+  // intermittently: with 69 stations, retrying on every request hijacks the single
+  // process (0.1 CPU on Render free) without getting anything.
   // After several consecutive failures we stop trying for a while and serve flags.json.
   private fallosSeguidos = 0;
   private abiertoHasta = 0;
@@ -174,6 +173,19 @@ export class RedCrossFlagProvider implements FlagProvider {
     // entry carries a real color. An entry without color (e.g. the cron scraped
     // before the 11:30 flag hoisting and stored "No hay información") must NOT shadow
     // the live scrape, which in prod usually does return the already-hoisted flag.
+    //
+    // La edad NO entra en esta condición, y es deliberado. Se probó a dejar pasar al
+    // vivo también las entradas caducadas (>8 h) y sale caro: el fichero está caducado
+    // TODOS los días entre las 11:30 —cuando abre la franja— y que aterrice la primera
+    // captura hacia las 12:30, porque la última de ayer es de hace más de ocho horas.
+    // En esa ventana las 69 estaciones se iban al vivo; con el límite de concurrencia 3
+    // de `www.cruzroja.es` y respuestas de 10-12 s, un barrido completo son ~4 min, y un
+    // 200 sin color solo se cachea 300 s: el proceso se queda barriendo en bucle
+    // (~800 peticiones/hora frente a ~60) sobre los 0,1 CPU de Render free. El circuit
+    // breaker no lo frena, porque un 200 sin color cuenta como éxito.
+    // Y no compensa: los días en que el fichero se queda viejo, el scrape en vivo bebe
+    // de la misma fuente y tampoco trae color. Una bandera caducada la oculta ya
+    // `vigenciaBandera`; que la entrega se prolongue lo vigila `flags-freshness`.
     const fromFile = (await this.loadFileFlags()).get(redCrossId);
     if (fromFile?.color) return fromFile;
 
@@ -204,7 +216,7 @@ export class RedCrossFlagProvider implements FlagProvider {
 
     try {
       // The outer catch returns null WITHOUT caching: cruzroja.es is slow and
-      // unstable (10-12s responses and intermittent 503s behind its WAF F5), so
+      // unstable (10-12s responses and intermittent 503s), so
       // a failure must not stay cached for 24h — it is retried on the next
       // request and self-heals when the site responds.
       const status = await this.cache.getOrSet(key, TTL_SIN_COLOR, async () => {

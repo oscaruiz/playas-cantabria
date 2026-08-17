@@ -19,9 +19,10 @@ const httpsAgent = new https.Agent({
 });
 
 /**
- * Browser headers (UA + language) for scraping websites that filter bots.
- * Needed in production: sites like cruzroja.es or aemet.es reject the default
- * UA from datacenter IPs. Each caller adds its own `Accept`.
+ * Browser headers (UA + language) for the sites we read HTML from. Needed in
+ * production: cruzroja.es and aemet.es do not serve the default axios UA, and
+ * the Spanish `Accept-Language` is what gets their pages in Spanish. Each caller
+ * adds its own `Accept`.
  */
 export const BROWSER_HEADERS = {
   'User-Agent':

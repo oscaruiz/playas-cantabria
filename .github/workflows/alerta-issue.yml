@@ -1,0 +1,100 @@
+name: Aviso por issue
+
+# Lleva una alarma a una persona.
+#
+# El 14-ago-2026 la entrega de banderas se rompió y `flags-freshness` lo detectó
+# a la primera: falló seis pasadas seguidas, del 14 al 16. No sirvió de nada. Un
+# workflow programado en rojo no se lo cuenta a nadie —no hay quien mire la
+# pestaña de Actions un sábado— y el único síntoma que llegó fue la app sin
+# banderas durante dos días.
+#
+# Un issue sí: GitHub lo notifica por email y por la app del móvil. Y como se
+# abre uno solo por incidencia (mismo título ⇒ no se duplica) y se cierra cuando
+# la frescura vuelve, seis pasadas rojas siguen siendo un único aviso.
+
+on:
+  workflow_call:
+    inputs:
+      titulo:
+        description: Título exacto del issue; es la clave que evita duplicarlo.
+        required: true
+        type: string
+      cuerpo:
+        description: Cuerpo del issue al abrirlo, o comentario de cierre.
+        required: false
+        type: string
+        default: ''
+      accion:
+        description: '`abrir` (por defecto) o `cerrar`.'
+        required: false
+        type: string
+        default: abrir
+
+jobs:
+  avisar:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - uses: actions/github-script@v7
+        # Por `env` y no interpolado en el script: lo que llega en `cuerpo` es
+        # texto de otro workflow, y sustituirlo dentro del JavaScript lo dejaría
+        # ejecutarse.
+        env:
+          TITULO: ${{ inputs.titulo }}
+          CUERPO: ${{ inputs.cuerpo }}
+          ACCION: ${{ inputs.accion }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        with:
+          script: |
+            const titulo = process.env.TITULO;
+            const accion = process.env.ACCION;
+            const repo = { owner: context.repo.owner, repo: context.repo.repo };
+
+            // Por TÍTULO, no por etiqueta: la etiqueta es decoración y puede no
+            // existir todavía o habérsela quitado alguien, y si el de-duplicado
+            // dependiera de ella acabaríamos abriendo un aviso por pasada. Se
+            // descartan los PR, que la API de issues también devuelve.
+            const abiertos = await github.rest.issues.listForRepo({
+              ...repo,
+              state: 'open',
+              per_page: 100,
+            });
+            const abierto = abiertos.data.find((i) => i.title === titulo && !i.pull_request);
+
+            if (accion === 'cerrar') {
+              if (!abierto) {
+                core.info('Nada que cerrar: no hay aviso abierto.');
+                return;
+              }
+              await github.rest.issues.createComment({
+                ...repo,
+                issue_number: abierto.number,
+                body: `${process.env.CUERPO}\n\nSe cierra solo: ${process.env.RUN_URL}`,
+              });
+              await github.rest.issues.update({ ...repo, issue_number: abierto.number, state: 'closed' });
+              core.info(`Cerrado #${abierto.number}`);
+              return;
+            }
+
+            if (abierto) {
+              core.info(`Ya hay un aviso abierto (#${abierto.number}); no se duplica.`);
+              return;
+            }
+            const alta = {
+              ...repo,
+              title: titulo,
+              body: `${process.env.CUERPO}\n\nPasada que lo detectó: ${process.env.RUN_URL}`,
+            };
+            // La etiqueta `banderas` no existe todavía en el repo. Si asignarla
+            // fallara, abrir el aviso importa muchísimo más que clasificarlo:
+            // quedarse sin avisar por una etiqueta sería el mismo fallo de agosto
+            // otra vez, esta vez por nuestra culpa.
+            let nuevo;
+            try {
+              nuevo = await github.rest.issues.create({ ...alta, labels: ['banderas'] });
+            } catch (e) {
+              core.warning(`No se pudo etiquetar el aviso (${e.status ?? e.message}); se abre sin etiqueta.`);
+              nuevo = await github.rest.issues.create(alta);
+            }
+            core.notice(`Aviso abierto: #${nuevo.data.number}`);

@@ -1,8 +1,8 @@
 name: Scrape Cruz Roja flags
 
-# Scrapea las banderas de Cruz Roja desde el runner de GitHub (IP no-Render) y
-# commitea regions/cantabria/flags.json, que el backend sirve como fuente primaria.
-# (En Render el scrape en vivo da 403 por el WAF F5; esto lo desacopla.)
+# Scrapea las banderas de Cruz Roja desde el runner de GitHub y commitea
+# regions/cantabria/flags.json, que el backend sirve como fuente primaria.
+# Así la entrega no depende de que el servidor consiga el dato en cada petición.
 #
 # El push a main REDESPLIEGA en Render, y eso es intencionado: el backend lee
 # flags.json una sola vez al arrancar, así que el despliegue es el mecanismo de
@@ -102,22 +102,52 @@ jobs:
           AEMET_API_KEY: ${{ secrets.AEMET_API_KEY }}
         run: npm run build:snapshot
 
-      - name: Commit flags.json / snapshot.json if changed
+      # `!cancelled()`, no el salto por defecto: cuando el scrape sale en rojo
+      # —justo el día que hay que explicar— este paso se saltaba y el diagnóstico
+      # se quedaba en el log de Actions, que hace falta autenticarse para leer.
+      # Con flags.json sin tocar, aquí sólo sube `flags-diag.json`, y el job sigue
+      # en rojo porque quien falló fue el paso del scrape.
+      - name: Commit flags.json / snapshot.json / flags-diag.json if changed
+        if: ${{ !cancelled() }}
         run: |
-          if [[ -n "$(git status --porcelain "../regions/${REGION}/flags.json" "../regions/${REGION}/snapshot.json")" ]]; then
+          RUTAS=("../regions/${REGION}/flags.json" "../regions/${REGION}/snapshot.json" "../regions/${REGION}/flags-diag.json")
+          if [[ -n "$(git status --porcelain "${RUTAS[@]}")" ]]; then
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add "../regions/${REGION}/flags.json"
             # `if`, no `[[ ... ]] && ...`: con `set -e` (el shell de Actions) un
             # `&&` que evalúa a falso aborta el step, y entonces ni las banderas
-            # se commitearían. El snapshot puede no existir si faltan las claves.
-            if [[ -f "../regions/${REGION}/snapshot.json" ]]; then
-              git add "../regions/${REGION}/snapshot.json"
-            fi
+            # se commitearían. El snapshot puede no existir si faltan las claves,
+            # y flags.json tampoco si la pasada decidió no sobrescribirlo.
+            for ruta in "${RUTAS[@]}"; do
+              if [[ -f "$ruta" ]]; then
+                git add "$ruta"
+              fi
+            done
             git commit -m "chore(flags): actualizar banderas ${REGION} [skip ci]"
             # Otro job de la matriz puede haber empujado mientras tanto.
             git pull --rebase
             git push
           else
-            echo "Sin cambios en flags.json ni snapshot.json"
+            echo "Sin cambios en flags.json, snapshot.json ni flags-diag.json"
           fi
+
+  # Para fallos DEL JOB: npm ci, red, o que la mayoría de fichas no conteste. Que
+  # no haya banderas izadas NO llega aquí —eso sale en verde y lo vigila
+  # `flags-freshness`—, y por eso comparte título con aquel: es la misma
+  # incidencia mirada desde otro sitio, y así son un aviso y no dos.
+  avisar:
+    needs: scrape
+    if: failure()
+    uses: ./.github/workflows/alerta-issue.yml
+    permissions:
+      issues: write
+    with:
+      titulo: 'Banderas: la cadena de entrega está caída'
+      cuerpo: |
+        El scrape de Cruz Roja ha fallado. `regions/<region>/flags-diag.json` —que
+        se sube también cuando el job sale en rojo— lleva los `alt` recibidos y los
+        estados HTTP: distinguen un «No hay información» de verdad de una respuesta
+        que simplemente vino sin el dato.
+
+        `flags.json` NO se ha sobrescrito: la app sigue con la última captura buena
+        hasta que cumpla 8 h.
