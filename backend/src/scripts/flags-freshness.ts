@@ -59,7 +59,7 @@ import { enTemporadaDePlaya } from '../infrastructure/config/config';
  * ~18 h (the scraper does not run overnight, so at opening the freshest
  * capture is yesterday evening's) and being blind to everything below that.
  */
-const MAX_AGE_HOURS = 8;
+const MAX_AGE_HOURS = 0;
 
 
 function main(): void {
