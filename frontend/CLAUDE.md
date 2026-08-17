@@ -106,7 +106,7 @@ Todas las interfaces están en `src/services/api.ts`:
 ## Despliegue
 
 - **Web**: Firebase Hosting multi-site dentro del proyecto `playas-cantabria-front` — un target por región en `.firebaserc` y una entrada por target en `firebase.json`. Sin proyecto ni factura adicional.
-- **Workflow**: `.github/workflows/deploy-web.yml`, con `strategy.matrix.region`. Es **manual** (`workflow_dispatch`): necesita el secret `FIREBASE_SERVICE_ACCOUNT` y un sitio de hosting por región.
+- **Cómo se despliega**: **desde la máquina local, nunca desde CI** — `npm run build` y `firebase deploy --only hosting:<region>`, con la sesión propia de `firebase login`. En GitHub no hay (ni debe haber) ninguna credencial de Firebase: el CI construye cada región para validarla (`region-build` en `quality.yml`), pero no despliega nada.
 - **Android**: Capacitor (`capacitor.config.ts`), `appId` y nombre leídos de la región, web dir `build`. Como `android/` está ignorado, `npm run android:sync` aplica después el `applicationId`, nombre y URL scheme al proyecto nativo local. El nombre pasa por `scripts/android-strings.mjs`: los recursos `<string>` de Android exigen escapar `'`, `"` y `\`, y un apóstrofo suelto **no degrada, rompe la compilación** (L'Escala, L'Ampolla). Aquí no hay JDK para detectarlo, así que lo fija `src/test/androidStrings.test.ts`.
 - **Env vars**: `.env.development` (localhost:4000), `.env.production` (Render URL) y `REACT_APP_REGION` (por defecto `cantabria`)
 

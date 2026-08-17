@@ -105,7 +105,7 @@ API base URL configured via `REACT_APP_API_BASE_URL` env var (defaults to produc
 
 ## Deployment
 
-- Backend deploys to Render (`playas-cantabria.onrender.com`)
-- Frontend deploys one app per region: a Firebase Hosting site per region (multi-site, same project) or a Capacitor Android app per `capacitorAppId`. Workflow `deploy-web.yml`, manual, with `strategy.matrix.region`
+- Backend deploys to Render (`playas-cantabria.onrender.com`), automatically on every push to `main`
+- Frontend deploys **from the local machine, never from CI**: `cd frontend && npm run build && firebase deploy --only hosting:<region>` with the developer's own `firebase login` session. One Firebase Hosting site per region (multi-site, project `playas-cantabria-front`), or a Capacitor Android app per `capacitorAppId`. No Firebase credential exists in GitHub, deliberately
 - Backend also supports Firebase Functions (auto-detected via env vars)
 
