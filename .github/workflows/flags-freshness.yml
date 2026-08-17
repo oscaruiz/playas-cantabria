@@ -18,7 +18,18 @@ on:
     # de vigilancia (11:30–19:30) y con el izado hecho hace horas. Se comprueba
     # CUANDO la frescura debe existir, en vez de tolerar el peor caso a todas
     # horas: eso es lo que permite exigir las mismas 8 h que exige la app.
-    - cron: '0 12,16 * * *'
+    #
+    # DOS entradas, no una: `github.event.schedule` dice cuál disparó, y las dos
+    # pasadas no miden lo mismo. El scraper no corre de noche, así que a mediodía
+    # el fichero solo está fresco si la captura de HOY ya aterrizó — y la hora de
+    # publicación de Cruz Roja varía de las 12:01 a las 18:24 (medido en ago-2026).
+    # La pasada de mediodía pregunta en realidad "¿ha publicado ya?", que no
+    # distingue TARDE de ROTO: sus tres fallos aislados de agosto (6, 9 y 11)
+    # fueron días sanos con publicación tardía. Por eso mediodía puede CERRAR el
+    # aviso pero no abrirlo, y la de la tarde —"el día se acaba sin banderas"—
+    # es la única que abre.
+    - cron: '0 12 * * *' # 14:00 Madrid: detecta la recuperación; no abre aviso
+    - cron: '0 16 * * *' # 18:00 Madrid: la única pasada que abre el aviso
   workflow_dispatch: {}
 
 jobs:
@@ -43,9 +54,18 @@ jobs:
 
   # Un cron en rojo no avisa a nadie: del 14 al 16-ago-2026 este vigilante falló
   # seis veces seguidas y la única señal que llegó fue la app sin banderas.
+  #
+  # Solo abre la pasada de la TARDE (ver el bloque `schedule`): la de mediodía
+  # falla también en días sanos con publicación tardía, y ~8 avisos/mes de los
+  # que la mayoría se cierran solos enseñan a ignorar la alarma. La condición
+  # EXCLUYE mediodía en vez de admitir la tarde a propósito: una errata en la
+  # cadena daría avisos de más, nunca avisos de menos. `workflow_dispatch` llega
+  # con `schedule` vacío y sigue abriendo — es el mecanismo de prueba.
+  # El job de mediodía sigue saliendo ROJO cuando el fichero está viejo; lo que
+  # se retrasa es el aviso, no el registro.
   avisar:
     needs: frescura
-    if: failure()
+    if: failure() && github.event.schedule != '0 12 * * *'
     uses: ./.github/workflows/alerta-issue.yml
     permissions:
       issues: write
