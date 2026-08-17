@@ -36,6 +36,18 @@ function dispararBeforeInstallPrompt(): { prompt: jest.Mock } {
   return { prompt };
 }
 
+/** Chromium's answer to "does this device already have the app?". */
+function fijarAppsInstaladas(apps: unknown[] | null): void {
+  if (apps === null) {
+    delete (window.navigator as { getInstalledRelatedApps?: unknown }).getInstalledRelatedApps;
+    return;
+  }
+  Object.defineProperty(window.navigator, 'getInstalledRelatedApps', {
+    value: () => Promise.resolve(apps),
+    configurable: true,
+  });
+}
+
 describe('queOfrecer', () => {
   it('no ofrece nada dentro de la app ya instalada, ni con evento ni en iOS', () => {
     expect(queOfrecer({ hayEvento: true, esIOS: true, enModoApp: true, instalada: true })).toBeNull();
@@ -61,11 +73,13 @@ describe('BotonInstalar', () => {
   beforeEach(() => {
     reiniciarInstalacionParaTests();
     fijarUserAgent(UA_ANDROID);
+    fijarAppsInstaladas(null);
     escucharInstalacion();
   });
 
   afterEach(() => {
     fijarUserAgent(uaOriginal);
+    fijarAppsInstaladas(null);
   });
 
   it('no pinta nada mientras el navegador no ofrezca instalar', () => {
@@ -106,6 +120,33 @@ describe('BotonInstalar', () => {
 
     expect(screen.queryByRole('button', { name: /instalar app/i })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /abrir app/i })).toBeInTheDocument();
+  });
+
+  it('al volver más tarde pregunta al navegador y ofrece abrir la app ya instalada', async () => {
+    // Regresión: `appinstalled` solo suena en la pestaña donde se instaló y no
+    // se recordaba, así que en la siguiente visita el chip desaparecía del
+    // todo — Chrome retiene `beforeinstallprompt` una vez instalada.
+    reiniciarInstalacionParaTests();
+    fijarAppsInstaladas([{ platform: 'webapp', url: 'https://x/manifest.json' }]);
+    escucharInstalacion();
+
+    renderWithProviders(<BotonInstalar />);
+
+    expect(await screen.findByRole('button', { name: /abrir app/i })).toBeInTheDocument();
+  });
+
+  it('si el navegador dice que no la tiene, no se inventa el botón', async () => {
+    reiniciarInstalacionParaTests();
+    fijarAppsInstaladas([]);
+    escucharInstalacion();
+
+    renderWithProviders(<BotonInstalar />);
+    // Flush the pending getInstalledRelatedApps() promise before asserting.
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(screen.queryByRole('button', { name: /abrir app/i })).not.toBeInTheDocument();
   });
 
   it('en iOS, donde no hay API, despliega las instrucciones manuales', () => {

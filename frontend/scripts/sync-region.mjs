@@ -20,6 +20,7 @@ import { readdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { validateBeachCatalog, validateRegion } from './region-validation.mjs';
+import { origenPublico } from './lib/site-origin.mjs';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const frontendRoot = path.resolve(scriptDir, '..');
@@ -126,6 +127,22 @@ const manifest = {
   theme_color: region.branding.themeColor,
   background_color: region.branding.backgroundColor,
   lang: 'es',
+  // The manifest points at ITSELF so `getInstalledRelatedApps()` can answer
+  // "you already have this installed". Without this entry the browser always
+  // says no, and whoever installed the app lost the way back to it from the
+  // web: `beforeinstallprompt` is withheld once installed, so the chip simply
+  // disappeared on the next visit.
+  //
+  // It has to be the absolute URL of the deployed manifest, so a region with
+  // no hosting yet gets no entry rather than a wrong one. Note this makes the
+  // check a production-only affair: from localhost the origin does not match.
+  ...(origenPublico(frontendRoot, region.id)
+    ? {
+        related_applications: [
+          { platform: 'webapp', url: `${origenPublico(frontendRoot, region.id)}/manifest.json` },
+        ],
+      }
+    : {}),
 };
 
 await writeFile(

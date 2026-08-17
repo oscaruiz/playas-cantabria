@@ -16,5 +16,11 @@
   "orientation": "portrait",
   "theme_color": "#0a7ea4",
   "background_color": "#faf6f1",
-  "lang": "es"
+  "lang": "es",
+  "related_applications": [
+    {
+      "platform": "webapp",
+      "url": "https://playas-cantabria-front.web.app/manifest.json"
+    }
+  ]
 }

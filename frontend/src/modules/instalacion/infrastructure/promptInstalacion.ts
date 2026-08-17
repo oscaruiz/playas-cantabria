@@ -19,6 +19,13 @@ interface EventoInstalacion extends Event {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
+/** Chromium-only too, and also outside lib.dom. */
+interface AppRelacionada {
+  platform: string;
+  url?: string;
+  id?: string;
+}
+
 let evento: EventoInstalacion | null = null;
 let instalada = false;
 let escuchando = false;
@@ -79,6 +86,40 @@ export function escucharInstalacion(): void {
     instalada = true;
     emitir();
   });
+
+  void preguntarSiEstaInstalada();
+}
+
+/**
+ * `appinstalled` only fires in the page that installed it, and it is not
+ * remembered anywhere: on the NEXT visit the chip vanished entirely, because
+ * Chrome withholds `beforeinstallprompt` once the app is installed. Whoever
+ * had installed it was left with no way back to the app from the web.
+ *
+ * `getInstalledRelatedApps()` is the standard way to ask, and it needs the
+ * manifest to list itself under `related_applications` — that is why the
+ * generated manifest self-references.
+ *
+ * Chromium-only: Firefox and Safari never answer, and there the chip behaves
+ * exactly as it did before. We do NOT guess from the absence of
+ * `beforeinstallprompt`: that event is also missing on an uninstalled app that
+ * simply does not meet the criteria, and a wrong guess sends someone to open
+ * an app they never installed.
+ */
+async function preguntarSiEstaInstalada(): Promise<void> {
+  const api = (navigator as { getInstalledRelatedApps?: () => Promise<AppRelacionada[]> })
+    .getInstalledRelatedApps;
+  if (typeof api !== 'function') return;
+  try {
+    const apps = await api.call(navigator);
+    if (apps.length > 0) {
+      instalada = true;
+      emitir();
+    }
+  } catch {
+    // Out of scope, insecure context, or the browser refusing to answer:
+    // staying silent leaves exactly the behaviour we had before.
+  }
 }
 
 export async function lanzarPrompt(): Promise<void> {
