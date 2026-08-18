@@ -126,4 +126,8 @@ jobs:
           CI: "false"
           GENERATE_SOURCEMAP: "false"
           REACT_APP_REGION: ${{ matrix.region }}
+          # Defined-but-empty on purpose: silences the origin in .env.production
+          # (it belongs to the region deployed from the repo checkout), so no
+          # region inherits another region's public domain here.
+          REACT_APP_SITE_ORIGIN: ""
       - run: npm run perf:budget
