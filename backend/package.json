@@ -2,7 +2,7 @@
   "name": "playas-cantabria-backend",
   "version": "1.0.0",
   "private": true,
-  "license": "SEE LICENSE IN ../LICENSE",
+  "license": "SEE LICENSE IN ../LICENSE.md",
   "type": "commonjs",
   "main": "dist/index.js",
   "engines": {

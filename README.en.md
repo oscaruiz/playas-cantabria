@@ -4,7 +4,7 @@
 ---
 
 [![Version](https://img.shields.io/badge/version-2.1.0-blue)](../../releases)
-[![License: PolyForm Shield 1.0.0](https://img.shields.io/badge/License-PolyForm%20Shield%201.0.0-blue.svg)](./LICENSE.md)
+[![License: PolyForm NC + Shield](https://img.shields.io/badge/License-PolyForm%20NC%20%2B%20Shield-blue.svg)](./LICENSE.md)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.x-informational)
 ![Node.js](https://img.shields.io/badge/Node.js-20.x-informational)
 ![Express](https://img.shields.io/badge/Express-4.x-informational)
@@ -269,7 +269,7 @@ Contributions are welcome. If you have ideas, suggestions, or want to report a b
 ---
 
 ## License
-This project is distributed under the [PolyForm Shield 1.0.0](./LICENSE.md) license. It allows using, studying, modifying, forking and contributing to the software, and reusing it in projects that do not compete with Playucas. It does not allow offering a product that competes with Playucas, even for free. It is a *source-available* license; it is not open source under the OSI definition.
+This project is distributed under two licenses at once: [PolyForm Noncommercial 1.0.0 and PolyForm Shield 1.0.0](./LICENSE.md); you must comply with both. The code is in the open: you can use it, study it, fork it, and contribute. Commercial use of the code is not allowed, nor is offering a product that competes with Playucas (even a free one). Because of these restrictions the project is *source-available*, not open source under the OSI definition.
 
 The "Playucas" name, logo and visual identity are not covered by the software license: see [TRADEMARK.md](./TRADEMARK.md).
 

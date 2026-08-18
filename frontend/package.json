@@ -2,6 +2,7 @@
   "name": "playas-cantabria",
   "version": "0.0.1",
   "private": true,
+  "license": "SEE LICENSE IN ../LICENSE.md",
   "dependencies": {
     "@capacitor/android": "^7.4.2",
     "@capacitor/app": "7.0.1",
