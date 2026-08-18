@@ -1,6 +1,6 @@
-# Playas Cantabria
+# Playucas.es
 
-Spanish-language monorepo: beach info app for Cantabria, Spain.
+Spanish-language monorepo: beach info app for Cantabria, Spain (public brand: Playucas.es).
 - `backend/` — Express + TypeScript, hexagonal architecture
 - `frontend/` — Ionic React + Capacitor mobile/web app
 

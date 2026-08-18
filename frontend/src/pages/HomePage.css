@@ -58,13 +58,12 @@
 
 /* La cabecera mide 84px fijos (`--playa-header-h`) y el contenido de todas las
    páginas se descuelga de ese número, así que el título no puede pasar de una
-   línea: cede tamaño. Pacifico es ancha —"Playas de Cantabria" pide ~313px a
-   1.6rem— y en un móvil de 360px quedan unos 280 con la ⓘ ya sin etiqueta. El
-   nombre de una región más larga seguirá acabando en puntos suspensivos: es la
-   forma aceptada de degradar, la misma que el nombre de playa en el detalle. */
-@media (max-width: 430px) {
-  .hp-sticky-title { font-size: 1.4rem; }
-}
+   línea. Pacifico es ancha, pero "Playucas.es" pide ~190px a 1.6rem y en un
+   móvil de 360px quedan unos 280 con la ⓘ ya sin etiqueta: cabe sin ceder
+   tamaño (el breakpoint de 430px que pedía "Playas de Cantabria" sobró al
+   acortar la marca). La marca de una región más larga acabará en puntos
+   suspensivos: es la forma aceptada de degradar, la misma que el nombre de
+   playa en el detalle. */
 
 /* --- Hero band (scrollable, below sticky header) --- */
 .hp-hero {

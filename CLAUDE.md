@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Playas Cantabria is a beach information app for Cantabria, Spain. It displays beach listings with real-time weather (AEMET, OpenWeatherMap) and flag/safety data (Cruz Roja). The UI text is Spanish, and the public API keys are Spanish (frontend contract — never rename them).
+Playucas.es (repo: playas-cantabria) is a beach information app for Cantabria, Spain. It displays beach listings with real-time weather (AEMET, OpenWeatherMap) and flag/safety data (Cruz Roja). The UI text is Spanish, and the public API keys are Spanish (frontend contract — never rename them). The public brand comes from each region's `region.json` (`branding.appName`), interpolated as `{marca}` in i18n/SEO templates — never hardcode it.
 
 **Language convention**: NEW code and comments are written in English. Existing Spanish comments and identifiers stay as they are — do not translate them opportunistically; they often carry operational history.
 
@@ -106,6 +106,6 @@ API base URL configured via `REACT_APP_API_BASE_URL` env var (defaults to produc
 ## Deployment
 
 - Backend deploys to Render (`playas-cantabria.onrender.com`), automatically on every push to `main`
-- Frontend deploys **from the local machine, never from CI**: `cd frontend && npm run build && firebase deploy --only hosting:<region>` with the developer's own `firebase login` session. One Firebase Hosting site per region (multi-site, project `playas-cantabria-front`), or a Capacitor Android app per `capacitorAppId`. No Firebase credential exists in GitHub, deliberately
+- Frontend deploys **from the local machine, never from CI**: `cd frontend && npm run build && firebase deploy --only hosting:<region>` with the developer's own `firebase login` session. One Firebase Hosting site per region (multi-site, project `playas-cantabria-front`), or a Capacitor Android app per `capacitorAppId`. No Firebase credential exists in GitHub, deliberately. Cantabria is served on the custom domain `https://playucas.es` (attached to the `playas-cantabria-front` site; DNS at Piensa Solutions; `REACT_APP_SITE_ORIGIN` in `frontend/.env.production` drives canonical/sitemap/manifest)
 - Backend also supports Firebase Functions (auto-detected via env vars)
 

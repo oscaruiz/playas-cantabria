@@ -251,7 +251,7 @@ describe('PlayaDetalle — previsión AEMET', () => {
 
     const panel = container.querySelector('.pd-info-ficha .info-datos-panel');
     expect(panel).toHaveTextContent(
-      'Playas Cantabria es un proyecto independiente: ninguna de estas fuentes lo respalda ni colabora con él.',
+      'Playucas.es es un proyecto independiente: ninguna de estas fuentes lo respalda ni colabora con él.',
     );
     expect(panel).toHaveTextContent('Datos calculados el');
   });
@@ -623,7 +623,7 @@ describe('PlayaDetalle — puntuación', () => {
 
     const fuente = container.querySelector('.proximas-horas-fuente .info-datos-panel');
     expect(fuente).toHaveTextContent(
-      'Datos meteorológicos de Open-Meteo, adaptados por Playas Cantabria: se transforman para calcular la puntuación.',
+      'Datos meteorológicos de Open-Meteo, adaptados por Playucas.es: se transforman para calcular la puntuación.',
     );
     expect(fuente?.querySelector('a')).toHaveAttribute('href', 'https://open-meteo.com');
     expect(container.querySelectorAll('.proximas-horas-fuente')).toHaveLength(1);

@@ -1,4 +1,4 @@
-# 🏖️ Beaches of Cantabria
+# 🏖️ Playucas.es
 *Check the status of the beaches of Cantabria in real time. This app provides 3-day forecasts with morning/afternoon detail, tides, UV index, weather warnings, and Red Cross flag status.*
 
 ---
@@ -16,9 +16,11 @@ Available languages: [Español](README.md) | **English**
 
 ## Production Demo
 
-Try the app here: **[https://playas-cantabria-front.web.app/](https://playas-cantabria-front.web.app/)**
+Try the app here: **[https://playucas.es/](https://playucas.es/)**
 
 Backend API: `https://playas-cantabria.onrender.com`
+
+> The repository, the Firebase project (`playas-cantabria-front`) and the Render service keep the historical `playas-cantabria` name; the public brand is **Playucas.es**.
 
 ## Preview
 

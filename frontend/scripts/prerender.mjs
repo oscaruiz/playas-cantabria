@@ -155,7 +155,7 @@ function contenidoListado() {
 
 function contenidoInicio() {
   return bloqueContenido(
-    `<h1>Playas de ${escaparHtml(region.name)}</h1>
+    `<h1>${escaparHtml(region.branding.appName)}</h1>
       <p>Compara las playas de ${escaparHtml(region.name)} y elige la mejor para hoy: puntuación, bandera, tiempo y mareas al abrir la aplicación.</p>
       <ul>
         ${enlacesPlayas([...playas].sort((a, b) => a.nombre.localeCompare(b.nombre)))}
@@ -213,7 +213,7 @@ function escribirRuta(ruta, titulo, descripcion, contenido) {
   return destino;
 }
 
-const vars = { region: region.name };
+const vars = { region: region.name, marca: region.branding.appName };
 let generadas = 0;
 
 try {
@@ -319,7 +319,7 @@ try {
     const propias = playas.filter(landing.filtro);
     escribirRuta(
       `/${landing.id}`,
-      `${titulo} | Playas ${region.name}`,
+      `${titulo} | ${region.branding.appName}`,
       intro,
       bloqueContenido(
         `<h1>${escaparHtml(titulo)}</h1>

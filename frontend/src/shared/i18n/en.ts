@@ -7,8 +7,8 @@ import type { ClaveTexto } from './es';
  */
 export const en = {
   // ---- App / global ----
-  'app.titulo': '{region} Beaches',
-  'app.tituloDocumento': '{region} Beaches',
+  'app.titulo': '{marca}',
+  'app.tituloDocumento': '{marca}',
 
   // ---- Bottom navigation ----
   'nav.principal': 'Main navigation',
@@ -217,21 +217,21 @@ export const en = {
   // ---- SEO (document head per route) ----
   'seo.tituloInicio': '{region} beaches: the best beach for today',
   'seo.descInicio': 'Compare {region} beaches right now: score, flag, weather and forecast to pick a beach today.',
-  'seo.tituloLista': 'All the beaches of {region} | {region} Beaches',
+  'seo.tituloLista': 'All the beaches of {region} | {marca}',
   'seo.descLista': 'Full list of {region} beaches, with search, distance, flags and services.',
-  'seo.tituloAcerca': 'About and terms | {region} Beaches',
+  'seo.tituloAcerca': 'About and terms | {marca}',
   'seo.descAcerca':
-    'What {region} Beaches is, its independence, limits of liability, data sources and contact.',
-  'seo.tituloPrivacidad': 'Privacy and storage | {region} Beaches',
+    'What {marca} is, its independence, limits of liability, data sources and contact.',
+  'seo.tituloPrivacidad': 'Privacy and storage | {marca}',
   'seo.descPrivacidad':
-    'What {region} Beaches processes: optional geolocation, local storage, providers and your rights.',
-  'seo.tituloMapa': '{region} beach map | {region} Beaches',
+    'What {marca} processes: optional geolocation, local storage, providers and your rights.',
+  'seo.tituloMapa': '{region} beach map | {marca}',
   'seo.descMapa': 'Interactive map with every beach in {region} and its status.',
-  'seo.tituloDetalle': '{nombre}: flag, weather and tides today | {region} Beaches',
+  'seo.tituloDetalle': '{nombre}: flag, weather and tides today | {marca}',
   'seo.descDetalle': 'Status of {nombre} beach, in {municipio}: current flag, weather, forecast and today\'s tides.',
-  'seo.tituloMunicipio': 'Beaches in {municipio}: current conditions | {region} Beaches',
+  'seo.tituloMunicipio': 'Beaches in {municipio}: current conditions | {marca}',
   'seo.descMunicipio': 'The beaches of {municipio}, in {region}, each linking to today\'s flag, weather and tides.',
-  'seo.tituloMunicipios': 'Municipalities with beaches in {region} | {region} Beaches',
+  'seo.tituloMunicipios': 'Municipalities with beaches in {region} | {marca}',
   'seo.descMunicipios': 'Every municipality in {region} with a beach in the catalog, with access to each one\'s beaches.',
   'municipios.titulo': 'Municipalities with beaches',
   'municipios.intro': 'The municipalities of {region} with beaches in the catalog. Each one leads to its beaches and their status.',
@@ -242,7 +242,7 @@ export const en = {
   'detalle.generandoImagen': 'Building image…',
   'detalle.otrasPlayasMunicipio': 'Other beaches in the municipality of {municipio}',
   'detalle.enlaceCopiado': 'Link copied',
-  'seo.tituloNoEncontrada': 'Page not found | {region} Beaches',
+  'seo.tituloNoEncontrada': 'Page not found | {marca}',
   'seo.descNoEncontrada': 'This address does not match any beach or municipality in the {region} catalog.',
 
   // ---- Municipality and curated landing pages ----
@@ -265,10 +265,10 @@ export const en = {
     'Información elaborada utilizando, entre otras, la obtenida de la Agencia Estatal de Meteorología. Source: {fuente}.',
   'atribucion.openweather': 'Weather data provided by {fuente}.',
   'atribucion.openmeteo':
-    'Weather data by {fuente}, adapted by {region} Beaches: it is transformed to compute the score.',
+    'Weather data by {fuente}, adapted by {marca}: it is transformed to compute the score.',
   'atribucion.banderas': 'Flag status published by {fuente}.',
   'atribucion.independiente':
-    '{region} Beaches is an independent project: none of these sources endorses it or collaborates with it.',
+    '{marca} is an independent project: none of these sources endorses it or collaborates with it.',
 
   // ---- ⓘ control labels ----
   'info.aviso': 'Notice',

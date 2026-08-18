@@ -14,8 +14,8 @@ const TEXTOS_LANDINGS = Object.fromEntries(LANDINGS.map((l) => [l.id, l.textos])
 
 export const es = {
   // ---- App / global ----
-  'app.titulo': 'Playas de {region}',
-  'app.tituloDocumento': 'Playas {region}',
+  'app.titulo': '{marca}',
+  'app.tituloDocumento': '{marca}',
 
   // ---- Bottom navigation ----
   'nav.principal': 'Navegación principal',
@@ -255,7 +255,7 @@ export const es = {
   'detalle.generandoImagen': 'Generando imagen…',
   'detalle.otrasPlayasMunicipio': 'Otras playas del municipio de {municipio}',
   'detalle.enlaceCopiado': 'Enlace copiado',
-  'seo.tituloNoEncontrada': 'Página no encontrada | Playas {region}',
+  'seo.tituloNoEncontrada': 'Página no encontrada | {marca}',
   'seo.descNoEncontrada': 'Esta dirección no corresponde a ninguna playa ni municipio del catálogo de {region}.',
 
   // ---- Municipality and curated landing pages (Spanish texts shared with
@@ -280,10 +280,10 @@ export const es = {
     'Información elaborada utilizando, entre otras, la obtenida de la Agencia Estatal de Meteorología. Fuente: {fuente}.',
   'atribucion.openweather': 'Datos meteorológicos proporcionados por {fuente}.',
   'atribucion.openmeteo':
-    'Datos meteorológicos de {fuente}, adaptados por Playas {region}: se transforman para calcular la puntuación.',
+    'Datos meteorológicos de {fuente}, adaptados por {marca}: se transforman para calcular la puntuación.',
   'atribucion.banderas': 'Estado de las banderas publicado por {fuente}.',
   'atribucion.independiente':
-    'Playas {region} es un proyecto independiente: ninguna de estas fuentes lo respalda ni colabora con él.',
+    '{marca} es un proyecto independiente: ninguna de estas fuentes lo respalda ni colabora con él.',
 
   // ---- Etiquetas del control ⓘ ----
   // Cortas y por CONTENIDO: quien ve la ficha tiene que poder decidir cuál

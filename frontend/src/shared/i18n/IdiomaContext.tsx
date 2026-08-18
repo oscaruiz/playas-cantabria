@@ -37,11 +37,12 @@ export function detectarIdiomaInicial(): Idioma {
 }
 
 /**
- * `{region}` is always available without the call sites passing it: it is a
- * property of the build, not of each screen. That is what lets the titles and
- * subtitles be the same key in every region.
+ * `{region}` and `{marca}` are always available without the call sites passing
+ * them: they are properties of the build, not of each screen. That is what
+ * lets the titles and subtitles be the same key in every region, each with its
+ * own brand name from region.json.
  */
-const VARS_IMPLICITAS: Vars = { region: REGION.name };
+const VARS_IMPLICITAS: Vars = { region: REGION.name, marca: REGION.branding.appName };
 
 function interpolar(plantilla: string, vars?: Vars): string {
   const todas = vars ? { ...VARS_IMPLICITAS, ...vars } : VARS_IMPLICITAS;

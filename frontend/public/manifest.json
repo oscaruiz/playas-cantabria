@@ -1,6 +1,6 @@
 {
-  "short_name": "Playas Cantabria",
-  "name": "Playas de Cantabria",
+  "short_name": "Playucas.es",
+  "name": "Playucas.es",
   "description": "Estado de las playas de Cantabria: tiempo, banderas y mareas.",
   "icons": [
     {
@@ -20,7 +20,7 @@
   "related_applications": [
     {
       "platform": "webapp",
-      "url": "https://playas-cantabria-front.web.app/manifest.json"
+      "url": "https://playucas.es/manifest.json"
     }
   ]
 }

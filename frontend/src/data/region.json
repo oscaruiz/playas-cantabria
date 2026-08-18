@@ -2,11 +2,11 @@
   "id": "cantabria",
   "name": "Cantabria",
   "branding": {
-    "appName": "Playas de Cantabria",
-    "shortName": "Playas Cantabria",
+    "appName": "Playucas.es",
+    "shortName": "Playucas.es",
     "themeColor": "#0a7ea4",
     "backgroundColor": "#faf6f1",
-    "capacitorAppId": "com.example.app"
+    "capacitorAppId": "es.playucas.app"
   },
   "map": {
     "center": {

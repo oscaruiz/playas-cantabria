@@ -36,7 +36,7 @@ describe('scripts/prerender.mjs', () => {
     expect(salida).toMatch(/rutas generadas/);
 
     const ficha = readFileSync(join(dir, 'playas', 'suances', 'la-concha', 'index.html'), 'utf8');
-    expect(ficha).toContain('<title>La Concha: bandera, tiempo y mareas hoy | Playas Cantabria</title>');
+    expect(ficha).toContain('<title>La Concha: bandera, tiempo y mareas hoy | Playucas.es</title>');
     expect(ficha).toContain('<h1>Playa de La Concha</h1>');
     expect(ficha).toContain('Suances');
     // Honesty: the static page must not claim live data; it says it loads.
@@ -60,7 +60,7 @@ describe('scripts/prerender.mjs', () => {
 
     // The root index.html is ALSO rewritten (route "/").
     const inicio = readFileSync(join(dir, 'index.html'), 'utf8');
-    expect(inicio).toContain('<h1>Playas de Cantabria</h1>');
+    expect(inicio).toContain('<h1>Playucas.es</h1>');
     expect(inicio).not.toContain('<div id="root"></div>');
   });
 
@@ -73,7 +73,7 @@ describe('scripts/prerender.mjs', () => {
     expect(inicio).toContain('html.con-js .prerender{display:none}');
     expect(inicio.indexOf('con-js')).toBeLessThan(inicio.indexOf('class="prerender"'));
     // Hidden for the user, still there for whoever parses the HTML.
-    expect(inicio).toContain('<h1>Playas de Cantabria</h1>');
+    expect(inicio).toContain('<h1>Playucas.es</h1>');
   });
 
   it('genera páginas de municipio y de landings (Fase 6) desde los mismos selectores', () => {

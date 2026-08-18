@@ -1,4 +1,4 @@
-# 🏖️ Playas de Cantabria
+# 🏖️ Playucas.es
 *Consulta el estado de las playas de Cantabria en tiempo real. Esta aplicación proporciona predicción a 3 días con detalle por mañana y tarde, mareas, índice UV, avisos meteorológicos y estado de la bandera de la Cruz Roja.*
 
 ---
@@ -16,9 +16,11 @@ Available languages: **Español** | [English](README.en.md)
 
 ## Demo en Producción
 
-Puedes probar la aplicación aquí: **[https://playas-cantabria-front.web.app/](https://playas-cantabria-front.web.app/)**
+Puedes probar la aplicación aquí: **[https://playucas.es/](https://playucas.es/)**
 
 Backend API: `https://playas-cantabria.onrender.com`
+
+> El repositorio, el proyecto de Firebase (`playas-cantabria-front`) y el servicio de Render conservan el nombre histórico `playas-cantabria`; la marca pública es **Playucas.es**.
 
 ## Preview
 

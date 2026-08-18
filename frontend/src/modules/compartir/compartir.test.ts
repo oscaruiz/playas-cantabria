@@ -33,8 +33,8 @@ const PUNTUADA: FeaturedBeach = {
 const entrada = (idioma: Idioma, puntuada: FeaturedBeach = PUNTUADA) => ({
   playa: { nombre: 'La Maruca', municipio: 'Santander' },
   puntuada,
-  marca: 'Playas de Cantabria',
-  sitio: 'playas-cantabria-front.web.app',
+  marca: 'Playucas.es',
+  sitio: 'playucas.es',
   ahora: AHORA,
   t: traductor(idioma),
   idioma,
@@ -145,8 +145,8 @@ describe('resumen de la tarjeta compartible', () => {
     const r = resumenTarjeta(entrada('es'));
 
     expect(r.aviso).toBe(es['aviso.ranking']);
-    expect(r.marca).toBe('Playas de Cantabria');
-    expect(r.sitio).toBe('playas-cantabria-front.web.app');
+    expect(r.marca).toBe('Playucas.es');
+    expect(r.sitio).toBe('playucas.es');
   });
 });
 

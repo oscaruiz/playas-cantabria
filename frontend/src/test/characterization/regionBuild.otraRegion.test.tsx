@@ -91,8 +91,9 @@ it('el listado pide /api/asturias y titula con Asturias', async () => {
 
   expect(await screen.findByText('Playas de Asturias')).toBeInTheDocument();
   // Since Phase 4 each page titles itself (SeoHead); the list page's title
-  // still must carry the region and never a hardcoded Cantabria.
-  expect(document.title).toBe('Todas las playas de Asturias | Playas Asturias');
+  // still must carry the region and the region's OWN brand (branding.appName),
+  // never a hardcoded Cantabria brand.
+  expect(document.title).toBe('Todas las playas de Asturias | Playas de Asturias');
   expect(screen.queryByText(/Cantabria/)).not.toBeInTheDocument();
 
   const urls = fetchMock.mock.calls.map((c) => String(c[0]));
@@ -112,10 +113,11 @@ it('el mapa arranca en el centro de Asturias, no en el de Cantabria', async () =
   expect(mockZoomMapa[0]).toBe(OTRA_REGION.map.zoom);
 });
 
-it('la app en inglés también lleva el nombre de la región', async () => {
+it('la app en inglés también lleva la marca de la región', async () => {
   mockApi();
   const PlayasList = (await import('../../pages/PlayasList')).default;
   renderWithProviders(<PlayasList />, { route: '/playas', idioma: 'en' });
 
-  expect(await screen.findByText('Asturias Beaches')).toBeInTheDocument();
+  // The brand is a proper name from region.json: it does not translate.
+  expect(await screen.findByText('Playas de Asturias')).toBeInTheDocument();
 });

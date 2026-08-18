@@ -15,27 +15,27 @@
 'use strict';
 
 const PLANTILLAS_SEO = {
-  tituloInicio: 'Playas {region}: la mejor playa para hoy',
+  tituloInicio: '{marca}: la mejor playa para hoy',
   descInicio:
     'Compara las playas de {region} ahora mismo: puntuación, bandera, tiempo y previsión para elegir playa hoy.',
-  tituloLista: 'Todas las playas de {region} | Playas {region}',
+  tituloLista: 'Todas las playas de {region} | {marca}',
   descLista:
     'Listado completo de las playas de {region}, con buscador, distancia, banderas y servicios.',
-  tituloMapa: 'Mapa de playas de {region} | Playas {region}',
+  tituloMapa: 'Mapa de playas de {region} | {marca}',
   descMapa: 'Mapa interactivo con todas las playas de {region} y su estado.',
-  tituloDetalle: '{nombre}: bandera, tiempo y mareas hoy | Playas {region}',
+  tituloDetalle: '{nombre}: bandera, tiempo y mareas hoy | {marca}',
   descDetalle:
     'Estado de la playa de {nombre}, en {municipio}: bandera actual, tiempo, previsión y mareas de hoy.',
-  tituloMunicipio: 'Playas de {municipio}: estado actual | Playas {region}',
+  tituloMunicipio: 'Playas de {municipio}: estado actual | {marca}',
   descMunicipio:
     'Las playas de {municipio}, en {region}, con enlace al estado de hoy de cada una: bandera, tiempo y mareas.',
-  tituloAcerca: 'Acerca de y condiciones | Playas {region}',
+  tituloAcerca: 'Acerca de y condiciones | {marca}',
   descAcerca:
-    'Qué es Playas {region}, su independencia, límites de responsabilidad, fuentes de datos y contacto.',
-  tituloPrivacidad: 'Privacidad y almacenamiento | Playas {region}',
+    'Qué es {marca}, su independencia, límites de responsabilidad, fuentes de datos y contacto.',
+  tituloPrivacidad: 'Privacidad y almacenamiento | {marca}',
   descPrivacidad:
-    'Qué datos trata Playas {region}: geolocalización opcional, almacenamiento local, proveedores y derechos.',
-  tituloMunicipios: 'Municipios con playa en {region} | Playas {region}',
+    'Qué datos trata {marca}: geolocalización opcional, almacenamiento local, proveedores y derechos.',
+  tituloMunicipios: 'Municipios con playa en {region} | {marca}',
   descMunicipios:
     'Todos los municipios de {region} con playa en el catálogo, con acceso a las playas de cada uno.',
 };
