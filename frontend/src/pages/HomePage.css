@@ -37,7 +37,13 @@
   font-family: 'Pacifico', cursive;
   font-weight: 400;
   font-size: 1.6rem;
-  margin: 0 0 4px;
+  /* Pacifico's glyphs need ~1.72em but the 84px header only affords a 1.2
+     line box, so descenders (the "y") paint below it and the overflow:hidden
+     that ellipsis requires was amputating them. The padding lets them paint
+     inside the clip box; the negative margin gives that space back, so the
+     header keeps its 84px and the subtitle its 4px gap. */
+  margin: 0 0 calc(4px - 0.3em);
+  padding-bottom: 0.3em;
   line-height: 1.2;
   color: #ffffff;
   white-space: nowrap;

@@ -37,7 +37,9 @@
   font-family: 'Pacifico', cursive;
   font-weight: 400;
   font-size: 1.6rem;
-  margin: 0 0 4px;
+  /* Clip room for Pacifico's descenders — see .hp-sticky-title. */
+  margin: 0 0 calc(4px - 0.3em);
+  padding-bottom: 0.3em;
   line-height: 1.2;
   color: #ffffff;
   white-space: nowrap;
