@@ -1,10 +1,10 @@
 # 🏖️ Playucas.es
-*Check the status of the beaches of Cantabria in real time. This app provides 3-day forecasts with morning/afternoon detail, tides, UV index, weather warnings, and Red Cross flag status.*
+*Check the status of the beaches of Cantabria in real time: conditions score, 3-day forecasts with morning/afternoon detail, tides, UV index, weather warnings, and Red Cross flag status.*
 
 ---
 
-[![Version](https://img.shields.io/badge/version-2.0.0-blue)](../../releases)
-[![License: MIT-NC](https://img.shields.io/badge/License-MIT--NC-yellow.svg)](./LICENSE)
+[![Version](https://img.shields.io/badge/version-2.1.0-blue)](../../releases)
+[![License: PolyForm Shield 1.0.0](https://img.shields.io/badge/License-PolyForm%20Shield%201.0.0-blue.svg)](./LICENSE.md)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.x-informational)
 ![Node.js](https://img.shields.io/badge/Node.js-20.x-informational)
 ![Express](https://img.shields.io/badge/Express-4.x-informational)
@@ -24,24 +24,29 @@ Backend API: `https://playas-cantabria.onrender.com`
 
 ## Preview
 
-![Screenshot List (Home)](./docs/screenshots/list.png)
-![Screenshot Map](./docs/screenshots/map.png)
-![Screenshot Details](./docs/screenshots/details.png)
+<p align="center">
+  <img src="./docs/screenshots/home.png" alt="Home: the best beach for today" width="220" />
+  <img src="./docs/screenshots/list.png" alt="Beach listing" width="220" />
+  <img src="./docs/screenshots/details.png" alt="Beach detail" width="220" />
+  <img src="./docs/screenshots/map.png" alt="Interactive map" width="220" />
+</p>
 
 ## Features
 
-* **Beach listing** with search by name or municipality and A-Z / Z-A sorting.
-* **Beach detail** with full information:
-  * 3-day forecast with day selector (Today, Tomorrow, Day after tomorrow) and date display.
-  * Morning/afternoon breakdown: sky, wind and wave conditions for each half of the day.
-  * Max temperature, water temperature and thermal sensation.
-  * UV index with color-coded levels.
-  * Weather warnings with severity level.
-  * Tides: high and low tide times, with a real-time rising/falling indicator for today.
-  * Red Cross: flag status, coverage dates and lifeguard schedule.
-  * "Get directions" button that opens Google Maps with directions to the beach.
-* **Interactive map** (Leaflet/OpenStreetMap) with your current location and direct access to beach details.
-* **Partial offline mode:** if the backend doesn't respond within 2.5s, the beach list is served from a local JSON file and updated when the server replies.
+* **"Best beach for today" home page:** automatic ranking of the catalog's beaches with a 0–100 conditions score (sky, wind, flag…), runner-up alternatives, and a clear notice that it is an indicative recommendation.
+* **Beach listing** with search by name or municipality, A-Z / Z-A sorting, favorites, a per-beach conditions summary and trend (improving / worsening).
+* **Beach detail:**
+  * 3-day forecast with day selector and morning/afternoon breakdown: sky, wind and waves.
+  * Max temperature, water temperature and thermal sensation; color-coded UV index; weather warnings with severity.
+  * Hourly strip for the next few hours and imminent-rain notice (nowcast).
+  * Tides: high and low tide times, with a real-time rising/falling indicator.
+  * Flag and lifeguard coverage with its operator (Red Cross): status, coverage and schedule, with last-updated time.
+  * **Share** button that renders today's reading as an image card, and a "Get directions" button (Google Maps).
+  * Link to a webcam when the beach has a reliable one.
+* **Interactive map** (Leaflet/OpenStreetMap) with conditions, hoisted flags and your location.
+* **Municipality pages and curated landing pages**, prerendered along with every other route for SEO (sitemap and canonicals included).
+* **Installable PWA** with partial offline mode: if the backend doesn't respond within 2.5s, the beach list is served from a local JSON file and updated when the server replies.
+* **Bilingual:** Spanish and English interface.
 
 ## Data Sources
 
@@ -49,45 +54,54 @@ The app aggregates information from multiple sources with a fallback chain:
 
 * **AEMET (XML/HTML scraping):** Enriched 3-day forecast, tides, warnings and real UV (primary source).
 * **AEMET OpenData API:** 2-day forecast as fallback.
-* **OpenWeatherMap:** Weather data, estimated UV and tomorrow's forecast as last resort.
+* **OpenWeatherMap:** Weather data, estimated UV and hourly-strip backup.
+* **Open-Meteo:** Hourly precipitation for the rain nowcast.
 * **Red Cross:** Flag status and lifeguard services (scraping).
 
-In-memory cache with configurable TTL (default 300s) and singleflight deduplication.
+In-memory cache with a configurable base TTL (default 1800s, scaled by time of day and season), a *stale* window that serves the last good value if a provider goes down, singleflight deduplication, and an optional second level on Upstash Redis.
+
+> **Data licensing:** the license of this repository covers the code only. Data from AEMET, OpenWeatherMap, Open-Meteo, Red Cross, and OpenStreetMap belongs to its respective sources and is governed by their own terms (attribution required; ODbL in the case of OpenStreetMap). Anyone deploying this software takes on those obligations towards each data provider.
+
+---
+
+## Multi-region
+
+The engine is region-agnostic: **a region is a data directory** under `regions/<id>/`, with its `region.json` (name, brand, map center, flag operators) and its `beaches.json` catalog. The backend validates every region at startup and mounts its API under `/api/<id>/…`; the frontend is built per region with `REACT_APP_REGION=<id>`, which injects that region's brand, map and catalog. Cantabria is the reference region; `regions/asturias/` exists as an example of a contributed region.
 
 ---
 
 ## Backend Architecture
 
-The backend follows a **Hexagonal Architecture** (Ports & Adapters). Dependencies always point inward: `infrastructure → application → domain`.
+The backend follows a **Hexagonal Architecture** (Ports and Adapters). Dependencies always point inward: `infrastructure → application → domain`.
 
 ### Layers
 
 1. **`Domain` (Core)**
-   * Entities: `Beach`, `Weather`, `Flag`, `Tides`, `BeachForecast`.
+   * Entities: `Beach`, `Weather`, `Flag`, `Tides`, `BeachForecast`, `RainNowcast`, `Sunshine`.
    * Ports (interfaces): `BeachRepository`, `WeatherProvider`, `FlagProvider`, `TidesProvider`.
-   * Use cases: `GetAllBeaches`, `GetBeachById`, `GetBeachDetails`.
+   * Use cases: `GetAllBeaches`, `GetBeachById`, `GetBeachDetails`, `GetFeaturedBeaches` (with `BeachScorer`), `GetRainNowcast`.
    * **No dependencies** on other layers.
 
 2. **`Application` (Orchestration)**
    * DTOs: `BeachDTO`, `BeachDetailsDTO`.
-   * Mappers: `BeachMapper`, `LegacyDetailsMapper`.
-   * Services: `LegacyDetailsAssembler` (orchestrates the fallback chain).
-   * Validation: Zod schemas for route parameters.
+   * Mappers: `BeachMapper`, `BeachDetailsMapper`, `FeaturedBeachMapper`, `LegacyDetailsMapper`.
+   * Services: `DetailsAssembler` and `LegacyDetailsAssembler` (orchestrate the fallback chain).
+   * Validation: Zod schemas for route params.
 
 3. **`Infrastructure` (Outside)**
-   * Express: Server, routes, middlewares.
-   * Providers: `AemetBeachWebScraper`, `AemetBeachForecastProvider`, `OpenWeatherWeatherProvider`, `RedCrossFlagProvider`.
-   * Repository: `JsonBeachRepository` (reads from static JSON).
-   * Cache: `InMemoryCache` with TTL and singleflight.
-   * DI: Manual container with no framework (`dependencies.ts`).
+   * Express: server, routes, middlewares (CORS, rate limit, errors).
+   * Providers: `AemetBeachWebScraper`, `AemetBeachForecastProvider`, `AemetWeatherProvider`, `OpenWeatherWeatherProvider`, `OpenMeteoPrecipitationProvider`, `RedCrossFlagProvider` and `FlagProviderRouter` (dispatches by flag operator).
+   * Repository: `JsonBeachRepository` (reads the region's JSON catalog).
+   * Cache: `InMemoryCache` with TTL and singleflight, with an optional L2 on Upstash Redis.
+   * DI: manual container without a framework (`dependencies.ts`), one per valid region.
 
 ### Fallback Chain (beach detail)
 
 ```
-Layer 1: AemetBeachWebScraper         → Public XML/HTML from aemet.es (3 days, morning/afternoon, tides, warnings, UV)
-Layer 2: AemetBeachForecastProvider   → OpenData API with API key (2 days)
-Layer 3: OpenWeatherWeatherProvider   → OpenWeather API (temp, wind, description)
-Layer 4: GetBeachDetails              → AEMET observation ↔ OpenWeather (hedged, first to respond wins)
+Layer 1: AemetBeachWebScraper        → public XML/HTML from aemet.es (3 days, morning/afternoon, tides, warnings, UV)
+Layer 2: AemetBeachForecastProvider  → OpenData API with API key (2 days)
+Layer 3: OpenWeatherWeatherProvider  → OpenWeather API (temp, wind, description)
+Layer 4: GetBeachDetails             → AEMET observation ↔ OpenWeather (hedged, first to respond wins)
 ```
 
 ---
@@ -99,24 +113,24 @@ Layer 4: GetBeachDetails              → AEMET observation ↔ OpenWeather (hed
 * **Language:** [TypeScript](https://www.typescriptlang.org/) v5.5
 * **Runtime:** [Node.js](https://nodejs.org/) v20+
 * **Framework:** [Express.js](https://expressjs.com/) v4.19
-* **Architecture:** Hexagonal (Ports & Adapters) with manual DI.
+* **Architecture:** Hexagonal (Ports and Adapters) with manual DI.
 * **Validation:** [Zod](https://zod.dev/)
-* **HTTP:** [Axios](https://axios-http.com/) v1.7
-* **Scraping:** [Cheerio](https://cheerio.js.org/) v1.0
+* **HTTP:** [Axios](https://axios-http.com/)
+* **Scraping:** [Cheerio](https://cheerio.js.org/)
 * **Encoding:** [iconv-lite](https://github.com/ashtuchkin/iconv-lite) (AEMET serves ISO-8859-15)
-* **Environment:** [Dotenv](https://github.com/motdotla/dotenv)
-* **Logging:** [Winston](https://github.com/winstonjs/winston)
+* **Tests:** [Vitest](https://vitest.dev/)
 * **Deployment:** [Render](https://render.com/) (primary), [Firebase Functions](https://firebase.google.com/docs/functions) (alternative)
 
 ### Frontend
 
-* **Framework:** [React](https://reactjs.org/) 18
-* **UI:** [Ionic](https://ionicframework.com/) React
+* **Framework:** [React](https://reactjs.org/) 18 (Create React App)
+* **UI Framework:** [Ionic](https://ionicframework.com/) React
 * **Language:** [TypeScript](https://www.typescriptlang.org/)
 * **Router:** [React Router](https://reactrouter.com/)
 * **Maps:** [Leaflet](https://leafletjs.com/) / [react-leaflet](https://react-leaflet.js.org/) with OpenStreetMap
 * **Mobile Platform:** [Capacitor](https://capacitorjs.com/)
-* **Web Deployment:** [Firebase Hosting](https://firebase.google.com/docs/hosting)
+* **Tests:** Jest + React Testing Library (characterization suite)
+* **Web Deployment:** [Firebase Hosting](https://firebase.google.com/docs/hosting) (one site per region)
 
 ---
 
@@ -124,18 +138,24 @@ Layer 4: GetBeachDetails              → AEMET observation ↔ OpenWeather (hed
 
 ```
 playas-cantabria/
+├── regions/                  # Per-region data: region.json + beaches.json
+│   ├── cantabria/
+│   └── asturias/
 ├── backend/
 │   └── src/
-│       ├── domain/           # Entities, ports, use cases
+│       ├── domain/           # Entities, ports, domain services, use cases
 │       ├── application/      # DTOs, mappers, services, validation
-│       └── infrastructure/   # Express, providers, cache, DI, repositories
+│       ├── infrastructure/   # Express, providers, cache, DI, repositories, config
+│       └── regions/          # Runtime region registry and validation
 ├── frontend/
 │   └── src/
-│       ├── pages/            # Home, PlayaDetalle, MapaPage
+│       ├── app/              # Entry point, routes and theme (CSS variables)
+│       ├── pages/            # Home, listing, detail, map, municipalities, landings, legal
+│       ├── modules/          # share (image card), favorites, PWA install
+│       ├── shared/           # i18n (es/en), SEO/prerender, config, geo, formatting, UI
 │       ├── services/         # API client
-│       ├── config/           # API URL configuration
-│       ├── data/             # Fallback beach JSON
-│       └── theme/            # CSS variables
+│       └── data/             # Local catalog fallback (generated at build time)
+└── docs/                     # Screenshots and documentation
 ```
 
 ---
@@ -156,7 +176,7 @@ cd playas-cantabria
 # Backend
 cd backend
 npm install
-cp .env.tmp .env
+cp .env.example .env
 # Fill .env with your API keys
 
 # Frontend
@@ -173,32 +193,44 @@ You need two terminals:
 cd backend
 npm run dev
 
-# Terminal 2 — Frontend (http://localhost:8100)
+# Terminal 2 — Frontend (http://localhost:3000)
 cd frontend
 npm start
 ```
 
+### Tests
+
+```bash
+cd backend && npm test    # Vitest
+cd frontend && npm test   # Jest + RTL (always restores the Cantabria region)
+```
+
 ---
 
-## API Endpoints
+## API — Endpoints
+
+The API is multi-region: every route lives under `/api/:region/…`.
 
 | Method | Route | Description |
 |--------|-------|-------------|
-| GET | `/api/beaches` | List all beaches |
-| GET | `/api/beaches/:id` | Basic beach info |
-| GET | `/api/beaches/:id/details` | Full detail: 3-day forecast, tides, Red Cross, coordinates |
+| GET | `/api/:region/beaches` | List of all beaches in the region |
+| GET | `/api/:region/beaches/featured` | Conditions ranking (score per beach) |
+| GET | `/api/:region/beaches/:id` | Basic information for a beach |
+| GET | `/api/:region/beaches/:id/details` | Full detail: 3-day forecast, tides, flag, coordinates |
+
+The historical region-less routes (`/api/beaches…`) remain as deprecated Cantabria aliases for already-installed clients. Everything under `/api` is rate-limited to 60 requests/minute per IP.
 
 ### Examples
 
 ```bash
-# List
-curl "http://localhost:4000/api/beaches"
+# Listing (Cantabria)
+curl "http://localhost:4000/api/cantabria/beaches"
 
-# Full details (La Concha de Suances)
-curl "http://localhost:4000/api/beaches/3908503/details"
+# Full detail (La Concha, Suances)
+curl "http://localhost:4000/api/cantabria/beaches/3908503/details"
 ```
 
-The `/details` endpoint consolidates data from **AEMET, OpenWeatherMap and Red Cross** and includes a 3-day morning/afternoon forecast, tides (high/low), UV index, weather warnings and GPS coordinates.
+The `/details` endpoint consolidates data from **AEMET, OpenWeatherMap, Open-Meteo and the flag operator**, and includes a 3-day forecast with morning/afternoon detail, tides (high/low), UV index, weather warnings and GPS coordinates.
 
 ---
 
@@ -212,34 +244,43 @@ The `/details` endpoint consolidates data from **AEMET, OpenWeatherMap and Red C
 | `AEMET_API_KEY` | AEMET OpenData API key | — |
 | `OPENWEATHER_API_KEY` | OpenWeatherMap API key | — |
 | `CORS_ORIGIN` | Allowed CORS origin | `*` |
-| `CACHE_TTL_SECONDS` | Cache TTL in seconds | `300` |
-| `DEBUG_WEATHER` | Enables detailed logs and debug endpoint | — |
+| `CACHE_TTL_SECONDS` | Base provider TTL in seconds (scaled by time of day and season) | `1800` |
+| `FEATURED_FRESH_TTL_SECONDS` | Fresh window of the ranking before a background refresh | `300` |
+| `FEATURED_STALE_TTL_SECONDS` | Maximum time the last valid ranking can be served | `3600` |
+| `DETAILS_FRESH_TTL_SECONDS` | Fresh window of the consolidated detail | `60` |
+| `DETAILS_STALE_TTL_SECONDS` | Maximum time a previous detail can be served while refreshing | `600` |
+| `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | Optional; enable the two-level cache that survives restarts | — |
+| `DEBUG_WEATHER` | `1` enables detailed provider logs | — |
 
 ### Frontend
 
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `REACT_APP_API_BASE_URL` | Backend URL | `https://playas-cantabria.onrender.com` |
+| `REACT_APP_REGION` | Region this build serves | `cantabria` |
+| `REACT_APP_SITE_ORIGIN` | Public origin of the deployment (canonicals, sitemap, manifest) | — |
 
 ---
 
-## Contributions
+## Contributing
 
-Contributions are welcome! Open an *issue* with your ideas, suggestions or bug reports.
+Contributions are welcome. If you have ideas, suggestions, or want to report a bug, open an *issue* in this repository. Before submitting a PR, please read [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ---
 
 ## License
-MIT No Commercial (MIT + NC). See [LICENSE](./LICENSE).
+This project is distributed under the [PolyForm Shield 1.0.0](./LICENSE.md) license. It allows using, studying, modifying, forking and contributing to the software, and reusing it in projects that do not compete with Playucas. It does not allow offering a product that competes with Playucas, even for free. It is a *source-available* license; it is not open source under the OSI definition.
+
+The "Playucas" name, logo and visual identity are not covered by the software license: see [TRADEMARK.md](./TRADEMARK.md).
 
 ## Versioning
-Follows [Semantic Versioning](https://semver.org/).
-Currently **v2.0.0**.
+This project follows [Semantic Versioning](https://semver.org/).
+Currently at **v2.1.0**.
 
 ## Roadmap
 
-- [x] ~~Add **tide data**~~
-- [ ] Add more beaches
-- [ ] Improve **frontend architecture** (state, discriminated types, caching)
-- [ ] Publish **OpenAPI/Swagger**
-- [ ] Add basic E2E tests (Playwright)
+- [x] ~~Add **tides** data~~
+- [x] ~~Add more beaches~~ (46 Cantabria beaches in the catalog)
+- [ ] Improve the **frontend** architecture (state, discriminated types, caching)
+- [ ] Publish **OpenAPI/Swagger** for the API
+- [ ] Basic E2E tests (Playwright) for the main flows
