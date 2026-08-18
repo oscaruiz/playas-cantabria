@@ -81,10 +81,16 @@
   height: 100%;
   width: 100%;
   z-index: 0;
-  /* On DPR > 1 phones, sub-pixel rounding of the tile rows leaks hairline
-     gaps that show the container background — Leaflet's default #ddd reads
-     as a gray line across the sea. OSM's water tone makes those seams (and
-     not-yet-loaded areas) blend with the map instead. */
+}
+
+/* On DPR > 1 phones, sub-pixel rounding of the tile rows leaks hairline
+   gaps that show the container background — Leaflet's default #ddd reads
+   as a gray line across the sea. OSM's water tone makes those seams (and
+   not-yet-loaded areas) blend with the map instead.
+   The #id raises specificity above leaflet.css's `.leaflet-container`,
+   which loads AFTER this file (it ships in the lazy MapaLienzo chunk) and
+   would win the cascade on order alone. */
+#mapa-container .leaflet-map {
   background: #aad3df;
 }
 
