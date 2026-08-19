@@ -131,6 +131,22 @@ export type PrediccionCompletaDTO = {
   fuenteMareas: string | null;
 };
 
+/**
+ * Tide table borrowed from the nearest beach that has one, for a beach with
+ * no AEMET sheet of its own. Kept OUTSIDE `prediccionCompleta` on purpose:
+ * that object labels the whole forecast column as AEMET's, and is nulled out
+ * when empty precisely so a beach without a sheet does not misrepresent its
+ * source (see the assembler's guard). This field says plainly whose tides
+ * these are and how far away.
+ */
+export type MareaReferenciaDTO = {
+  playa: string;
+  municipio: string;
+  distanciaKm: number;
+  mareas: Array<{ pleamar: string[]; bajamar: string[] }>;
+  fuenteMareas: string | null;
+};
+
 export type LegacyDetailsDTO = {
   nombre: string;
   municipio: string;
@@ -163,6 +179,8 @@ export type LegacyDetailsDTO = {
   fuenteBanderas: string | null;
   cruzRoja: CruzRojaDTO | null;
   prediccionCompleta: PrediccionCompletaDTO | null;
+  /** Reference tide from the nearest beach, when this one has none of its own. */
+  mareaReferencia: MareaReferenciaDTO | null;
   /**
    * When this payload was actually ASSEMBLED, not when it was served. The
    * details endpoint answers from a stale-while-revalidate cache, so a
@@ -184,6 +202,7 @@ export class LegacyDetailsMapper {
       fuenteBanderas: resolveFlagOperatorName(beach.flagRef, beach.flagStations),
       cruzRoja: flag ? this.mapCruzRoja(flag) : null,
       prediccionCompleta: null,
+      mareaReferencia: null, // populated by LegacyDetailsAssembler when the beach has no AEMET sheet
     };
   }
 

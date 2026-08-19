@@ -311,6 +311,7 @@ export const en = {
   'marea.bajando': 'Falling',
   'marea.pleamar': 'High tide',
   'marea.bajamar': 'Low tide',
+  'marea.referenciaAviso': 'This beach has no tide table of its own. Showing {playa}, {km} km away.',
 
   // ---- Cruz Roja (card) ----
   'cruzroja.vigilanciaCobertura': 'Lifeguard service and coverage',

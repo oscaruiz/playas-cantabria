@@ -1277,3 +1277,11 @@
   margin: 0;
   font-size: 0.85rem;
 }
+
+/* Reference tide notice — this beach has no AEMET sheet of its own */
+.tides-referencia-aviso {
+  font-size: 0.78rem;
+  font-style: italic;
+  color: var(--playa-text-muted);
+  margin: -2px 0 10px;
+}

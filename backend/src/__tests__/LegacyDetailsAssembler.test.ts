@@ -9,6 +9,7 @@ import type { Beach } from '../domain/entities/Beach';
 import type { Weather } from '../domain/entities/Weather';
 import type { RainNowcast } from '../domain/entities/RainNowcast';
 import type { BeachFullForecast } from '../domain/entities/BeachForecast';
+import type { BeachRepository } from '../domain/ports/BeachRepository';
 
 // ---------------------------------------------------------------------------
 // Fixtures — Cóbreces-like payload: TODAY's MORNING and AFTERNOON disagree.
@@ -374,6 +375,163 @@ describe('LegacyDetailsAssembler — coherencia resumen vs desglose y "ahora" re
     expect(dia.temperaturaMaxima).toBe(24);
     expect(dia.temperaturaAgua).toBe(24);
     expect(dia.indiceUV).toBe(7);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Marea de referencia — a beach with no AEMET sheet borrows the nearest
+// beach's tide table. Coordinates approximate Langre/Somo/Sardinero, real
+// distances on this stretch of coast.
+// ---------------------------------------------------------------------------
+
+describe('LegacyDetailsAssembler — marea de referencia', () => {
+  const DONOR: Beach = {
+    id: 'donor-1',
+    name: 'Somo',
+    municipality: 'Ribamontán al Mar',
+    aemetCode: 'donor-1',
+    latitude: 43.4584,
+    longitude: -3.7352,
+  };
+
+  const FAR_DONOR: Beach = {
+    id: 'donor-2',
+    name: 'Sardinero',
+    municipality: 'Santander',
+    aemetCode: 'donor-2',
+    latitude: 43.4771,
+    longitude: -3.7871,
+  };
+
+  const NO_TIDES: Beach = {
+    id: 'sin-mareas',
+    name: 'Langre',
+    municipality: 'Ribamontán al Mar',
+    aemetCode: 'sin-mareas',
+    sinAemet: true,
+    latitude: 43.462,
+    longitude: -3.73,
+  };
+
+  const donorForecast = (): BeachFullForecast => ({
+    source: 'AEMET_HTML',
+    elaboration: null,
+    warningZone: null,
+    days: [],
+    tides: [{ highTide: ['09:00', '21:00'], lowTide: ['03:00', '15:00'] }],
+    tidesSource: '*Fuente: IHM',
+  });
+
+  function build(opts: {
+    beach: Beach;
+    catalog: Beach[];
+    donorForecast?: BeachFullForecast;
+    donorCachedTides?: { tides: BeachFullForecast['tides']; tidesSource: string | null } | null;
+    withRepo?: boolean;
+  }) {
+    const getDetails = {
+      execute: async () => ({ beach: opts.beach, weather: makeOwCurrent(), flag: null, tides: null }),
+    } as unknown as GetBeachDetails;
+
+    const aemetScraper = {
+      getBeachForecast: async (codigo: string) => {
+        if (codigo !== DONOR.aemetCode && codigo !== FAR_DONOR.aemetCode) {
+          throw new Error(`getBeachForecast llamado con código inesperado: ${codigo}`);
+        }
+        if (!opts.donorForecast) throw new Error('donor scrape failed');
+        return opts.donorForecast;
+      },
+      getCachedTides: () => opts.donorCachedTides ?? null,
+    } as unknown as AemetBeachWebScraper;
+
+    const aemetPlayas = {
+      getByBeachCode: async () => { throw new Error('not used'); },
+    } as unknown as AemetBeachForecastProvider;
+
+    const openWeather = {
+      getCurrentByCoords: async () => makeOwCurrent(),
+      getTomorrowByCoords: async () => { throw new Error('skip'); },
+      getDailyUVIndex: async () => { throw new Error('skip'); },
+      getCloudinessTodayAndTomorrow: async () => { throw new Error('skip'); },
+      getForecastHalfDays: async () => [],
+      getOutlookSlots: async () => [],
+    } as unknown as OpenWeatherWeatherProvider;
+
+    const rainNowcast = {
+      execute: async () => { throw new Error('skip'); },
+    } as unknown as GetRainNowcast;
+
+    if (opts.withRepo === false) {
+      return new LegacyDetailsAssembler(getDetails, aemetScraper, aemetPlayas, openWeather, rainNowcast);
+    }
+
+    const beachRepo = {
+      getAll: async () => opts.catalog,
+      getById: async () => null,
+    } as unknown as BeachRepository;
+
+    return new LegacyDetailsAssembler(
+      getDetails, aemetScraper, aemetPlayas, openWeather, rainNowcast,
+      undefined, undefined, 'cantabria', beachRepo,
+    );
+  }
+
+  it('presta la marea de la playa AEMET más cercana cuando la propia no tiene ficha', async () => {
+    const assembler = build({
+      beach: NO_TIDES,
+      catalog: [NO_TIDES, DONOR, FAR_DONOR],
+      donorForecast: donorForecast(),
+    });
+
+    const result = await assembler.assemble(NO_TIDES.id);
+
+    expect(result.mareaReferencia).not.toBeNull();
+    expect(result.mareaReferencia?.playa).toBe('Somo'); // el más cercano, no Sardinero
+    expect(result.mareaReferencia?.municipio).toBe('Ribamontán al Mar');
+    expect(result.mareaReferencia?.mareas).toEqual([
+      { pleamar: ['09:00', '21:00'], bajamar: ['03:00', '15:00'] },
+    ]);
+    expect(result.mareaReferencia?.fuenteMareas).toBe('*Fuente: IHM');
+    expect(result.mareaReferencia?.distanciaKm).toBeGreaterThan(0);
+    expect(result.mareaReferencia?.distanciaKm).toBeLessThan(10);
+  });
+
+  it('no presta nada a una playa que ya tiene su propia ficha AEMET', async () => {
+    const assembler = build({
+      beach: DONOR,
+      catalog: [DONOR, FAR_DONOR, NO_TIDES],
+      donorForecast: donorForecast(),
+    });
+
+    const result = await assembler.assemble(DONOR.id);
+
+    expect(result.mareaReferencia).toBeNull();
+    // Sus propias mareas sí llegan, por la vía normal (no la de préstamo).
+    expect(result.prediccionCompleta?.mareas).toEqual([
+      { pleamar: ['09:00', '21:00'], bajamar: ['03:00', '15:00'] },
+    ]);
+  });
+
+  it('si el scrape del donante falla y no hay caché, queda sin referencia (el resto del detalle no se rompe)', async () => {
+    const assembler = build({
+      beach: NO_TIDES,
+      catalog: [NO_TIDES, DONOR],
+      donorForecast: undefined,
+      donorCachedTides: null,
+    });
+
+    const result = await assembler.assemble(NO_TIDES.id);
+
+    expect(result.mareaReferencia).toBeNull();
+    expect(result.clima).not.toBeNull();
+  });
+
+  it('sin repositorio inyectado (compatibilidad hacia atrás) no intenta prestar mareas', async () => {
+    const assembler = build({ beach: NO_TIDES, catalog: [], withRepo: false });
+
+    const result = await assembler.assemble(NO_TIDES.id);
+
+    expect(result.mareaReferencia).toBeNull();
   });
 });
 

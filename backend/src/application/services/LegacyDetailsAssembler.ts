@@ -8,6 +8,8 @@ import {
   LluviaDTO,
   PrediccionCompletaDTO,
 } from '../mappers/LegacyDetailsMapper';
+import { BeachRepository } from '../../domain/ports/BeachRepository';
+import { findTideReference } from '../../domain/services/tideReference';
 import { OpenWeatherWeatherProvider } from '../../infrastructure/providers/OpenWeatherWeatherProvider';
 import { OPEN_METEO_NOMBRE } from '../../infrastructure/providers/OpenMeteoPrecipitationProvider';
 import { AemetBeachForecastProvider } from '../../infrastructure/providers/AemetBeachForecastProvider';
@@ -41,6 +43,8 @@ export class LegacyDetailsAssembler {
     /** Optional: without it the sky corrector does not run and the detail does not change. */
     private readonly sunshine?: SunshineProvider,
     private readonly regionId = 'cantabria',
+    /** Optional: without it a beach with no AEMET sheet gets no reference tide. */
+    private readonly beachRepo?: BeachRepository,
   ) {}
 
 
@@ -613,6 +617,41 @@ export class LegacyDetailsAssembler {
       base.prediccionCompleta.mareas.length === 0
     ) {
       base.prediccionCompleta = null;
+    }
+
+    // Step 10: A beach with no AEMET sheet has no tides of its own — borrow
+    // the nearest beach that does. Tide tables are always relative to a
+    // reference point anyway; on this coastline the shift a few km away is
+    // one or two minutes, so this is honest, not a workaround. Kept separate
+    // from `prediccionCompleta` (see the guard above): that field labels the
+    // whole forecast column as AEMET's, which would misrepresent the source
+    // for a beach that has none. Best-effort: any failure leaves it null,
+    // same as a beach that simply has no reference.
+    base.mareaReferencia = null;
+    if (details.beach.sinAemet && this.beachRepo) {
+      try {
+        const catalog = await this.beachRepo.getAll();
+        const reference = findTideReference(details.beach, catalog);
+        if (reference) {
+          const donorCode = reference.beach.aemetCode;
+          const forecast = await this.aemetScraper.getBeachForecast(donorCode).catch(() => null);
+          const tidesData =
+            forecast && forecast.tides.length > 0
+              ? { tides: forecast.tides, tidesSource: forecast.tidesSource }
+              : this.aemetScraper.getCachedTides(donorCode);
+          if (tidesData && tidesData.tides.length > 0) {
+            base.mareaReferencia = {
+              playa: reference.beach.name,
+              municipio: reference.beach.municipality,
+              distanciaKm: Math.round(reference.distanceKm * 10) / 10,
+              mareas: tidesData.tides.map((t) => ({ pleamar: t.highTide, bajamar: t.lowTide })),
+              fuenteMareas: tidesData.tidesSource,
+            };
+          }
+        }
+      } catch {
+        // Reference unresolved: the detail ships without it, same as before this feature.
+      }
     }
 
     // Stamped HERE, at the end of the only path that really calls the

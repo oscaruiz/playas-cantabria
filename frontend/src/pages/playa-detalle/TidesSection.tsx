@@ -43,7 +43,13 @@ const TidesSection: React.FC<{
   /** Reference port the times belong to (AEMET's own annotation). */
   fuenteMareas: string | null;
   isToday: boolean;
-}> = ({ marea, fuenteMareas, isToday }) => {
+  /**
+   * Present when these are NOT this beach's own tides: it has no AEMET
+   * sheet, so the nearest beach's table is shown instead. Tide tables are
+   * always relative to a reference point anyway — this just says which one.
+   */
+  referencia?: { playa: string; distanciaKm: number };
+}> = ({ marea, fuenteMareas, isToday, referencia }) => {
   const { t } = useIdioma();
   if (marea.pleamar.length === 0 && marea.bajamar.length === 0) return null;
 
@@ -58,6 +64,14 @@ const TidesSection: React.FC<{
   return (
     <section className="tides-section">
       <h3 className="section-kicker">{t('detalle.mareas')}</h3>
+      {referencia && (
+        <p className="tides-referencia-aviso">
+          {t('marea.referenciaAviso', {
+            playa: referencia.playa,
+            km: Math.round(referencia.distanciaKm * 10) / 10,
+          })}
+        </p>
+      )}
       {status && (
         <div className={`tide-status ${status.className}`}>
           {status.className === 'tide-status-rising' ? '\u2197' : '\u2198'} {t(status.clave)}

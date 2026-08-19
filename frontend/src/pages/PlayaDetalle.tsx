@@ -331,6 +331,20 @@ const PlayaDetallePage: React.FC = () => {
                     horas={datos.tiempoActual?.previsionHoras}
                     fuente={datos.tiempoActual?.previsionHorasFuente}
                   />
+                  {/* Tampoco tienen tabla de mareas propia: se presta la de
+                      la playa con ficha AEMET más cercana (índice 0 = hoy,
+                      igual que prediccionCompleta.mareas). */}
+                  {datos.mareaReferencia?.mareas[0] && (
+                    <TidesSection
+                      marea={datos.mareaReferencia.mareas[0]}
+                      fuenteMareas={datos.mareaReferencia.fuenteMareas}
+                      isToday
+                      referencia={{
+                        playa: datos.mareaReferencia.playa,
+                        distanciaKm: datos.mareaReferencia.distanciaKm,
+                      }}
+                    />
+                  )}
                 </>
               ) : null}
               </div>

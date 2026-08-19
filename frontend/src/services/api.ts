@@ -405,6 +405,19 @@ export interface WebcamPlaya {
   estado?: 'activa' | 'desactivada';
 }
 
+/**
+ * Tide table borrowed from the nearest beach that has one, for a beach with
+ * no AEMET sheet of its own. `mareas` is indexed by day like
+ * `PrediccionCompletaDTO['mareas']` — index 0 is today.
+ */
+export interface MareaReferencia {
+  playa: string;
+  municipio: string;
+  distanciaKm: number;
+  mareas: Array<{ pleamar: string[]; bajamar: string[] }>;
+  fuenteMareas: string | null;
+}
+
 export interface PlayaDetalle {
   nombre: string;
   municipio: string;
@@ -443,6 +456,12 @@ export interface PlayaDetalle {
 
   /** Year of the current Blue Flag award (ADEAC); absent/null if none. */
   banderaAzul?: number | null;
+
+  /**
+   * Present only when this beach has no AEMET sheet of its own
+   * (`prediccionCompleta` is then null).
+   */
+  mareaReferencia?: MareaReferencia | null;
 
   /**
    * When the backend ASSEMBLED this payload, not when it answered. The details

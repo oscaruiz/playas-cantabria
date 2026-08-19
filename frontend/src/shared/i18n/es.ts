@@ -337,6 +337,7 @@ export const es = {
   'marea.bajando': 'Bajando',
   'marea.pleamar': 'Pleamar',
   'marea.bajamar': 'Bajamar',
+  'marea.referenciaAviso': 'Esta playa no tiene tabla de mareas propia. Se muestra la de {playa}, a {km} km.',
 
   // ---- Cruz Roja (card) ----
   'cruzroja.vigilanciaCobertura': 'Vigilancia y cobertura',

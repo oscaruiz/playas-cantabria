@@ -161,6 +161,7 @@ export function configureDependencies(
       c.get('cache'),
       c.get('aemetWeatherProvider'),
       region.id,
+      c.get('beachRepository'),
     )
   );
 }
