@@ -50,10 +50,11 @@ describe('IdiomaContext', () => {
     expect(localStorage.getItem('app_idioma')).toBe('en');
   });
 
-  it('sin idioma guardado detecta el del navegador', () => {
-    // jsdom exposes navigator.language = 'en-US'
-    expect(detectarIdiomaInicial()).toBe('en');
-    localStorage.setItem('app_idioma', 'es');
+  it('sin idioma guardado arranca en español aunque el navegador esté en inglés', () => {
+    // jsdom exposes navigator.language = 'en-US'; detection must ignore it so
+    // that Googlebot (en-US, no localStorage) indexes the Spanish metadata.
     expect(detectarIdiomaInicial()).toBe('es');
+    localStorage.setItem('app_idioma', 'en');
+    expect(detectarIdiomaInicial()).toBe('en');
   });
 });

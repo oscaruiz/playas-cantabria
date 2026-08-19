@@ -190,7 +190,7 @@ for (const pattern of shellRules) {
  * region was synchronized last.
  */
 const bloqueIcono = tieneIcono
-  ? '<link rel="icon" type="image/png" href="/icon.png" />\n    <link rel="apple-touch-icon" href="/icon.png" />'
+  ? '<link rel="icon" type="image/png" sizes="512x512" href="/icon.png" />\n    <link rel="apple-touch-icon" href="/icon.png" />'
   : '<link rel="icon" type="image/svg+xml" href="/favicon.svg" />';
 const patronIcono = /(<!-- icono:inicio -->)[\s\S]*?(<!-- icono:fin -->)/;
 if (!patronIcono.test(indexHtml)) {

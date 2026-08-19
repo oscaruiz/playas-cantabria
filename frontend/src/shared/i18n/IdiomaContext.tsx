@@ -25,7 +25,7 @@ interface IdiomaContextValue {
 
 const IdiomaContext = createContext<IdiomaContextValue | null>(null);
 
-/** Saved language, or the browser's the first time. */
+/** Saved language, or Spanish the first time. */
 export function detectarIdiomaInicial(): Idioma {
   try {
     const guardado = localStorage.getItem(IDIOMA_KEY);
@@ -33,7 +33,10 @@ export function detectarIdiomaInicial(): Idioma {
   } catch {
     /* localStorage not available */
   }
-  return navigator.language?.toLowerCase().startsWith('en') ? 'en' : 'es';
+  // Deliberately NOT navigator.language: Googlebot renders with an en-US
+  // browser and no saved preference, so browser detection made Google index
+  // the English titles/metas for the Spanish URLs (seen 19-aug-2026).
+  return 'es';
 }
 
 /**
