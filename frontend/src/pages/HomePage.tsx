@@ -18,6 +18,7 @@ import { useUserLocation } from '../hooks/useUserLocation';
 import { useRevalidarAlVolver } from '../hooks/useRevalidarAlVolver';
 import BottomNavBar from '../shared/ui/BottomNavBar';
 import HeaderActions from '../shared/ui/HeaderActions';
+import LogoMarca from '../shared/ui/LogoMarca';
 import { useIdioma } from '../shared/i18n/IdiomaContext';
 import {
   traducirTextoApi,
@@ -425,12 +426,15 @@ const HomePage: React.FC = () => {
           texto no mueve nada. */}
       <div className="hp-sticky-header">
         <div
-          className="hp-sticky-marca"
+          className="hp-sticky-marca marca-con-logo"
           onClick={() => window.location.reload()}
           style={{ cursor: 'pointer' }}
         >
-          <h1 className="hp-sticky-title">{t('app.titulo')}</h1>
-          <p className="hp-sticky-subtitle">{t('home.subtitulo')}</p>
+          <LogoMarca />
+          <div className="marca-texto">
+            <h1 className="hp-sticky-title">{t('app.titulo')}</h1>
+            <p className="hp-sticky-subtitle">{t('home.subtitulo')}</p>
+          </div>
         </div>
         <HeaderActions />
       </div>

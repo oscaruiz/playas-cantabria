@@ -92,6 +92,20 @@ if (tieneIcono) {
   await rm(iconoPublico);
 }
 
+/**
+ * Optional header variant of the icon (`regions/<id>/icon-header.png`): same
+ * artwork redrawn so it reads at the ~52px the sticky header affords (bigger
+ * sun, in Cantabria's case). Same copy-or-delete rule as `icon.png`; the
+ * header falls back to `/icon.png` when a region ships no variant.
+ */
+const iconoCabeceraRegion = path.join(regionDir, 'icon-header.png');
+const iconoCabeceraPublico = path.join(frontendRoot, 'public/icon-header.png');
+if (existsSync(iconoCabeceraRegion)) {
+  await copyFile(iconoCabeceraRegion, iconoCabeceraPublico);
+} else if (existsSync(iconoCabeceraPublico)) {
+  await rm(iconoCabeceraPublico);
+}
+
 const iconosManifest = tieneIcono
   ? [
       {

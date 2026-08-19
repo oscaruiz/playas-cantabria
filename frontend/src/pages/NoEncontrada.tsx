@@ -5,6 +5,7 @@ import { useIdioma } from '../shared/i18n/IdiomaContext';
 import SeoHead from '../shared/seo/SeoHead';
 import BottomNavBar from '../shared/ui/BottomNavBar';
 import HeaderActions from '../shared/ui/HeaderActions';
+import LogoMarca from '../shared/ui/LogoMarca';
 import './landings/landings.css';
 
 /**
@@ -22,8 +23,11 @@ const NoEncontrada: React.FC = () => {
         noindex
       />
       <div className="home-sticky-header">
-        <div className="home-sticky-marca">
-          <p className="home-sticky-title">{t('app.titulo')}</p>
+        <div className="home-sticky-marca marca-con-logo">
+          <LogoMarca />
+          <div className="marca-texto">
+            <p className="home-sticky-title">{t('app.titulo')}</p>
+          </div>
         </div>
         <HeaderActions />
       </div>

@@ -1,0 +1,24 @@
+.marca-logo {
+  /* 52px is the ceiling: the 84px header affords 54px of content height
+     (16px top + 14px bottom padding), and the sun at the icon's centre is
+     unreadable below ~48px. */
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  flex: none;
+  display: block;
+}
+
+/* Row layout for a marca container that carries the logo. The text keeps its
+   own box (`min-width: 0`) so the title's ellipsis still works when the brand
+   is longer than the space the ⓘ leaves. */
+.marca-con-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.marca-con-logo .marca-texto {
+  flex: 1;
+  min-width: 0;
+}

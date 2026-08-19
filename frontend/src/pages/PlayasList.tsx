@@ -16,6 +16,7 @@ import { useHistory } from 'react-router-dom';
 import BeachCard from '../components/BeachCard';
 import BottomNavBar from '../shared/ui/BottomNavBar';
 import HeaderActions from '../shared/ui/HeaderActions';
+import LogoMarca from '../shared/ui/LogoMarca';
 import { useFavoritas } from '../modules/favorites';
 import { resumenMunicipios } from '../shared/seo/landings';
 import SeoHead from '../shared/seo/SeoHead';
@@ -152,12 +153,15 @@ const PlayasList: React.FC = () => {
           texto no mueve nada. */}
       <div className="home-sticky-header">
         <div
-          className="home-sticky-marca"
+          className="home-sticky-marca marca-con-logo"
           onClick={() => window.location.reload()}
           style={{ cursor: 'pointer' }}
         >
-          <h1 className="home-sticky-title">{t('app.titulo')}</h1>
-          <p className="home-sticky-subtitle">{t('lista.subtitulo')}</p>
+          <LogoMarca />
+          <div className="marca-texto">
+            <h1 className="home-sticky-title">{t('app.titulo')}</h1>
+            <p className="home-sticky-subtitle">{t('lista.subtitulo')}</p>
+          </div>
         </div>
         <HeaderActions />
       </div>

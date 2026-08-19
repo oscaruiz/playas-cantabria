@@ -4,6 +4,7 @@ import { Playa, FeaturedBeach, getPlayas, getFeaturedBeaches } from '../services
 import { useIdioma } from '../shared/i18n/IdiomaContext';
 import BottomNavBar from '../shared/ui/BottomNavBar';
 import HeaderActions from '../shared/ui/HeaderActions';
+import LogoMarca from '../shared/ui/LogoMarca';
 import SeoHead from '../shared/seo/SeoHead';
 import './MapaPage.css';
 
@@ -57,12 +58,15 @@ const MapaPage: React.FC = () => {
           texto no mueve nada. */}
       <div className="mapa-sticky-header">
         <div
-          className="mapa-sticky-marca"
+          className="mapa-sticky-marca marca-con-logo"
           onClick={() => window.location.reload()}
           style={{ cursor: 'pointer' }}
         >
-          <h1 className="mapa-sticky-title">{t('app.titulo')}</h1>
-          <p className="mapa-sticky-subtitle">{t('mapa.subtitulo')}</p>
+          <LogoMarca />
+          <div className="marca-texto">
+            <h1 className="mapa-sticky-title">{t('app.titulo')}</h1>
+            <p className="mapa-sticky-subtitle">{t('mapa.subtitulo')}</p>
+          </div>
         </div>
         <HeaderActions />
       </div>
