@@ -17,6 +17,11 @@ import {
 import type { ClaveTexto } from '../shared/i18n/es';
 import { sinAcentos } from '../shared/seo/beachUrls';
 import { fechaMadrid, minutosMadrid } from '../shared/format/tiempo';
+import { classifySky, hasPrecipitation } from '../shared/cielo/sky';
+
+// Sky classification lives in shared/cielo/sky.ts; the Spanish names remain
+// here as compatibility aliases for the existing call sites.
+export { skyEmoji as emojiCielo, skyWord as palabraCielo } from '../shared/cielo/sky';
 
 /** Normalizes for search: lowercase + no accents (Arn\u00EDa \u2192 arnia). */
 export function normalizarBusqueda(texto: string): string {
@@ -304,8 +309,7 @@ export function esLluviaActiva(
   if (tiempoActual.lluvia?.estado === 'lloviendo') return true;
   if (tiempoActual.lluvia?.estado === 'sin_lluvia') return false;
   if ((tiempoActual.precipitacionMm ?? 0) > 0) return true;
-  const c = (tiempoActual.cielo ?? '').toLowerCase();
-  return /lluvia|llovizna|chubasc|tormenta/.test(c);
+  return hasPrecipitation(classifySky(tiempoActual.cielo));
 }
 
 /**
@@ -324,57 +328,6 @@ export function lluviaPrevista(
   return tiempoActual.lluvia?.prevista ?? null;
 }
 
-export function emojiCielo(cielo: string | null, esNoche = false): string {
-  if (!cielo) return esNoche ? '\u{1F319}' : '\u26C5';
-  const c = cielo.toLowerCase();
-
-  // Significant weather goes FIRST. AEMET puts cloud cover and
-  // precipitation in the same string ("Cubierto con lluvia", "Intervalos
-  // nubosos con lluvia escasa"), so checking cloudiness first meant rain
-  // never showed: those two gave cloud and sun respectively.
-  // 'torment', not 'tormenta', so that "chubascos tormentosos" also matches.
-  if (/torment|el[eé]ctrica|rayos/.test(c)) return '\u26C8\uFE0F';
-  if (/nieve|nevada|aguanieve/.test(c)) return '\u{1F328}\uFE0F';
-  if (/lluvia|llovizna|chubascos/.test(c)) return '\u{1F327}\uFE0F';
-  if (/niebla|bruma|neblina/.test(c)) return '\u{1F32B}\uFE0F';
-
-  // At night a sun is simply wrong, and there is no widely supported
-  // moon-behind-cloud emoji: clear and partly clear both become the moon.
-  // Nothing is lost — `palabraCielo` still tells them apart in words.
-  if (esNoche && /poco nuboso|intervalos|parcial|nubes dispersas|algo de nubes|despejado|soleado|claro/.test(c)) {
-    return '\u{1F319}';
-  }
-
-  // Cloud cover, from least to most. Partials go BEFORE clear so
-  // that the 'soleado' in "parcialmente soleado" doesn't take it.
-  if (/poco nuboso|intervalos|parcial|nubes dispersas|algo de nubes/.test(c)) return '\u{1F324}\uFE0F';
-  // "cielo claro" is OpenWeather's clear sky (01x); AEMET says "despejado".
-  if (/despejado|soleado|claro/.test(c)) return '\u2600\uFE0F';
-  // Plain "nubes" is OpenWeather's overcast (04x); scattered ones have already been filtered above.
-  if (/muy nuboso|cubierto|nubes/.test(c)) return '\u2601\uFE0F';
-  if (/nuboso|nublado/.test(c)) return '\u26C5';
-  return '\u26C5';
-}
-
-/**
- * The app's own word for a sky, whatever the provider called it.
- *
- * The listing and the detail were describing the SAME sky with two
- * vocabularies: the ranking reason said "Sol" or "Parcialmente soleado"
- * (normalized in the backend, because AEMET and OpenWeather do not name
- * skies alike) while the detail headline printed the provider's raw string \u2014
- * "cielo claro", "algo de nubes", "nubes dispersas". On 46 of 46 beaches the
- * two screens used different words, and both appear TOGETHER on the detail:
- * the score card with one, the headline with the other.
- *
- * Normalizing here and not in the API keeps `cielo` carrying what the
- * provider actually said \u2014 `emojiCielo` classifies on that raw text, and so
- * does the backend's scorer. This is a presentation problem, so it is fixed
- * at presentation.
- *
- * Returns null for a sky it does not recognize, so the caller shows the raw
- * text rather than dropping information.
- */
 /**
  * Whether a ranked beach's reading is at NIGHT, per the provider's own icon
  * suffix (`01d` / `01n`). It lives here so every surface asks the same
@@ -386,29 +339,4 @@ export function emojiCielo(cielo: string | null, esNoche = false): string {
  */
 export function esNocheEn(weather?: { iconoClima?: string | null } | null): boolean {
   return weather?.iconoClima?.endsWith('n') === true;
-}
-
-export function palabraCielo(
-  cielo: string | null | undefined,
-  esNoche = false,
-): string | null {
-  if (!cielo) return null;
-  const c = cielo.toLowerCase();
-
-  // Significant weather FIRST, same trap as `emojiCielo`: AEMET packs cover
-  // and precipitation into one string ("Cubierto con lluvia"), so checking
-  // cloudiness first would report a cloudy sky on a rainy one.
-  if (/torment|el[e\u00E9]ctrica|rayos/.test(c)) return 'Tormenta';
-  if (/nieve|nevada|aguanieve/.test(c)) return 'Nieve';
-  if (/lluvia|llovizna|chubasc/.test(c)) return 'Lluvia';
-  if (/niebla|bruma|neblina/.test(c)) return 'Niebla';
-
-  // Partials BEFORE clear, or the "soleado" in "parcialmente soleado" wins.
-  if (/poco nuboso|intervalos|parcial|nubes dispersas|algo de nubes/.test(c)) {
-    return esNoche ? 'Parcialmente despejado' : 'Parcialmente soleado';
-  }
-  // At night there is no sun to name: the same sky is "Despejado".
-  if (/despejado|soleado|claro/.test(c)) return esNoche ? 'Despejado' : 'Sol';
-  if (/muy nuboso|cubierto|nuboso|nublado|nubes/.test(c)) return 'Nublado';
-  return null;
 }
