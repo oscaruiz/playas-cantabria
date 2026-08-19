@@ -48,7 +48,7 @@ describe('PlayasList — estados', () => {
     // spinner gives way to the listing.
     pending.reject(new Error('backend caído'));
 
-    await waitFor(() => expect(screen.getByText('46 playas')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('47 playas')).toBeInTheDocument());
     expect(screen.queryByText('Cargando playas...')).not.toBeInTheDocument();
   });
 
@@ -60,8 +60,8 @@ describe('PlayasList — estados', () => {
 
     renderWithProviders(<PlayasList />, { route: '/playas' });
 
-    // 46 beaches: the complete `src/data/beaches.json` file.
-    await waitFor(() => expect(screen.getByText('46 playas')).toBeInTheDocument());
+    // 47 beaches: the complete `src/data/beaches.json` file.
+    await waitFor(() => expect(screen.getByText('47 playas')).toBeInTheDocument());
     expect(screen.queryByText('No se pudieron cargar las playas')).not.toBeInTheDocument();
   });
 });

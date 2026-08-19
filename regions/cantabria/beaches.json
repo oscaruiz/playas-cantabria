@@ -1479,5 +1479,31 @@
     "acceso": [
       "En coche y a pie desde Maliaño"
     ]
+  },
+  {
+    "nombre": "Arenal de Sonabia",
+    "municipio": "Liendo",
+    "codigo": "3903690",
+    "lat": 43.4117041424854,
+    "lon": -3.33509519652282,
+    "atributos": {
+      "nudista": true,
+      "socorrismo": false,
+      "duchas": false,
+      "aseos": false,
+      "chiringuito": false,
+      "accesible": false,
+      "parking": true
+    },
+    "sinAemet": true,
+    "longitud": 150,
+    "anchura": 120,
+    "tipoPlaya": "Aislada",
+    "arena": "Arena dorada",
+    "acceso": [
+      "A pie"
+    ],
+    "parkingDescripcion": "Menos de 50 plazas",
+    "bus": "Interurbano (Santander-Castro Urdiales)"
   }
 ]
