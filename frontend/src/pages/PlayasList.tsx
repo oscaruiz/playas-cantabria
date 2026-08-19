@@ -6,9 +6,9 @@ import {
   IonSpinner,
   IonIcon,
 } from '@ionic/react';
-import { searchOutline, locateOutline, starOutline } from 'ionicons/icons';
+import { searchOutline, locateOutline, starOutline, videocamOutline } from 'ionicons/icons';
 import { Playa, FeaturedBeach, getPlayas, getFeaturedBeaches } from '../services/api';
-import { coincidePlaya, normalizarBusqueda } from '../utils/beachHelpers';
+import { coincidePlaya, normalizarBusqueda, webcamDisponible } from '../utils/beachHelpers';
 import { haversineKm } from '../shared/geo/haversine';
 import { useUserLocation } from '../hooks/useUserLocation';
 import { useIdioma } from '../shared/i18n/IdiomaContext';
@@ -34,6 +34,7 @@ const PlayasList: React.FC = () => {
   const [filtro, setFiltro] = useState('');
   const [orden, setOrden] = useState<OrdenMode>('az');
   const [soloFavoritas, setSoloFavoritas] = useState(false);
+  const [soloConWebcam, setSoloConWebcam] = useState(false);
   const { favoritas } = useFavoritas();
   // There is no error state: `getPlayas` never rejects, it always falls back to the local
   // JSON. What does need to be conveyed is that the data is not fresh.
@@ -122,7 +123,10 @@ const PlayasList: React.FC = () => {
   const filtradas = useMemo(() => {
     if (!playas) return [];
     const result = playas.filter(
-      (p) => (!soloFavoritas || favoritas.has(p.codigo)) && coincidePlaya(p, filtro)
+      (p) =>
+        (!soloFavoritas || favoritas.has(p.codigo)) &&
+        (!soloConWebcam || webcamDisponible(p.webcam)) &&
+        coincidePlaya(p, filtro)
     );
     if (orden === 'cerca' && userLocation) {
       const [uLat, uLon] = userLocation;
@@ -131,7 +135,7 @@ const PlayasList: React.FC = () => {
       );
     }
     return result.sort((a, b) => a.nombre.localeCompare(b.nombre));
-  }, [playas, filtro, orden, userLocation, soloFavoritas, favoritas]);
+  }, [playas, filtro, orden, userLocation, soloFavoritas, favoritas, soloConWebcam]);
 
   return (
     <IonPage className="home-page">
@@ -234,6 +238,15 @@ const PlayasList: React.FC = () => {
               aria-pressed={soloFavoritas}
             >
               <IonIcon icon={starOutline} aria-hidden="true" />
+            </button>
+            <button
+              className={`sort-button${soloConWebcam ? ' sort-button--active' : ''}`}
+              onClick={() => setSoloConWebcam((v) => !v)}
+              title={t('lista.filtroWebcam')}
+              aria-label={t('lista.filtroWebcam')}
+              aria-pressed={soloConWebcam}
+            >
+              <IonIcon icon={videocamOutline} aria-hidden="true" />
             </button>
           </div>
           {showSuggestions && suggestions.length > 0 && (

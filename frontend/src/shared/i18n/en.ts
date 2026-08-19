@@ -90,6 +90,7 @@ export const en = {
   'lista.noEncontradas': 'No beaches found for "{filtro}"',
   'lista.vigiladaAria': 'Beach supervised by {operador}',
   'lista.webcamAria': 'Beach with webcam available',
+  'lista.filtroWebcam': 'Show only beaches with webcam',
   'lista.datosLocales': 'Offline: showing saved data, it may be out of date',
   'lista.datosNoDisponibles': 'Could not load beaches or saved data',
 

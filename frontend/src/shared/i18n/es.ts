@@ -98,6 +98,7 @@ export const es = {
   'lista.noEncontradas': 'No se encontraron playas para "{filtro}"',
   'lista.vigiladaAria': 'Playa vigilada por {operador}',
   'lista.webcamAria': 'Playa con webcam disponible',
+  'lista.filtroWebcam': 'Mostrar solo playas con webcam',
   'lista.datosLocales': 'Sin conexión: mostrando datos guardados, puede que estén desactualizados',
   'lista.datosNoDisponibles': 'No se pudieron cargar las playas ni los datos guardados',
 

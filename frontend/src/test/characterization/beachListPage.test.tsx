@@ -262,6 +262,21 @@ describe('PlayasList — sugerencias', () => {
   });
 });
 
+describe('PlayasList — filtro de webcam', () => {
+  it('deja solo las playas con webcam activa y se puede quitar', async () => {
+    const { container } = await renderList();
+    const boton = screen.getByRole('button', { name: 'Mostrar solo playas con webcam' });
+
+    fireEvent.click(boton);
+    // La Salvé also has a webcam, but 'desactivada': it must stay out.
+    expect(cardNames(container)).toEqual(['La Concha']);
+    expect(boton).toHaveAttribute('aria-pressed', 'true');
+
+    fireEvent.click(boton);
+    expect(cardNames(container)).toHaveLength(7);
+  });
+});
+
 describe('PlayasList — badges de la tarjeta', () => {
   it('marca como vigilada si hay idCruzRoja o puestos de Cruz Roja', async () => {
     const { container } = await renderList();
