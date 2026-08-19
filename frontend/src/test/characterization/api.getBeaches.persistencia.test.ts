@@ -66,7 +66,7 @@ describe('getPlayas — persistencia del último listado', () => {
 
     const resultado = await getPlayas({ timeoutMs: 50 });
 
-    expect(resultado).toHaveLength(47);
+    expect(resultado).toHaveLength(49);
   });
 
   it('ignora una copia corrupta sin romper la carga', async () => {
@@ -74,7 +74,7 @@ describe('getPlayas — persistencia del último listado', () => {
     installFetchMock([route(BEACHES, { networkError: true })]);
     const { getPlayas } = await loadApi();
 
-    await expect(getPlayas({ timeoutMs: 50 })).resolves.toHaveLength(47);
+    await expect(getPlayas({ timeoutMs: 50 })).resolves.toHaveLength(49);
   });
 
   it('no guarda una respuesta vacía: dejaría a la app sin fallback útil', async () => {

@@ -1505,5 +1505,63 @@
     ],
     "parkingDescripcion": "Menos de 50 plazas",
     "bus": "Interurbano (Santander-Castro Urdiales)"
+  },
+  {
+    "nombre": "San Julián",
+    "municipio": "Liendo",
+    "codigo": "3903691",
+    "lat": 43.4127011810838,
+    "lon": -3.37089579402331,
+    "atributos": {
+      "mascotas": false,
+      "accesible": false,
+      "duchas": false,
+      "aseos": false,
+      "socorrismo": false,
+      "surf": false,
+      "parking": false,
+      "chiringuito": false,
+      "nudista": false
+    },
+    "sinAemet": true,
+    "longitud": 100,
+    "anchura": 20,
+    "tipoPlaya": "Montaña",
+    "arena": "Arena dorada y fina",
+    "acceso": [
+      "En coche por la N-634 desde Villanueva (1,8 km en mal estado, estrecho)",
+      "Descenso final a pie"
+    ],
+    "hospitalDistancia": 10
+  },
+  {
+    "nombre": "Los Caballos",
+    "municipio": "Miengo",
+    "codigo": "3904491",
+    "lat": 43.4422563,
+    "lon": -4.0227194,
+    "alias": [
+      "Ombleda",
+      "Umbreda"
+    ],
+    "atributos": {
+      "mascotas": false,
+      "accesible": false,
+      "duchas": false,
+      "aseos": false,
+      "socorrismo": false,
+      "surf": false,
+      "parking": false,
+      "chiringuito": false
+    },
+    "sinAemet": true,
+    "longitud": 200,
+    "anchura": 40,
+    "tipoPlaya": "Aislada",
+    "arena": "Arena dorada",
+    "acceso": [
+      "En coche por la R-67 (salida 11), S-470 y S-471 hasta Cuchía",
+      "Camino de tierra desde la playa de Cuchía (700 m) y bajada peatonal con escaleras"
+    ]
   }
 ]
