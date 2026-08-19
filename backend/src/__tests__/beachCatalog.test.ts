@@ -70,8 +70,8 @@ describe('Catálogo de playas — altas nuevas (nombres + ids explícitos)', () 
     { nombre: 'Punta Parayas', municipio: 'Camargo', codigo: '3901690' },
   ];
 
-  it('incorpora exactamente 25 playas nuevas (46 en total)', () => {
-    expect(backend.length).toBe(46);
+  it('incorpora exactamente 25 playas nuevas (49 en total tras las altas de ago-2026)', () => {
+    expect(backend.length).toBe(49);
   });
 
   it.each(NUEVAS)('$nombre ($municipio) existe una sola vez con codigo $codigo', ({ nombre, municipio, codigo }) => {
@@ -93,5 +93,22 @@ describe('Catálogo de playas — altas nuevas (nombres + ids explícitos)', () 
       const conId = (b?.cruzRojaStations ?? []).filter((s: any) => typeof s.id === 'number' && s.id > 0);
       expect(conId.length, `${nombre} debe tener puestos con id`).toBeGreaterThan(0);
     }
+  });
+});
+
+describe('Catálogo de playas — altas de agosto de 2026', () => {
+  // Coves with no lifeguard service: unlike the July batch, having no Cruz
+  // Roja station is the verified truth here, not missing data.
+  const ALTAS_AGO_2026: Array<{ nombre: string; municipio: string; codigo: string }> = [
+    { nombre: 'Arenal de Sonabia', municipio: 'Liendo', codigo: '3903690' },
+    { nombre: 'San Julián', municipio: 'Liendo', codigo: '3903691' },
+    { nombre: 'Los Caballos', municipio: 'Miengo', codigo: '3904491' },
+  ];
+
+  it.each(ALTAS_AGO_2026)('$nombre ($municipio) existe una sola vez con codigo $codigo y sinAemet', ({ nombre, municipio, codigo }) => {
+    const matches = backend.filter((b) => b.nombre === nombre && b.municipio === municipio);
+    expect(matches).toHaveLength(1);
+    expect(matches[0].codigo).toBe(codigo);
+    expect(matches[0].sinAemet).toBe(true);
   });
 });
