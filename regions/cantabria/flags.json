@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-19T11:49:45.802Z",
+  "generatedAt": "2026-08-19T12:34:07.807Z",
   "flags": {
     "30": {
       "color": "green",
@@ -373,8 +373,8 @@
       "schedule": "11:30 - 19:30"
     },
     "1119": {
-      "color": "green",
-      "message": "Verde",
+      "color": "yellow",
+      "message": "Amarilla",
       "coverageFrom": "12-06-2026",
       "coverageTo": "15-09-2026",
       "schedule": "11:30 - 19:30"
@@ -394,8 +394,8 @@
       "schedule": "11:30 - 19:30"
     },
     "1128": {
-      "color": "green",
-      "message": "Verde",
+      "color": "yellow",
+      "message": "Amarilla",
       "coverageFrom": "12-06-2026",
       "coverageTo": "15-09-2026",
       "schedule": "11:30 - 19:30"
