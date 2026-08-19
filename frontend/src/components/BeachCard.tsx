@@ -1,6 +1,6 @@
 import React from 'react';
 import { IonIcon } from '@ionic/react';
-import { videocamOutline } from 'ionicons/icons';
+import { videocamOutline, flag } from 'ionicons/icons';
 import { Link } from 'react-router-dom';
 import { Playa, FeaturedBeach } from '../services/api';
 import {
@@ -135,6 +135,11 @@ const BeachCard: React.FC<{
             {conWebcam && (
               <span className="badge-webcam" aria-label={t('lista.webcamAria')}>
                 <IonIcon icon={videocamOutline} aria-hidden="true" />
+              </span>
+            )}
+            {playa.banderaAzul != null && (
+              <span className="badge-bandera-azul" aria-label={t('lista.banderaAzulAria')}>
+                <IonIcon icon={flag} aria-hidden="true" />
               </span>
             )}
           </div>

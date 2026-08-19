@@ -71,7 +71,7 @@ it('el JSON empaquetado reparte la vigilancia entre dos campos distintos', () =>
 
   // Invariant over the output of `sync-beaches`: if the backend changed the
   // split, this test warns before it shows up in the interface.
-  expect(playas).toHaveLength(49);
+  expect(playas).toHaveLength(51);
   expect(conId).toHaveLength(10);
   expect(soloConPuestos).toHaveLength(32);
   expect(conId.length + soloConPuestos.length).toBe(42);
@@ -84,8 +84,8 @@ it('con el backend caído, La Concha sigue mostrando el badge', async () => {
   ]);
 
   const { container } = renderWithProviders(<PlayasList />, { route: '/playas' });
-  // 49 beaches: the local JSON is being rendered, without `idCruzRoja` for this beach.
-  await screen.findByText('49 playas');
+  // 51 beaches: the local JSON is being rendered, without `idCruzRoja` for this beach.
+  await screen.findByText('51 playas');
 
   // This is the assertion that failed before the fix.
   expect(badgeDe(container, 'La Concha')).not.toBeNull();
@@ -98,7 +98,7 @@ it('las playas sin ninguna fuente de vigilancia no muestran badge', async () => 
   ]);
 
   const { container } = renderWithProviders(<PlayasList />, { route: '/playas' });
-  await screen.findByText('49 playas');
+  await screen.findByText('51 playas');
 
   // Four real beaches have neither an id nor stations.
   expect(badgeDe(container, 'La Arena')).toBeNull();

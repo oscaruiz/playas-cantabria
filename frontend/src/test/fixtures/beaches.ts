@@ -58,6 +58,7 @@ export const laConcha: Playa = {
     url: 'https://example.test/webcam/la-concha',
     cobertura: 'exacta',
   },
+  banderaAzul: 2026,
 };
 
 export const elSardinero: Playa = {

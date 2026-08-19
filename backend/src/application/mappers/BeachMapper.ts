@@ -41,6 +41,7 @@ export class BeachMapper {
       ...(beach.hospitalDistanceKm != null ? { hospitalDistancia: beach.hospitalDistanceKm } : {}),
       ...(beach.diving != null ? { submarinismo: beach.diving } : {}),
       ...(beach.webcam ? { webcam: beach.webcam } : {}),
+      ...(beach.blueFlagYear != null ? { banderaAzul: beach.blueFlagYear } : {}),
     };
   }
 

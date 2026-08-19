@@ -43,6 +43,7 @@ Backend API: `https://playas-cantabria.onrender.com`
   * Bandera y vigilancia con su operador (Cruz Roja): estado, cobertura y horario, con fecha de actualización.
   * Botón **Compartir** que genera una tarjeta-imagen con la lectura del día, y botón "Cómo llegar" (Google Maps).
   * Enlace a webcam cuando la playa dispone de una fiable.
+  * Distintivo **Bandera Azul** (ADEAC) con su año de concesión y enlace a la web oficial, en la ficha y como icono en el listado.
 * **Mapa interactivo** (Leaflet/OpenStreetMap) con condiciones, banderas izadas y tu ubicación.
 * **Páginas de municipios y landings temáticas**, prerenderizadas junto al resto de rutas para SEO (sitemap y canónicas incluidos).
 * **PWA instalable** con modo offline parcial: si el backend no responde en 2.5s, el listado se sirve desde un JSON local y se actualiza cuando el servidor contesta.
@@ -280,7 +281,7 @@ Actualmente en **v2.1.0**.
 ## Roadmap
 
 - [x] ~~Incorporar datos de **mareas**~~
-- [x] ~~Añadir más playas~~ (46 playas de Cantabria en el catálogo)
+- [x] ~~Añadir más playas~~ (51 playas de Cantabria en el catálogo)
 - [ ] Mejorar la arquitectura del **frontend** (estado, tipos discriminados, caching)
 - [ ] Publicar **OpenAPI/Swagger** de la API
 - [ ] Tests E2E básicos (Playwright) para flujos principales

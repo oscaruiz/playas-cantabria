@@ -253,6 +253,7 @@ describe('API contract — GET /api/beaches/:id/details', () => {
       hospitalDistancia: null,
       submarinismo: null,
       webcam: { url: 'https://example.com/berria', cobertura: 'exacta' },
+      banderaAzul: null,
       temperaturaActual: 18,
       tiempoActual: {
         cielo: 'lluvia ligera',
@@ -335,6 +336,7 @@ describe('API contract — GET /api/beaches/:id/details', () => {
       hospitalDistancia: null,
       submarinismo: null,
       webcam: null,
+      banderaAzul: null,
       temperaturaActual: 18,
       tiempoActual: {
         cielo: 'lluvia ligera',

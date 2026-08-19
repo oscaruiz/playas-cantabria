@@ -216,6 +216,8 @@ export interface Playa {
   hospitalDistancia?: number;
   submarinismo?: boolean;
   webcam?: WebcamPlaya | null;
+  /** Year of the current Blue Flag award (ADEAC); absent/null if none. */
+  banderaAzul?: number | null;
 }
 
 // ------------------------------
@@ -438,6 +440,9 @@ export interface PlayaDetalle {
 
   // Beach webcam (may be absent). External link only.
   webcam?: WebcamPlaya | null;
+
+  /** Year of the current Blue Flag award (ADEAC); absent/null if none. */
+  banderaAzul?: number | null;
 
   /**
    * When the backend ASSEMBLED this payload, not when it answered. The details

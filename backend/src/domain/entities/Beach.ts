@@ -74,4 +74,6 @@ export interface Beach {
   hospitalDistanceKm?: number;
   diving?: boolean;
   webcam?: Webcam;
+  /** Year of the current Blue Flag award (ADEAC). Annual: the catalog must be renewed each season. */
+  blueFlagYear?: number;
 }

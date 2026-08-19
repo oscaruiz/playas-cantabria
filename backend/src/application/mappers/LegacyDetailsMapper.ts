@@ -148,6 +148,8 @@ export type LegacyDetailsDTO = {
   hospitalDistancia: number | null;
   submarinismo: boolean | null;
   webcam: Webcam | null;
+  /** Year of the current Blue Flag award, or null if the beach has none. */
+  banderaAzul: number | null;
   temperaturaActual: number | null;
   tiempoActual: TiempoActualDTO | null;
   clima: ClimaDTO | null;
@@ -252,6 +254,7 @@ export class LegacyDetailsMapper {
       hospitalDistancia: b.hospitalDistanceKm ?? null,
       submarinismo: b.diving ?? null,
       webcam: b.webcam ?? null,
+      banderaAzul: b.blueFlagYear ?? null,
     };
   }
 

@@ -71,6 +71,8 @@ export interface BeachDTO {
   hospitalDistancia?: number;
   submarinismo?: boolean;
   webcam?: Webcam;
+  /** Year of the current Blue Flag award; absent if the beach has none. */
+  banderaAzul?: number;
   clima?: WeatherDTO;
   bandera?: string;
 }

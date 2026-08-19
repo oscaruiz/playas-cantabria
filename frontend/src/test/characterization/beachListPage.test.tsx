@@ -304,6 +304,17 @@ describe('PlayasList — badges de la tarjeta', () => {
     expect(byName('La Salvé').querySelector('.badge-webcam')).toBeNull();
   });
 
+  it('muestra el badge de Bandera Azul solo en playas premiadas', async () => {
+    const { container } = await renderList();
+    const cards = Array.from(container.querySelectorAll('.beach-card'));
+    const byName = (nombre: string) =>
+      cards.find((c) => c.querySelector('.beach-card-name')?.textContent === nombre) as HTMLElement;
+
+    // La Concha carries banderaAzul: 2026 in the fixture; La Salvé does not.
+    expect(byName('La Concha').querySelector('.badge-bandera-azul')).not.toBeNull();
+    expect(byName('La Salvé').querySelector('.badge-bandera-azul')).toBeNull();
+  });
+
   it('cada tarjeta dice si la playa va a mejor y por qué', async () => {
     const { container } = await renderList();
     const cards = Array.from(container.querySelectorAll('.beach-card'));

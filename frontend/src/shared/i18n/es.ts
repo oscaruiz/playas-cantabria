@@ -99,6 +99,10 @@ export const es = {
   'lista.vigiladaAria': 'Playa vigilada por {operador}',
   'lista.webcamAria': 'Playa con webcam disponible',
   'lista.filtroWebcam': 'Mostrar solo playas con webcam',
+  'banderaAzul.distintivo': 'Bandera Azul {year}',
+  'banderaAzul.frase': 'Esta playa ha recibido la Bandera Azul {year}.',
+  'banderaAzul.masInfo': 'Más información en',
+  'lista.banderaAzulAria': 'Playa con Bandera Azul',
   'lista.datosLocales': 'Sin conexión: mostrando datos guardados, puede que estén desactualizados',
   'lista.datosNoDisponibles': 'No se pudieron cargar las playas ni los datos guardados',
 

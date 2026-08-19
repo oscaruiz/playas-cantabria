@@ -91,6 +91,10 @@ export const en = {
   'lista.vigiladaAria': 'Beach supervised by {operador}',
   'lista.webcamAria': 'Beach with webcam available',
   'lista.filtroWebcam': 'Show only beaches with webcam',
+  'banderaAzul.distintivo': 'Blue Flag {year}',
+  'banderaAzul.frase': 'This beach has been awarded the Blue Flag {year}.',
+  'banderaAzul.masInfo': 'More information at',
+  'lista.banderaAzulAria': 'Beach with Blue Flag',
   'lista.datosLocales': 'Offline: showing saved data, it may be out of date',
   'lista.datosNoDisponibles': 'Could not load beaches or saved data',
 

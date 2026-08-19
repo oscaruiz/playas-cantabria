@@ -40,6 +40,7 @@ type RawBeach = {
   hospitalDistancia?: number;
   submarinismo?: boolean;
   webcam?: Webcam;
+  banderaAzul?: number;
 };
 
 export class JsonBeachRepository implements BeachRepository {
@@ -124,6 +125,7 @@ export class JsonBeachRepository implements BeachRepository {
       hospitalDistanceKm: r.hospitalDistancia,
       diving: r.submarinismo,
       webcam: r.webcam ?? undefined,
+      blueFlagYear: r.banderaAzul ?? undefined,
     };
   }
 }

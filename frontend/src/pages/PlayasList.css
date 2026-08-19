@@ -493,3 +493,15 @@
 .home-page .search-sort-container {
   display: none;
 }
+
+/* Blue Flag badge on the beach card, next to the webcam one */
+.badge-bandera-azul {
+  display: flex;
+  align-items: center;
+  color: #1d6fb8;
+  flex-shrink: 0;
+}
+
+.badge-bandera-azul ion-icon {
+  font-size: 1rem;
+}

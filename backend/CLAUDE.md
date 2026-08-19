@@ -121,7 +121,7 @@ Two-step response: first returns a data URL, then you download the actual JSON.
 
 ## Static data
 
-`data/beaches.json` — 20 Cantabria beaches with:
+`regions/cantabria/beaches.json` (repo root) — 51 Cantabria beaches with:
 - `codigo`: AEMET ID (e.g. "3902401"). Primary key for all AEMET APIs.
 - `nombre`: name aligned with AEMET web (no unnecessary accents, no trailing spaces).
 - `municipio`: municipality per AEMET.
@@ -149,6 +149,15 @@ Optional `webcam` object per beach in `data/beaches.json` (propagated through `B
 - **Add / change**: edit the beach's `webcam` object. **Disable** without losing it:
   `"estado": "desactivada"`. **Remove**: delete the `webcam` key (the section auto-hides).
 - Beaches with no reliable cam simply omit `webcam`.
+
+### Blue Flag (banderaAzul)
+
+Optional `banderaAzul` per beach in the region catalog: a **scalar year** (`"banderaAzul": 2026`).
+The ADEAC award is annual — the year is part of the data on purpose, so a stale value is visible
+("Bandera Azul 2026" in 2027) instead of silently wrong. Renewal each season: bump the year on
+beaches that renew, delete the key on ones that lose it, add it to new grants. Propagates like
+`webcam` (entity field `blueFlagYear`, API key `banderaAzul`, additive, `null` in the details DTO
+when absent). `beachCatalog.test.ts` pins the exact awarded list per year.
 
 
 ## Encoding and scraping

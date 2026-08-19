@@ -83,6 +83,7 @@
     "nombre": "La Arena",
     "municipio": "Arnuero",
     "codigo": "3900602",
+    "banderaAzul": 2026,
     "lat": 43.50376068544449,
     "lon": -3.577431874716216,
     "idCruzRoja": 0,
@@ -150,6 +151,7 @@
     "nombre": "Oriñon",
     "municipio": "Castro Urdiales",
     "codigo": "3902002",
+    "banderaAzul": 2026,
     "lat": 43.39937929830378,
     "lon": -3.3210950057077557,
     "idCruzRoja": 0,
@@ -185,6 +187,7 @@
     "nombre": "Ostende",
     "municipio": "Castro Urdiales",
     "codigo": "3902004",
+    "banderaAzul": 2026,
     "lat": 43.386556240404815,
     "lon": -3.2255850223022766,
     "idCruzRoja": 0,
@@ -392,6 +395,7 @@
     "nombre": "Ris",
     "municipio": "Noja",
     "codigo": "3904701",
+    "banderaAzul": 2026,
     "lat": 43.4914462044969,
     "lon": -3.5289174541786283,
     "atributos": {
@@ -695,6 +699,7 @@
     "nombre": "El Sable de Merón",
     "municipio": "San Vicente de la Barquera",
     "codigo": "3908004",
+    "banderaAzul": 2026,
     "lat": 43.390554164871766,
     "lon": -4.37798552043929,
     "atributos": {
@@ -805,6 +810,7 @@
     "nombre": "Tagle",
     "municipio": "Suances",
     "codigo": "3908599",
+    "banderaAzul": 2026,
     "lat": 43.42756651289524,
     "lon": -4.091435231267211,
     "idCruzRoja": 371,
@@ -1309,6 +1315,7 @@
     "nombre": "Helgueras",
     "municipio": "Noja",
     "codigo": "3904790",
+    "banderaAzul": 2026,
     "lat": 43.4700611,
     "lon": -3.493238888888889,
     "cruzRojaStations": [
@@ -1330,6 +1337,7 @@
     "nombre": "Trengandín",
     "municipio": "Noja",
     "codigo": "3904791",
+    "banderaAzul": 2026,
     "lat": 43.47696496416688,
     "lon": -3.5135650634765625,
     "cruzRojaStations": [
@@ -1391,6 +1399,7 @@
     "nombre": "Los Locos",
     "municipio": "Suances",
     "codigo": "3908591",
+    "banderaAzul": 2026,
     "lat": 43.43772943360433,
     "lon": -4.047346115112305,
     "cruzRojaStations": [
@@ -1563,5 +1572,57 @@
       "En coche por la R-67 (salida 11), S-470 y S-471 hasta Cuchía",
       "Camino de tierra desde la playa de Cuchía (700 m) y bajada peatonal con escaleras"
     ]
+  },
+  {
+    "nombre": "Brazomar",
+    "municipio": "Castro Urdiales",
+    "codigo": "3902090",
+    "lat": 43.3741989,
+    "lon": -3.2114008,
+    "idCruzRoja": 0,
+    "atributos": {
+      "duchas": true,
+      "aseos": true,
+      "parking": true,
+      "chiringuito": true,
+      "socorrismo": true,
+      "nudista": false
+    },
+    "sinAemet": true,
+    "banderaAzul": 2026,
+    "longitud": 300,
+    "anchura": 40,
+    "tipoPlaya": "Urbana",
+    "arena": "Arena dorada",
+    "acceso": [
+      "A pie desde el centro de Castro Urdiales",
+      "En coche por la A-8 (salida 147) y N-634"
+    ],
+    "bus": "Interurbano (Santander-Castro Urdiales)"
+  },
+  {
+    "nombre": "El Sable de Quejo",
+    "municipio": "Arnuero",
+    "codigo": "3900690",
+    "lat": 43.4981,
+    "lon": -3.541901,
+    "idCruzRoja": 0,
+    "atributos": {
+      "duchas": true,
+      "accesible": true,
+      "parking": true,
+      "socorrismo": true,
+      "nudista": false
+    },
+    "sinAemet": true,
+    "banderaAzul": 2026,
+    "longitud": 150,
+    "anchura": 50,
+    "arena": "Arena dorada",
+    "acceso": [
+      "En coche por la CA-448",
+      "A pie"
+    ],
+    "parkingDescripcion": "Menos de 50 plazas"
   }
 ]

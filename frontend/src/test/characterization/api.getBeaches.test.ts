@@ -66,7 +66,7 @@ describe('getPlayas — carrera contra el fallback local', () => {
     const result = await getPlayas({ timeoutMs: 20, onBackendData });
 
     // The fallback is the whole `src/data/beaches.json`, not the fixture.
-    expect(result).toHaveLength(49);
+    expect(result).toHaveLength(51);
     expect(result[0]).toHaveProperty('codigo');
   });
 
@@ -100,7 +100,7 @@ describe('getPlayas — carrera contra el fallback local', () => {
     await flushMicrotasks();
     await pending;
 
-    expect(resolved).toHaveLength(49);
+    expect(resolved).toHaveLength(51);
   });
 });
 
@@ -109,14 +109,14 @@ describe('getPlayas — nunca rechaza', () => {
     installFetchMock([route(BEACHES, { status: 500 })]);
     const { getPlayas } = await loadApi();
 
-    await expect(getPlayas({ timeoutMs: 50 })).resolves.toHaveLength(49);
+    await expect(getPlayas({ timeoutMs: 50 })).resolves.toHaveLength(51);
   });
 
   it('cae al JSON local si falla la red', async () => {
     installFetchMock([route(BEACHES, { networkError: true })]);
     const { getPlayas } = await loadApi();
 
-    await expect(getPlayas({ timeoutMs: 50 })).resolves.toHaveLength(49);
+    await expect(getPlayas({ timeoutMs: 50 })).resolves.toHaveLength(51);
   });
 });
 

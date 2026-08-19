@@ -1236,3 +1236,44 @@
   color: var(--playa-text-muted);
   font-variant-numeric: tabular-nums;
 }
+
+/* Blue Flag (ADEAC) card — annual award, always shown with its year.
+   The pennant mirrors .flag-pennant's clip-path so both flags match. */
+.blue-flag-section .blue-flag-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.blue-flag-pennant {
+  position: relative;
+  width: 28px;
+  height: 40px;
+  flex-shrink: 0;
+  border-left: 2px solid #9db4c0;
+}
+
+.blue-flag-pennant::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 0;
+  width: 24px;
+  height: 15px;
+  clip-path: polygon(0 0, 100% 0, 82% 50%, 100% 100%, 0 100%);
+  background: #1d6fb8;
+}
+
+.blue-flag-link {
+  font-size: 0.85rem;
+}
+
+.blue-flag-frase {
+  margin: 0 0 4px;
+  font-weight: 600;
+}
+
+.blue-flag-mas {
+  margin: 0;
+  font-size: 0.85rem;
+}

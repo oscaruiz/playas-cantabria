@@ -38,6 +38,7 @@ import MetadataFooter from './playa-detalle/MetadataFooter';
 import CruzRojaCard from './playa-detalle/CruzRojaCard';
 import { BeachInfoSection, BeachAttributesSection } from './playa-detalle/BeachInfoSection';
 import { WebcamCard } from './playa-detalle/WebcamCard';
+import { BlueFlagBadge } from './playa-detalle/BlueFlagBadge';
 import { ComputedAt } from '../features/provenance/SourceAndFreshness';
 import InfoDatos from '../features/provenance/InfoDatos';
 import { rutaMunicipio } from '../shared/seo/landings';
@@ -335,6 +336,8 @@ const PlayaDetallePage: React.FC = () => {
               </div>
 
               <div className="detail-col detail-col--info">
+              <BlueFlagBadge year={datos.banderaAzul} />
+
               {datos.cruzRoja != null && <CruzRojaCard cruzRoja={datos.cruzRoja} playa={datos} />}
 
               <WebcamCard webcam={datos.webcam} />

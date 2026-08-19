@@ -43,6 +43,7 @@ Backend API: `https://playas-cantabria.onrender.com`
   * Flag and lifeguard coverage with its operator (Red Cross): status, coverage and schedule, with last-updated time.
   * **Share** button that renders today's reading as an image card, and a "Get directions" button (Google Maps).
   * Link to a webcam when the beach has a reliable one.
+  * **Blue Flag** (ADEAC) badge with its award year and a link to the official site, on the detail page and as an icon in the listing.
 * **Interactive map** (Leaflet/OpenStreetMap) with conditions, hoisted flags and your location.
 * **Municipality pages and curated landing pages**, prerendered along with every other route for SEO (sitemap and canonicals included).
 * **Installable PWA** with partial offline mode: if the backend doesn't respond within 2.5s, the beach list is served from a local JSON file and updated when the server replies.
@@ -280,7 +281,7 @@ Currently at **v2.1.0**.
 ## Roadmap
 
 - [x] ~~Add **tides** data~~
-- [x] ~~Add more beaches~~ (46 Cantabria beaches in the catalog)
+- [x] ~~Add more beaches~~ (51 Cantabria beaches in the catalog)
 - [ ] Improve the **frontend** architecture (state, discriminated types, caching)
 - [ ] Publish **OpenAPI/Swagger** for the API
 - [ ] Basic E2E tests (Playwright) for the main flows
