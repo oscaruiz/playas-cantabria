@@ -16,6 +16,7 @@ import { waitFor } from '@testing-library/react';
 import { installFetchMock, restoreFetch, route } from '../http/fakeFetch';
 import { beachesResponse } from '../fixtures/beaches';
 import { RUTA_PLAYAS as BEACHES } from '../apiRoutes';
+import { LOCAL_CATALOG_SIZE } from '../localCatalog';
 
 
 async function loadApi() {
@@ -54,7 +55,7 @@ describe('getPlayas — señal de datos locales', () => {
 
     const result = await getPlayas({ timeoutMs: 20, onFallback, onBackendData });
 
-    expect(result).toHaveLength(51);
+    expect(result).toHaveLength(LOCAL_CATALOG_SIZE);
     expect(onFallback).toHaveBeenCalledTimes(1);
     // The notice is emitted BEFORE the backend arrives.
     expect(onBackendData).not.toHaveBeenCalled();
@@ -71,7 +72,7 @@ describe('getPlayas — señal de datos locales', () => {
 
     const result = await getPlayas({ timeoutMs: 500, onFallback, onBackendData });
 
-    expect(result).toHaveLength(51);
+    expect(result).toHaveLength(LOCAL_CATALOG_SIZE);
     expect(onFallback).toHaveBeenCalledTimes(1);
     expect(onBackendData).not.toHaveBeenCalled();
   });
@@ -90,7 +91,7 @@ describe('getPlayas — señal de datos locales', () => {
     installFetchMock([route(BEACHES, { networkError: true })]);
     const { getPlayas } = await loadApi();
 
-    await expect(getPlayas({ timeoutMs: 500 })).resolves.toHaveLength(51);
+    await expect(getPlayas({ timeoutMs: 500 })).resolves.toHaveLength(LOCAL_CATALOG_SIZE);
   });
 
   it('resuelve vacío y avisa si tampoco se puede cargar la copia local', async () => {

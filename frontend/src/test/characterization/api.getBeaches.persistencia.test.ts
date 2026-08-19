@@ -10,6 +10,7 @@
 import { installFetchMock, restoreFetch, route } from '../http/fakeFetch';
 import { beachesResponse } from '../fixtures/beaches';
 import { RUTA_PLAYAS as BEACHES } from '../apiRoutes';
+import { LOCAL_CATALOG_SIZE } from '../localCatalog';
 
 const CLAVE = 'playas:ultimoListado';
 
@@ -66,7 +67,7 @@ describe('getPlayas — persistencia del último listado', () => {
 
     const resultado = await getPlayas({ timeoutMs: 50 });
 
-    expect(resultado).toHaveLength(51);
+    expect(resultado).toHaveLength(LOCAL_CATALOG_SIZE);
   });
 
   it('ignora una copia corrupta sin romper la carga', async () => {
@@ -74,7 +75,7 @@ describe('getPlayas — persistencia del último listado', () => {
     installFetchMock([route(BEACHES, { networkError: true })]);
     const { getPlayas } = await loadApi();
 
-    await expect(getPlayas({ timeoutMs: 50 })).resolves.toHaveLength(51);
+    await expect(getPlayas({ timeoutMs: 50 })).resolves.toHaveLength(LOCAL_CATALOG_SIZE);
   });
 
   it('no guarda una respuesta vacía: dejaría a la app sin fallback útil', async () => {

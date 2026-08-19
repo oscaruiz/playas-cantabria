@@ -19,6 +19,7 @@ import { waitFor } from '@testing-library/react';
 import { installFetchMock, restoreFetch, route, flushMicrotasks } from '../http/fakeFetch';
 import { beachesResponse } from '../fixtures/beaches';
 import { RUTA_PLAYAS as BEACHES } from '../apiRoutes';
+import { LOCAL_CATALOG_SIZE } from '../localCatalog';
 
 
 const TTL_MS = 5 * 60 * 1000;
@@ -66,7 +67,7 @@ describe('getPlayas — carrera contra el fallback local', () => {
     const result = await getPlayas({ timeoutMs: 20, onBackendData });
 
     // The fallback is the whole `src/data/beaches.json`, not the fixture.
-    expect(result).toHaveLength(51);
+    expect(result).toHaveLength(LOCAL_CATALOG_SIZE);
     expect(result[0]).toHaveProperty('codigo');
   });
 
@@ -100,7 +101,7 @@ describe('getPlayas — carrera contra el fallback local', () => {
     await flushMicrotasks();
     await pending;
 
-    expect(resolved).toHaveLength(51);
+    expect(resolved).toHaveLength(LOCAL_CATALOG_SIZE);
   });
 });
 
@@ -109,14 +110,14 @@ describe('getPlayas — nunca rechaza', () => {
     installFetchMock([route(BEACHES, { status: 500 })]);
     const { getPlayas } = await loadApi();
 
-    await expect(getPlayas({ timeoutMs: 50 })).resolves.toHaveLength(51);
+    await expect(getPlayas({ timeoutMs: 50 })).resolves.toHaveLength(LOCAL_CATALOG_SIZE);
   });
 
   it('cae al JSON local si falla la red', async () => {
     installFetchMock([route(BEACHES, { networkError: true })]);
     const { getPlayas } = await loadApi();
 
-    await expect(getPlayas({ timeoutMs: 50 })).resolves.toHaveLength(51);
+    await expect(getPlayas({ timeoutMs: 50 })).resolves.toHaveLength(LOCAL_CATALOG_SIZE);
   });
 });
 

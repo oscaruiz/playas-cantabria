@@ -70,6 +70,15 @@ describe('Catálogo de playas — altas nuevas (nombres + ids explícitos)', () 
     { nombre: 'Punta Parayas', municipio: 'Camargo', codigo: '3901690' },
   ];
 
+  /**
+   * THE pin for the catalog size: the one number a human owns and updates on
+   * purpose with every alta, right next to the per-beach lists that say WHICH
+   * beaches are expected. The frontend characterization tests used to repeat
+   * it in six more files; they now derive it from `src/data/beaches.json`
+   * (`src/test/localCatalog.ts`), because a count that only restates the JSON
+   * beside it protects nothing — and forgetting one of the seven copies is
+   * what turned CI red on 19-aug-2026.
+   */
   it('incorpora exactamente 25 playas nuevas (51 en total tras las altas de ago-2026)', () => {
     expect(backend.length).toBe(51);
   });

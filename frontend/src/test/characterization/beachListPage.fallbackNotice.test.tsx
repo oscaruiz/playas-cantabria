@@ -18,6 +18,7 @@ import { installFetchMock, restoreFetch, route, deferred, RouteSpec } from '../h
 import { beachesResponse } from '../fixtures/beaches';
 import { featuredResponse } from '../fixtures/featured';
 import { RUTA_DESTACADAS as FEATURED, RUTA_PLAYAS as BEACHES } from '../apiRoutes';
+import { BEACH_COUNT_ES, BEACH_COUNT_EN } from '../localCatalog';
 
 
 const AVISO = 'Sin conexión: mostrando datos guardados, puede que estén desactualizados';
@@ -42,7 +43,7 @@ it('avisa cuando el backend está caído, y sigue mostrando el listado', async (
 
   renderWithProviders(<PlayasList />, { route: '/playas' });
 
-  await screen.findByText('51 playas');
+  await screen.findByText(BEACH_COUNT_ES);
   const aviso = screen.getByText(AVISO);
   expect(aviso).toBeInTheDocument();
   // `role="status"` so that screen readers announce it without stealing focus.
@@ -57,7 +58,7 @@ it('el aviso se traduce', async () => {
 
   renderWithProviders(<PlayasList />, { route: '/playas', idioma: 'en' });
 
-  await screen.findByText('51 beaches');
+  await screen.findByText(BEACH_COUNT_EN);
   expect(
     screen.getByText('Offline: showing saved data, it may be out of date'),
   ).toBeInTheDocument();
@@ -73,7 +74,7 @@ it('el aviso desaparece si el backend acaba respondiendo', async () => {
   renderWithProviders(<PlayasList />, { route: '/playas' });
 
   // After the default 2.5 s the local JSON is served and the notice shows up.
-  await screen.findByText('51 playas', undefined, { timeout: 4000 });
+  await screen.findByText(BEACH_COUNT_ES, undefined, { timeout: 4000 });
   expect(screen.getByText(AVISO)).toBeInTheDocument();
 
   // And when the backend finally answers, both data and notice are replaced.

@@ -22,6 +22,7 @@ import PlayasList from '../../pages/PlayasList';
 import { renderWithProviders } from '../render';
 import { installFetchMock, restoreFetch, route, deferred, RouteSpec } from '../http/fakeFetch';
 import { RUTA_DESTACADAS as FEATURED, RUTA_PLAYAS as BEACHES } from '../apiRoutes';
+import { BEACH_COUNT_ES } from '../localCatalog';
 
 
 afterEach(() => {
@@ -48,7 +49,7 @@ describe('PlayasList — estados', () => {
     // spinner gives way to the listing.
     pending.reject(new Error('backend caído'));
 
-    await waitFor(() => expect(screen.getByText('51 playas')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(BEACH_COUNT_ES)).toBeInTheDocument());
     expect(screen.queryByText('Cargando playas...')).not.toBeInTheDocument();
   });
 
@@ -60,8 +61,8 @@ describe('PlayasList — estados', () => {
 
     renderWithProviders(<PlayasList />, { route: '/playas' });
 
-    // 51 beaches: the complete `src/data/beaches.json` file.
-    await waitFor(() => expect(screen.getByText('51 playas')).toBeInTheDocument());
+    // The whole `src/data/beaches.json` file, however many beaches it holds.
+    await waitFor(() => expect(screen.getByText(BEACH_COUNT_ES)).toBeInTheDocument());
     expect(screen.queryByText('No se pudieron cargar las playas')).not.toBeInTheDocument();
   });
 });
