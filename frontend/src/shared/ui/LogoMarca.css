@@ -22,3 +22,13 @@
   flex: 1;
   min-width: 0;
 }
+
+/* On phones the header row is tight: the logo cedes a few pixels so the
+   subtitle can keep its full text (it also drops to 0.72rem, per page). */
+@media (max-width: 480px) {
+  .marca-logo {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+  }
+}

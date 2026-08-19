@@ -62,6 +62,14 @@
   text-overflow: ellipsis;
 }
 
+/* "Descubre las mejores playas de Cantabria" is the longest subtitle; with
+   the header logo it no longer fit a phone at 0.8rem and got ellipsized.
+   Scales with the viewport so it also survives 360px; below ~330px the
+   ellipsis returns, which is the accepted degradation. */
+@media (max-width: 480px) {
+  .hp-sticky-subtitle { font-size: clamp(0.6rem, 3vw - 0.05rem, 0.72rem); }
+}
+
 /* La cabecera mide 84px fijos (`--playa-header-h`) y el contenido de todas las
    páginas se descuelga de ese número, así que el título no puede pasar de una
    línea. Pacifico es ancha, pero "Playucas.es" pide ~190px a 1.6rem y en un
