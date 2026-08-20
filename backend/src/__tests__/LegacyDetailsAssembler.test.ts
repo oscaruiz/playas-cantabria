@@ -615,6 +615,7 @@ describe('LegacyDetailsAssembler — previsión horaria en tiempoActual', () => 
     const dto = await assembler.assemble('3902401');
 
     expect(dto.tiempoActual?.previsionHoras).toBeNull();
+    expect(dto.tiempoActual?.ventanaDia).toBeNull();
     expect(dto.tiempoActual?.lluvia).not.toBeNull();
   });
 
@@ -657,5 +658,96 @@ describe('LegacyDetailsAssembler — previsión horaria en tiempoActual', () => 
 
     expect(dto.tiempoActual?.previsionHoras).toHaveLength(4);
     expect(dto.tiempoActual?.previsionHorasFuente).toBe('Open-Meteo');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Ventana del día: CUÁNDO ir, publicada junto a la tira que la respalda.
+// ---------------------------------------------------------------------------
+
+describe('LegacyDetailsAssembler — ventana del día en tiempoActual', () => {
+  const MEDIODIA = new Date('2026-08-01T11:00:00Z'); // 13:00 Madrid
+
+  const rainCon = (horas: number): RainNowcast => ({
+    status: 'dry',
+    precipitationMm: 0,
+    lastHourOnly: false,
+    sources: [],
+    timestamp: MEDIODIA.getTime(),
+    outlook: Array.from({ length: horas }, (_, i) => ({
+      timestamp: MEDIODIA.getTime() + (i + 1) * 3_600_000,
+      cloudCoverPct: 20,
+      temperatureC: 21,
+      windSpeedMs: 3,
+    })),
+  });
+
+  afterEach(() => vi.useRealTimers());
+
+  it('publica la mejor franja del resto del día, recortada a la franja de playa', async () => {
+    vi.setSystemTime(MEDIODIA);
+    const assembler = buildAssembler({
+      details: { beach: COBRECES, weather: makeOwCurrent(), flag: null, tides: null },
+      forecast: makeForecast(),
+      owCurrent: makeOwCurrent(),
+      rain: rainCon(8), // buenas hasta las 19:00 UTC (21:00 Madrid)
+    });
+
+    const dto = await assembler.assemble('3902401');
+
+    expect(dto.tiempoActual?.ventanaDia).toEqual({
+      inicio: new Date(MEDIODIA.getTime() + 3_600_000).toISOString(),
+      // El último tramo (19:00 UTC) + 1 h se recorta al fin de franja (21:00 Madrid).
+      fin: new Date(MEDIODIA.getTime() + 8 * 3_600_000).toISOString(),
+      cambio: null,
+    });
+    expect(dto.tiempoActual?.ventanaDiaFuente).toBe('Open-Meteo');
+  });
+
+  it('si Open-Meteo calla, la ventana la sirve OpenWeather con su paso de 3 h', async () => {
+    vi.setSystemTime(MEDIODIA);
+    const assembler = buildAssembler({
+      details: { beach: COBRECES, weather: makeOwCurrent(), flag: null, tides: null },
+      forecast: makeForecast(),
+      owCurrent: makeOwCurrent(),
+      rain: { ...rainCon(0), outlook: null },
+      owOutlook: [1, 4, 7].map((h) => ({
+        timestamp: MEDIODIA.getTime() + h * 3_600_000,
+        cloudCoverPct: 5,
+        temperatureC: 24,
+        windSpeedMs: 2,
+      })),
+    });
+
+    const dto = await assembler.assemble('3902401');
+
+    expect(dto.tiempoActual?.ventanaDia?.inicio).toBe(
+      new Date(MEDIODIA.getTime() + 3_600_000).toISOString(),
+    );
+    expect(dto.tiempoActual?.ventanaDiaFuente).toBe('OpenWeather');
+  });
+
+  it('si Open-Meteo respondió y el veredicto es "no hay franja buena", el suplente no opina', async () => {
+    vi.setSystemTime(MEDIODIA);
+    const assembler = buildAssembler({
+      details: { beach: COBRECES, weather: makeOwCurrent(), flag: null, tides: null },
+      forecast: makeForecast(),
+      owCurrent: makeOwCurrent(),
+      // Día gris de verdad: ninguna hora llega al suelo absoluto.
+      rain: {
+        ...rainCon(0),
+        outlook: Array.from({ length: 6 }, (_, i) => ({
+          timestamp: MEDIODIA.getTime() + (i + 1) * 3_600_000,
+          cloudCoverPct: 95,
+          temperatureC: 14,
+          windSpeedMs: 10,
+        })),
+      },
+      owOutlook: () => Promise.reject(new Error('no debería pedirse')),
+    });
+
+    const dto = await assembler.assemble('3902401');
+
+    expect(dto.tiempoActual?.ventanaDia).toBeNull();
   });
 });

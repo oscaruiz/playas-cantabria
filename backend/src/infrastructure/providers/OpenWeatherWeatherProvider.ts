@@ -117,6 +117,8 @@ export class OpenWeatherWeatherProvider implements WeatherProvider {
         cloudCoverPct: typeof s?.clouds?.all === 'number' ? s.clouds.all : null,
         temperatureC: typeof s?.main?.temp === 'number' ? s.main.temp : null,
         windSpeedMs: typeof s?.wind?.speed === 'number' ? s.wind.speed : null,
+        // Accumulated over the 3h slot; the day window only asks if it is > 0.
+        precipitationMm: typeof s?.rain?.['3h'] === 'number' ? s.rain['3h'] : null,
       }))
       .filter((s) => Number.isFinite(s.timestamp));
   }

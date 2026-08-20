@@ -1199,6 +1199,12 @@
   overflow-x: auto;
 }
 
+/* The day window inside this card: the conclusion under the hours that back
+   it, with a little air before the source credit. */
+.proximas-horas-section .mejor-momento {
+  margin: 12px 2px 2px;
+}
+
 .pd-hora {
   flex: 1 1 0;
   min-width: 64px;

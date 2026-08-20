@@ -1,7 +1,8 @@
 import React from 'react';
 import { IonIcon } from '@ionic/react';
 import { sunnyOutline, partlySunnyOutline, cloudyOutline } from 'ionicons/icons';
-import { PrevisionHora } from '../../services/api';
+import { PrevisionHora, VentanaDia } from '../../services/api';
+import MejorMomento from '../../components/MejorMomento';
 import { useIdioma } from '../../shared/i18n/IdiomaContext';
 import { horaLocalMadrid } from '../../shared/format/tiempo';
 import { procedenciaPrevisionHoras } from '../../features/provenance/procedencia';
@@ -23,21 +24,27 @@ function iconoDeNubes(pct: number | null): string {
  * later, what do I find?" — which nobody thinks to look for under "how the
  * score is calculated".
  *
- * Renders nothing when there are no slots: outside the beach window, or with
- * Open-Meteo down.
+ * The day window ("mejor momento") shares this card: it is the conclusion the
+ * hours above it back up, drawn under them and above the source credit.
+ *
+ * Renders nothing when there is neither an hourly strip nor a window: outside
+ * the beach window, or with both hourly sources down.
  */
 const ProximasHoras: React.FC<{
   horas?: PrevisionHora[] | null;
   fuente?: string | null;
-}> = ({ horas, fuente }) => {
+  ventana?: VentanaDia | null;
+}> = ({ horas, fuente, ventana }) => {
   const { t } = useIdioma();
-  if (!horas || horas.length === 0) return null;
+  const hayHoras = (horas?.length ?? 0) > 0;
+  if (!hayHoras && !ventana) return null;
 
   return (
     <section className="proximas-horas-section">
       <h3 className="section-kicker">{t('detalle.pronostico.titulo')}</h3>
+      {hayHoras && (
       <ul className="pd-horas">
-        {horas.map((h) => (
+        {(horas as PrevisionHora[]).map((h) => (
           /* Una frase por hora para quien no ve la tira: la nubosidad solo la
              cuenta el icono, y el icono es decorativo. */
           <li
@@ -63,19 +70,23 @@ const ProximasHoras: React.FC<{
           </li>
         ))}
       </ul>
+      )}
+      <MejorMomento ventana={ventana} />
       {/* Quién lo pronostica, y qué hacemos con ello: estas mismas horas
           alimentan la puntuación, así que la licencia obliga a decir que los
           datos van adaptados. Esa nota ya acredita y enlaza la fuente, de modo
           que el crédito genérico solo sale cuando no hay nota — repetirlo
           sería decir dos veces lo mismo. The API sends no emission time for
           the outlook, so none is shown either way. */}
-      <InfoDatos etiqueta="info.fuente" aria="info.aria.horas" className="proximas-horas-fuente">
-        {atribucionDeFuente(fuente)?.nota ? (
-          <AttributionNote fuente={fuente} />
-        ) : (
-          <SourceAndFreshness procedencia={procedenciaPrevisionHoras(fuente)} />
-        )}
-      </InfoDatos>
+      {hayHoras && (
+        <InfoDatos etiqueta="info.fuente" aria="info.aria.horas" className="proximas-horas-fuente">
+          {atribucionDeFuente(fuente)?.nota ? (
+            <AttributionNote fuente={fuente} />
+          ) : (
+            <SourceAndFreshness procedencia={procedenciaPrevisionHoras(fuente)} />
+          )}
+        </InfoDatos>
+      )}
     </section>
   );
 };

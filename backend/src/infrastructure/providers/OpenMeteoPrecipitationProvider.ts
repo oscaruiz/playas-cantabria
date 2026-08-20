@@ -42,20 +42,21 @@ export class OpenMeteoPrecipitationProvider implements PrecipitationNowProvider 
             // Max UV for today and tomorrow, also in the same call (cost 0):
             // replaces OpenWeather One Call 2.5, which is retired.
             daily: 'uv_index_max',
-            // Hourly sky/temperature/wind for the score's outlook, ALSO in the
-            // same call and therefore free in requests — but not in bytes:
-            // `forecast_days: 2` handed out 48 slots to use 4, and measured
-            // that was 1.7 kB per beach (3.0 kB vs 1.3 kB, +130%) thrown away
-            // 46 times per TTL cycle. `forecast_hours` trims the hourly block
-            // WITHOUT touching `daily` (the UV still covers today and
-            // tomorrow), `minutely_15` or `current`.
+            // Hourly sky/temperature/wind/rain for the score's outlook and the
+            // day window, ALSO in the same call and therefore free in requests
+            // — but not in bytes: `forecast_days: 2` handed out 48 slots to
+            // use 4, and measured that was 1.7 kB per beach (3.0 kB vs 1.3 kB,
+            // +130%) thrown away 46 times per TTL cycle. `forecast_hours`
+            // trims the hourly block WITHOUT touching `daily` (the UV still
+            // covers today and tomorrow), `minutely_15` or `current`.
             //
-            // Six and not four: `ventanaOutlook` can start counting at 11:00
-            // when it is asked earlier, so the window reaches further than four
-            // hours from now. The code keeps filtering by timestamp anyway, so
-            // the parsing never depended on the API honouring this.
-            hourly: 'cloud_cover,temperature_2m,wind_speed_10m',
-            forecast_hours: 6,
+            // Sixteen and not six: the day window ("mejor momento") scores the
+            // WHOLE remaining beach window (11:00–21:00 Madrid), so a refresh
+            // at 05:00 UTC has to reach 21:00 local. The outlook keeps taking
+            // its own 4h slice; the code filters by timestamp anyway, so the
+            // parsing never depended on the API honouring this.
+            hourly: 'cloud_cover,temperature_2m,wind_speed_10m,precipitation',
+            forecast_hours: 16,
             // Open-Meteo answers km/h by default and `computeWindScore` reads m/s.
             // Asking for the right unit here beats converting at three call sites.
             wind_speed_unit: 'ms',
@@ -103,6 +104,7 @@ export class OpenMeteoPrecipitationProvider implements PrecipitationNowProvider 
         const clouds: unknown[] = Array.isArray(h.cloud_cover) ? h.cloud_cover : [];
         const temps: unknown[] = Array.isArray(h.temperature_2m) ? h.temperature_2m : [];
         const winds: unknown[] = Array.isArray(h.wind_speed_10m) ? h.wind_speed_10m : [];
+        const hourlyPrecs: unknown[] = Array.isArray(h.precipitation) ? h.precipitation : [];
         const upcomingHours: HourlyOutlookSlot[] = [];
         for (let i = 0; i < hTimes.length; i++) {
           const ts = parseUtc(hTimes[i]);
@@ -111,7 +113,8 @@ export class OpenMeteoPrecipitationProvider implements PrecipitationNowProvider 
             timestamp: ts,
             cloudCoverPct: num(clouds[i]),
             temperatureC: num(temps[i]),
-            windSpeedMs: num(winds[i])
+            windSpeedMs: num(winds[i]),
+            precipitationMm: num(hourlyPrecs[i])
           });
         }
 

@@ -43,6 +43,12 @@ export interface HourlyOutlookSlot {
   temperatureC: number | null;
   /** m/s, requested as such: Open-Meteo defaults to km/h. */
   windSpeedMs: number | null;
+  /**
+   * Forecast precipitation over the slot (mm). The day-window scorer only asks
+   * whether it is > 0: a wet slot can never be part of the best time to go.
+   * Null on sources (or cached payloads) that do not carry it.
+   */
+  precipitationMm?: number | null;
 }
 
 /** Signal of precipitation forecast for the next few hours (Open-Meteo). */

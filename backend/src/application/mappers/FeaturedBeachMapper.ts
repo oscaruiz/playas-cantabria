@@ -8,7 +8,8 @@ import {
   SUBSCORE_MAX,
 } from '../../domain/use-cases/BeachScorer';
 import type { OutlookSignal } from '../../domain/use-cases/WeatherOutlook';
-import { FeaturedBeachDTO, FeaturedBeachesResponseDTO } from '../dtos/FeaturedBeachDTO';
+import type { DayWindowSignal } from '../../domain/use-cases/BeachWindowScorer';
+import { FeaturedBeachDTO, FeaturedBeachesResponseDTO, VentanaDiaDTO } from '../dtos/FeaturedBeachDTO';
 import { esBanderaVigente } from '../../domain/services/flagVigencia';
 
 export interface FeaturedBeachResult {
@@ -23,6 +24,20 @@ export interface FeaturedBeachResult {
   subScores?: SubScores | null;
   outlook?: OutlookSignal | null;
   tope?: ScoreCap | null;
+  /** Best stretch of the remaining beach window. Absent on the excluded path. */
+  ventanaDia?: DayWindowSignal | null;
+}
+
+/** Epoch ms → ISO, the shape every instant already travels in the API. */
+export function mapVentanaDia(ventana: DayWindowSignal | null | undefined): VentanaDiaDTO | null {
+  if (!ventana) return null;
+  return {
+    inicio: new Date(ventana.mejor.inicio).toISOString(),
+    fin: new Date(ventana.mejor.fin).toISOString(),
+    cambio: ventana.cambio
+      ? { desde: new Date(ventana.cambio.desde).toISOString(), causa: ventana.cambio.causa }
+      : null,
+  };
 }
 
 const FLAG_COLOR_ES: Record<string, 'Verde' | 'Amarilla' | 'Roja'> = {
@@ -101,6 +116,7 @@ export class FeaturedBeachMapper {
           }
         : null,
       topeAplicado: r.tope ?? null,
+      ventanaDia: mapVentanaDia(r.ventanaDia),
       oleaje: r.enrichment?.waves ?? null,
     };
   }

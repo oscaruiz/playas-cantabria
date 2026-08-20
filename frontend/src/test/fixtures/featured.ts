@@ -49,6 +49,16 @@ export const featuredLaConcha: FeaturedBeach = {
   pronostico: { direccion: 'mejora', delta: 6, causa: 'despeja' },
   topeAplicado: null,
   oleaje: 'marejadilla',
+  /**
+   * El ejemplo aprobado de la feature: "Mejor momento: 11:00–14:00 · a partir
+   * de las 17:00 aumenta el viento". En UTC porque así viaja en el API; el
+   * cliente lo pinta en hora de Madrid (verano, UTC+2).
+   */
+  ventanaDia: {
+    inicio: '2026-07-27T09:00:00.000Z',
+    fin: '2026-07-27T12:00:00.000Z',
+    cambio: { desde: '2026-07-27T15:00:00.000Z', causa: 'arrecia_viento' },
+  },
 };
 
 export const featuredElSardinero: FeaturedBeach = {

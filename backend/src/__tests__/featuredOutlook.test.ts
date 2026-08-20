@@ -140,6 +140,33 @@ describe('GetFeaturedBeaches — previsión de las próximas horas', () => {
 });
 
 // ---------------------------------------------------------------------------
+// La ventana del día: CUÁNDO ir, no solo si la playa está bien ahora
+// ---------------------------------------------------------------------------
+
+describe('GetFeaturedBeaches — ventana del día', () => {
+  it('publica la mejor franja construida sobre los mismos tramos del nowcast', async () => {
+    vi.setSystemTime(AHORA);
+    const { resumenTodas } = await construir(nowcast(tramos(0))).execute();
+    const ventana = resumenTodas[0].ventanaDia;
+
+    // Cuatro horas buenas contiguas desde las 14:00 Madrid (12:00 UTC).
+    expect(ventana?.mejor).toEqual({
+      inicio: AHORA.getTime() + 3_600_000,
+      fin: AHORA.getTime() + 5 * 3_600_000,
+    });
+    expect(ventana?.cambio).toBeNull();
+  });
+
+  it('sin tramos de Open-Meteo no hay ventana, y nada más se rompe', async () => {
+    vi.setSystemTime(AHORA);
+    const { resumenTodas } = await construir(nowcast(null)).execute();
+
+    expect(resumenTodas[0].ventanaDia).toBeNull();
+    expect(resumenTodas[0].score).toBe(59);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // La lluvia prevista manda en lo que se cuenta, sin tocar lo que puntúa
 // ---------------------------------------------------------------------------
 

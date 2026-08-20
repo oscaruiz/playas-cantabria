@@ -29,12 +29,27 @@ import {
 } from '../shared/i18n/apiText';
 import ScoreBadge from '../components/ScoreBadge';
 import TrendBadge from '../components/TrendBadge';
+import MejorMomento from '../components/MejorMomento';
+import type { ClaveTexto } from '../shared/i18n/es';
 import SafetyNotice from '../shared/ui/SafetyNotice';
 import { rutaPlaya } from '../shared/seo/beachUrls';
 import SeoHead from '../shared/seo/SeoHead';
 import { useFavoritas } from '../modules/favorites';
 import { BotonInstalar } from '../modules/instalacion';
 import './HomePage.css';
+
+/**
+ * The verdict as a sentence, by bands of the existing score. Client-side on
+ * purpose: the mark already travels, and a phrase computed here cannot drift
+ * from the number shown next to it. Below 30 there is no phrase — a beach
+ * that bad does not reach the hero card.
+ */
+function claveFraseValoracion(puntuacion: number): ClaveTexto | null {
+  if (puntuacion >= 75) return 'home.frase.muyBien';
+  if (puntuacion >= 60) return 'home.frase.bien';
+  if (puntuacion >= 30) return 'home.frase.regular';
+  return null;
+}
 
 /**
  * The reason as the card must read it: with the outlook fragment removed,
@@ -158,7 +173,16 @@ const HeroBeachCard: React.FC<{
         </div>
       </div>
 
+      {claveFraseValoracion(beach.puntuacion) && (
+        <p className="hp-hero-frase">
+          {t(claveFraseValoracion(beach.puntuacion) as ClaveTexto, { nombre: beach.nombre })}
+        </p>
+      )}
+
       <p className="hp-hero-reason">{traducirTextoApi(razon, idioma)}</p>
+
+      {/* CUÁNDO ir, no solo si está bien: la mejor franja del resto del día. */}
+      <MejorMomento ventana={beach.ventanaDia} />
 
       {/* Lo más accionable de la portada: si la mejor playa de hoy va a peor
           dentro de dos horas, hay que decirlo aquí y no en el detalle. */}

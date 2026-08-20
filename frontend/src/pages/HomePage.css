@@ -200,11 +200,24 @@
   margin-top: 3px;
 }
 
+/* The verdict as a sentence ("Somo está muy bien hoy"), above the reason. */
+.hp-hero-frase {
+  font-size: 1.02rem;
+  font-weight: 600;
+  color: var(--playa-text);
+  margin: 14px 0 0;
+}
+
 .hp-hero-reason {
   font-size: 0.95rem;
   line-height: 1.45;
   color: var(--playa-text);
   margin: 14px 0 0;
+}
+
+/* With the phrase above, the reason is support text: tighter to it. */
+.hp-hero-frase + .hp-hero-reason {
+  margin-top: 4px;
 }
 
 .hp-hero-caveat {

@@ -5,6 +5,7 @@ import { resolveFlagOperatorName } from '../../domain/services/flagAggregation';
 import { Weather } from '../../domain/entities/Weather';
 import { HourlyOutlookSlot, RainNowcast } from '../../domain/entities/RainNowcast';
 import { RainForecastSignal } from '../../domain/use-cases/RainForecast';
+import type { VentanaDiaDTO } from '../dtos/FeaturedBeachDTO';
 
 /**
  * A value of the day that nobody measured and no model forecast: this backend
@@ -93,6 +94,14 @@ export type TiempoActualDTO = {
    * the day this falls back to another source, the label follows on its own.
    */
   previsionHorasFuente?: string | null;
+  /**
+   * WHEN to go today: best stretch of the remaining beach window plus the
+   * first turn for the worse after it. Same shape as the featured listing's
+   * field, so both screens compose the same sentence. Additive field.
+   */
+  ventanaDia?: VentanaDiaDTO | null;
+  /** Who forecast the window's hours — same reason as `previsionHorasFuente`. */
+  ventanaDiaFuente?: string | null;
   /**
    * Whether the provider considers this observation to be at NIGHT. It is the
    * provider's own day/night call (the `d`/`n` suffix on its icon), which

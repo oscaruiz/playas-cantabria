@@ -5,6 +5,7 @@ import { RainNowcast } from '../entities/RainNowcast';
 import { GetRainNowcast } from './GetRainNowcast';
 import { buildRainForecastSignal } from './RainForecast';
 import { buildWeatherOutlook, resolvePublishedOutlook } from './WeatherOutlook';
+import { buildDayWindow } from './BeachWindowScorer';
 import { BeachRepository } from '../ports/BeachRepository';
 import { WeatherProvider } from '../ports/WeatherProvider';
 import { FlagProvider } from '../ports/FlagProvider';
@@ -138,6 +139,11 @@ export class GetFeaturedBeaches {
       // request, so it costs nothing and it is null whenever Open-Meteo fails.
       const outlook = buildWeatherOutlook(weather, rain?.outlook);
 
+      // WHEN to go: best stretch of the remaining beach window, from the same
+      // slots. Open-Meteo only, symmetric with the outlook above: when it is
+      // down the field is null and the interface shows nothing.
+      const ventanaDia = buildDayWindow(rain?.outlook);
+
       const { score, subScores, tope } = computeBeachScore(
         weather,
         flag,
@@ -173,6 +179,7 @@ export class GetFeaturedBeaches {
         subScores,
         outlook: resolvePublishedOutlook(outlook, rainForecast),
         tope,
+        ventanaDia,
       };
 
       if (score >= MIN_SCORE) {

@@ -265,6 +265,10 @@ describe('API contract — GET /api/beaches/:id/details', () => {
         // The provider's own day/night call, from the `n` suffix on its icon.
         esNoche: false,
         timestamp: T_ISO,
+        // Additive: the day window has nothing to stand on in this fixture
+        // (no hourly source), and it says so explicitly.
+        ventanaDia: null,
+        ventanaDiaFuente: null,
       },
       clima: {
         fuente: 'AEMET',
@@ -349,6 +353,10 @@ describe('API contract — GET /api/beaches/:id/details', () => {
         // The provider's own day/night call, from the `n` suffix on its icon.
         esNoche: false,
         timestamp: T_ISO,
+        // Additive: the day window has nothing to stand on in this fixture
+        // (no hourly source), and it says so explicitly.
+        ventanaDia: null,
+        ventanaDiaFuente: null,
       },
       clima: {
         fuente: 'OpenWeather',

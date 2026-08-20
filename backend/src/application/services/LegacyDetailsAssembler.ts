@@ -17,6 +17,8 @@ import { AemetBeachWebScraper } from '../../infrastructure/providers/AemetBeachW
 import { GetRainNowcast } from '../../domain/use-cases/GetRainNowcast';
 import { buildRainForecastSignal, textosRestantesHoy } from '../../domain/use-cases/RainForecast';
 import { ventanaOutlook } from '../../domain/use-cases/WeatherOutlook';
+import { buildDayWindow, type DayWindowSignal } from '../../domain/use-cases/BeachWindowScorer';
+import { mapVentanaDia } from '../mappers/FeaturedBeachMapper';
 import type { HourlyOutlookSlot, RainNowcast } from '../../domain/entities/RainNowcast';
 import type { BeachFullForecast } from '../../domain/entities/BeachForecast';
 import { CacheKeys, InMemoryCache } from '../../infrastructure/cache/InMemoryCache';
@@ -77,6 +79,30 @@ export class LegacyDetailsAssembler {
     } catch {
       // Both sources silent, or simply out of the beach window: an empty
       // strip is the honest answer. Nothing here is ever invented.
+      return null;
+    }
+  }
+
+  /**
+   * The day window ("mejor momento"), with the same two sources standing one
+   * behind the other as the strip above. The fallback only steps in when
+   * Open-Meteo brought NO slots at all: when it answered and the verdict was
+   * "no stretch good enough", asking a coarser source for a second opinion
+   * would publish whichever of the two is more optimistic.
+   */
+  private async resolverVentanaDia(
+    lat: number,
+    lon: number,
+    delNowcast: readonly HourlyOutlookSlot[] | null | undefined,
+  ): Promise<{ ventana: DayWindowSignal; fuente: string } | null> {
+    if ((delNowcast?.length ?? 0) > 0) {
+      const ventana = buildDayWindow(delNowcast);
+      return ventana ? { ventana, fuente: OPEN_METEO_NOMBRE } : null;
+    }
+    try {
+      const ventana = buildDayWindow(await this.openWeather.getOutlookSlots(lat, lon));
+      return ventana ? { ventana, fuente: 'OpenWeather' } : null;
+    } catch {
       return null;
     }
   }
@@ -363,6 +389,20 @@ export class LegacyDetailsAssembler {
           lluvia: LegacyDetailsMapper.mapLluvia(rainSignal),
           previsionHoras: prevision ? LegacyDetailsMapper.mapPrevisionHoras(prevision.horas) : null,
           previsionHorasFuente: prevision?.fuente ?? null,
+        };
+      }
+      // WHEN to go today. Outside the `rainSignal` guard on purpose: with the
+      // nowcast down the window still has OpenWeather's slots to stand on.
+      if (base.tiempoActual) {
+        const ventana = await this.resolverVentanaDia(
+          details.beach.latitude,
+          details.beach.longitude,
+          rainSignal?.outlook,
+        );
+        base.tiempoActual = {
+          ...base.tiempoActual,
+          ventanaDia: ventana ? mapVentanaDia(ventana.ventana) : null,
+          ventanaDiaFuente: ventana?.fuente ?? null,
         };
       }
     } catch {

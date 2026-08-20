@@ -187,6 +187,20 @@ export const es = {
   'detalle.pronostico.causa.lluviaPrevista': 'lluvia prevista',
   'detalle.pronostico.aria': 'Próximas 4 horas: {direccion}, {causa}',
   'detalle.pronostico.ariaSinCausa': 'Próximas 4 horas: {direccion}',
+  // Ventana del día: CUÁNDO ir. Las horas vienen del API como instantes y la
+  // causa como clave; la frase se compone aquí, nunca en el servidor.
+  'ventana.mejor': 'Mejor momento: {inicio}–{fin}',
+  'ventana.cambio.despeja': 'A partir de las {hora} se despeja',
+  'ventana.cambio.nubla': 'A partir de las {hora} se nubla',
+  'ventana.cambio.subeTemperatura': 'A partir de las {hora} sube la temperatura',
+  'ventana.cambio.bajaTemperatura': 'A partir de las {hora} baja la temperatura',
+  'ventana.cambio.amainaViento': 'A partir de las {hora} amaina el viento',
+  'ventana.cambio.arreciaViento': 'A partir de las {hora} aumenta el viento',
+  'ventana.cambio.lluviaPrevista': 'A partir de las {hora} se espera lluvia',
+  // Frase de valoración de la portada, por bandas de la puntuación existente.
+  'home.frase.muyBien': '{nombre} está muy bien hoy',
+  'home.frase.bien': '{nombre} está bien hoy',
+  'home.frase.regular': '{nombre} está regular hoy',
   'detalle.cargando': 'Cargando datos de la playa...',
   'detalle.errorCarga': 'No se pudo cargar el detalle de la playa',
   'detalle.sinRespuesta': 'Sin respuesta del servidor',

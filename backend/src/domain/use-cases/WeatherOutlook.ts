@@ -32,9 +32,10 @@ import {
 /** How far ahead we look. */
 const VENTANA_MINUTOS = 4 * 60;
 
-/** Beach window in Madrid, in minutes of the day (mirror of `franjaYTemporada`). */
-const INICIO_FRANJA_MADRID = 11 * 60;
-const FIN_FRANJA_MADRID = 21 * 60;
+/** Beach window in Madrid, in minutes of the day (mirror of `franjaYTemporada`).
+ *  Exported for `BeachWindowScorer`, which scores this same window whole. */
+export const INICIO_FRANJA_MADRID = 11 * 60;
+export const FIN_FRANJA_MADRID = 21 * 60;
 
 /**
  * How much of each factor's real change we are willing to anticipate. The
@@ -101,7 +102,7 @@ function clamp(value: number, min: number, max: number): number {
 }
 
 /** Minutes elapsed in the day, Madrid time (robust to the server's TZ). */
-function minutosMadrid(fecha: Date): number {
+export function minutosMadrid(fecha: Date): number {
   const hhmm = new Intl.DateTimeFormat('en-GB', {
     timeZone: 'Europe/Madrid',
     hour: '2-digit',

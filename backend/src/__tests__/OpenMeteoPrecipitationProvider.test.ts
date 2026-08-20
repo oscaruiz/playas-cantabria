@@ -22,6 +22,7 @@ const HAPPY_PAYLOAD = {
       cloud_cover: [80, 15],
       temperature_2m: [19, 21],
       wind_speed_10m: [3.4, 2.1],
+      precipitation: [0.3, 0],
     },
   },
 };
@@ -101,18 +102,18 @@ describe('OpenMeteoPrecipitationProvider', () => {
 
     expect(spy).toHaveBeenCalledTimes(1); // coste 0: no hay una segunda petición
     const config = (spy.mock.calls[0] as any[])[1];
-    expect(config.params.hourly).toBe('cloud_cover,temperature_2m,wind_speed_10m');
+    expect(config.params.hourly).toBe('cloud_cover,temperature_2m,wind_speed_10m,precipitation');
     expect(config.params.wind_speed_unit).toBe('ms');
   });
 
-  it('pide solo las horas que se usan: 48 tramos para usar 4 eran 1,7 kB por playa', async () => {
+  it('pide solo las horas que se usan: la ventana del día necesita llegar a las 21:00 Madrid', async () => {
     const spy = vi.spyOn(http, 'get').mockResolvedValue(HAPPY_PAYLOAD as any);
     const provider = new OpenMeteoPrecipitationProvider(new InMemoryCache());
 
     await provider.getPrecipitationNow(43.3944, -4.2205);
 
     const config = (spy.mock.calls[0] as any[])[1];
-    expect(config.params.forecast_hours).toBe(6);
+    expect(config.params.forecast_hours).toBe(16);
     // Sin tocar lo demás: el UV sigue necesitando los dos días.
     expect(config.params.forecast_days).toBe(2);
     expect(config.params.daily).toBe('uv_index_max');
@@ -131,8 +132,10 @@ describe('OpenMeteoPrecipitationProvider', () => {
       cloudCoverPct: 80,
       temperatureC: 19,
       windSpeedMs: 3.4,
+      precipitationMm: 0.3,
     });
     expect(now.upcomingHours?.[1].cloudCoverPct).toBe(15);
+    expect(now.upcomingHours?.[1].precipitationMm).toBe(0);
   });
 
   it('payload sin bloque hourly → upcomingHours vacío, sin romper el nowcast', async () => {

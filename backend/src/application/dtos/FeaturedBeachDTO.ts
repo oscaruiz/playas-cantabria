@@ -44,6 +44,19 @@ export interface PronosticoDTO {
 /** Cap that clipped the score, and therefore why the factors do not add up. */
 export type TopeDTO = 'lluvia' | 'lluvia_prevista';
 
+/**
+ * Best stretch of the remaining beach window, plus the first turn for the
+ * worse after it. Instants travel as ISO strings and the cause as a key (the
+ * same vocabulary as `PronosticoDTO.causa`): the client composes and
+ * translates "Mejor momento: 11:00–14:00 · a partir de las 17:00 aumenta el
+ * viento" — an hour baked into a Spanish phrase here could not be translated.
+ */
+export interface VentanaDiaDTO {
+  inicio: string;
+  fin: string;
+  cambio: { desde: string; causa: PronosticoDTO['causa'] } | null;
+}
+
 export interface FeaturedBeachDTO {
   nombre: string;
   municipio: string;
@@ -63,6 +76,9 @@ export interface FeaturedBeachDTO {
   subpuntuaciones: SubPuntuacionesDTO | null;
   pronostico: PronosticoDTO | null;
   topeAplicado: TopeDTO | null;
+  /** WHEN to go today. Null outside the beach window, with the hourly source
+   *  down, or when no stretch is good enough to recommend. */
+  ventanaDia: VentanaDiaDTO | null;
   /** Sea state as AEMET words it: the value shown next to the waves factor. */
   oleaje: string | null;
 }

@@ -299,6 +299,7 @@ const PlayaDetallePage: React.FC = () => {
                     <ProximasHoras
                       horas={datos.tiempoActual?.previsionHoras}
                       fuente={datos.tiempoActual?.previsionHorasFuente}
+                      ventana={datos.tiempoActual?.ventanaDia}
                     />
                   )}
                   {pred.mareas?.[safeDayIndex] && (
@@ -330,6 +331,7 @@ const PlayaDetallePage: React.FC = () => {
                   <ProximasHoras
                     horas={datos.tiempoActual?.previsionHoras}
                     fuente={datos.tiempoActual?.previsionHorasFuente}
+                    ventana={datos.tiempoActual?.ventanaDia}
                   />
                   {/* Tampoco tienen tabla de mareas propia: se presta la de
                       la playa con ficha AEMET más cercana (índice 0 = hoy,

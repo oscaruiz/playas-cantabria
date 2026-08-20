@@ -381,6 +381,10 @@ export interface TiempoActual {
   previsionHoras?: PrevisionHora[] | null;
   /** Who forecast those hours, as the API credits it. */
   previsionHorasFuente?: string | null;
+  /** WHEN to go today. Same shape as the listing's field. */
+  ventanaDia?: VentanaDia | null;
+  /** Who forecast the window's hours, as the API credits it. */
+  ventanaDiaFuente?: string | null;
   /**
    * Whether the provider considers this observation to be at night. It is its
    * own day/night call, so it follows the real sunset at these coordinates
@@ -537,6 +541,20 @@ export interface FeaturedBeach {
   pronostico?: Pronostico | null;
   topeAplicado?: 'lluvia' | 'lluvia_prevista' | null;
   oleaje?: string | null;
+  ventanaDia?: VentanaDia | null;
+}
+
+/**
+ * WHEN to go today: best stretch of the remaining beach window, plus the first
+ * turn for the worse after it. Instants come as ISO and the cause as a key
+ * (the `CausaPronostico` vocabulary): the client composes and localizes
+ * "Mejor momento: 11:00–14:00 · a partir de las 17:00 aumenta el viento".
+ * Optional for the same backward-compatibility reason as `pronostico`.
+ */
+export interface VentanaDia {
+  inicio: string;
+  fin: string;
+  cambio?: { desde: string; causa: CausaPronostico | null } | null;
 }
 
 /**
