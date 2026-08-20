@@ -17,7 +17,7 @@ import {
 import type { ClaveTexto } from '../shared/i18n/es';
 import { sinAcentos } from '../shared/seo/beachUrls';
 import { fechaMadrid, minutosMadrid } from '../shared/format/tiempo';
-import { classifySky, hasPrecipitation } from '../shared/cielo/sky';
+import { classifySky, hasPrecipitation, skyEmoji } from '../shared/cielo/sky';
 
 // Sky classification lives in shared/cielo/sky.ts; the Spanish names remain
 // here as compatibility aliases for the existing call sites.
@@ -339,4 +339,24 @@ export function lluviaPrevista(
  */
 export function esNocheEn(weather?: { iconoClima?: string | null } | null): boolean {
   return weather?.iconoClima?.endsWith('n') === true;
+}
+
+/**
+ * Sky emoji for a ranked/featured entry (map marker, home cards, list): the
+ * live rain signal wins over the model's sky. OpenWeather's current
+ * observation keeps saying "nubes" during drizzle, which is how the map drew
+ * clouds while the detail said "lloviendo" — same override the detail applies
+ * in ForecastHero, reading the same `lluvia` signal.
+ */
+export function rankedSkyEmoji(
+  weather: {
+    descripcionClima: string | null;
+    iconoClima?: string | null;
+    lluvia?: { estado: string } | null;
+  },
+): string {
+  if (esLluviaActiva({ cielo: weather.descripcionClima, lluvia: weather.lluvia ?? null })) {
+    return '\u{1F327}️';
+  }
+  return skyEmoji(weather.descripcionClima, esNocheEn(weather));
 }

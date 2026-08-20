@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { IonIcon } from '@ionic/react';
 import { warningOutline, chevronDownOutline } from 'ionicons/icons';
 import { FeaturedBeach, SubPuntuaciones } from '../../services/api';
+import { esLluviaActiva } from '../../utils/beachHelpers';
 import ScoreBadge from '../../components/ScoreBadge';
 import TrendBadge from '../../components/TrendBadge';
 import { useIdioma } from '../../shared/i18n/IdiomaContext';
@@ -79,6 +80,13 @@ const ScoreCard: React.FC<{
   const valorDe = (campo: keyof SubPuntuaciones): string => {
     switch (campo) {
       case 'cielo':
+        // The live rain signal of THIS scored payload wins over the model's
+        // cloud text: "Nubes" here next to the hero's "lloviendo ahora" badge
+        // read as a contradiction. The points stay as they are — rain does not
+        // score the sky, it caps the total (the rule listed below).
+        if (esLluviaActiva({ cielo: puntuada.descripcionClima, lluvia: puntuada.lluvia ?? null })) {
+          return traducirTextoApi('Lluvia', idioma);
+        }
         return traducirTextoApi(puntuada.descripcionClima, idioma) || t('detalle.scoreInfo.sinDato');
       case 'temperatura':
         return puntuada.temperatura != null

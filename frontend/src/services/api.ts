@@ -542,6 +542,12 @@ export interface FeaturedBeach {
   topeAplicado?: 'lluvia' | 'lluvia_prevista' | null;
   oleaje?: string | null;
   ventanaDia?: VentanaDia | null;
+  /**
+   * Live rain signal, same aggregated nowcast the detail carries in
+   * `tiempoActual.lluvia`. Optional for the usual backward-compatibility
+   * reason: without it the icon falls back to the sky description alone.
+   */
+  lluvia?: LluviaActual | null;
 }
 
 /**

@@ -6,7 +6,7 @@ import 'leaflet/dist/leaflet.css';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Playa, FeaturedBeach } from '../../services/api';
 import {
-  emojiCielo,
+  rankedSkyEmoji,
   esNocheEn,
   palabraCielo,
   flagColorClass,
@@ -51,7 +51,7 @@ function secondaryBadge(weather: FeaturedBeach): string {
 
 function getBeachIcon(weather: FeaturedBeach, isBest: boolean): DivIcon {
   const status = markerStatus(weather.puntuacion);
-  const sky = emojiCielo(weather.descripcionClima, esNocheEn(weather));
+  const sky = rankedSkyEmoji(weather);
   const temp = weather.temperatura != null ? `${Math.round(weather.temperatura)}°` : '';
   const badge = secondaryBadge(weather);
   const flag = weather.bandera ? flagColorClass(weather.bandera) : '';
@@ -216,7 +216,7 @@ const MapaLienzo: React.FC<{
                     return (
                       <>
                         <p className="mapa-popup-row">
-                          {emojiCielo(weather.descripcionClima, esNocheEn(weather))}{' '}
+                          {rankedSkyEmoji(weather)}{' '}
                           {weather.temperatura != null ? `${Math.round(weather.temperatura)}°` : ''}{' '}
                           {/* La palabra de la app: aquí se leía la cadena cruda
                               del proveedor ("nubes dispersas") mientras la

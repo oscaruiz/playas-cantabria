@@ -159,3 +159,42 @@ describe('FeaturedBeachMapper — desglose, pronóstico y tope', () => {
     expect(dto.playas[0].oleaje).toBe('marejadilla');
   });
 });
+
+// ---------------------------------------------------------------------------
+// Señal de lluvia en el featured: OpenWeather current dice "nubes" mientras
+// llovizna, así que sin este campo el mapa dibujaba nubes mientras el detalle
+// (tiempoActual.lluvia, mismo nowcast agregado) decía "lloviendo".
+// ---------------------------------------------------------------------------
+
+describe('FeaturedBeachMapper — lluvia (nowcast agregado)', () => {
+  it('publica la señal con el mismo shape que tiempoActual.lluvia del detalle', () => {
+    const dto = FeaturedBeachMapper.toDTO(
+      [makeResult({
+        rain: {
+          status: 'raining', precipitationMm: 0.6, lastHourOnly: false,
+          sources: [
+            { source: 'AEMET', precipitating: true, precipitationMm: 0.6, lastHour: true, timestamp: 1750000000000 },
+          ],
+          timestamp: 1750000000000,
+        },
+      })],
+      [], [], 1750000000000,
+    );
+
+    expect(dto.playas[0].lluvia).toEqual({
+      estado: 'lloviendo',
+      mm: 0.6,
+      ultimaHora: false,
+      fuentes: ['AEMET'],
+      timestamp: new Date(1750000000000).toISOString(),
+    });
+  });
+
+  it('sin nowcast (proveedores caídos o respuesta cacheada vieja) va null', () => {
+    const dto = FeaturedBeachMapper.toDTO([makeResult({ rain: null })], [], [], 1750000000000);
+    expect(dto.playas[0].lluvia).toBeNull();
+
+    const ausente = FeaturedBeachMapper.toDTO([makeResult()], [], [], 1750000000000);
+    expect(ausente.playas[0].lluvia).toBeNull();
+  });
+});

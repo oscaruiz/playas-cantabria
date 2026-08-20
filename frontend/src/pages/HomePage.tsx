@@ -9,7 +9,7 @@ import {
   getPlayas,
   getFeaturedBeaches,
 } from '../services/api';
-import { emojiCielo, esNocheEn, flagColorClass } from '../utils/beachHelpers';
+import { rankedSkyEmoji, flagColorClass } from '../utils/beachHelpers';
 import { normalizarInstante } from '../features/provenance/procedencia';
 import { FreshnessLabel } from '../features/provenance/SourceAndFreshness';
 import { rankearPlayas, codigoMejorPuntuacionNoHero } from '../utils/beachRanking';
@@ -150,7 +150,7 @@ const HeroBeachCard: React.FC<{
   const { t, idioma } = useIdioma();
   // `iconoClima` es el icono de OpenWeather ('01d'/'01n'): trae su propia
   // decisión de día o noche, que sigue al ocaso real de esas coordenadas.
-  const emoji = emojiCielo(beach.descripcionClima, esNocheEn(beach));
+  const emoji = rankedSkyEmoji(beach);
   const flagClass = beach.bandera ? flagColorClass(beach.bandera) : null;
   const razon = razonSinPronostico(beach, razonLegible(beach.razonRanking));
 
@@ -245,7 +245,7 @@ const AlternativeRow: React.FC<{
   const { t, idioma } = useIdioma();
   // `iconoClima` es el icono de OpenWeather ('01d'/'01n'): trae su propia
   // decisión de día o noche, que sigue al ocaso real de esas coordenadas.
-  const emoji = emojiCielo(beach.descripcionClima, esNocheEn(beach));
+  const emoji = rankedSkyEmoji(beach);
   const flagClass = beach.bandera ? flagColorClass(beach.bandera) : null;
   const razon = razonSinPronostico(beach, razonLegible(beach.razonRanking));
 

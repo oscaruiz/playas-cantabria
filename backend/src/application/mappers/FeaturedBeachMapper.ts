@@ -11,6 +11,8 @@ import type { OutlookSignal } from '../../domain/use-cases/WeatherOutlook';
 import type { DayWindowSignal } from '../../domain/use-cases/BeachWindowScorer';
 import { FeaturedBeachDTO, FeaturedBeachesResponseDTO, VentanaDiaDTO } from '../dtos/FeaturedBeachDTO';
 import { esBanderaVigente } from '../../domain/services/flagVigencia';
+import { RainNowcast } from '../../domain/entities/RainNowcast';
+import { LegacyDetailsMapper } from './LegacyDetailsMapper';
 
 export interface FeaturedBeachResult {
   beach: Beach;
@@ -26,6 +28,8 @@ export interface FeaturedBeachResult {
   tope?: ScoreCap | null;
   /** Best stretch of the remaining beach window. Absent on the excluded path. */
   ventanaDia?: DayWindowSignal | null;
+  /** Aggregated rain nowcast; the score already reads it, the DTO publishes it. */
+  rain?: RainNowcast | null;
 }
 
 /** Epoch ms → ISO, the shape every instant already travels in the API. */
@@ -118,6 +122,7 @@ export class FeaturedBeachMapper {
       topeAplicado: r.tope ?? null,
       ventanaDia: mapVentanaDia(r.ventanaDia),
       oleaje: r.enrichment?.waves ?? null,
+      lluvia: r.rain ? LegacyDetailsMapper.mapLluvia(r.rain) : null,
     };
   }
 }

@@ -124,7 +124,7 @@ export class GetFeaturedBeaches {
       // Excluded beaches go directly to caution with specific reason
       if (isExcluded(weather, flag, enrichment)) {
         const reason = buildExclusionReason(weather, flag, enrichment);
-        const entry = { beach, weather, flag, score: 0, reason, downgradeReason: reason, enrichment };
+        const entry = { beach, weather, flag, score: 0, reason, downgradeReason: reason, enrichment, rain };
         caution.push(entry);
         all.push(entry);
         continue;
@@ -184,12 +184,12 @@ export class GetFeaturedBeaches {
 
       if (score >= MIN_SCORE) {
         const reason = buildRankingReason(subScores, weather, flag, enrichment, rain, rainForecast, outlook);
-        const entry = { beach, weather, flag, score, reason, downgradeReason, enrichment, ...desglose };
+        const entry = { beach, weather, flag, score, reason, downgradeReason, enrichment, rain, ...desglose };
         good.push(entry);
         all.push(entry);
       } else {
         const reason = buildCautionReason(subScores, weather, flag, enrichment, rain, rainForecast, outlook);
-        const entry = { beach, weather, flag, score, reason, downgradeReason, enrichment, ...desglose };
+        const entry = { beach, weather, flag, score, reason, downgradeReason, enrichment, rain, ...desglose };
         caution.push(entry);
         all.push(entry);
       }

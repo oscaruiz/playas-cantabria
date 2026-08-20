@@ -1,4 +1,5 @@
 import { BeachAttributesDTO } from './BeachDTO';
+import type { LluviaDTO } from '../mappers/LegacyDetailsMapper';
 
 /**
  * Points this beach scored on each factor, BEFORE the caps and the outlook
@@ -81,6 +82,14 @@ export interface FeaturedBeachDTO {
   ventanaDia: VentanaDiaDTO | null;
   /** Sea state as AEMET words it: the value shown next to the waves factor. */
   oleaje: string | null;
+  /**
+   * Live rain signal — the same aggregated nowcast the detail publishes in
+   * `tiempoActual.lluvia`. It has to travel here too: OpenWeather's current
+   * description says "nubes" during drizzle, so without this field the map
+   * cannot know it is raining while the detail says so. Additive field; null
+   * when the nowcast did not respond (older cached responses lack it).
+   */
+  lluvia: LluviaDTO | null;
 }
 
 export interface FeaturedBeachesResponseDTO {

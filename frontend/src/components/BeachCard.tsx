@@ -4,8 +4,7 @@ import { videocamOutline, flag } from 'ionicons/icons';
 import { Link } from 'react-router-dom';
 import { Playa, FeaturedBeach } from '../services/api';
 import {
-  emojiCielo,
-  esNocheEn,
+  rankedSkyEmoji,
   getActiveAttrs,
   vigilanciaDisponible,
   operadorVigilancia,
@@ -44,7 +43,7 @@ const BeachCard: React.FC<{
   distKm?: number | null;
 }> = ({ playa, weather, distKm = null }) => {
   const { t, idioma } = useIdioma();
-  const skyEmoji = weather ? emojiCielo(weather.descripcionClima, esNocheEn(weather)) : null;
+  const skyEmoji = weather ? rankedSkyEmoji(weather) : null;
 
   return (
     <div className="beach-card">

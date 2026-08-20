@@ -13,6 +13,7 @@ import {
   emojiCielo,
   palabraCielo,
   esNocheEn,
+  rankedSkyEmoji,
   operadorVigilancia,
 } from './beachHelpers';
 
@@ -538,5 +539,47 @@ describe('esNocheEn', () => {
     expect(esNocheEn({})).toBe(false);
     expect(esNocheEn(null)).toBe(false);
     expect(esNocheEn(undefined)).toBe(false);
+  });
+});
+
+describe('rankedSkyEmoji', () => {
+  const LLUVIA = '\u{1F327}️';
+  const NUBES = '☁️';
+  const LUNA = '\u{1F319}';
+  const SOL = '☀️';
+
+  it('la señal viva de lluvia gana al cielo del modelo (el caso del mapa)', () => {
+    // OpenWeather current says "nubes" while the aggregated nowcast says raining.
+    expect(rankedSkyEmoji({
+      descripcionClima: 'nubes',
+      iconoClima: '04d',
+      lluvia: { estado: 'lloviendo' },
+    })).toBe(LLUVIA);
+  });
+
+  it('sin señal (backend viejo o nowcast caído) se comporta como siempre', () => {
+    expect(rankedSkyEmoji({ descripcionClima: 'nubes', iconoClima: '04d' })).toBe(NUBES);
+    expect(rankedSkyEmoji({ descripcionClima: 'nubes', iconoClima: '04d', lluvia: null })).toBe(NUBES);
+  });
+
+  it('sin_lluvia explícito no fuerza lluvia y respeta el cielo', () => {
+    expect(rankedSkyEmoji({
+      descripcionClima: 'cielo claro',
+      iconoClima: '01d',
+      lluvia: { estado: 'sin_lluvia' },
+    })).toBe(SOL);
+  });
+
+  it('la noche sigue funcionando: luna con despejado nocturno, lluvia aunque sea de noche', () => {
+    expect(rankedSkyEmoji({ descripcionClima: 'cielo claro', iconoClima: '01n' })).toBe(LUNA);
+    expect(rankedSkyEmoji({
+      descripcionClima: 'nubes',
+      iconoClima: '04n',
+      lluvia: { estado: 'lloviendo' },
+    })).toBe(LLUVIA);
+  });
+
+  it('el texto de lluvia del propio cielo sigue dando lluvia (comportamiento previo)', () => {
+    expect(rankedSkyEmoji({ descripcionClima: 'lluvia ligera', iconoClima: '10d' })).toBe(LLUVIA);
   });
 });
