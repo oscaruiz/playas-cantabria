@@ -1,5 +1,5 @@
 {
-  "ranAt": "2026-08-20T11:51:57.924Z",
+  "ranAt": "2026-08-20T13:26:47.601Z",
   "region": "cantabria",
   "ids": 69,
   "conFicha": 69,
@@ -9,8 +9,8 @@
     "200": 69
   },
   "alts": {
-    "Amarilla": 23,
-    "Roja": 8,
+    "Roja": 10,
+    "Amarilla": 21,
     "Verde": 33,
     "No hay información": 5
   },
