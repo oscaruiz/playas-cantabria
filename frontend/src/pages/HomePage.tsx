@@ -584,6 +584,9 @@ const HomePage: React.FC = () => {
               <h2 className="section-kicker">{t('home.mejorHoy')}</h2>
               <div className="hp-empty-msg">
                 <p>{t('home.sinDestacadas')}</p>
+                <button className="hp-retry-btn" onClick={() => history.push('/playas')}>
+                  {t('home.sinDestacadasBoton')}
+                </button>
               </div>
             </section>
           )}

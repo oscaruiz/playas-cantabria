@@ -79,6 +79,7 @@ export const es = {
   'home.verEnMapaDe': 'Ver {nombre} en el mapa',
   'home.puntuacionAria': 'Puntuación {n} de 100',
   'home.sinDestacadas': 'Hoy no hay playas destacadas — consulta el listado completo',
+  'home.sinDestacadasBoton': 'Ver listado de playas',
   'home.errorCondiciones': 'No se pudieron cargar las condiciones actuales',
   'home.reintentar': 'Reintentar',
   'home.revisarAntes': 'Mejor revisar antes de ir',

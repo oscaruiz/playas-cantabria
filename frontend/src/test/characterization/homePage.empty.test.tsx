@@ -11,7 +11,8 @@
  */
 
 import React from 'react';
-import { screen } from '@testing-library/react';
+import { fireEvent, screen } from '@testing-library/react';
+import { Route } from 'react-router-dom';
 import type { FeaturedBeachesResponse } from '../../services/api';
 import HomePage from '../../pages/HomePage';
 import { renderWithProviders } from '../render';
@@ -47,4 +48,25 @@ it('muestra el aviso de "sin destacadas" cuando ninguna playa llega a 60', async
   expect(container.querySelectorAll('.hp-alt-row')).toHaveLength(0);
   // The "revisar" section is rendered: it does not depend on the threshold.
   expect(screen.getByText('Mejor revisar antes de ir')).toBeInTheDocument();
+});
+
+it('el aviso de "sin destacadas" lleva un botón al listado completo', async () => {
+  Object.defineProperty(navigator, 'geolocation', { configurable: true, value: undefined });
+  installFetchMock([
+    route(FEATURED, { json: sinDestacadas }),
+    route(BEACHES, { json: beachesResponse }),
+  ]);
+
+  renderWithProviders(
+    <>
+      <HomePage />
+      <Route path="/playas" render={() => <div>EN-LISTADO</div>} />
+    </>,
+    { route: '/' },
+  );
+
+  const boton = await screen.findByRole('button', { name: 'Ver listado de playas' });
+  fireEvent.click(boton);
+
+  expect(await screen.findByText('EN-LISTADO')).toBeInTheDocument();
 });

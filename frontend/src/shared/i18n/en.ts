@@ -71,6 +71,7 @@ export const en = {
   'home.verEnMapaDe': 'View {nombre} on the map',
   'home.puntuacionAria': 'Score {n} out of 100',
   'home.sinDestacadas': 'No featured beaches today — check the full list',
+  'home.sinDestacadasBoton': 'View beach list',
   'home.errorCondiciones': 'Could not load current conditions',
   'home.reintentar': 'Retry',
   'home.revisarAntes': 'Better check before you go',
