@@ -46,6 +46,21 @@ const UMBRAL_CALIDAD = 60;
 const MARGEN_PICO = 12;
 
 /**
+ * Hard per-factor gates: an hour can be unrecommendable even when its TOTAL
+ * clears the bar, because the other factors compensate in the sum. A sunny
+ * 24° hour with a 10 m/s blow still normalizes to ~80 — above the floor and,
+ * on a uniformly windy day, above the relative bar too — and the app's own
+ * map is warning "viento fuerte" for that same wind at the same time.
+ *
+ * The wind ceiling is the map's warning threshold on purpose: the window must
+ * never recommend an hour another screen is warning about. The temperature
+ * floor is where a beach stops being a SWIM plan even in full sun; the score
+ * curve alone only rejects cold when it is also cloudy.
+ */
+const MAX_RECOMMENDED_WIND_MS = 8;
+const MIN_RECOMMENDED_TEMP_C = 17;
+
+/**
  * Why the winning stretch beats the hours it rejected, named by the dominant
  * advantage. `sin_lluvia` wins outright whenever any rejected hour is wet —
  * dodging the rain is the fact that changes the plan; the other three reuse
@@ -79,6 +94,9 @@ interface SlotEvaluado {
   /** Normalized 0–100 over the factors this slot actually carries. 0 if wet. */
   calidad: number;
   mojado: boolean;
+  /** False when a hard per-factor gate rejects the hour (rain, wind, cold):
+   *  it can never be recommended, whatever its total. */
+  apto: boolean;
   cielo: number | null;
   temperatura: number | null;
   viento: number | null;
@@ -102,12 +120,20 @@ function evaluarSlot(slot: HourlyOutlookSlot): SlotEvaluado | null {
   // part of the analysis at all (and it breaks contiguity — see below).
   if (maximo === 0) return null;
 
+  // Per-factor gates on the RAW values. An unknown value does not condemn the
+  // hour — only a measured bad one does.
+  const apto =
+    !mojado
+    && !(slot.windSpeedMs != null && slot.windSpeedMs > MAX_RECOMMENDED_WIND_MS)
+    && !(slot.temperatureC != null && slot.temperatureC < MIN_RECOMMENDED_TEMP_C);
+
   return {
     timestamp: slot.timestamp,
     // Wet hours can never belong to the best time to go, whatever the sky
     // says: the same philosophy as the score's rain caps.
     calidad: mojado ? 0 : Math.round((suma / maximo) * 100),
     mojado,
+    apto,
     cielo,
     temperatura,
     viento,
@@ -168,7 +194,9 @@ export function buildDayWindow(
     .map(evaluarSlot)
     .filter((s): s is SlotEvaluado => s !== null)
     .map((s) =>
-      vetoHasta != null && s.timestamp < vetoHasta ? { ...s, mojado: true, calidad: 0 } : s,
+      vetoHasta != null && s.timestamp < vetoHasta
+        ? { ...s, mojado: true, apto: false, calidad: 0 }
+        : s,
     );
   if (evaluados.length < 2) return null;
 
@@ -184,7 +212,7 @@ export function buildDayWindow(
   for (const slot of evaluados) {
     const contiguo =
       actual.length > 0 && slot.timestamp - actual[actual.length - 1].timestamp === paso;
-    if (slot.calidad >= liston) {
+    if (slot.apto && slot.calidad >= liston) {
       if (actual.length > 0 && !contiguo) { tramos.push(actual); actual = []; }
       actual.push(slot);
     } else if (actual.length > 0) {
@@ -306,8 +334,10 @@ function buscarCambio(
   liston: number,
 ): { desde: number; causa: OutlookCausa } | null {
   const finTramo = tramo[tramo.length - 1].timestamp;
+  // "Stops being good" now means failing the bar OR a hard gate: a windy
+  // sunny hour can clear the bar on points and still end the stretch.
   const siguiente = evaluados.find(
-    (s) => s.timestamp > finTramo && s.calidad < liston,
+    (s) => s.timestamp > finTramo && (s.calidad < liston || !s.apto),
   );
   if (!siguiente) return null;
 

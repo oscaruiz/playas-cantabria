@@ -160,6 +160,34 @@ describe('buildDayWindow — la mejor franja del día', () => {
     expect(señal?.mejor).toEqual({ inicio: utc(10), fin: utc(15) });
   });
 
+  it('un día entero de viento fuerte no se recomienda: la puerta gana a la nota', () => {
+    // Sol y 24° con 10 m/s normalizan a ~81: por encima del suelo y, siendo
+    // el día uniforme, del listón relativo. El mapa avisa de ese viento; la
+    // ventana no puede recomendarlo a la vez.
+    const ventoso = slots([10, 11, 12, 13, 14, 15], {
+      cloudCoverPct: 5, temperatureC: 24, windSpeedMs: 10,
+    });
+    expect(buildDayWindow(ventoso, MEDIA_MANANA)).toBeNull();
+  });
+
+  it('un día despejado pero frío tampoco: al sol con 15° no es plan de playa', () => {
+    const frio = slots([10, 11, 12, 13, 14], {
+      cloudCoverPct: 5, temperatureC: 15, windSpeedMs: 2,
+    });
+    expect(buildDayWindow(frio, MEDIA_MANANA)).toBeNull();
+  });
+
+  it('mañana fría que templa por la tarde: se recomienda la tarde, por más cálida', () => {
+    const dia = [
+      ...slots([10, 11], { cloudCoverPct: 5, temperatureC: 15, windSpeedMs: 2 }),
+      ...slots([12, 13, 14, 15], { cloudCoverPct: 5, temperatureC: 22, windSpeedMs: 2 }),
+    ];
+    const señal = buildDayWindow(dia, MEDIA_MANANA);
+
+    expect(señal?.mejor).toEqual({ inicio: utc(12), fin: utc(16) });
+    expect(señal?.motivo).toBe('sube_temperatura');
+  });
+
   it('un tramo que cubre toda la franja restante no tiene motivo: no venció a nadie', () => {
     const señal = buildDayWindow(slots([10, 11, 12, 13, 14], BUENA), MEDIA_MANANA);
 
