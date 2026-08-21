@@ -13,6 +13,7 @@ import MejorMomento from '../../components/MejorMomento';
 import { useIdioma } from '../../shared/i18n/IdiomaContext';
 import { horaLocalMadrid } from '../../shared/format/tiempo';
 import { procedenciaPrevisionHoras } from '../../features/provenance/procedencia';
+import { todayLabelMadrid } from '../../shared/i18n/fechas';
 import { atribucionDeFuente } from '../../features/provenance/atribuciones';
 import { AttributionNote, SourceAndFreshness } from '../../features/provenance/SourceAndFreshness';
 import InfoDatos from '../../features/provenance/InfoDatos';
@@ -42,8 +43,12 @@ const ProximasHoras: React.FC<{
   fuente?: string | null;
   ventana?: VentanaDia | null;
 }> = ({ horas, fuente, ventana }) => {
-  const { t } = useIdioma();
+  const { t, idioma } = useIdioma();
   const hayHoras = (horas?.length ?? 0) > 0;
+  // The strip is always TODAY's remaining hours: with the day selector right
+  // above, the title must say which day it belongs to (Madrid's day — the
+  // hours are Madrid hours).
+  const titulo = t('detalle.pronostico.tituloRestoDia', { dia: todayLabelMadrid(idioma) });
 
   // Scroll affordance: the strip overflows on phones, and a clean cut at the
   // card edge reads as "this is everything". Fixed-width hours make the last
@@ -111,7 +116,7 @@ const ProximasHoras: React.FC<{
 
   return (
     <section className="proximas-horas-section">
-      <h3 className="section-kicker">{t('detalle.pronostico.tituloRestoDia')}</h3>
+      <h3 className="section-kicker">{titulo}</h3>
       {hayHoras && (
       <div
         className={`pd-horas-marco${masAntes ? ' pd-horas-marco--antes' : ''}${masDespues ? ' pd-horas-marco--despues' : ''}`}
@@ -123,7 +128,7 @@ const ProximasHoras: React.FC<{
         // A scrollable region must be reachable and named for the keyboard:
         // without tabindex its content is unreachable scrolling by keys.
         role="region"
-        aria-label={t('detalle.pronostico.tituloRestoDia')}
+        aria-label={titulo}
         tabIndex={0}
       >
         {lista.map((h, i) => {

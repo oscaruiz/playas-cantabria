@@ -48,7 +48,8 @@ describe('ProximasHoras — la tira que respalda la ventana', () => {
       { route: '/' },
     );
 
-    expect(screen.getByText('Lo que queda de día')).toBeInTheDocument();
+    // El día va explícito y en hora de Madrid: "Lo que queda de hoy (jueves 21)".
+    expect(screen.getByText(/^Lo que queda de hoy \([a-zá-ú]+ \d{1,2}\)$/)).toBeInTheDocument();
 
     const items = container.querySelectorAll('.pd-hora');
     expect(items).toHaveLength(4);

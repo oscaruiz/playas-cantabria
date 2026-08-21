@@ -71,7 +71,7 @@ describe('MejorMomento — sin datos no se inventa nada', () => {
       { route: '/' },
     );
 
-    expect(screen.getByText('Mejor momento: 11:00–21:00')).toBeInTheDocument();
+    expect(screen.getByText('Mejor momento para ir: 11:00–21:00')).toBeInTheDocument();
     expect(screen.queryByText(/A partir de las/)).toBeNull();
   });
 });

@@ -46,6 +46,29 @@ export function traducirNombreDiaApi(nombre: string, idioma: Idioma): string | n
   return DIAS[idioma][indice];
 }
 
+// Intl short weekday (en-US) → index into DIAS. Madrid's calendar day can
+// differ from the device's, so the weekday must be read in that timezone.
+const INDICE_DIA_INTL: Record<string, number> = {
+  Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6,
+};
+
+/**
+ * TODAY as Madrid sees it, worded for a title: "jueves 21" / "Thursday 21".
+ * The beach-window hours are Madrid hours, so the day they belong to must be
+ * Madrid's too — a viewer in another timezone gets the beach's day, not theirs.
+ */
+export function todayLabelMadrid(idioma: Idioma, ahora: Date = new Date()): string {
+  const partes = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Europe/Madrid',
+    weekday: 'short',
+    day: 'numeric',
+  }).formatToParts(ahora);
+  const semana = partes.find((p) => p.type === 'weekday')?.value ?? '';
+  const diaMes = partes.find((p) => p.type === 'day')?.value ?? '';
+  const nombre = nombreDia(INDICE_DIA_INTL[semana] ?? ahora.getDay(), idioma);
+  return `${nombre} ${diaMes}`;
+}
+
 /**
  * Readable short date: es → "Domingo 5 de junio" | en → "Sunday, June 5".
  * `nombreDiaTexto` must already come in the target language and capitalized.

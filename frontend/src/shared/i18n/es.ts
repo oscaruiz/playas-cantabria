@@ -191,7 +191,7 @@ export const es = {
   'detalle.pronostico.ariaSinCausa': 'Próximas 4 horas: {direccion}',
   // Ventana del día: CUÁNDO ir. Las horas vienen del API como instantes y la
   // causa como clave; la frase se compone aquí, nunca en el servidor.
-  'ventana.mejor': 'Mejor momento: {inicio}–{fin}',
+  'ventana.mejor': 'Mejor momento para ir: {inicio}–{fin}',
   'ventana.cambio.despeja': 'A partir de las {hora} se despeja',
   'ventana.cambio.nubla': 'A partir de las {hora} se nubla',
   'ventana.cambio.subeTemperatura': 'A partir de las {hora} sube la temperatura',
@@ -207,8 +207,10 @@ export const es = {
   'ventana.motivo.subeTemperatura': 'Elegido por ser las horas más cálidas',
   'ventana.motivo.amainaViento': 'Elegido por ser las horas con menos viento',
   'ventana.sinCambios': 'Sin empeoramientos a la vista hasta el cierre del día',
-  // Título de la tira horaria completa (la del outlook sigue siendo "Próximas 4 h").
-  'detalle.pronostico.tituloRestoDia': 'Lo que queda de día',
+  // Título de la tira horaria completa (la del outlook sigue siendo "Próximas
+  // 4 h"). El día va explícito: la tira es siempre de HOY, y al lado del
+  // selector de días lo tiene que decir.
+  'detalle.pronostico.tituloRestoDia': 'Lo que queda de hoy ({dia})',
   'detalle.pronostico.horasAnteriores': 'Ver horas anteriores',
   'detalle.pronostico.horasSiguientes': 'Ver más horas',
   // Frase de valoración de la portada, por bandas de la puntuación existente.
