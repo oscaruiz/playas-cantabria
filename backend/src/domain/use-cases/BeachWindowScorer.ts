@@ -45,6 +45,15 @@ const UMBRAL_CALIDAD = 60;
  */
 const MARGEN_PICO = 12;
 
+/**
+ * Why the winning stretch beats the hours it rejected, named by the dominant
+ * advantage. `sin_lluvia` wins outright whenever any rejected hour is wet —
+ * dodging the rain is the fact that changes the plan; the other three reuse
+ * the improving half of the `OutlookCausa` vocabulary so the client already
+ * knows how to phrase them.
+ */
+export type MotivoVentana = 'sin_lluvia' | 'despeja' | 'sube_temperatura' | 'amaina_viento';
+
 export interface DayWindowSignal {
   /** Best contiguous stretch, in epoch ms (end = last slot + step, clipped to the window). */
   mejor: { inicio: number; fin: number };
@@ -55,6 +64,12 @@ export interface DayWindowSignal {
    * `sube_temperatura`): it names why the good stretch ENDS.
    */
   cambio: { desde: number; causa: OutlookCausa } | null;
+  /**
+   * Why THIS stretch and not the rest of the day. Null when the stretch covers
+   * every evaluated hour (there is nothing it beat) or when no single factor
+   * stands out against the rejected hours.
+   */
+  motivo: MotivoVentana | null;
   /** Usable slots the verdict is built on — the honest depth of the forecast. */
   horasConsideradas: number;
 }
@@ -126,23 +141,20 @@ export function buildDayWindow(
 ): DayWindowSignal | null {
   if (!slots || slots.length === 0) return null;
 
-  // Same intersection arithmetic as `ventanaOutlook`, without the 4h ceiling:
-  // offsets from "now", so it cannot slip a day at either end.
-  const minutosAhora = minutosMadrid(ahora);
-  const desdeMin = Math.max(minutosAhora, INICIO_FRANJA_MADRID);
-  const hastaMin = FIN_FRANJA_MADRID;
-  if (hastaMin <= desdeMin) return null;
-  const desde = ahora.getTime() + (desdeMin - minutosAhora) * 60_000;
-  const hasta = ahora.getTime() + (hastaMin - minutosAhora) * 60_000;
+  const franja = franjaRestante(ahora);
+  if (!franja) return null;
+  const { desde, hasta } = franja;
 
   const ordenados = [...slots].sort((a, b) => a.timestamp - b.timestamp);
-  const enFranja = ordenados.filter((s) => s.timestamp > desde && s.timestamp <= hasta);
+  const paso = pasoDeSlots(ordenados);
+  // A slot belongs to the analysis while its INTERVAL overlaps the remaining
+  // window, not only when it starts inside it: dropping the in-progress slot
+  // meant the window could never start "now" even when now was the best hour.
+  const enFranja = ordenados.filter((s) => s.timestamp + paso > desde && s.timestamp <= hasta);
   const evaluados = enFranja
     .map(evaluarSlot)
     .filter((s): s is SlotEvaluado => s !== null);
   if (evaluados.length < 2) return null;
-
-  const paso = pasoDeSlots(enFranja);
 
   // The bar every recommended hour must clear: near the day's own best hour,
   // never below the absolute floor. See `MARGEN_PICO` for why it is relative.
@@ -177,14 +189,94 @@ export function buildDayWindow(
     return mejor;
   });
 
-  const inicio = mejorTramo[0].timestamp;
+  // The in-progress slot may start before "now": clamp so the published
+  // stretch never announces a start in the past.
+  const inicio = Math.max(mejorTramo[0].timestamp, desde);
   const fin = Math.min(mejorTramo[mejorTramo.length - 1].timestamp + paso, hasta);
 
   return {
     mejor: { inicio, fin },
     cambio: buscarCambio(evaluados, mejorTramo, liston),
+    motivo: buscarMotivo(evaluados, mejorTramo),
     horasConsideradas: evaluados.length,
   };
+}
+
+/**
+ * The remaining beach window as epoch bounds. Same intersection arithmetic as
+ * `ventanaOutlook`, without the 4h ceiling: offsets from "now", so it cannot
+ * slip a day at either end. Null once the window is over for today.
+ */
+export function franjaRestante(ahora: Date): { desde: number; hasta: number } | null {
+  const minutosAhora = minutosMadrid(ahora);
+  const desdeMin = Math.max(minutosAhora, INICIO_FRANJA_MADRID);
+  const hastaMin = FIN_FRANJA_MADRID;
+  if (hastaMin <= desdeMin) return null;
+  return {
+    desde: ahora.getTime() + (desdeMin - minutosAhora) * 60_000,
+    hasta: ahora.getTime() + (hastaMin - minutosAhora) * 60_000,
+  };
+}
+
+/**
+ * Trims hourly slots to the remaining beach window — the strip the detail
+ * shows under "what's left of the day". Kept API-compatible with the verdict
+ * above (same bounds, same in-progress-slot rule) so the hours the user sees
+ * are exactly the hours the window judged.
+ */
+export function recortarAFranjaRestante(
+  slots: readonly HourlyOutlookSlot[],
+  ahora: Date = new Date(),
+): HourlyOutlookSlot[] {
+  if (slots.length === 0) return [];
+  const franja = franjaRestante(ahora);
+  if (!franja) return [];
+  const ordenados = [...slots].sort((a, b) => a.timestamp - b.timestamp);
+  const paso = pasoDeSlots(ordenados);
+  return ordenados.filter((s) => s.timestamp + paso > franja.desde && s.timestamp <= franja.hasta);
+}
+
+/**
+ * Why the winning stretch beats the hours it rejected. Rain outside the
+ * stretch decides on its own; otherwise the factor with the widest mean
+ * advantage (in score points, same scale as `buscarCambio`) gives its name.
+ */
+function buscarMotivo(
+  evaluados: readonly SlotEvaluado[],
+  tramo: readonly SlotEvaluado[],
+): MotivoVentana | null {
+  const fuera = evaluados.filter((s) => !tramo.includes(s));
+  if (fuera.length === 0) return null;
+
+  if (fuera.some((s) => s.mojado)) return 'sin_lluvia';
+
+  const mediaDe = (
+    lista: readonly SlotEvaluado[],
+    lee: (s: SlotEvaluado) => number | null,
+  ): number | null => {
+    const valores = lista.map(lee).filter((v): v is number => v != null);
+    return valores.length > 0 ? media(valores) : null;
+  };
+
+  const ventajas: Array<{ motivo: MotivoVentana; ventaja: number }> = [];
+  const factores: Array<{ motivo: MotivoVentana; lee: (s: SlotEvaluado) => number | null }> = [
+    { motivo: 'despeja', lee: (s) => s.cielo },
+    { motivo: 'sube_temperatura', lee: (s) => s.temperatura },
+    { motivo: 'amaina_viento', lee: (s) => s.viento },
+  ];
+  for (const { motivo, lee } of factores) {
+    const dentro = mediaDe(tramo, lee);
+    const resto = mediaDe(fuera, lee);
+    if (dentro != null && resto != null) ventajas.push({ motivo, ventaja: dentro - resto });
+  }
+
+  const mejor = ventajas
+    .filter((v) => v.ventaja > 0)
+    .reduce<{ motivo: MotivoVentana; ventaja: number } | null>(
+      (max, v) => (max == null || v.ventaja > max.ventaja ? v : max),
+      null,
+    );
+  return mejor?.motivo ?? null;
 }
 
 /**

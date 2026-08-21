@@ -41,6 +41,8 @@ export function mapVentanaDia(ventana: DayWindowSignal | null | undefined): Vent
     cambio: ventana.cambio
       ? { desde: new Date(ventana.cambio.desde).toISOString(), causa: ventana.cambio.causa }
       : null,
+    motivo: ventana.motivo,
+    horasConsideradas: ventana.horasConsideradas,
   };
 }
 

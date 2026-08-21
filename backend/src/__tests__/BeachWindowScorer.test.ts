@@ -40,12 +40,14 @@ describe('buildDayWindow — la mejor franja del día', () => {
     const dia = [...slots([9, 10, 11, 12, 13, 14], BUENA), ...slots([15, 16, 17], VENTOSA)];
     const señal = buildDayWindow(dia, MEDIA_MANANA);
 
-    // El tramo de las 09:00 UTC queda fuera (la franja empieza a las 09:00 en
-    // punto y el filtro es estricto, como en `ventanaOutlook`).
-    expect(señal?.mejor).toEqual({ inicio: utc(10), fin: utc(15) });
+    // El slot de las 09:00 UTC abre la franja (11:00 Madrid): desde que la
+    // hora en curso cuenta, un tramo puede empezar en el arranque mismo.
+    expect(señal?.mejor).toEqual({ inicio: utc(9), fin: utc(15) });
     // 17:00 Madrid: se levanta el viento.
     expect(señal?.cambio).toEqual({ desde: utc(15), causa: 'arrecia_viento' });
-    expect(señal?.horasConsideradas).toBe(8);
+    // Y el motivo dice por qué ESE tramo: fuera de él sopla más.
+    expect(señal?.motivo).toBe('amaina_viento');
+    expect(señal?.horasConsideradas).toBe(9);
   });
 
   it('una hora de lluvia parte el día y nunca se recomienda', () => {
@@ -60,6 +62,8 @@ describe('buildDayWindow — la mejor franja del día', () => {
     expect(señal?.mejor).toEqual({ inicio: utc(14), fin: utc(18) });
     // Tras el tramo no queda ninguna hora evaluada mala: nada que avisar.
     expect(señal?.cambio).toBeNull();
+    // Con lluvia fuera del tramo, el motivo es esquivarla — nada pesa más.
+    expect(señal?.motivo).toBe('sin_lluvia');
   });
 
   it('un día malo no tiene "mejor momento": recomendar la hora menos mala vestiría un aviso de consejo', () => {
@@ -73,6 +77,9 @@ describe('buildDayWindow — la mejor franja del día', () => {
 
     expect(señal?.mejor).toEqual({ inicio: utc(10), fin: utc(14) });
     expect(señal?.cambio).toEqual({ desde: utc(14), causa: 'nubla' });
+    // Motivo y cambio son la misma historia desde dos lados: más despejado
+    // dentro, se nubla después.
+    expect(señal?.motivo).toBe('despeja');
   });
 
   it('la lluvia prevista se nombra como tal, no como el factor que arrastra', () => {
@@ -86,9 +93,9 @@ describe('buildDayWindow — la mejor franja del día', () => {
     const dia = [...slots([9, 12, 15], BUENA), slot(18, VENTOSA)];
     const señal = buildDayWindow(dia, MEDIA_MANANA);
 
-    // 12:00 y 15:00 UTC contiguos a paso de 3 h; fin = 15:00 + 3 h = 18:00 UTC
-    // (20:00 Madrid), dentro de la franja.
-    expect(señal?.mejor).toEqual({ inicio: utc(12), fin: utc(18) });
+    // 09:00, 12:00 y 15:00 UTC contiguos a paso de 3 h (la hora en curso
+    // cuenta); fin = 15:00 + 3 h = 18:00 UTC (20:00 Madrid), dentro de la franja.
+    expect(señal?.mejor).toEqual({ inicio: utc(9), fin: utc(18) });
     expect(señal?.cambio).toEqual({ desde: utc(18), causa: 'arrecia_viento' });
   });
 
@@ -110,6 +117,25 @@ describe('buildDayWindow — la mejor franja del día', () => {
     expect(buildDayWindow([], MEDIA_MANANA)).toBeNull();
     expect(buildDayWindow(null, MEDIA_MANANA)).toBeNull();
     expect(buildDayWindow(slots([10], BUENA), MEDIA_MANANA)).toBeNull();
+  });
+
+  it('la hora en curso cuenta y el inicio publicado se recorta a "ahora"', () => {
+    // 11:30 Madrid: el slot de las 09:00 UTC (11:00 Madrid) va por la mitad.
+    const yEnCurso = new Date('2026-07-15T09:30:00Z');
+    const señal = buildDayWindow(slots([9, 10, 11, 12, 13], BUENA), yEnCurso);
+
+    // El tramo arranca en la hora en curso, pero nunca se anuncia un inicio
+    // en el pasado: se publica "ahora".
+    expect(señal?.mejor).toEqual({ inicio: yEnCurso.getTime(), fin: utc(14) });
+    expect(señal?.horasConsideradas).toBe(5);
+  });
+
+  it('un tramo que cubre toda la franja restante no tiene motivo: no venció a nadie', () => {
+    const señal = buildDayWindow(slots([10, 11, 12, 13, 14], BUENA), MEDIA_MANANA);
+
+    expect(señal?.mejor).toEqual({ inicio: utc(10), fin: utc(15) });
+    expect(señal?.cambio).toBeNull();
+    expect(señal?.motivo).toBeNull();
   });
 
   it('un tramo sin ninguna variable no se certifica ni bueno ni malo: no cuenta', () => {

@@ -56,6 +56,15 @@ export interface VentanaDiaDTO {
   inicio: string;
   fin: string;
   cambio: { desde: string; causa: PronosticoDTO['causa'] } | null;
+  /**
+   * Why this stretch beats the hours it rejected (additive): `sin_lluvia`,
+   * or the improving-`causa` vocabulary (`despeja`, `sube_temperatura`,
+   * `amaina_viento`). Null when it covers the whole remaining window or no
+   * factor stands out — absent on cached responses from older backends.
+   */
+  motivo?: 'sin_lluvia' | 'despeja' | 'sube_temperatura' | 'amaina_viento' | null;
+  /** Forecast hours the verdict is built on — the honest depth (additive). */
+  horasConsideradas?: number;
 }
 
 export interface FeaturedBeachDTO {

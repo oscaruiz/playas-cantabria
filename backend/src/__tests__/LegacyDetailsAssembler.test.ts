@@ -559,23 +559,24 @@ describe('LegacyDetailsAssembler — previsión horaria en tiempoActual', () => 
 
   afterEach(() => vi.useRealTimers());
 
-  it('publica como mucho la ventana de 4 h, recortada por la misma función que puntúa', async () => {
+  it('publica la franja restante completa: la tira es la evidencia de la ventana del día', async () => {
     vi.setSystemTime(MEDIODIA);
     const assembler = buildAssembler({
       details: { beach: COBRECES, weather: makeOwCurrent(), flag: null, tides: null },
       forecast: makeForecast(),
       owCurrent: makeOwCurrent(),
-      rain: rainCon(8), // ocho tramos disponibles, solo cuatro entran
+      rain: rainCon(8), // ocho tramos, todos dentro de la franja (14:00–21:00 Madrid)
     });
 
     const dto = await assembler.assemble('3902401');
 
-    expect(dto.tiempoActual?.previsionHoras).toHaveLength(4);
+    expect(dto.tiempoActual?.previsionHoras).toHaveLength(8);
     expect(dto.tiempoActual?.previsionHoras?.[0]).toEqual({
       horaIso: new Date(MEDIODIA.getTime() + 3_600_000).toISOString(),
       nubesPct: 20,
       temperaturaC: 21,
       vientoMs: 3,
+      precipitacionMm: null,
     });
   });
 
@@ -700,6 +701,9 @@ describe('LegacyDetailsAssembler — ventana del día en tiempoActual', () => {
       // El último tramo (19:00 UTC) + 1 h se recorta al fin de franja (21:00 Madrid).
       fin: new Date(MEDIODIA.getTime() + 8 * 3_600_000).toISOString(),
       cambio: null,
+      // Cubre todo lo evaluado: no venció a ninguna hora, no hay motivo.
+      motivo: null,
+      horasConsideradas: 8,
     });
     expect(dto.tiempoActual?.ventanaDiaFuente).toBe('Open-Meteo');
   });

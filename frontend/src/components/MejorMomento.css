@@ -26,3 +26,11 @@
   font-size: 0.82rem;
   opacity: 0.8;
 }
+
+/* WHY this stretch won (detail only): same indent as the change line, a bit
+   more present because it is the answer the card exists to give. */
+.mejor-momento-motivo {
+  margin: 2px 0 0 16px;
+  font-size: 0.82rem;
+  opacity: 0.9;
+}

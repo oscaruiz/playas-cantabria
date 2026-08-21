@@ -1190,13 +1190,99 @@
 }
 
 /* Tira horaria: una fila por hora, scroll horizontal si no cabe. */
+/* The rail's frame: the edge fades live here, OVER the scroller, so they
+   never move with the content. Painted only on the side that still hides
+   hours — a fade over the true end would claim more content than there is. */
+.pd-horas-marco {
+  position: relative;
+}
+
+.pd-horas-marco::before,
+.pd-horas-marco::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 28px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.pd-horas-marco::before {
+  left: 0;
+  background: linear-gradient(to right, var(--playa-foam), transparent);
+}
+
+.pd-horas-marco::after {
+  right: 0;
+  background: linear-gradient(to left, var(--playa-foam), transparent);
+}
+
+.pd-horas-marco--antes::before,
+.pd-horas-marco--despues::after {
+  opacity: 1;
+}
+
+/* The explicit "this moves" signal, riding on its side's fade: a chevron
+   that is also a button (scrolls most of a screenful). Only rendered while
+   its side still hides hours, so it can never point at nothing. */
+.pd-horas-flecha {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--playa-border);
+  border-radius: 50%;
+  background: var(--playa-foam);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+  color: var(--playa-ocean);
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.pd-horas-flecha--antes {
+  left: 2px;
+}
+
+.pd-horas-flecha--despues {
+  right: 2px;
+}
+
+.pd-horas-flecha:active {
+  transform: translateY(-50%) scale(0.92);
+}
+
 .pd-horas {
   display: flex;
   gap: 6px;
   margin: 0;
-  padding: 0;
+  /* Room under the cards for the thin scrollbar, so it does not overlap them. */
+  padding: 0 0 6px;
   list-style: none;
   overflow-x: auto;
+  /* One horizontal gesture must not turn into page navigation. */
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+}
+
+/* On touch screens the peek + fades carry the affordance; the scrollbar strip
+   would only eat height. Pointer devices keep the thin bar as a third signal. */
+@media (pointer: coarse) {
+  .pd-horas {
+    scrollbar-width: none;
+    padding-bottom: 0;
+  }
+  .pd-horas::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 /* The day window inside this card: the conclusion under the hours that back
@@ -1206,8 +1292,12 @@
 }
 
 .pd-hora {
-  flex: 1 1 0;
-  min-width: 64px;
+  /* Fixed basis, never stretched: with `flex: 1` the hours filled the row
+     edge to edge and the strip cut off CLEAN at the card border — nothing
+     signalled that more hours were hiding. A fixed width makes the overflow
+     land mid-card, so the half-cut hour itself says "keep scrolling". */
+  flex: 0 0 64px;
+  scroll-snap-align: start;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1228,6 +1318,19 @@
 .pd-hora-icono {
   font-size: 1.05rem;
   color: var(--playa-ocean);
+}
+
+/* The hours inside the recommended window: the strip's visual answer to
+   "why this stretch" — the tinted run IS the window drawn over its evidence. */
+.pd-hora--mejor {
+  border-color: var(--ion-color-success, #2dd36f);
+  background: rgba(45, 211, 111, 0.1);
+}
+
+/* A wet hour is what the window dodges: the drop reads as a warning, not as
+   one more decorative sky icon. */
+.pd-hora-icono--lluvia {
+  color: var(--ion-color-primary, #0a7ea4);
 }
 
 .pd-hora-temp {

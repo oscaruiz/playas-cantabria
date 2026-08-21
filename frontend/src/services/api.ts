@@ -367,6 +367,8 @@ export interface PrevisionHora {
   nubesPct: number | null;
   temperaturaC: number | null;
   vientoMs: number | null;
+  /** Forecast rain for this hour. Optional: older backends do not send it. */
+  precipitacionMm?: number | null;
 }
 
 export interface TiempoActual {
@@ -561,7 +563,16 @@ export interface VentanaDia {
   inicio: string;
   fin: string;
   cambio?: { desde: string; causa: CausaPronostico | null } | null;
+  /**
+   * Why this stretch beats the rejected hours. Optional for the usual
+   * backward-compatibility reason: without it only the time range is shown.
+   */
+  motivo?: MotivoVentana | null;
+  /** Forecast hours the verdict is built on. Optional, same reason. */
+  horasConsideradas?: number;
 }
+
+export type MotivoVentana = 'sin_lluvia' | 'despeja' | 'sube_temperatura' | 'amaina_viento';
 
 /**
  * Points scored on each factor, before caps and outlook. There is no UV factor:

@@ -76,6 +76,8 @@ export type PrevisionHoraDTO = {
   nubesPct: number | null;
   temperaturaC: number | null;
   vientoMs: number | null;
+  /** Forecast rain for this hour (additive): lets the strip mark wet hours. */
+  precipitacionMm?: number | null;
 };
 
 export type TiempoActualDTO = {
@@ -248,6 +250,7 @@ export class LegacyDetailsMapper {
       nubesPct: s.cloudCoverPct,
       temperaturaC: s.temperatureC,
       vientoMs: s.windSpeedMs,
+      precipitacionMm: s.precipitationMm ?? null,
     }));
   }
 

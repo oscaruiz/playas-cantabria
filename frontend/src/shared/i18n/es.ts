@@ -177,6 +177,7 @@ export const es = {
   'detalle.pronostico.puntos': '{n} puntos',
   'detalle.pronostico.sinDatos': 'Sin previsión horaria ahora mismo.',
   'detalle.pronostico.ariaHora': 'A las {hora}: {nubes}% de nubes, {temp} grados, viento {viento} metros por segundo',
+  'detalle.pronostico.ariaHoraLluvia': 'A las {hora}: lluvia prevista, {temp} grados, viento {viento} metros por segundo',
   // Por QUÉ se mueve. "Mejora" a secas no sirve para decidir: lo que decide es
   // que se abre el cielo o que se levanta viento.
   'detalle.pronostico.causa.despeja': 'se despeja',
@@ -198,6 +199,18 @@ export const es = {
   'ventana.cambio.amainaViento': 'A partir de las {hora} amaina el viento',
   'ventana.cambio.arreciaViento': 'A partir de las {hora} aumenta el viento',
   'ventana.cambio.lluviaPrevista': 'A partir de las {hora} se espera lluvia',
+  // Ventana ya empezada (la caché puede servirla con el inicio en el pasado).
+  'ventana.hastaFin': 'Buen momento hasta las {fin}',
+  // Por qué ESE tramo y no el resto del día; sin motivo ni cambio, la calma.
+  'ventana.motivo.sinLluvia': 'Elegido por ser el tramo sin lluvia previsto',
+  'ventana.motivo.despeja': 'Elegido por ser las horas más despejadas',
+  'ventana.motivo.subeTemperatura': 'Elegido por ser las horas más cálidas',
+  'ventana.motivo.amainaViento': 'Elegido por ser las horas con menos viento',
+  'ventana.sinCambios': 'Sin empeoramientos a la vista hasta el cierre del día',
+  // Título de la tira horaria completa (la del outlook sigue siendo "Próximas 4 h").
+  'detalle.pronostico.tituloRestoDia': 'Lo que queda de día',
+  'detalle.pronostico.horasAnteriores': 'Ver horas anteriores',
+  'detalle.pronostico.horasSiguientes': 'Ver más horas',
   // Frase de valoración de la portada, por bandas de la puntuación existente.
   'home.frase.muyBien': '{nombre} está muy bien hoy',
   'home.frase.bien': '{nombre} está bien hoy',

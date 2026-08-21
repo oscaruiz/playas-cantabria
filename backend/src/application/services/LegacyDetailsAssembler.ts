@@ -16,8 +16,11 @@ import { AemetBeachForecastProvider } from '../../infrastructure/providers/Aemet
 import { AemetBeachWebScraper } from '../../infrastructure/providers/AemetBeachWebScraper';
 import { GetRainNowcast } from '../../domain/use-cases/GetRainNowcast';
 import { buildRainForecastSignal, textosRestantesHoy } from '../../domain/use-cases/RainForecast';
-import { ventanaOutlook } from '../../domain/use-cases/WeatherOutlook';
-import { buildDayWindow, type DayWindowSignal } from '../../domain/use-cases/BeachWindowScorer';
+import {
+  buildDayWindow,
+  recortarAFranjaRestante,
+  type DayWindowSignal,
+} from '../../domain/use-cases/BeachWindowScorer';
 import { mapVentanaDia } from '../mappers/FeaturedBeachMapper';
 import type { HourlyOutlookSlot, RainNowcast } from '../../domain/entities/RainNowcast';
 import type { BeachFullForecast } from '../../domain/entities/BeachForecast';
@@ -70,11 +73,15 @@ export class LegacyDetailsAssembler {
     delNowcast: readonly HourlyOutlookSlot[] | null | undefined,
   ): Promise<{ horas: HourlyOutlookSlot[]; fuente: string } | null> {
     const ahora = new Date();
-    const preferidas = ventanaOutlook(delNowcast ?? [], ahora);
+    // The whole remaining beach window, not the outlook's 4h ceiling: the
+    // strip is the evidence behind "mejor momento", which judges every
+    // remaining hour — a 4h strip could not show WHY the window ends when it
+    // does. Same trim the verdict itself uses, so they can never disagree.
+    const preferidas = recortarAFranjaRestante(delNowcast ?? [], ahora);
     if (preferidas.length > 0) return { horas: preferidas, fuente: OPEN_METEO_NOMBRE };
 
     try {
-      const horas = ventanaOutlook(await this.openWeather.getOutlookSlots(lat, lon), ahora);
+      const horas = recortarAFranjaRestante(await this.openWeather.getOutlookSlots(lat, lon), ahora);
       return horas.length > 0 ? { horas, fuente: 'OpenWeather' } : null;
     } catch {
       // Both sources silent, or simply out of the beach window: an empty
