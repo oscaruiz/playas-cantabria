@@ -141,8 +141,10 @@ export class GetFeaturedBeaches {
 
       // WHEN to go: best stretch of the remaining beach window, from the same
       // slots. Open-Meteo only, symmetric with the outlook above: when it is
-      // down the field is null and the interface shows nothing.
-      const ventanaDia = buildDayWindow(rain?.outlook);
+      // down the field is null and the interface shows nothing. The nowcast
+      // rides along so rain falling NOW vetoes the next hour, whatever the
+      // forecast claims.
+      const ventanaDia = buildDayWindow(rain?.outlook, new Date(), rain);
 
       const { score, subScores, tope } = computeBeachScore(
         weather,

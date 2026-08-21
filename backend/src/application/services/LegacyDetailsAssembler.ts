@@ -100,14 +100,22 @@ export class LegacyDetailsAssembler {
   private async resolverVentanaDia(
     lat: number,
     lon: number,
-    delNowcast: readonly HourlyOutlookSlot[] | null | undefined,
+    nowcast: RainNowcast | null,
   ): Promise<{ ventana: DayWindowSignal; fuente: string } | null> {
+    // The nowcast rides into the verdict on BOTH branches: rain falling now
+    // must veto the next hour even when the slots come from the OpenWeather
+    // fallback — its status can be valid while the Open-Meteo slots are not.
+    const delNowcast = nowcast?.outlook;
     if ((delNowcast?.length ?? 0) > 0) {
-      const ventana = buildDayWindow(delNowcast);
+      const ventana = buildDayWindow(delNowcast, new Date(), nowcast);
       return ventana ? { ventana, fuente: OPEN_METEO_NOMBRE } : null;
     }
     try {
-      const ventana = buildDayWindow(await this.openWeather.getOutlookSlots(lat, lon));
+      const ventana = buildDayWindow(
+        await this.openWeather.getOutlookSlots(lat, lon),
+        new Date(),
+        nowcast,
+      );
       return ventana ? { ventana, fuente: 'OpenWeather' } : null;
     } catch {
       return null;
@@ -404,7 +412,7 @@ export class LegacyDetailsAssembler {
         const ventana = await this.resolverVentanaDia(
           details.beach.latitude,
           details.beach.longitude,
-          rainSignal?.outlook,
+          rainSignal,
         );
         base.tiempoActual = {
           ...base.tiempoActual,

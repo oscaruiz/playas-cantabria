@@ -1,4 +1,4 @@
-import type { HourlyOutlookSlot } from '../entities/RainNowcast';
+import type { HourlyOutlookSlot, RainNowcast } from '../entities/RainNowcast';
 import {
   computeTemperatureScore,
   computeWindScore,
@@ -138,6 +138,7 @@ function media(valores: number[]): number {
 export function buildDayWindow(
   slots: readonly HourlyOutlookSlot[] | null | undefined,
   ahora: Date = new Date(),
+  lluviaAhora?: Pick<RainNowcast, 'status'> | null,
 ): DayWindowSignal | null {
   if (!slots || slots.length === 0) return null;
 
@@ -151,9 +152,24 @@ export function buildDayWindow(
   // window, not only when it starts inside it: dropping the in-progress slot
   // meant the window could never start "now" even when now was the best hour.
   const enFranja = ordenados.filter((s) => s.timestamp + paso > desde && s.timestamp <= hasta);
+
+  // Rain detected NOW (the aggregated multi-source nowcast) overrides the
+  // model for the next hour: these slots said "dry" while it was actually
+  // raining, so their claim is already disproved — the window must never
+  // recommend going out into rain the forecast cannot see. One hour is the
+  // minimum persistence an active event deserves; while it keeps raining the
+  // short cache TTLs slide this veto forward on every refresh. Same
+  // philosophy as the score's rain cap, and it costs zero extra calls: both
+  // callers already hold the nowcast.
+  const vetoHasta =
+    lluviaAhora?.status === 'raining' ? ahora.getTime() + 60 * 60_000 : null;
+
   const evaluados = enFranja
     .map(evaluarSlot)
-    .filter((s): s is SlotEvaluado => s !== null);
+    .filter((s): s is SlotEvaluado => s !== null)
+    .map((s) =>
+      vetoHasta != null && s.timestamp < vetoHasta ? { ...s, mojado: true, calidad: 0 } : s,
+    );
   if (evaluados.length < 2) return null;
 
   // The bar every recommended hour must clear: near the day's own best hour,

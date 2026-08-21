@@ -130,6 +130,36 @@ describe('buildDayWindow — la mejor franja del día', () => {
     expect(señal?.horasConsideradas).toBe(5);
   });
 
+  it('lluvia AHORA veta la próxima hora aunque el modelo diga seco', () => {
+    // 11:30 Madrid, lloviendo según el nowcast; la previsión (BUENA) dice
+    // seco todo el día — que es exactamente el caso en que el modelo ya ha
+    // quedado desmentido y no puede recomendar salir ya.
+    const lloviendo = new Date('2026-07-15T09:30:00Z');
+    const señal = buildDayWindow(slots([9, 10, 11, 12, 13], BUENA), lloviendo, {
+      status: 'raining',
+    });
+
+    // Los slots de las 09:00 y 10:00 UTC (en curso y siguiente) caen dentro
+    // del veto de una hora: el tramo recomendable empieza a las 13:00 Madrid.
+    expect(señal?.mejor).toEqual({ inicio: utc(11), fin: utc(14) });
+    // Y el motivo cuenta la verdad: es el tramo sin lluvia.
+    expect(señal?.motivo).toBe('sin_lluvia');
+  });
+
+  it('lloviendo y con menos de una hora de franja por delante, no hay recomendación', () => {
+    const tarde = new Date('2026-07-15T17:30:00Z'); // 19:30 Madrid
+    expect(
+      buildDayWindow(slots([17, 18], BUENA), tarde, { status: 'raining' }),
+    ).toBeNull();
+  });
+
+  it('con el nowcast seco (o ausente) el veto no existe y nada cambia', () => {
+    const señal = buildDayWindow(slots([10, 11, 12, 13, 14], BUENA), MEDIA_MANANA, {
+      status: 'dry',
+    });
+    expect(señal?.mejor).toEqual({ inicio: utc(10), fin: utc(15) });
+  });
+
   it('un tramo que cubre toda la franja restante no tiene motivo: no venció a nadie', () => {
     const señal = buildDayWindow(slots([10, 11, 12, 13, 14], BUENA), MEDIA_MANANA);
 
