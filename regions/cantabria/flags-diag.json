@@ -1,19 +1,16 @@
 {
-  "ranAt": "2026-08-21T17:55:15.427Z",
+  "ranAt": "2026-08-22T07:54:00.268Z",
   "region": "cantabria",
   "ids": 69,
   "conFicha": 69,
-  "conColor": 64,
+  "conColor": 0,
   "rechazadas403": 0,
   "estadosHttp": {
     "200": 69
   },
   "alts": {
-    "Amarilla": 16,
-    "Roja": 22,
-    "Verde": 26,
-    "No hay información": 5
+    "No hay información": 69
   },
-  "escrito": true,
-  "motivo": "captura escrita"
+  "escrito": false,
+  "motivo": "sin banderas izadas"
 }
