@@ -44,7 +44,7 @@ export const featuredLaConcha: FeaturedBeach = {
   puntuacion: 93,
   razonRanking: 'cielo despejado, viento flojo, bandera verde, mejora en las próximas horas',
   subpuntuaciones: {
-    cielo: 25, temperatura: 22, bandera: 20, viento: 15, oleaje: 6, datos: 5,
+    cielo: 25, temperatura: 22, bandera: 10, viento: 25, oleaje: 6, datos: 5,
   },
   pronostico: { direccion: 'mejora', delta: 6, causa: 'despeja' },
   topeAplicado: null,
@@ -234,5 +234,5 @@ export const featuredResponse: FeaturedBeachesResponse = {
   revisar: [featuredBerria, featuredLangre],
   resumenTodas,
   // Scale of each factor, sent once for the whole response.
-  maximos: { cielo: 25, temperatura: 25, bandera: 20, viento: 15, oleaje: 10, datos: 5 },
+  maximos: { cielo: 25, temperatura: 25, bandera: 10, viento: 25, oleaje: 10, datos: 5 },
 };

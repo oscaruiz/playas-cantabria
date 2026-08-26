@@ -23,7 +23,7 @@ const TOPES: Record<'lluvia' | 'lluvia_prevista', { clave: ClaveTexto; valor: nu
 
 /** Reachable maximum of each factor when the backend does not send `maximos`. */
 const MAXIMOS_POR_DEFECTO: SubPuntuaciones = {
-  cielo: 25, temperatura: 25, bandera: 20, viento: 15, oleaje: 10, datos: 5,
+  cielo: 25, temperatura: 25, bandera: 10, viento: 25, oleaje: 10, datos: 5,
 };
 
 /**
@@ -39,8 +39,8 @@ const MAXIMOS_POR_DEFECTO: SubPuntuaciones = {
 const FACTORES: Array<{ campo: keyof SubPuntuaciones; clave: ClaveTexto }> = [
   { campo: 'cielo', clave: 'detalle.scoreInfo.sol' },
   { campo: 'temperatura', clave: 'detalle.scoreInfo.temp' },
-  { campo: 'bandera', clave: 'detalle.scoreInfo.bandera' },
   { campo: 'viento', clave: 'detalle.scoreInfo.viento' },
+  { campo: 'bandera', clave: 'detalle.scoreInfo.bandera' },
   { campo: 'oleaje', clave: 'detalle.scoreInfo.oleaje' },
   { campo: 'datos', clave: 'detalle.scoreInfo.datos' },
 ];

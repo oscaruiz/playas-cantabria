@@ -86,7 +86,7 @@ export interface ForecastEnrichment {
 export const LEGACY_FLAG_OPERATORS: readonly string[] = ['Cruz Roja'];
 
 /** Weight of the flag factor in the 0-100 total, and the total itself. */
-const FLAG_MAX = 20;
+const FLAG_MAX = 10;
 const SCORE_MAX = 100;
 
 /**
@@ -99,21 +99,21 @@ export const SUBSCORE_MAX = {
   cielo: 25,
   temperatura: 25,
   bandera: FLAG_MAX,
-  viento: 15,
+  viento: 25,
   oleaje: 10,
   datos: 5,
 } as const;
 
 /**
  * Reachable maximum when the region has no flag service: the flag factor
- * disappears (-20) and `datos` can never award the 2 points that came from
+ * disappears (-10) and `datos` can never award the 2 points that came from
  * having a flag reading (-2).
  */
 const SCORE_MAX_WITHOUT_FLAG = SCORE_MAX - FLAG_MAX - 2;
 
 /**
  * Rescales to 0-100 the score of a region with no flag service. Without this
- * every beach in such a region would lose the same ~22 points, and the bands
+ * every beach in such a region would lose the same ~12 points, and the bands
  * (green ≥60) would read the absence of an operator as bad conditions —
  * penalising the whole region for something that has nothing to do with the
  * beach.
@@ -254,7 +254,7 @@ export function computeTemperatureScore(tempC: number | null): number {
 }
 
 // ---------------------------------------------------------------------------
-// Flag score (0-20)
+// Flag score (0-10)
 // ---------------------------------------------------------------------------
 
 /**
@@ -262,22 +262,22 @@ export function computeTemperatureScore(tempC: number | null): number {
  * is the whole point: there is a flag flying, what is missing is our reading of
  * it. Docking points for it punished the beach for a failure of ours — and
  * punished it HARDER than a beach with no lifeguards, which walks away with the
- * neutral 10. Ignorance is not evidence of bad conditions.
+ * neutral 5. Ignorance is not evidence of bad conditions.
  *
  * Safety does not rest on this number: a stale black or red keeps its colour
  * (see `GetFeaturedBeaches.getFlagForBeach`) and keeps excluding the beach, so
  * what degrades to `unknown` is only ever a green or a yellow.
  */
 const FLAG_SCORE: Record<FlagColor, number> = {
-  green: 20,
-  yellow: 10,
+  green: 10,
+  yellow: 5,
   red: 0,
   black: 0,
-  unknown: 10,
+  unknown: 5,
 };
 
 /** Neutral when there is nothing to judge: no service, or no reading of it. */
-const FLAG_NEUTRAL = 10;
+const FLAG_NEUTRAL = 5;
 
 export function computeFlagScore(flag: FlagStatus | null): number {
   if (!flag || !flag.color) return FLAG_NEUTRAL; // no CR coverage → neutral
@@ -285,16 +285,16 @@ export function computeFlagScore(flag: FlagStatus | null): number {
 }
 
 // ---------------------------------------------------------------------------
-// Wind score (0-15)
+// Wind score (0-25)
 // ---------------------------------------------------------------------------
 
 export function computeWindScore(windSpeedMs: number | null): number {
-  if (windSpeedMs == null) return 7;
-  if (windSpeedMs <= 3) return 15;
-  if (windSpeedMs <= 5) return interpolate(windSpeedMs, 3, 5, 15, 12);
-  if (windSpeedMs <= 8) return interpolate(windSpeedMs, 5, 8, 12, 8);
-  if (windSpeedMs <= 12) return interpolate(windSpeedMs, 8, 12, 8, 3);
-  return interpolate(Math.min(windSpeedMs, 20), 12, 20, 3, 0);
+  if (windSpeedMs == null) return 12;
+  if (windSpeedMs <= 3) return 25;
+  if (windSpeedMs <= 5) return interpolate(windSpeedMs, 3, 5, 25, 20);
+  if (windSpeedMs <= 8) return interpolate(windSpeedMs, 5, 8, 20, 13);
+  if (windSpeedMs <= 12) return interpolate(windSpeedMs, 8, 12, 13, 5);
+  return interpolate(Math.min(windSpeedMs, 20), 12, 20, 5, 0);
 }
 
 // ---------------------------------------------------------------------------
@@ -417,7 +417,7 @@ export function computeBeachScore(
     cielo: computeSkyScore(weather),
     temperatura: computeTemperatureScore(weather?.temperatureC ?? null),
     // 0 and out of the sum with no operator in the region: there is no flag to
-    // judge, so a neutral 10/20 would be inventing a middling reading.
+    // judge, so a neutral 5/10 would be inventing a middling reading.
     bandera: hasFlagService ? computeFlagScore(effectiveFlag) : 0,
     viento: computeWindScore(weather?.windSpeedMs ?? null),
     oleaje: computeWavesScore(enrichment, weather, isSurf),
@@ -573,7 +573,7 @@ export function buildCautionReason(
   const forecastPart = rainPart ? null : rainForecastReasonFragment(rainForecast);
   if (forecastPart) parts.push(forecastPart);
 
-  if (subScores.viento <= 3) parts.push('viento fuerte');
+  if (subScores.viento <= 5) parts.push('viento fuerte');
   if (subScores.oleaje <= 2) parts.push('oleaje fuerte');
   if (subScores.cielo <= 3 && !rainPart && !forecastPart) parts.push('lluvia o tormenta');
   if (subScores.temperatura <= 5) parts.push('temperatura baja');
@@ -632,7 +632,7 @@ export function buildDowngradeFactors(
   else if (flag?.color === 'red') parts.push('bandera roja');
   else if (!flag?.color && operador && !hasFlagStation) parts.push(`sin cobertura ${operador}`);
 
-  if (subScores.viento <= 5) parts.push('viento fuerte');
+  if (subScores.viento <= 8) parts.push('viento fuerte');
   if (subScores.oleaje <= 3) parts.push('oleaje fuerte');
 
   if (outlook?.direccion === 'empeora') {

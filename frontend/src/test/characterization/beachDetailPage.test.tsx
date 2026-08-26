@@ -556,7 +556,7 @@ describe('PlayaDetalle — puntuación', () => {
 
     expect(valores[0]).toBe('cielo despejado');   // cielo
     expect(valores[1]).toBe('22°');               // temperatura
-    expect(valores[2]).toBe('Verde');             // bandera
+    expect(valores[3]).toBe('Verde');             // bandera (viento va antes: pesa más)
     expect(valores[4]).toBe('marejadilla');       // oleaje
     expect(valores[5]).toBe('clima y bandera');   // datos
   });

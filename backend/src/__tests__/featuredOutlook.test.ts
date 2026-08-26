@@ -30,7 +30,7 @@ function tramos(nubes: number): HourlyOutlookSlot[] {
     timestamp: AHORA.getTime() + (i + 1) * 3_600_000,
     cloudCoverPct: nubes,
     temperatureC: 20,
-    windSpeedMs: 3.3,
+    windSpeedMs: 5.4,
   }));
 }
 
@@ -55,7 +55,7 @@ function construir(rain: RainNowcast) {
       temperatureC: 19.91,
       description: 'nubes',
       icon: '04d',
-      windSpeedMs: 3.34,
+      windSpeedMs: 5.4,
       windDirectionDeg: 0,
       humidityPct: 70,
       pressureHPa: 1015,
@@ -130,7 +130,7 @@ describe('GetFeaturedBeaches — previsión de las próximas horas', () => {
           timestamp: medianoche.getTime() + (i + 1) * 3_600_000,
           cloudCoverPct: 0,
           temperatureC: 20,
-          windSpeedMs: 3.3,
+          windSpeedMs: 5.4,
         })),
       ),
     ).execute();

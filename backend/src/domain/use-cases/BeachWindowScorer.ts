@@ -38,7 +38,7 @@ const UMBRAL_CALIDAD = 60;
  * How far below the day's own peak an hour may fall and still belong to the
  * best stretch. The bar is RELATIVE on purpose: an absolute one cannot see the
  * change that matters most on this coast — clear sky and 24° with a gale still
- * normalizes to ~77 (wind is 15 of 65 points), so "a partir de las 17:00
+ * normalizes to ~67 (wind is 25 of 75 points), so "a partir de las 17:00
  * aumenta el viento" would never be said. Twelve points keeps one sky band
  * (01d→02d, −4.6) and a light breeze pickup (−4.6) inside the stretch, and
  * pushes a closed sky (−13.8) or a real blow (−20) out of it.

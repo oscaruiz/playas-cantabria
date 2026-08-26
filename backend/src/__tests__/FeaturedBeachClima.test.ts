@@ -58,7 +58,7 @@ describe('FeaturedBeachMapper.descripcionClima — observación real con priorid
 });
 
 describe('buildRankingReason — palabra de cielo desde la observación', () => {
-  const subScores: SubScores = { cielo: 22, temperatura: 22, bandera: 20, viento: 15, oleaje: 10, datos: 5 };
+  const subScores: SubScores = { cielo: 22, temperatura: 22, bandera: 10, viento: 25, oleaje: 10, datos: 5 };
 
   it('prefiere la observación OpenWeather sobre enrichment.summary', () => {
     const reason = buildRankingReason(subScores, makeWeather({ description: 'algo de nubes' }), null, makeEnrichment({ summary: 'Despejado' }));
@@ -107,7 +107,7 @@ describe('FeaturedBeachMapper — desglose, pronóstico y tope', () => {
     const dto = FeaturedBeachMapper.toDTO([makeResult({ subScores })], [], [], 1750000000000);
 
     expect(dto.maximos).toEqual({
-      cielo: 25, temperatura: 25, bandera: 20, viento: 15, oleaje: 10, datos: 5,
+      cielo: 25, temperatura: 25, bandera: 10, viento: 25, oleaje: 10, datos: 5,
     });
     expect(Object.keys(dto.playas[0])).not.toContain('maximos');
   });

@@ -126,7 +126,7 @@ describe('GetFeaturedBeaches — banderas fuera de horario', () => {
 
   it('sigue contando la bandera dentro del horario', async () => {
     // Un horario que cubre todo el día: la bandera es vigente se ejecute cuando
-    // se ejecute la suite, y debe sumar sus 20 puntos.
+    // se ejecute la suite, y debe sumar sus 10 puntos.
     const vigente: FlagStatus = {
       ...banderaFueraDeHorario(new Date()),
       schedule: '00:00 - 23:59',

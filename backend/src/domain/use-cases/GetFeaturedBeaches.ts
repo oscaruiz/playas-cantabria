@@ -293,13 +293,13 @@ export class GetFeaturedBeaches {
    * That last part is the point. Outside lifeguard hours the interface already
    * refuses to paint a colour, but the score and the ranking reason were still
    * built from the raw flag: at midnight the app published `bandera: null` and,
-   * in the same object, "bandera verde" worth 20 points. It contradicted
+   * in the same object, "bandera verde" worth 10 points. It contradicted
    * itself, and it inflated the rating with a flag captured hours earlier.
    *
    * Discarding is only right when there is NO service. A reading that goes
    * stale during the watch means the delivery broke, not that the beach was
    * cleared: turning it into `null` there let a lost black flag score as
-   * "no coverage" (neutral 10/20) and re-enter the ranking. So a restrictive
+   * "no coverage" (neutral 5/10) and re-enter the ranking. So a restrictive
    * colour survives its own staleness — it keeps excluding until something
    * tells us it was taken down — and any other stale colour degrades to
    * `unknown`, which neither publishes a colour nor scores as good.

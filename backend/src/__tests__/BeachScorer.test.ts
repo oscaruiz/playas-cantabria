@@ -154,11 +154,11 @@ describe('computeTemperatureScore', () => {
 
 describe('computeFlagScore', () => {
   it('returns max for green', () => {
-    expect(computeFlagScore(makeFlag({ color: 'green' }))).toBe(20);
+    expect(computeFlagScore(makeFlag({ color: 'green' }))).toBe(10);
   });
 
-  it('returns 10 for yellow', () => {
-    expect(computeFlagScore(makeFlag({ color: 'yellow' }))).toBe(10);
+  it('returns 5 for yellow', () => {
+    expect(computeFlagScore(makeFlag({ color: 'yellow' }))).toBe(5);
   });
 
   it('returns 0 for red and black', () => {
@@ -167,14 +167,14 @@ describe('computeFlagScore', () => {
   });
 
   it('returns neutral for null (no Cruz Roja coverage)', () => {
-    expect(computeFlagScore(null)).toBe(10);
+    expect(computeFlagScore(null)).toBe(5);
   });
 
   it('una bandera que no podemos leer puntúa igual que no tener servicio', () => {
     // "Hay bandera, lo que no tenemos es información": restar por eso castigaba
     // a la playa por un fallo nuestro, y encima MÁS que a una playa sin
-    // vigilancia, que se llevaba el 10 neutro.
-    expect(computeFlagScore(makeFlag({ color: 'unknown' }))).toBe(10);
+    // vigilancia, que se llevaba el 5 neutro.
+    expect(computeFlagScore(makeFlag({ color: 'unknown' }))).toBe(5);
     expect(computeFlagScore(makeFlag({ color: 'unknown' }))).toBe(computeFlagScore(null));
   });
 });
@@ -185,8 +185,8 @@ describe('computeFlagScore', () => {
 
 describe('computeWindScore', () => {
   it('returns max for calm', () => {
-    expect(computeWindScore(0)).toBe(15);
-    expect(computeWindScore(2)).toBe(15);
+    expect(computeWindScore(0)).toBe(25);
+    expect(computeWindScore(2)).toBe(25);
   });
 
   it('decreases with stronger wind', () => {
@@ -199,7 +199,7 @@ describe('computeWindScore', () => {
   });
 
   it('returns neutral for null', () => {
-    expect(computeWindScore(null)).toBe(7);
+    expect(computeWindScore(null)).toBe(12);
   });
 });
 
@@ -575,9 +575,9 @@ describe('región sin servicio de banderas', () => {
     const sinOperador = computeBeachScore(
       buenTiempo(), null, enrichment, undefined, null, null, SIN_OPERADOR,
     ).score;
-    // The 12 points it cannot reach (10 neutral flag + the 2 from "datos"
+    // The 7 points it cannot reach (5 neutral flag + the 2 from "datos"
     // that need a reading) are the ones that used to cap a whole region.
-    expect(conOperador).toBe(88);
+    expect(conOperador).toBe(93);
     expect(sinOperador).toBe(100);
   });
 
@@ -835,7 +835,7 @@ describe('computeBeachScore — el tope que se aplicó', () => {
  */
 describe('buildRankingReason — de noche no hay sol que nombrar', () => {
   const base: SubScores = {
-    cielo: 25, temperatura: 25, bandera: 20, viento: 15, oleaje: 10, datos: 5,
+    cielo: 25, temperatura: 25, bandera: 10, viento: 25, oleaje: 10, datos: 5,
   };
   const cielo = (icon: string, description: string): Weather => ({
     source: 'OpenWeather',
