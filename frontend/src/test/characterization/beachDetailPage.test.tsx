@@ -20,7 +20,7 @@
  */
 
 import React from 'react';
-import { fireEvent, screen } from '@testing-library/react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 import type { PlayaDetalle, LluviaActual } from '../../services/api';
 import PlayaDetallePage from '../../pages/PlayaDetalle';
 import { renderWithProviders } from '../render';
@@ -791,5 +791,46 @@ describe('PlayaDetalle — estados', () => {
     await screen.findByText('Hoy');
 
     expect(container.querySelector('.error-container')).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+
+/**
+ * LAST on purpose: it swaps the `/featured` response, and the 5 min module
+ * cache in `services/api.ts` would hand that swapped ranking to any test that
+ * ran after it (same debt the states file documents).
+ */
+describe('PlayaDetalle — tope publicado', () => {
+  it('la nota del tope enseña el valor que publica el backend, no el 59 a fuego', async () => {
+    // The forecast cap is graded now: rain 3 h away caps at 75, not 59.
+    const conTope = {
+      ...featuredResponse,
+      resumenTodas: featuredResponse.resumenTodas.map((b) =>
+        b.codigo === '3908503'
+          ? { ...b, puntuacion: 75, topeAplicado: 'lluvia_prevista' as const, topeValor: 75 }
+          : b,
+      ),
+    };
+    // `/featured` is cached in `services/api.ts` for 5 min against Date.now(),
+    // and earlier tests filled it under the REAL clock. Stepping the fake clock
+    // past that (real now + TTL) is what lets THIS response in.
+    jest.useRealTimers();
+    const despues = new Date(Date.now() + 10 * 60_000);
+    jest.useFakeTimers().setSystemTime(despues);
+    installFetchMock([
+      route(FEATURED, { json: conTope }),
+      route(DETAILS, { json: buildAemetDetail(despues) }),
+    ]);
+
+    const { container } = renderDetalle('3908503');
+    await screen.findByText('Puntuación de hoy');
+    // The score arrives from the (uncached) /featured after the detail does.
+    await waitFor(() => expect(container.querySelector('.score-badge-num')).toHaveTextContent('75'));
+    fireEvent.click(screen.getByText('Cómo se calcula'));
+
+    expect(container.querySelector('.pd-score-tope')).toHaveTextContent(
+      'Se espera lluvia: la nota se limita a 75',
+    );
   });
 });

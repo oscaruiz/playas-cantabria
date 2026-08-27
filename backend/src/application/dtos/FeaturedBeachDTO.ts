@@ -86,6 +86,8 @@ export interface FeaturedBeachDTO {
   subpuntuaciones: SubPuntuacionesDTO | null;
   pronostico: PronosticoDTO | null;
   topeAplicado: TopeDTO | null;
+  /** The cap value behind `topeAplicado`; null when no cap clipped the score. */
+  topeValor: number | null;
   /** WHEN to go today. Null outside the beach window, with the hourly source
    *  down, or when no stretch is good enough to recommend. */
   ventanaDia: VentanaDiaDTO | null;

@@ -15,6 +15,7 @@ import {
   ForecastEnrichment,
   RAIN_SCORE_CAP,
   RAIN_FORECAST_SCORE_CAP,
+  rainForecastCap,
 } from '../domain/use-cases/BeachScorer';
 import { Weather } from '../domain/entities/Weather';
 import { FlagStatus } from '../domain/entities/Flag';
@@ -475,12 +476,72 @@ describe('computeBeachScore con lluvia prevista', () => {
     enrichment: makeEnrichment({ waves: 'débil', uvIndex: 4 }),
   });
 
-  it('capa a RAIN_FORECAST_SCORE_CAP (59): amarillo suave, por encima del 55 de lluvia activa', () => {
+  it('inminente (1 h): capa a RAIN_FORECAST_SCORE_CAP (59), por encima del 55 de lluvia activa', () => {
     const { weather, flag, enrichment } = perfect();
     const r = computeBeachScore(weather, flag, enrichment, undefined, null, makeForecastSignal());
     expect(r.score).toBe(RAIN_FORECAST_SCORE_CAP);
     expect(r.score).toBeLessThan(60);
     expect(r.score).toBeGreaterThan(RAIN_SCORE_CAP);
+    expect(r.topeValor).toBe(RAIN_FORECAST_SCORE_CAP);
+  });
+
+  describe('el tope se relaja con la distancia (rainForecastCap)', () => {
+    it.each([
+      [7, 100],
+      [6, 100],
+      [5, 92],
+      [4, 84],
+      [3, 75],
+      [2, 67],
+      [1, 59],
+      [0, 59],
+      [-2, 59],
+    ])('%s h → tope %s', (horas, tope) => {
+      expect(Math.round(rainForecastCap(horas))).toBe(tope);
+    });
+
+    it('sin hora (sólo texto AEMET) se trata como ~3 h → 75', () => {
+      expect(Math.round(rainForecastCap(null))).toBe(75);
+    });
+  });
+
+  it('lluvia a 7 h: se avisa pero no se penaliza', () => {
+    const { weather, flag, enrichment } = perfect();
+    const now = Date.now();
+    const lejana = makeForecastSignal({ firstAt: now + 7 * 3_600_000 });
+    const seca = computeBeachScore(weather, flag, enrichment, undefined, null, null, undefined, undefined, now);
+    const r = computeBeachScore(weather, flag, enrichment, undefined, null, lejana, undefined, undefined, now);
+    expect(r.score).toBe(seca.score);
+    expect(r.tope).toBeNull();
+    expect(r.topeValor).toBeNull();
+    expect(buildRankingReason(r.subScores, weather, flag, enrichment, null, lejana)).toContain('lluvia prevista');
+  });
+
+  it('lluvia a 3 h: tope intermedio de 75', () => {
+    const { weather, flag, enrichment } = perfect();
+    const now = Date.now();
+    const media = makeForecastSignal({ firstAt: now + 3 * 3_600_000 });
+    const r = computeBeachScore(weather, flag, enrichment, undefined, null, media, undefined, undefined, now);
+    expect(r.score).toBe(75);
+    expect(r.tope).toBe('lluvia_prevista');
+    expect(r.topeValor).toBe(75);
+  });
+
+  it('sólo texto AEMET (sin hora): mismo 75 intermedio', () => {
+    const { weather, flag, enrichment } = perfect();
+    const texto = makeForecastSignal({ firstAt: null, mmMax: null, sources: ['AEMET'] });
+    const r = computeBeachScore(weather, flag, enrichment, undefined, null, texto);
+    expect(r.score).toBe(75);
+    expect(r.tope).toBe('lluvia_prevista');
+  });
+
+  it('la lluvia ACTIVA gana aunque la prevista esté lejos', () => {
+    const { weather, flag, enrichment } = perfect();
+    const lejana = makeForecastSignal({ firstAt: Date.now() + 7 * 3_600_000 });
+    const r = computeBeachScore(weather, flag, enrichment, undefined, makeRain(), lejana);
+    expect(r.score).toBe(RAIN_SCORE_CAP);
+    expect(r.tope).toBe('lluvia');
+    expect(r.topeValor).toBe(RAIN_SCORE_CAP);
   });
 
   it('la lluvia ACTIVA gana a la prevista (55 < 59)', () => {

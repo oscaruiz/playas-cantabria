@@ -542,6 +542,8 @@ export interface FeaturedBeach {
   subpuntuaciones?: SubPuntuaciones | null;
   pronostico?: Pronostico | null;
   topeAplicado?: 'lluvia' | 'lluvia_prevista' | null;
+  /** The cap value behind `topeAplicado`. Older backends do not send it. */
+  topeValor?: number | null;
   oleaje?: string | null;
   ventanaDia?: VentanaDia | null;
   /**

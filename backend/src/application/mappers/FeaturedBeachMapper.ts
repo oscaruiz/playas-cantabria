@@ -26,6 +26,7 @@ export interface FeaturedBeachResult {
   subScores?: SubScores | null;
   outlook?: OutlookSignal | null;
   tope?: ScoreCap | null;
+  topeValor?: number | null;
   /** Best stretch of the remaining beach window. Absent on the excluded path. */
   ventanaDia?: DayWindowSignal | null;
   /** Aggregated rain nowcast; the score already reads it, the DTO publishes it. */
@@ -122,6 +123,7 @@ export class FeaturedBeachMapper {
           }
         : null,
       topeAplicado: r.tope ?? null,
+      topeValor: r.topeValor ?? null,
       ventanaDia: mapVentanaDia(r.ventanaDia),
       oleaje: r.enrichment?.waves ?? null,
       lluvia: r.rain ? LegacyDetailsMapper.mapLluvia(r.rain) : null,

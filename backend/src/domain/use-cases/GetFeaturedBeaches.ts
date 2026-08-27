@@ -146,7 +146,7 @@ export class GetFeaturedBeaches {
       // forecast claims.
       const ventanaDia = buildDayWindow(rain?.outlook, new Date(), rain);
 
-      const { score, subScores, tope } = computeBeachScore(
+      const { score, subScores, tope, topeValor } = computeBeachScore(
         weather,
         flag,
         enrichment,
@@ -181,6 +181,7 @@ export class GetFeaturedBeaches {
         subScores,
         outlook: resolvePublishedOutlook(outlook, rainForecast),
         tope,
+        topeValor,
         ventanaDia,
       };
 

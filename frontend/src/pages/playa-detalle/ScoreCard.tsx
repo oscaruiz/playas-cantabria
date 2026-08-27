@@ -15,7 +15,11 @@ import {
   sinFragmentoDePronostico,
 } from '../../shared/i18n/apiText';
 
-/** Cap values applied by the backend (`RAIN_SCORE_CAP` / `RAIN_FORECAST_SCORE_CAP`). */
+/**
+ * Cap texts, with the value the backend used to apply when it did not send
+ * `topeValor`. The forecast cap is graded now (59 imminent → none at 6 h), so
+ * the published value wins; 59 is only the floor an old backend enforced.
+ */
 const TOPES: Record<'lluvia' | 'lluvia_prevista', { clave: ClaveTexto; valor: number }> = {
   lluvia: { clave: 'detalle.scoreInfo.topeLluvia', valor: 55 },
   lluvia_prevista: { clave: 'detalle.scoreInfo.topeLluviaPrevista', valor: 59 },
@@ -67,7 +71,9 @@ const ScoreCard: React.FC<{
   const pronostico = puntuada.pronostico ?? null;
   const desglose = puntuada.subpuntuaciones ?? null;
   const escala = maximos ?? MAXIMOS_POR_DEFECTO;
-  const tope = puntuada.topeAplicado ? TOPES[puntuada.topeAplicado] : null;
+  const tope = puntuada.topeAplicado
+    ? { ...TOPES[puntuada.topeAplicado], valor: puntuada.topeValor ?? TOPES[puntuada.topeAplicado].valor }
+    : null;
 
   const razon = pronostico
     ? sinFragmentoDePronostico(puntuada.razonRanking)

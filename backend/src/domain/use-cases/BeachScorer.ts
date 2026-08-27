@@ -15,11 +15,31 @@ import type { OutlookSignal } from './WeatherOutlook';
 export const RAIN_SCORE_CAP = 55;
 
 /**
- * Cap when rain is FORECAST (next ~6h or today per AEMET) but it is not yet
- * raining: also yellow (<60), but above the active-rain cap → hierarchy
- * raining (55) < going to rain (59) < dry.
+ * Cap when rain is FORECAST and IMMINENT but it is not yet raining: also
+ * yellow (<60), but above the active-rain cap → hierarchy raining (55) <
+ * about to rain (59) < dry. This is the floor of `rainForecastCap`: the
+ * further away the rain, the higher the cap, until it stops mattering.
  */
 export const RAIN_FORECAST_SCORE_CAP = 59;
+
+/**
+ * Forecast rain this far away (hours) does not cap at all — it is still
+ * NAMED in the reasons ("lluvia prevista"), but a beach with a fine morning
+ * and showers at 16:00 must outscore one that is grey all day. Open-Meteo
+ * looks 16 h ahead, so without this a single evening slot painted the whole
+ * coast yellow from breakfast.
+ */
+export const RAIN_FORECAST_FREE_HOURS = 6;
+
+/** Forecast rain this close (hours) gets the full `RAIN_FORECAST_SCORE_CAP`. */
+export const RAIN_FORECAST_FULL_HOURS = 1;
+
+/**
+ * Hours assumed when the signal has no time at all (AEMET text: "chubascos
+ * por la tarde"). Rain is coming today, we just do not know when: neither
+ * ignored nor treated as imminent.
+ */
+export const RAIN_FORECAST_UNKNOWN_HOURS = 3;
 
 /**
  * How much the next few hours can move the score, up or down. Eight points is
@@ -146,6 +166,37 @@ export interface ScoringResult {
    * capped" instead of leaving the numbers looking broken.
    */
   tope: ScoreCap | null;
+  /**
+   * The cap value that clipped the score, null when none did. Published so
+   * the interface can say "limited to 75" instead of hardcoding a number the
+   * graded forecast cap no longer honours.
+   */
+  topeValor: number | null;
+}
+
+// ---------------------------------------------------------------------------
+// Forecast rain cap, graded by distance
+// ---------------------------------------------------------------------------
+
+/** Hours until the first wet slot; null when the signal carries no time. */
+export function hoursUntilRain(forecast: RainForecastSignal, now: number): number | null {
+  if (forecast.firstAt == null) return null;
+  return (forecast.firstAt - now) / 3_600_000;
+}
+
+/**
+ * Cap for forecast rain as a function of how far away it is. At or beyond
+ * `RAIN_FORECAST_FREE_HOURS` there is no cap (SCORE_MAX); from there it falls
+ * linearly to `RAIN_FORECAST_SCORE_CAP` at `RAIN_FORECAST_FULL_HOURS` and
+ * stays there for anything closer — including a first slot already in the
+ * past, which remains "forecast" until the nowcast actually sees rain (and
+ * that one caps harder, at RAIN_SCORE_CAP).
+ */
+export function rainForecastCap(hours: number | null): number {
+  const h = hours ?? RAIN_FORECAST_UNKNOWN_HOURS;
+  const span = RAIN_FORECAST_FREE_HOURS - RAIN_FORECAST_FULL_HOURS;
+  const t = Math.max(0, Math.min(1, (h - RAIN_FORECAST_FULL_HOURS) / span));
+  return RAIN_FORECAST_SCORE_CAP + (SCORE_MAX - RAIN_FORECAST_SCORE_CAP) * t;
 }
 
 // ---------------------------------------------------------------------------
@@ -405,6 +456,8 @@ export function computeBeachScore(
   rainForecast?: RainForecastSignal | null,
   flagOperators: readonly string[] = LEGACY_FLAG_OPERATORS,
   outlook?: OutlookSignal | null,
+  /** Injectable clock: the forecast cap depends on how far away the rain is. */
+  now: number = Date.now(),
 ): ScoringResult {
   const isSurf = attributes?.surf === true;
   const hasFlagService = flagOperators.length > 0;
@@ -442,11 +495,17 @@ export function computeBeachScore(
   if (delta > 0) score += delta;
 
   let tope: ScoreCap | null = null;
+  let topeValor: number | null = null;
 
-  // FORECAST rain (next few hours): soft yellow.
-  if (rainForecast?.expected && score > RAIN_FORECAST_SCORE_CAP) {
-    score = RAIN_FORECAST_SCORE_CAP;
-    tope = 'lluvia_prevista';
+  // FORECAST rain: a cap that tightens as the rain gets closer. Far enough
+  // away it is SCORE_MAX and never bites — the reason still names it.
+  if (rainForecast?.expected) {
+    const cap = Math.round(rainForecastCap(hoursUntilRain(rainForecast, now)));
+    if (score > cap) {
+      score = cap;
+      tope = 'lluvia_prevista';
+      topeValor = cap;
+    }
   }
 
   // Rain detected now (multi-source signal): the beach can never be "good",
@@ -454,6 +513,7 @@ export function computeBeachScore(
   if (rain?.status === 'raining' && score > RAIN_SCORE_CAP) {
     score = RAIN_SCORE_CAP;
     tope = 'lluvia';
+    topeValor = RAIN_SCORE_CAP;
   }
 
   // A DETERIORATION lands after the caps, so it counts below them too. The
@@ -469,7 +529,7 @@ export function computeBeachScore(
   // put a score outside it into the API, the bands or the map colours.
   score = Math.max(0, Math.min(SCORE_MAX, score));
 
-  return { score, subScores, tope };
+  return { score, subScores, tope, topeValor };
 }
 
 // ---------------------------------------------------------------------------

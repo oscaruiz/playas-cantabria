@@ -175,7 +175,9 @@ describe('GetFeaturedBeaches — lluvia prevista sobre un cielo que se abre', ()
   function conLluviaPrevista(): RainNowcast {
     return {
       ...nowcast(tramos(0)),
-      upcoming: { expected: true, firstAt: AHORA.getTime() + 2 * 3_600_000, mmMax: 1.2 },
+      // One hour away: close enough for the full 59 cap. Further out the cap
+      // relaxes (2 h → 67) and the 67 the sky bonus reaches would slip under it.
+      upcoming: { expected: true, firstAt: AHORA.getTime() + 1 * 3_600_000, mmMax: 1.2 },
     };
   }
 
