@@ -18,6 +18,7 @@
 import React from 'react';
 import { fireEvent, screen } from '@testing-library/react';
 import HomePage from '../../pages/HomePage';
+import { recargarFavoritas } from '../../modules/favorites';
 import { renderWithProviders } from '../render';
 import { installFetchMock, restoreFetch, route, deferred, RouteSpec } from '../http/fakeFetch';
 import { beachesResponse } from '../fixtures/beaches';
@@ -35,6 +36,39 @@ afterEach(() => {
 });
 
 describe('HomePage — estados', () => {
+  it('no pinta las favoritas hasta que /featured termina, y sí cuando falla', async () => {
+    // Seeded straight into storage: the catalog arrives at once (local
+    // fallback) and used to paint this section alone above the spinner.
+    localStorage.setItem(
+      'playas:favoritas',
+      JSON.stringify({ version: 1, beachCodes: [beachesResponse[0].codigo] }),
+    );
+    recargarFavoritas();
+
+    const pending = deferred<RouteSpec>();
+    installFetchMock([
+      route(FEATURED, () => pending.promise),
+      route(BEACHES, { json: beachesResponse }),
+    ]);
+
+    renderWithProviders(<HomePage />, { route: '/' });
+
+    expect(await screen.findByText('7 playas')).toBeInTheDocument();
+    expect(screen.getByText('Buscando las mejores playas cerca de ti...')).toBeInTheDocument();
+    expect(screen.queryByText('Tus playas favoritas')).not.toBeInTheDocument();
+
+    // Rejected, not resolved, so the cache stays empty for the next cases.
+    // The section still shows on error: it depends on the ranking's timing,
+    // not on its fate.
+    pending.reject(new Error('backend caído'));
+
+    expect(await screen.findByText('Tus playas favoritas')).toBeInTheDocument();
+    expect(screen.getByText('No se pudieron cargar las condiciones actuales')).toBeInTheDocument();
+
+    localStorage.removeItem('playas:favoritas');
+    recargarFavoritas();
+  });
+
   it('muestra el mensaje de búsqueda y da paso al error si falla', async () => {
     const pending = deferred<RouteSpec>();
     installFetchMock([

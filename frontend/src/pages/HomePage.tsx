@@ -472,8 +472,10 @@ const HomePage: React.FC = () => {
         />
 
         <div className="hp-body">
-          {/* Favorites first — independent of the featured ranking's fate. */}
-          {favoritasEnHome.length > 0 && (
+          {/* Favorites first — independent of the featured ranking's fate
+              (they still show if it fails), but not of its timing: painted
+              alone above the spinner they looked like the whole page. */}
+          {!featuredLoading && favoritasEnHome.length > 0 && (
             <section className="hp-section hp-section--favoritas">
               <h2 className="section-kicker">{t('home.favoritas')}</h2>
               <div className="hp-alt-list">
