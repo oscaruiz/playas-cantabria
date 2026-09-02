@@ -17,6 +17,7 @@ export interface DiagRoutesDeps {
  * /api/_diag/* — diagnostics ALWAYS on (without DEBUG_WEATHER).
  * - GET /api/_diag/version    -> deployed commit (Render) to know which build is live.
  * - GET /api/_diag/flag/:id   -> real result of the Cruz Roja scrape from the server.
+ * - GET /api/_diag/flags      -> edad del fichero de banderas y estado del rescate.
  * - GET /api/_diag/metrics    -> external quota consumption + cache effectiveness.
  * - GET /api/_diag/sky        -> what the observed sky is (or would be) correcting.
  * - GET /api/_diag/providers  -> live probe of every provider from this IP.
@@ -53,6 +54,22 @@ export function createDiagRouter(deps: DiagRoutesDeps): Router {
       ...skyCorrectionMetrics.snapshot(),
       now: new Date().toISOString(),
     });
+  });
+
+  /**
+   * Entrega de banderas: edad del fichero pre-scrapeado y estado del barrido de
+   * rescate. Responde en una peticion lo que el 1-sep-2026 hubo que sacar de git.
+   */
+  router.get('/flags', async (_req: Request, res: Response, next: NextFunction) => {
+    try {
+      res.setHeader('Cache-Control', 'no-store');
+      res.json({
+        ...(await deps.flagProvider.snapshotEntrega()),
+        now: new Date().toISOString(),
+      });
+    } catch (e) {
+      next(e);
+    }
   });
 
   router.get('/version', (_req: Request, res: Response) => {

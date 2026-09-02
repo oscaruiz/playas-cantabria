@@ -216,6 +216,16 @@ caché que lo sirvió todo, función ya muerta— no contiene ningún fallo que 
 de clave y RSS. Es la única forma fiable de saber a qué distancia se está de los límites gratuitos
 (OpenWeather 60/min y 1M/mes, Open-Meteo 10k/día).
 
+`GET /api/_diag/flags` responde la edad del `flags.json` cargado y el estado del **barrido de
+rescate**: `ficheroEdadHoras`, `proximoBarridoEnSeg` y el resultado de la última pasada. El fichero
+lo entrega el cron de GitHub por commit + redespliegue, y ese planificador falla — el 1-sep-2026 no
+ejecutó ninguno de los once disparos del día y la app se quedó sin banderas toda la mañana con Cruz
+Roja publicando con normalidad. Por eso, cuando `vigenciaBandera` da `caducada` (hay vigilancia
+ahora y la captura pasa de 8 h), `RedCrossFlagProvider` lanza **en segundo plano** una pasada por
+todas las estaciones del fichero y rellena la caché; la petición del usuario no espera. Como mucho
+una pasada cada 20 min, o cada 55 si trajo color. No confundir con el fallback vivo por petición,
+que sigue descartado por lo que dice el comentario de `getFlagByRedCrossId`.
+
 Referencias medidas en local con 46 playas y caché fría: un `/details` completo cuesta **2 llamadas a
 OpenWeather** (antes 6) y un `/featured` completo ~132 peticiones salientes. Con `data/snapshot.json`
 sembrado, el primer `/featured` tras arrancar cuesta **0 peticiones** y responde en decenas de ms.

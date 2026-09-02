@@ -86,7 +86,9 @@ describe('RedCrossFlagProvider — fuente primaria por fichero (flags.json)', ()
     writeFileSync(
       file,
       JSON.stringify({
-        generatedAt: '2026-06-17T08:00:00.000Z',
+        // Relativa al reloj: con una fecha fija, el fichero esta caducado siempre que
+        // el test corra dentro de la franja de vigilancia y el rescate si sale a la red.
+        generatedAt: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
         flags: { '555': { color: 'red', message: 'Bandera roja', coverageFrom: '12-06-2026', coverageTo: '15-09-2026', schedule: '11:30 - 19:30' } }
       })
     );
@@ -262,5 +264,98 @@ describe('RedCrossFlagProvider — flags.json que no se puede fechar', () => {
 
     expect(status?.color).toBe('green');
     expect(esBanderaVigente(status!, new Date())).toBe(false);
+  });
+});
+
+/**
+ * Fichero de banderas CADUCADO con el servicio abierto: la situacion del
+ * 1-sep-2026, cuando GitHub no ejecuto ninguno de los once crones del dia y la
+ * ultima captura era de la noche anterior. Fechas relativas al reloj a proposito:
+ * `vigenciaBandera` mira hora y temporada de Madrid, y un fixture con fechas fijas
+ * cambiaria de significado segun cuando corra el test.
+ */
+function ficheroCaducado(horasDeAntiguedad = 9, horario = '00:00 - 23:59'): string {
+  const dir = mkdtempSync(join(tmpdir(), 'flags-'));
+  const file = join(dir, 'flags.json');
+  const ddmmyyyy = (d: Date) =>
+    `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`;
+  const desde = new Date();
+  desde.setFullYear(desde.getFullYear() - 1);
+  const hasta = new Date();
+  hasta.setFullYear(hasta.getFullYear() + 1);
+  const entrada = {
+    color: 'red',
+    message: 'Bandera roja',
+    coverageFrom: ddmmyyyy(desde),
+    coverageTo: ddmmyyyy(hasta),
+    schedule: horario,
+  };
+  writeFileSync(
+    file,
+    JSON.stringify({
+      generatedAt: new Date(Date.now() - horasDeAntiguedad * 3600_000).toISOString(),
+      flags: { '555': entrada, '556': entrada },
+    })
+  );
+  return file;
+}
+
+describe('RedCrossFlagProvider — barrido de rescate (fichero caducado)', () => {
+  it('no bloquea la peticion, y el barrido de fondo repuebla la cache con el color en vivo', async () => {
+    const spy = vi.spyOn(http, 'post').mockResolvedValue({ data: FICHA_HTML } as any);
+    const provider = new RedCrossFlagProvider(new InMemoryCache(), ficheroCaducado());
+
+    // La primera peticion se sirve YA con lo que hay: el fichero, aunque este viejo.
+    // `esBanderaVigente` la ocultara aguas arriba; lo que no hace es esperar al scrape.
+    const primera = await provider.getFlagByRedCrossId(555);
+    expect(primera?.color).toBe('red');
+
+    // El barrido corre por detras y toca TODAS las estaciones del fichero, no solo la pedida.
+    await vi.waitFor(async () => {
+      expect(await provider.getFlagByRedCrossId(555)).toMatchObject({ color: 'green' });
+    });
+    expect(spy.mock.calls.map((c) => c[1])).toEqual(
+      expect.arrayContaining([
+        'id=555&action=&aplicacion=consultaPlayas',
+        'id=556&action=&aplicacion=consultaPlayas',
+      ])
+    );
+  });
+
+  it('no se repite: el barrido corre una vez, no una por peticion', async () => {
+    const spy = vi.spyOn(http, 'post').mockResolvedValue({ data: FICHA_HTML } as any);
+    const provider = new RedCrossFlagProvider(new InMemoryCache(), ficheroCaducado());
+
+    await provider.getFlagByRedCrossId(555);
+    await vi.waitFor(() => expect(spy).toHaveBeenCalledTimes(2)); // 2 estaciones, 1 pasada
+
+    for (let i = 0; i < 20; i++) await provider.getFlagByRedCrossId(555);
+    expect(spy).toHaveBeenCalledTimes(2);
+  });
+
+  it('fuera de horario NO barre: no hay bandera izada que rescatar', async () => {
+    const spy = vi.spyOn(http, 'post').mockResolvedValue({ data: FICHA_HTML } as any);
+    // Horario ya cerrado a cualquier hora del dia -> `vigenciaBandera` da 'sin-servicio'.
+    const provider = new RedCrossFlagProvider(new InMemoryCache(), ficheroCaducado(9, '00:00 - 00:00'));
+
+    const status = await provider.getFlagByRedCrossId(555);
+
+    expect(status?.color).toBe('red');
+    await new Promise((r) => setTimeout(r, 20));
+    expect(spy).not.toHaveBeenCalled();
+  });
+
+  it('snapshotEntrega expone la edad del fichero (lo que /api/_diag/flags responde)', async () => {
+    vi.spyOn(http, 'post').mockResolvedValue({ data: FICHA_HTML } as any);
+    const provider = new RedCrossFlagProvider(new InMemoryCache(), ficheroCaducado(9));
+
+    await provider.getFlagByRedCrossId(555);
+    const snap = await provider.snapshotEntrega();
+
+    expect(snap.ficheroEstaciones).toBe(2);
+    expect(snap.ficheroEdadHoras).toBeCloseTo(9, 0);
+    await vi.waitFor(async () => {
+      expect((await provider.snapshotEntrega()).ultimoBarrido).toMatchObject({ conColor: 2, total: 2 });
+    });
   });
 });

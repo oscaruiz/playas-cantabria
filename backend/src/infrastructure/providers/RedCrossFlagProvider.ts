@@ -14,7 +14,7 @@ import { InMemoryCache, CacheKeys } from '../cache/InMemoryCache';
 import { FlagProvider } from '../../domain/ports/FlagProvider';
 import { FlagStatus, FlagColor, FlagRef } from '../../domain/entities/Flag';
 import { readFlagsFile } from '../../regions/flagsFileSchema';
-import { MAX_EDAD_BANDERA_MS } from '../../domain/services/flagVigencia';
+import { MAX_EDAD_BANDERA_MS, vigenciaBandera } from '../../domain/services/flagVigencia';
 import { Config } from '../config/config';
 
 /**
@@ -38,6 +38,8 @@ export class RedCrossFlagProvider implements FlagProvider {
   // scrape often answers nothing. If a beach is not in the file, we fall back to the
   // live scrape.
   private fileFlags: Map<number, FlagStatus> | null = null;
+  /** `generatedAt` del fichero, tal cual, para poder decir su edad sin abrir git. */
+  private fileGeneratedAt: number | null = null;
 
   // Circuit breaker for the live scrape. cruzroja.es responds in 10-12s and fails
   // intermittently: with 69 stations, retrying on every request hijacks the single
@@ -73,6 +75,27 @@ export class RedCrossFlagProvider implements FlagProvider {
       );
     }
   }
+
+  // ---- Barrido de rescate -------------------------------------------------
+  // El fichero pre-scrapeado se entrega por commit + redespliegue, asi que su
+  // frescura depende del planificador de cron de GitHub, y en este repo va MUY
+  // degradado: descarta disparos y los que ejecuta llegan con 1-5 h de retraso.
+  // El 1-sep-2026 no ejecuto NINGUNO en todo el dia -ni de este workflow ni de
+  // los otros dos-, el fichero de la noche anterior supero las 8 h de
+  // `MAX_EDAD_BANDERA_MS` y la app estuvo sin banderas toda la manana sin que
+  // nada estuviera roto por nuestra parte. Anadir mas crones no lo arregla:
+  // lo que fallo fue el planificador entero, no una entrada concreta.
+  //
+  // Este barrido saca a GitHub del camino critico. Cuando lo que ibamos a
+  // servir YA esta caducado, el backend rellena la cache con UNA pasada
+  // acotada, en segundo plano y a la concurrencia 3 del `hostLimiter`.
+  private barridoEnCurso: Promise<void> | null = null;
+  private proximoBarrido = 0;
+  private ultimoBarrido: { at: number; conColor: number; total: number } | null = null;
+  /** Sin color: se reintenta pronto (Cruz Roja publica entre las 12:01 y las 18:24). */
+  private static readonly REINTENTO_SIN_COLOR_MS = 20 * 60 * 1000;
+  /** Con color: la misma cadencia que el cron horario; antes no hay nada que ganar. */
+  private static readonly REINTENTO_CON_COLOR_MS = 55 * 60 * 1000;
 
   constructor(
     private readonly cache: InMemoryCache,
@@ -113,6 +136,7 @@ export class RedCrossFlagProvider implements FlagProvider {
       }
       // One millisecond past the freshness window: undateable, therefore expired.
       const ts = generatedAt ?? Date.now() - MAX_EDAD_BANDERA_MS - 1;
+      this.fileGeneratedAt = generatedAt ?? null;
       if (generatedAt == null && flags.size > 0) {
         console.error(
           `[CRUZ ROJA] ${this.flagsFile}: sin fecha utilizable; ${flags.size} banderas se sirven como caducadas`,
@@ -187,6 +211,23 @@ export class RedCrossFlagProvider implements FlagProvider {
     // de la misma fuente y tampoco trae color. Una bandera caducada la oculta ya
     // `vigenciaBandera`; que la entrega se prolongue lo vigila `flags-freshness`.
     const fromFile = (await this.loadFileFlags()).get(redCrossId);
+
+    // RESCATE. `caducada` significa exactamente esto: hay vigilancia AHORA (dentro
+    // de horario y de temporada) y la ultima captura pasa de 8 h, o sea que ondea
+    // una bandera y no sabemos cual. No es el fallback vivo por peticion que se
+    // descarta arriba: aqui solo se LEE la cache en memoria y se programa un
+    // barrido de fondo que la rellena. La diferencia es toda -la peticion del
+    // usuario ni espera al scrape ni lo dispara, y el barrido corre como mucho una
+    // vez cada 20 min-, y cubre el caso que el cron no cubre: que GitHub descarte
+    // todos los disparos del dia y el fichero se quede viejo con el servicio abierto.
+    if (fromFile && vigenciaBandera(fromFile) === 'caducada') {
+      this.programarBarridoDeRescate();
+      const rescatada = this.cache.get<FlagStatus>(
+        CacheKeys.flagByRedCrossId(this.regionId, redCrossId)
+      );
+      if (rescatada?.color) return rescatada;
+    }
+
     if (fromFile?.color) return fromFile;
 
     // Live scrape (cached). If it carries a real color, it is the freshest truth.
@@ -196,6 +237,73 @@ export class RedCrossFlagProvider implements FlagProvider {
     // No color through any path: the file (with its coverage/schedule) is better than
     // nothing; if there is no file either, whatever the live scrape gave; and otherwise, null.
     return fromFile ?? live ?? null;
+  }
+
+  /**
+   * Lanza el barrido si toca. NO se espera: la peticion en curso no se retrasa
+   * ni un milisegundo por el rescate.
+   */
+  private programarBarridoDeRescate(): void {
+    if (this.barridoEnCurso || this.circuitoAbierto) return;
+    const ahora = Date.now();
+    if (ahora < this.proximoBarrido) return;
+    // Se estampa ANTES de empezar: un barrido que revienta tiene que esperar su
+    // turno igual que uno que termina, o la siguiente peticion lo relanza en bucle.
+    this.proximoBarrido = ahora + RedCrossFlagProvider.REINTENTO_SIN_COLOR_MS;
+    this.barridoEnCurso = this.barrerEstaciones()
+      .catch(() => undefined)
+      .finally(() => {
+        this.barridoEnCurso = null;
+      });
+  }
+
+  /** Una pasada por todas las estaciones del fichero. Rellena la cache (L1 + L2). */
+  private async barrerEstaciones(): Promise<void> {
+    const ids = [...(await this.loadFileFlags()).keys()];
+    if (ids.length === 0) return;
+    console.warn(
+      `[CRUZ ROJA] fichero caducado: barrido de rescate de ${ids.length} estaciones`
+    );
+    // Todas a la vez a proposito: el `hostLimiter` las sirve de tres en tres, que
+    // es el ritmo que aguanta www.cruzroja.es (~4 min). Un `for` secuencial son ~12.
+    const estados = await Promise.all(ids.map((id) => this.fetchLiveCached(id)));
+    const conColor = estados.filter((e) => e?.color).length;
+    this.ultimoBarrido = { at: Date.now(), conColor, total: ids.length };
+    if (conColor > 0) {
+      this.proximoBarrido = Date.now() + RedCrossFlagProvider.REINTENTO_CON_COLOR_MS;
+    }
+    console.warn(`[CRUZ ROJA] barrido de rescate: ${conColor}/${ids.length} con color`);
+  }
+
+  /**
+   * Estado de la entrega para `/api/_diag/flags`. Es lo primero que hubo que
+   * averiguar el 1-sep-2026 y costo un `git fetch` mas un `git show`; aqui es
+   * una peticion.
+   */
+  async snapshotEntrega(): Promise<{
+    ficheroGeneradoEn: string | null;
+    ficheroEdadHoras: number | null;
+    ficheroEstaciones: number;
+    barridoEnCurso: boolean;
+    proximoBarridoEnSeg: number;
+    ultimoBarrido: { at: string; conColor: number; total: number } | null;
+  }> {
+    const estaciones = (await this.loadFileFlags()).size;
+    const ahora = Date.now();
+    return {
+      ficheroGeneradoEn: this.fileGeneratedAt
+        ? new Date(this.fileGeneratedAt).toISOString()
+        : null,
+      ficheroEdadHoras: this.fileGeneratedAt
+        ? Math.round(((ahora - this.fileGeneratedAt) / 3600000) * 10) / 10
+        : null,
+      ficheroEstaciones: estaciones,
+      barridoEnCurso: this.barridoEnCurso !== null,
+      proximoBarridoEnSeg: Math.max(0, Math.round((this.proximoBarrido - ahora) / 1000)),
+      ultimoBarrido: this.ultimoBarrido
+        ? { ...this.ultimoBarrido, at: new Date(this.ultimoBarrido.at).toISOString() }
+        : null,
+    };
   }
 
   /** Live scrape with cache and retry. Never throws: returns null on failure. */
