@@ -9,6 +9,7 @@
 // service worker, and the Workbox build step will be skipped.
 
 import { clientsClaim } from 'workbox-core';
+import type { WorkboxPlugin } from 'workbox-core/types';
 import { CacheableResponsePlugin } from 'workbox-cacheable-response';
 import { ExpirationPlugin } from 'workbox-expiration';
 import { precacheAndRoute, createHandlerBoundToURL } from 'workbox-precaching';
@@ -83,6 +84,59 @@ registerRoute(
 // the user staring at a spinner. Intended side effect: the app remains
 // useful at the beach with poor coverage, and revisits don't spend quota of the
 // free APIs.
+/** Posted to the open tabs together with the response that supersedes a cached one. */
+const MENSAJE_API_ACTUALIZADA = 'API_ACTUALIZADA';
+
+/**
+ * Hands the tabs the answer that arrived late, instead of leaving them on the
+ * stale one.
+ *
+ * `NetworkFirst` gives up on the network after three seconds and resolves the
+ * request with the stored body, and at the `fetch` layer that is an ordinary
+ * 200: the app could not tell last night's payload from this morning's. On
+ * 2-sep-2026 the first load of the day painted night icons and yesterday's
+ * temperatures, because the first `/featured` after the night is always a cold
+ * recompute on the backend and always blows past the timeout. The request the
+ * strategy abandoned does finish, and this is what makes its result arrive.
+ *
+ * The message CARRIES THE BODY, and that is the whole point: a message that
+ * only said "there is something newer" would have the app fetch again, that
+ * fetch would write the cache, writing the cache would fire this callback
+ * again, and round it goes. Measured before fixing it: 634 messages in one
+ * session against a backend on a free plan. Handing over the data closes the
+ * loop — the app has nothing left to ask for.
+ *
+ * Marking the cached response with a header was tried first and cannot work:
+ * the API is on another origin, so the browser CORS-filters the response the
+ * worker returns and any header of ours is stripped before the page sees it.
+ */
+const entregarRespuestaNueva: WorkboxPlugin = {
+  cacheDidUpdate: async ({ cacheName, oldResponse, request }) => {
+    // Sin `oldResponse` esta entrada se llena por primera vez y la app ya está
+    // pintando ese mismo cuerpo: no hay nada que corregir.
+    if (!oldResponse) return;
+
+    let datos: unknown;
+    try {
+      // Se relee del caché en vez de clonar `newResponse`: para cuando este
+      // callback corre, workbox ya ha gastado ese cuerpo en el `cache.put`, y
+      // clonarlo lanza. El fallo era mudo —el `catch` se lo tragaba— y el aviso
+      // sencillamente no salía nunca.
+      const cache = await caches.open(cacheName);
+      const guardada = await cache.match(request);
+      if (!guardada) return;
+      datos = await guardada.json();
+    } catch {
+      return; // no es JSON utilizable: mejor callar que mandar basura
+    }
+
+    const clientes = await self.clients.matchAll({ type: 'window' });
+    for (const cliente of clientes) {
+      cliente.postMessage({ type: MENSAJE_API_ACTUALIZADA, url: request.url, datos });
+    }
+  },
+};
+
 registerRoute(
   ({ url }) => url.pathname.startsWith(`${REGION_API_PATH}/beaches`),
   new NetworkFirst({
@@ -93,6 +147,7 @@ registerRoute(
       // get stuck as if it were the good data.
       new CacheableResponsePlugin({ statuses: [200] }),
       new ExpirationPlugin({ maxEntries: 60, maxAgeSeconds: 24 * 60 * 60 }),
+      entregarRespuestaNueva,
     ],
   })
 );

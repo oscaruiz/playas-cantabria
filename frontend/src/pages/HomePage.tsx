@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { IonPage, IonContent, IonFooter, IonSpinner, IonIcon } from '@ionic/react';
 import { locationOutline, warningOutline } from 'ionicons/icons';
 import { useHistory, Link } from 'react-router-dom';
@@ -16,6 +16,7 @@ import { rankearPlayas, codigoMejorPuntuacionNoHero } from '../utils/beachRankin
 import { haversineKm } from '../shared/geo/haversine';
 import { useUserLocation } from '../hooks/useUserLocation';
 import { useRevalidarAlVolver } from '../hooks/useRevalidarAlVolver';
+import { useRefrescoDelServiceWorker } from '../hooks/useRefrescoDelServiceWorker';
 import BottomNavBar from '../shared/ui/BottomNavBar';
 import HeaderActions from '../shared/ui/HeaderActions';
 import LogoMarca from '../shared/ui/LogoMarca';
@@ -333,6 +334,9 @@ const CautionCard: React.FC<{
   );
 };
 
+/** Igual que el `umbralCacheMs` de `ComputedAt`: pasado esto, no es de ahora. */
+const UMBRAL_DATOS_VIEJOS_MS = 10 * 60 * 1000;
+
 // ---- Main component ----
 
 const HomePage: React.FC = () => {
@@ -343,6 +347,14 @@ const HomePage: React.FC = () => {
   const { userLocation, locationLoading, locationDenied, locationBlocked, retryLocation } = useUserLocation();
   const history = useHistory();
   const { t } = useIdioma();
+
+  const recargarFeatured = useCallback(
+    () =>
+      getFeaturedBeaches()
+        .then(setFeatured)
+        .catch(() => { /* la portada ya pintada sigue valiendo */ }),
+    [],
+  );
 
   useEffect(() => {
     let mounted = true;
@@ -370,10 +382,18 @@ const HomePage: React.FC = () => {
   // abrirla, y entrar en una playa enseñaba un cielo más nuevo que la tarjeta
   // que se acababa de tocar. No fuerza nada — si la copia sigue fresca, esto
   // no llega a pedir al servidor.
-  useRevalidarAlVolver(() => {
-    getFeaturedBeaches()
-      .then(setFeatured)
-      .catch(() => { /* la portada ya pintada sigue valiendo */ });
+  useRevalidarAlVolver(recargarFeatured);
+
+  // El service worker sirvió su copia porque el backend tardó más de tres
+  // segundos —la primera carga de la mañana siempre lo hace— y la respuesta de
+  // verdad llegó después. Sin esto la portada se quedaba con el cielo de anoche
+  // hasta que alguien recargaba a mano.
+  //
+  // Se pinta lo que TRAE el mensaje. Volver a pedir aquí sería un bucle: la
+  // petición escribe la caché y escribir la caché es justo lo que emite este
+  // mensaje.
+  useRefrescoDelServiceWorker(({ url, datos }) => {
+    if (url.endsWith('/beaches/featured')) setFeatured(datos as FeaturedBeachesResponse);
   });
 
   const cautionBeaches = featured?.revisar ?? [];
@@ -435,6 +455,11 @@ const HomePage: React.FC = () => {
   const avgTemp = featured ? averageTemp(featured.playas) : null;
   const totalBeaches = allPlayas?.length ?? 0;
   const actualizadoMs = featured ? normalizarInstante(featured.timestamp) : null;
+  // Lo pintado lo construyó el backend hace demasiado: o lo sirvió el service
+  // worker de su copia, o el backend devolvió algo viejo. Mismo umbral que
+  // `ComputedAt` usa en el detalle, para que las dos pantallas no discrepen.
+  const datosDeCache =
+    actualizadoMs != null && Date.now() - actualizadoMs > UMBRAL_DATOS_VIEJOS_MS;
 
   return (
     <IonPage className="hp-page">
@@ -472,6 +497,15 @@ const HomePage: React.FC = () => {
         />
 
         <div className="hp-body">
+          {/* El service worker sirvió su copia porque el backend tardaba. Se dice,
+              en vez de dejar pasar el cielo de anoche por el de ahora; desaparece
+              solo en cuanto llega la respuesta buena y la portada se repinta. */}
+          {datosDeCache && (
+            <p className="hp-aviso-cache" role="status">
+              {t('home.datosDeCache')}
+            </p>
+          )}
+
           {/* Favorites first — independent of the featured ranking's fate
               (they still show if it fails), but not of its timing: painted
               alone above the spinner they looked like the whole page. */}

@@ -116,6 +116,18 @@
   max-width: 640px;
 }
 
+/* Aviso de datos servidos por el service worker mientras llega la respuesta
+   real. Discreto a propósito: informa, no alarma, y se va solo. */
+.hp-aviso-cache {
+  margin: 0 0 16px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--ion-color-light, #f4f5f8);
+  color: var(--ion-color-medium-shade, #808289);
+  font-size: 0.8125rem;
+  line-height: 1.35;
+}
+
 /* --- Section --- */
 .hp-section {
   margin-bottom: 32px;

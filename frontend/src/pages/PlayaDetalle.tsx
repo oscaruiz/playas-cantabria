@@ -40,6 +40,7 @@ import { BeachInfoSection, BeachAttributesSection } from './playa-detalle/BeachI
 import { WebcamCard } from './playa-detalle/WebcamCard';
 import { BlueFlagBadge } from './playa-detalle/BlueFlagBadge';
 import { ComputedAt } from '../features/provenance/SourceAndFreshness';
+import { useRefrescoDelServiceWorker } from '../hooks/useRefrescoDelServiceWorker';
 import InfoDatos from '../features/provenance/InfoDatos';
 import { rutaMunicipio } from '../shared/seo/landings';
 import { FavoriteButton } from '../modules/favorites';
@@ -147,6 +148,17 @@ const PlayaDetallePage: React.FC = () => {
       .catch(() => { /* non-blocking: no score */ });
     return () => { activo = false; };
   }, [codigoResuelto]);
+
+  // `ComputedAt` ya dice que lo pintado es viejo, pero decirlo no es arreglarlo:
+  // cuando el service worker entrega la respuesta que llegó tarde, se pinta. Se
+  // usa el cuerpo del mensaje, nunca una petición nueva — eso realimentaría la
+  // caché y volvería a disparar el mensaje.
+  useRefrescoDelServiceWorker(({ url, datos }) => {
+    if (!codigoResuelto) return;
+    if (url.endsWith(`/beaches/${codigoResuelto}/details`)) {
+      setCargado({ ruta: identidadRuta, detalle: datos as PlayaDetalleData });
+    }
+  });
 
   const [selectedDay, setSelectedDay] = useState(0);
   const pred = datos?.prediccionCompleta;
