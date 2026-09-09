@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-07T18:48:31.866Z",
+  "generatedAt": "2026-09-09T12:25:57.397Z",
   "flags": {
     "30": {
       "color": "red",
@@ -37,8 +37,8 @@
       "schedule": "11:30 - 19:30"
     },
     "35": {
-      "color": "green",
-      "message": "Verde",
+      "color": "yellow",
+      "message": "Amarilla",
       "coverageFrom": "12-06-2026",
       "coverageTo": "15-09-2026",
       "schedule": "11:30 - 19:30"
@@ -149,29 +149,29 @@
       "schedule": "11:30 - 19:30"
     },
     "368": {
-      "color": "yellow",
-      "message": "Amarilla",
+      "color": "red",
+      "message": "Roja",
       "coverageFrom": "12-06-2026",
       "coverageTo": "15-09-2026",
       "schedule": "11:30 - 19:30"
     },
     "369": {
-      "color": "yellow",
-      "message": "Amarilla",
+      "color": "red",
+      "message": "Roja",
       "coverageFrom": "12-06-2026",
       "coverageTo": "15-09-2026",
       "schedule": "11:30 - 19:30"
     },
     "370": {
-      "color": "yellow",
-      "message": "Amarilla",
+      "color": "red",
+      "message": "Roja",
       "coverageFrom": "12-06-2026",
       "coverageTo": "15-09-2026",
       "schedule": "11:30 - 19:30"
     },
     "371": {
-      "color": "green",
-      "message": "Verde",
+      "color": "yellow",
+      "message": "Amarilla",
       "coverageFrom": "12-06-2026",
       "coverageTo": "15-09-2026",
       "schedule": "11:30 - 19:30"
@@ -296,15 +296,15 @@
       "schedule": "11:30 - 19:30"
     },
     "816": {
-      "color": "yellow",
-      "message": "Amarilla",
+      "color": "red",
+      "message": "Roja",
       "coverageFrom": "12-06-2026",
       "coverageTo": "15-09-2026",
       "schedule": "11:30 - 19:30"
     },
     "817": {
-      "color": "green",
-      "message": "Verde",
+      "color": "yellow",
+      "message": "Amarilla",
       "coverageFrom": "12-06-2026",
       "coverageTo": "15-09-2026",
       "schedule": "11:30 - 19:30"
@@ -338,8 +338,8 @@
       "schedule": "11:30 - 19:30"
     },
     "1032": {
-      "color": "red",
-      "message": "Roja",
+      "color": "yellow",
+      "message": "Amarilla",
       "coverageFrom": "12-06-2026",
       "coverageTo": "15-09-2026",
       "schedule": "11:30 - 19:30"
@@ -366,15 +366,15 @@
       "schedule": "11:30 - 19:30"
     },
     "1118": {
-      "color": "green",
-      "message": "Verde",
+      "color": "yellow",
+      "message": "Amarilla",
       "coverageFrom": "12-06-2026",
       "coverageTo": "15-09-2026",
       "schedule": "11:30 - 19:30"
     },
     "1119": {
-      "color": "yellow",
-      "message": "Amarilla",
+      "color": "red",
+      "message": "Roja",
       "coverageFrom": "12-06-2026",
       "coverageTo": "15-09-2026",
       "schedule": "11:30 - 19:30"
@@ -408,15 +408,15 @@
       "schedule": "11:30 - 19:30"
     },
     "1232": {
-      "color": "green",
-      "message": "Verde",
+      "color": "yellow",
+      "message": "Amarilla",
       "coverageFrom": "12-06-2026",
       "coverageTo": "15-09-2026",
       "schedule": "11:30 - 19:30"
     },
     "1233": {
-      "color": "green",
-      "message": "Verde",
+      "color": "red",
+      "message": "Roja",
       "coverageFrom": "12-06-2026",
       "coverageTo": "15-09-2026",
       "schedule": "11:30 - 19:30"
@@ -450,8 +450,8 @@
       "schedule": "11:30 - 19:30"
     },
     "1238": {
-      "color": "yellow",
-      "message": "Amarilla",
+      "color": "green",
+      "message": "Verde",
       "coverageFrom": "12-06-2026",
       "coverageTo": "15-09-2026",
       "schedule": "11:30 - 19:30"
