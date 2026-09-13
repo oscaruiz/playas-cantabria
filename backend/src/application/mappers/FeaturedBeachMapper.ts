@@ -54,16 +54,29 @@ const FLAG_COLOR_ES: Record<string, 'Verde' | 'Amarilla' | 'Roja'> = {
 };
 
 export class FeaturedBeachMapper {
+  /**
+   * The two instants are NOT the same one, and merging them back would be a
+   * safety bug, not a tidy-up:
+   *
+   * - `generadoEn` is when the ranking was assembled, and it is what gets
+   *   published as `timestamp` so the app can tell how old the sky it is
+   *   painting really is.
+   * - `ahora` is when this response is being built, and it is what decides
+   *   whether each flag is still current. Judging an hour-old ranking against
+   *   its own assembly instant would republish lifeguard flags that expired
+   *   fifty minutes ago as if they still applied.
+   */
   static toDTO(
     mejores: FeaturedBeachResult[],
     revisar: FeaturedBeachResult[],
     resumenTodas: FeaturedBeachResult[],
-    timestamp: number,
+    generadoEn: number,
+    ahoraMs: number = Date.now(),
   ): FeaturedBeachesResponseDTO {
-    // A single "now" for the whole response: it decides which flags are still current.
-    const ahora = new Date(timestamp);
+    const ahora = new Date(ahoraMs);
     return {
-      timestamp,
+      timestamp: generadoEn,
+      servidoEn: ahoraMs,
       playas: mejores.map((r) => this.mapOne(r, ahora)),
       revisar: revisar.map((r) => this.mapOne(r, ahora)),
       resumenTodas: resumenTodas.map((r) => this.mapOne(r, ahora)),

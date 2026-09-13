@@ -104,7 +104,23 @@ export interface FeaturedBeachDTO {
 }
 
 export interface FeaturedBeachesResponseDTO {
+  /** When the ranking was ASSEMBLED. See `servidoEn` for the other instant. */
   timestamp: number;
+  /**
+   * When THIS response was built, which is not the same thing and is why both
+   * travel.
+   *
+   * The same assembled ranking can go out many times from the stale cache, and
+   * each time the flags are judged again against the clock — a green that was
+   * current at 10:00 is published as no flag at all by 19:00. So two responses
+   * can share a `timestamp` and still disagree, and a client holding both needs
+   * to know which one asked the question later. Without it, the older reading
+   * could overwrite the newer one and put a lifeguard flag back on a beach
+   * whose reading had already expired.
+   *
+   * Additive: an older client ignores it and is no worse off than before.
+   */
+  servidoEn: number;
   playas: FeaturedBeachDTO[];
   revisar: FeaturedBeachDTO[];
   resumenTodas: FeaturedBeachDTO[];

@@ -43,9 +43,14 @@ export function sembrarDesdeSnapshot(
       return false;
     }
 
+    // The snapshot file has always known when it was written; the ranking
+    // inside it did not carry the instant, so the first response after a
+    // deploy went out claiming to be brand new. `generatedAt` IS that instant,
+    // and it is already parsed two lines up to decide whether the file is too
+    // old to use at all.
     cache.seed(
       CacheKeys.featuredBeaches(region.id),
-      snap.featured,
+      { ...snap.featured, generadoEn: Date.parse(snap.generatedAt) },
       0,
       Config.featuredStaleTtlSeconds(),
     );

@@ -45,6 +45,18 @@ export interface FeaturedBeachesFullResult {
   mejores: FeaturedBeachResult[];
   revisar: FeaturedBeachResult[];
   resumenTodas: FeaturedBeachResult[];
+  /**
+   * When this ranking was ASSEMBLED. It travels inside the cached value on
+   * purpose: that is the only way a stale hit keeps the instant of the sky it
+   * is actually carrying instead of the instant it happened to be served.
+   *
+   * The endpoint used to stamp `Date.now()` on the way out, so a ranking from
+   * an hour ago went out claiming to be a second old — and the front page,
+   * which already knows how to warn that what it paints is old, could never
+   * tell. Optional because a snapshot written before this field exists is
+   * seeded without it.
+   */
+  generadoEn?: number;
 }
 
 export class GetFeaturedBeaches {
@@ -210,7 +222,7 @@ export class GetFeaturedBeaches {
     const mejores = good.length >= MIN_BEACHES ? good.slice(0, topN) : [];
     const revisar = caution.slice(0, CAUTION_COUNT);
 
-    return { mejores, revisar, resumenTodas: all };
+    return { mejores, revisar, resumenTodas: all, generadoEn: Date.now() };
   }
 
   private async enrichBeach(beach: Beach): Promise<{

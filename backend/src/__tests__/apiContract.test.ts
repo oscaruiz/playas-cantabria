@@ -235,7 +235,7 @@ describe('API contract — GET /api/beaches/:id/details', () => {
   it('returns the exact details shape when everything works (AEMET sheet + multi-station flag)', async () => {
     const res = await fetch(`${baseUrl}/api/beaches/3907990/details`);
     expect(res.status).toBe(200);
-    expect(res.headers.get('cache-control')).toBe('public, max-age=60, stale-while-revalidate=300');
+    expect(res.headers.get('cache-control')).toBe('public, max-age=60');
     expect(await res.json()).toEqual({
       nombre: 'Berria',
       municipio: 'Santoña',

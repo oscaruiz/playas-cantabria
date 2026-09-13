@@ -30,6 +30,26 @@ afterEach(() => {
 });
 
 describe('sembrarDesdeSnapshot', () => {
+  it('siembra el instante del fichero, no el del arranque', async () => {
+    // Sin esto la primera respuesta tras un despliegue salía diciendo que el
+    // ranking acababa de calcularse, cuando venía de un fichero de hace horas.
+    const generatedAt = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+    const ruta = escribirSnapshot({ generatedAt, featured: { mejores: [] } });
+    const cache = new InMemoryCache();
+
+    expect(sembrarDesdeSnapshot(cache, region(ruta))).toBe(true);
+
+    // Se lee como lo lee el endpoint: `get` devuelve undefined para una
+    // entrada stale, y sembrada como stale es justo lo que está.
+    const sembrado = await cache.getOrSetStale<{ generadoEn?: number }>(
+      CacheKeys.featuredBeaches('cantabria'),
+      300,
+      3600,
+      async () => ({ generadoEn: Date.now() }),
+    );
+    expect(sembrado.generadoEn).toBe(Date.parse(generatedAt));
+  });
+
   it('siembra el agregado como STALE: se sirve al instante y se refresca detrás', () => {
     const ruta = escribirSnapshot({
       generatedAt: new Date().toISOString(),
