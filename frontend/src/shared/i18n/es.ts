@@ -50,7 +50,9 @@ export const es = {
   'fav.filtro': 'Mostrar solo favoritas',
   'fav.vacio': 'Aún no tienes playas favoritas. Toca la estrella de una playa para guardarla aquí.',
   'home.favoritas': 'Tus playas favoritas',
-  'home.datosDeCache': 'Datos guardados de tu última visita · buscando los de ahora…',
+  'home.datosDeCache': 'Datos guardados de tu última visita',
+  'home.datosDeCacheAccion': 'Toca para actualizar',
+  'home.datosDeCacheBuscando': 'Buscando los datos de ahora…',
 
   // ---- Install as an app (PWA) ----
   'instalar.chip': 'Instalar app',

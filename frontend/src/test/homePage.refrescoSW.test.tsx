@@ -101,6 +101,43 @@ describe('HomePage — respuesta servida por el service worker', () => {
     await waitFor(() => expect(screen.queryByText(AVISO)).not.toBeInTheDocument());
   });
 
+  it('vuelve a pedir el ranking por su cuenta cuando lo pintado es viejo', async () => {
+    // El mensaje del worker puede no llegar nunca: la petición que abandonó
+    // falla, o el backend devuelve el mismo ranking viejo. El aviso decía
+    // "buscando los de ahora…" y no había nadie buscando.
+    let llamadas = 0;
+    installFetchMock([
+      route(FEATURED, () => ({ json: llamadas++ === 0 ? conEdad(12) : conEdad(0) })),
+      route(BEACHES, { json: beachesResponse }),
+    ]);
+
+    renderWithProviders(<HomePage />, { route: '/' });
+
+    await screen.findByText(AVISO);
+    await waitFor(() => expect(screen.queryByText(AVISO)).not.toBeInTheDocument());
+    expect(llamadas).toBe(2);
+  });
+
+  it('dice la hora de Madrid del ranking aunque no haya ninguna recomendada', async () => {
+    // El chip colgaba de `featured.playas.length`, así que el día sin ninguna
+    // playa recomendada —el día en que más importa saber de cuándo es el
+    // dato— era justo el día en que no se decía.
+    installFetchMock([
+      route(FEATURED, { json: { ...conEdad(0), playas: [], mejores: [] } }),
+      route(BEACHES, { json: beachesResponse }),
+    ]);
+
+    renderWithProviders(<HomePage />, { route: '/' });
+
+    const hora = new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Europe/Madrid',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    }).format(new Date(Date.now()));
+    expect(await screen.findByText(new RegExp(hora))).toBeInTheDocument();
+  });
+
   it('ignora la entrega de otro endpoint: el ranking no es el catálogo', async () => {
     installFetchMock([
       route(FEATURED, { json: conEdad(12) }),

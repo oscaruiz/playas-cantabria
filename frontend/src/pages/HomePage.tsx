@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { IonPage, IonContent, IonFooter, IonSpinner, IonIcon } from '@ionic/react';
 import { locationOutline, warningOutline } from 'ionicons/icons';
 import { useHistory, Link } from 'react-router-dom';
@@ -11,6 +11,7 @@ import {
 } from '../services/api';
 import { rankedSkyEmoji, flagColorClass } from '../utils/beachHelpers';
 import { normalizarInstante } from '../features/provenance/procedencia';
+import { formatearHaceTiempo, horaLocalMadrid } from '../shared/format/tiempo';
 import { FreshnessLabel } from '../features/provenance/SourceAndFreshness';
 import { rankearPlayas, codigoMejorPuntuacionNoHero } from '../utils/beachRanking';
 import { haversineKm } from '../shared/geo/haversine';
@@ -108,12 +109,11 @@ const NearestCard: React.FC<{
 };
 
 const HeroBody: React.FC<{
-  featuredCount: number;
   avgTemp: number | null;
   totalBeaches: number;
   /** Epoch ms of the featured snapshot; null hides the badge. */
   actualizadoMs: number | null;
-}> = ({ featuredCount, avgTemp, totalBeaches, actualizadoMs }) => {
+}> = ({ avgTemp, totalBeaches, actualizadoMs }) => {
   const { t, tPlural } = useIdioma();
   return (
     <div className="hp-hero">
@@ -128,10 +128,18 @@ const HeroBody: React.FC<{
             <span aria-hidden="true">{'\uD83C\uDFD6'}</span> {tPlural('home.playasBadge', totalBeaches)}
           </span>
         )}
-        {featuredCount > 0 && actualizadoMs != null && (
+        {/* When the data is from does not depend on there being recommended
+            beaches: a ranking with none was assembled just as recently, and
+            hanging this off `featuredCount` hid it on exactly the odd day.
+            Relative AND the Madrid clock time: "3 min ago" says whether it is
+            alive, the time says which reading it is — and that is the one you
+            can check against your own watch. */}
+        {actualizadoMs != null && (
           <span className="hp-badge">
             <span aria-hidden="true">{'\uD83D\uDD52'}</span>{' '}
             <FreshnessLabel instante={actualizadoMs} />
+            {' · '}
+            {horaLocalMadrid(new Date(actualizadoMs).toISOString())}
           </span>
         )}
         {/* Renders nothing unless this browser can really install the app. */}
@@ -356,6 +364,18 @@ const HomePage: React.FC = () => {
     [],
   );
 
+  const [reintentando, setReintentando] = useState(false);
+  // `force`: what is painted came from a stored copy, so the module cache
+  // holds that same body and a plain `getFeaturedBeaches()` would hand it
+  // back without asking anyone.
+  const reintentarFeatured = useCallback(() => {
+    setReintentando(true);
+    return getFeaturedBeaches({ force: true })
+      .then(setFeatured)
+      .catch(() => { /* we carry on with what is already painted */ })
+      .finally(() => setReintentando(false));
+  }, []);
+
   useEffect(() => {
     let mounted = true;
 
@@ -459,6 +479,17 @@ const HomePage: React.FC = () => {
   const datosDeCache =
     actualizadoMs != null && Date.now() - actualizadoMs > UMBRAL_DATOS_VIEJOS_MS;
 
+  // One automatic retry: the response the service worker gave up on may never
+  // arrive (backend asleep, bad network, or the same old ranking again), and
+  // without this the front page kept that copy until someone reloaded by hand.
+  // Once, not in a loop: every attempt wakes Render up.
+  const yaReintentado = useRef(false);
+  useEffect(() => {
+    if (!datosDeCache || yaReintentado.current) return;
+    yaReintentado.current = true;
+    void reintentarFeatured();
+  }, [datosDeCache, reintentarFeatured]);
+
   return (
     <IonPage className="hp-page">
       <SeoHead
@@ -488,20 +519,40 @@ const HomePage: React.FC = () => {
 
       <IonContent fullscreen>
         <HeroBody
-          featuredCount={featured?.playas.length ?? 0}
           avgTemp={avgTemp}
           totalBeaches={totalBeaches}
           actualizadoMs={actualizadoMs}
         />
 
         <div className="hp-body">
-          {/* El service worker sirvió su copia porque el backend tardaba. Se dice,
-              en vez de dejar pasar el cielo de anoche por el de ahora; desaparece
-              solo en cuanto llega la respuesta buena y la portada se repinta. */}
+          {/* The service worker served its copy because the backend was slow.
+              It is said, rather than passing last night's sky off as this
+              morning's, and HOW old it is is said too: it used to read
+              "fetching the current ones…" when nobody was fetching — the
+              request that abandoned it may never come back — so the notice
+              sat there promising something that was not happening. It now
+              retries once on its own; the rest is up to whoever taps it. */}
           {datosDeCache && (
-            <p className="hp-aviso-cache" role="status">
-              {t('home.datosDeCache')}
-            </p>
+            <button
+              type="button"
+              className="hp-aviso-cache"
+              onClick={reintentarFeatured}
+              disabled={reintentando}
+            >
+              <span className="hp-aviso-cache-texto">
+                <span className="hp-aviso-cache-titulo">{t('home.datosDeCache')}</span>
+                <span className="hp-aviso-cache-sub" role="status">
+                  {reintentando
+                    ? t('home.datosDeCacheBuscando')
+                    : `${formatearHaceTiempo(actualizadoMs as number, t)} · ${t('home.datosDeCacheAccion')}`}
+                </span>
+              </span>
+              {reintentando ? (
+                <IonSpinner name="crescent" className="hp-aviso-cache-spinner" />
+              ) : (
+                <span className="hp-aviso-cache-icono" aria-hidden="true">&#8635;</span>
+              )}
+            </button>
           )}
 
           {/* Favorites first — independent of the featured ranking's fate

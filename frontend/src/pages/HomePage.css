@@ -116,16 +116,54 @@
   max-width: 640px;
 }
 
-/* Aviso de datos servidos por el service worker mientras llega la respuesta
-   real. Discreto a propósito: informa, no alarma, y se va solo. */
+/* Notice for data served by the service worker. A button, because the
+   automatic retry can fail: then this is all that stands between the user
+   and last night's sky. Discreet, but tappable. */
 .hp-aviso-cache {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
   margin: 0 0 16px;
-  padding: 8px 12px;
-  border-radius: 8px;
+  padding: 10px 14px;
+  border: 1px solid var(--playa-border, #e0e2e6);
+  border-radius: 10px;
   background: var(--ion-color-light, #f4f5f8);
   color: var(--ion-color-medium-shade, #808289);
+  font-family: inherit;
   font-size: 0.8125rem;
   line-height: 1.35;
+  text-align: left;
+  cursor: pointer;
+}
+
+.hp-aviso-cache:disabled {
+  cursor: default;
+}
+
+.hp-aviso-cache-texto {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.hp-aviso-cache-titulo {
+  font-weight: 600;
+  color: var(--ion-color-dark, #2b2c2e);
+}
+
+.hp-aviso-cache-icono {
+  font-size: 1.125rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.hp-aviso-cache-spinner {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
 }
 
 /* --- Section --- */
