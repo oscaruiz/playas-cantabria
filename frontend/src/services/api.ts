@@ -636,7 +636,11 @@ export async function getFeaturedBeaches(
   if (!options.force && featuredCache && featuredCache.expiresAt > Date.now()) {
     return featuredCache.value;
   }
-  if (featuredRequest) return featuredRequest;
+  // `force` does NOT join the request in flight: that request is very often
+  // the one that produced the body being escaped from — the retry would hand
+  // back the same old ranking and call it an answer. Deduplication is for
+  // ordinary callers.
+  if (!options.force && featuredRequest) return featuredRequest;
 
   featuredRequest = fetch(buildRegionApiUrl('/beaches/featured'))
     .then((res) => {
@@ -703,6 +707,30 @@ function esAnterior(
   return candidato.servidoEn < actual.servidoEn;
 }
 
+/**
+ * The ranking every screen paints, and who to tell when it changes.
+ *
+ * The cache above answers a request; this is the value IN FORCE, and the two
+ * are not the same thing. Ionic keeps visited pages mounted, so five screens
+ * can be alive at once: with a copy per screen, the one that happened to fire
+ * the request repainted and the rest kept the sky they had loaded — the exact
+ * split this module exists to prevent. There is one value and one list of
+ * screens to wake.
+ */
+let rankingEnVigor: FeaturedBeachesResponse | null = null;
+const suscriptores = new Set<() => void>();
+
+/** Subscribe to the ranking in force; returns the unsubscribe. */
+export function suscribirRanking(alCambiar: () => void): () => void {
+  suscriptores.add(alCambiar);
+  return () => { suscriptores.delete(alCambiar); };
+}
+
+/** The ranking in force, or null before the first answer of the session. */
+export function leerRankingEnVigor(): FeaturedBeachesResponse | null {
+  return rankingEnVigor;
+}
+
 function guardarFeatured(value: FeaturedBeachesResponse): FeaturedBeachesResponse {
   // Only a ranking that is still IN FORCE gets a vote. An expired entry is one
   // nobody will be served again — letting it veto meant a plain refetch after
@@ -712,6 +740,12 @@ function guardarFeatured(value: FeaturedBeachesResponse): FeaturedBeachesRespons
   const enCache = vigente ? featuredCache?.value : undefined;
   if (enCache && esAnterior(value, enCache)) return enCache;
   featuredCache = { value, expiresAt: Date.now() + FEATURED_CACHE_TTL_MS };
+  // Only a body that actually WINS wakes the screens: re-serving the same
+  // value would repaint five pages for nothing.
+  if (rankingEnVigor !== value) {
+    rankingEnVigor = value;
+    suscriptores.forEach((alCambiar) => alCambiar());
+  }
   return value;
 }
 

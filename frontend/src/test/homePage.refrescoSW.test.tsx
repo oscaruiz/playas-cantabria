@@ -34,10 +34,13 @@ beforeAll(() => {
 });
 
 /**
- * `getFeaturedBeaches` memoriza 60 s en variables de módulo, así que sin esto el
- * payload del primer test se lo comen los siguientes. Cada test arranca dos
- * minutos después del anterior: el memo ha caducado y la respuesta que se
- * declara aquí es la que llega de verdad.
+ * El ranking en vigor vive en variables de módulo de `services/api` y NO se
+ * reinicia entre tests —igual que no se reinicia entre dos pantallas de la app,
+ * que es justo para lo que está—. Así que la portada abre pintando lo que dejó
+ * el caso anterior y se corrige cuando llega su respuesta, exactamente como le
+ * pasa a una pantalla que se abre con un ranking viejo en vigor: por eso los
+ * casos esperan a que la pantalla SE ASIENTE, en vez de mirarla al instante.
+ * Cada test arranca además dos minutos después, con el memo de 60 s caducado.
  */
 let ahora = Date.now();
 
@@ -84,7 +87,7 @@ describe('HomePage — respuesta servida por el service worker', () => {
     renderWithProviders(<HomePage />, { route: '/' });
 
     await screen.findByText('La Concha');
-    expect(screen.queryByText(AVISO)).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByText(AVISO)).not.toBeInTheDocument());
   });
 
   it('se repinta con lo que trae el mensaje, y el aviso se retira solo', async () => {
@@ -114,8 +117,8 @@ describe('HomePage — respuesta servida por el service worker', () => {
     renderWithProviders(<HomePage />, { route: '/' });
 
     await screen.findByText(AVISO);
+    await waitFor(() => expect(llamadas).toBe(2));
     await waitFor(() => expect(screen.queryByText(AVISO)).not.toBeInTheDocument());
-    expect(llamadas).toBe(2);
   });
 
   it('dice la hora de Madrid del ranking aunque no haya ninguna recomendada', async () => {

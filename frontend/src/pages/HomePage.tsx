@@ -1,23 +1,19 @@
-import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { IonPage, IonContent, IonFooter, IonSpinner, IonIcon } from '@ionic/react';
 import { locationOutline, warningOutline } from 'ionicons/icons';
 import { useHistory, Link } from 'react-router-dom';
 import {
   Playa,
   FeaturedBeach,
-  FeaturedBeachesResponse,
   getPlayas,
-  getFeaturedBeaches,
 } from '../services/api';
 import { rankedSkyEmoji, flagColorClass } from '../utils/beachHelpers';
-import { normalizarInstante } from '../features/provenance/procedencia';
 import { formatearHaceTiempo, horaLocalMadrid } from '../shared/format/tiempo';
 import { FreshnessLabel } from '../features/provenance/SourceAndFreshness';
 import { rankearPlayas, codigoMejorPuntuacionNoHero } from '../utils/beachRanking';
 import { haversineKm } from '../shared/geo/haversine';
 import { useUserLocation } from '../hooks/useUserLocation';
-import { useRevalidarAlVolver } from '../hooks/useRevalidarAlVolver';
-import { useFeaturedFresco } from '../hooks/useFeaturedFresco';
+import { useRanking } from '../features/ranking/useRanking';
 import BottomNavBar from '../shared/ui/BottomNavBar';
 import HeaderActions from '../shared/ui/HeaderActions';
 import LogoMarca from '../shared/ui/LogoMarca';
@@ -342,53 +338,25 @@ const CautionCard: React.FC<{
   );
 };
 
-/** Igual que el `umbralCacheMs` de `ComputedAt`: pasado esto, no es de ahora. */
-const UMBRAL_DATOS_VIEJOS_MS = 10 * 60 * 1000;
-
 // ---- Main component ----
 
 const HomePage: React.FC = () => {
-  const [featured, setFeatured] = useState<FeaturedBeachesResponse | null>(null);
+  const {
+    ranking: featured,
+    actualizadoMs,
+    deVisitaAnterior,
+    cargando: featuredLoading,
+    error: featuredError,
+    reintentando,
+    reintentar,
+  } = useRanking();
   const [allPlayas, setAllPlayas] = useState<Playa[] | null>(null);
-  const [featuredError, setFeaturedError] = useState(false);
-  const [featuredLoading, setFeaturedLoading] = useState(true);
   const { userLocation, locationLoading, locationDenied, locationBlocked, retryLocation } = useUserLocation();
   const history = useHistory();
   const { t } = useIdioma();
 
-  const recargarFeatured = useCallback(
-    () =>
-      getFeaturedBeaches()
-        .then(setFeatured)
-        .catch(() => { /* la portada ya pintada sigue valiendo */ }),
-    [],
-  );
-
-  const [reintentando, setReintentando] = useState(false);
-  // `force`: what is painted came from a stored copy, so the module cache
-  // holds that same body and a plain `getFeaturedBeaches()` would hand it
-  // back without asking anyone.
-  const reintentarFeatured = useCallback(() => {
-    setReintentando(true);
-    return getFeaturedBeaches({ force: true })
-      .then(setFeatured)
-      .catch(() => { /* we carry on with what is already painted */ })
-      .finally(() => setReintentando(false));
-  }, []);
-
   useEffect(() => {
     let mounted = true;
-
-    getFeaturedBeaches()
-      .then((value) => {
-        if (mounted) setFeatured(value);
-      })
-      .catch(() => {
-        if (mounted) setFeaturedError(true);
-      })
-      .finally(() => {
-        if (mounted) setFeaturedLoading(false);
-      });
 
     getPlayas({ onBackendData: (data) => { if (mounted) setAllPlayas(data); } })
       .then((data) => {
@@ -397,22 +365,6 @@ const HomePage: React.FC = () => {
 
     return () => { mounted = false; };
   }, []);
-
-  // Al volver a la pestaña: la portada seguía pintando el ranking que cargó al
-  // abrirla, y entrar en una playa enseñaba un cielo más nuevo que la tarjeta
-  // que se acababa de tocar. No fuerza nada — si la copia sigue fresca, esto
-  // no llega a pedir al servidor.
-  useRevalidarAlVolver(recargarFeatured);
-
-  // El service worker sirvió su copia porque el backend tardó más de tres
-  // segundos —la primera carga de la mañana siempre lo hace— y la respuesta de
-  // verdad llegó después. Sin esto la portada se quedaba con el cielo de anoche
-  // hasta que alguien recargaba a mano.
-  //
-  // Se pinta lo que TRAE el mensaje. Volver a pedir aquí sería un bucle: la
-  // petición escribe la caché y escribir la caché es justo lo que emite este
-  // mensaje.
-  useFeaturedFresco(setFeatured);
 
   const cautionBeaches = featured?.revisar ?? [];
 
@@ -472,24 +424,6 @@ const HomePage: React.FC = () => {
 
   const avgTemp = featured ? averageTemp(featured.playas) : null;
   const totalBeaches = allPlayas?.length ?? 0;
-  const actualizadoMs = featured ? normalizarInstante(featured.timestamp) : null;
-  // Lo pintado lo construyó el backend hace demasiado: o lo sirvió el service
-  // worker de su copia, o el backend devolvió algo viejo. Mismo umbral que
-  // `ComputedAt` usa en el detalle, para que las dos pantallas no discrepen.
-  const datosDeCache =
-    actualizadoMs != null && Date.now() - actualizadoMs > UMBRAL_DATOS_VIEJOS_MS;
-
-  // One automatic retry: the response the service worker gave up on may never
-  // arrive (backend asleep, bad network, or the same old ranking again), and
-  // without this the front page kept that copy until someone reloaded by hand.
-  // Once, not in a loop: every attempt wakes Render up.
-  const yaReintentado = useRef(false);
-  useEffect(() => {
-    if (!datosDeCache || yaReintentado.current) return;
-    yaReintentado.current = true;
-    void reintentarFeatured();
-  }, [datosDeCache, reintentarFeatured]);
-
   return (
     <IonPage className="hp-page">
       <SeoHead
@@ -532,11 +466,11 @@ const HomePage: React.FC = () => {
               request that abandoned it may never come back — so the notice
               sat there promising something that was not happening. It now
               retries once on its own; the rest is up to whoever taps it. */}
-          {datosDeCache && (
+          {deVisitaAnterior && (
             <button
               type="button"
               className="hp-aviso-cache"
-              onClick={reintentarFeatured}
+              onClick={reintentar}
               disabled={reintentando}
             >
               <span className="hp-aviso-cache-texto">
@@ -681,18 +615,21 @@ const HomePage: React.FC = () => {
             <section className="hp-section">
               <div className="hp-error-msg">
                 <p>{t('home.errorCondiciones')}</p>
+                {/* Waking a sleeping Render takes half a minute: a button that
+                    only greys out looks like a button that did nothing. */}
                 <button
                   className="hp-retry-btn"
-                  onClick={() => {
-                    setFeaturedError(false);
-                    setFeaturedLoading(true);
-                    getFeaturedBeaches({ force: true })
-                      .then(setFeatured)
-                      .catch(() => setFeaturedError(true))
-                      .finally(() => setFeaturedLoading(false));
-                  }}
+                  onClick={reintentar}
+                  disabled={reintentando}
                 >
-                  {t('home.reintentar')}
+                  {reintentando ? (
+                    <>
+                      <IonSpinner name="crescent" className="hp-retry-spinner" />
+                      {t('home.buscando')}
+                    </>
+                  ) : (
+                    t('home.reintentar')
+                  )}
                 </button>
               </div>
             </section>

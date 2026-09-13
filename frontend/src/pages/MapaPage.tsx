@@ -1,13 +1,7 @@
 import { IonPage, IonContent, IonFooter, IonSpinner } from '@ionic/react';
-import React, { Suspense, useCallback, useEffect, useState } from 'react';
-import {
-  Playa,
-  FeaturedBeach,
-  FeaturedBeachesResponse,
-  getPlayas,
-  getFeaturedBeaches,
-} from '../services/api';
-import { useFeaturedFresco } from '../hooks/useFeaturedFresco';
+import React, { Suspense, useEffect, useMemo, useState } from 'react';
+import { Playa, getPlayas } from '../services/api';
+import { useRanking } from '../features/ranking/useRanking';
 import { useIdioma } from '../shared/i18n/IdiomaContext';
 import BottomNavBar from '../shared/ui/BottomNavBar';
 import HeaderActions from '../shared/ui/HeaderActions';
@@ -23,19 +17,16 @@ const MapaLienzo = React.lazy(() => import('./mapa/MapaLienzo'));
 
 const MapaPage: React.FC = () => {
   const [playas, setPlayas] = useState<Playa[]>([]);
-  const [weatherMap, setWeatherMap] = useState<Map<string, FeaturedBeach>>(new Map());
   const { t } = useIdioma();
 
-  const indexarPorCodigo = useCallback(
-    (res: FeaturedBeachesResponse) =>
-      setWeatherMap(new Map(res.resumenTodas.map((b) => [b.codigo, b]))),
-    [],
+  // The markers read the ranking in force, so they repaint with every screen
+  // that paints a sky — including when the answer the service worker gave up
+  // on lands late.
+  const { ranking } = useRanking();
+  const weatherMap = useMemo(
+    () => new Map((ranking?.resumenTodas ?? []).map((b) => [b.codigo, b])),
+    [ranking],
   );
-
-  // Same repaint the home page does: the markers were drawing the sky the
-  // service worker had served from its cache while the detail of the beach
-  // behind the marker showed the current one.
-  useFeaturedFresco(indexarPorCodigo);
 
   useEffect(() => {
     const handlePlayas = (data: Playa[]) => {
@@ -52,11 +43,7 @@ const MapaPage: React.FC = () => {
     };
 
     getPlayas({ onBackendData: handlePlayas }).then(handlePlayas);
-
-    getFeaturedBeaches()
-      .then(indexarPorCodigo)
-      .catch(() => { /* fallback: numbered markers */ });
-  }, [indexarPorCodigo]);
+  }, []);
 
   return (
     <IonPage className="mapa-page">

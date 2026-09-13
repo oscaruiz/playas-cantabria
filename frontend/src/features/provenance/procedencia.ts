@@ -39,6 +39,17 @@ export function normalizarInstante(
 }
 
 /**
+ * Past this age, what is painted is no longer a reading from now: it is a copy
+ * the service worker or the backend's stale cache handed over.
+ *
+ * One definition, because two screens must not disagree about it — the ranking
+ * on the front page and the detail's `ComputedAt` were each carrying their own
+ * ten minutes. It matches the backend's fresh TTL: below it, the answer is what
+ * a recomputation would have given anyway.
+ */
+export const UMBRAL_DATOS_VIEJOS_MS = 10 * 60 * 1000;
+
+/**
  * Absolute, human-readable instant in Europe/Madrid — the accessible
  * counterpart of the relative "hace X min" text. Locale follows the UI
  * language; the timezone is always the beaches' own.

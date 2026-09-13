@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   IonPage,
   IonContent,
@@ -10,11 +10,8 @@ import { chevronBackOutline, navigateOutline, mapOutline } from 'ionicons/icons'
 import { useHistory, useParams, Link } from 'react-router-dom';
 import {
   getDetallePlaya,
-  getFeaturedBeaches,
   getPlayas,
   ErrorDetalle,
-  FeaturedBeach,
-  SubPuntuaciones,
   PlayaDetalle as PlayaDetalleData,
 } from '../services/api';
 import { rutaPlaya, encontrarPorSlugs } from '../shared/seo/beachUrls';
@@ -41,7 +38,7 @@ import { WebcamCard } from './playa-detalle/WebcamCard';
 import { BlueFlagBadge } from './playa-detalle/BlueFlagBadge';
 import { ComputedAt } from '../features/provenance/SourceAndFreshness';
 import { useRefrescoDelServiceWorker } from '../hooks/useRefrescoDelServiceWorker';
-import { useFeaturedFresco } from '../hooks/useFeaturedFresco';
+import { useRanking } from '../features/ranking/useRanking';
 import InfoDatos from '../features/provenance/InfoDatos';
 import { rutaMunicipio } from '../shared/seo/landings';
 import { FavoriteButton } from '../modules/favorites';
@@ -68,12 +65,6 @@ const PlayaDetallePage: React.FC = () => {
   const [error, setError] = useState(false);
   /** Estado HTTP del fallo; null = la petición no volvió (red, CORS, SW). */
   const [statusError, setStatusError] = useState<number | null>(null);
-  // Ranking score (featured endpoint). Requested IN PARALLEL and optional:
-  // the detail is painted without waiting for it, and if it fails/is slow it is simply not shown.
-  const [puntuada, setPuntuada] = useState<FeaturedBeach | null>(null);
-  // Scale of each factor, sent once per response: it travels so the bars of the
-  // breakdown cannot drift from the weights the backend actually applies.
-  const [maximos, setMaximos] = useState<SubPuntuaciones | null>(null);
 
   /**
    * El error se ENCIENDE y se APAGA. Antes solo se encendía: cualquier fallo
@@ -93,8 +84,6 @@ const PlayaDetallePage: React.FC = () => {
   // URL and favorite star) while — or even after — the new one fails to load.
   useEffect(() => {
     setCargado(null);
-    setPuntuada(null);
-    setMaximos(null);
     setSelectedDay(0);
     setError(false);
     setStatusError(null);
@@ -137,19 +126,6 @@ const PlayaDetallePage: React.FC = () => {
     return () => { activo = false; };
   }, [codigoResuelto]);
 
-  useEffect(() => {
-    if (!codigoResuelto) return;
-    let activo = true;
-    getFeaturedBeaches()
-      .then((res) => {
-        if (!activo) return;
-        setPuntuada(res.resumenTodas.find((b) => b.codigo === codigoResuelto) ?? null);
-        setMaximos(res.maximos ?? null);
-      })
-      .catch(() => { /* non-blocking: no score */ });
-    return () => { activo = false; };
-  }, [codigoResuelto]);
-
   // `ComputedAt` ya dice que lo pintado es viejo, pero decirlo no es arreglarlo:
   // cuando el service worker entrega la respuesta que llegó tarde, se pinta. Se
   // usa el cuerpo del mensaje, nunca una petición nueva — eso realimentaría la
@@ -161,14 +137,23 @@ const PlayaDetallePage: React.FC = () => {
     }
   });
 
-  // The score card is built from the ranking, not from the detail: without
-  // this it kept the score of the sky the service worker had cached while the
-  // headline right above it already showed the current one.
-  useFeaturedFresco((res) => {
-    if (!codigoResuelto) return;
-    setPuntuada(res.resumenTodas.find((b) => b.codigo === codigoResuelto) ?? null);
-    setMaximos(res.maximos ?? null);
-  });
+  // The score card is built from the ranking, not from the detail, so it reads
+  // the ranking in force: otherwise it kept the score of the sky the service
+  // worker had cached while the headline right above it showed the current one.
+  const { ranking } = useRanking();
+  // Ranking score (featured endpoint). Optional and derived, never stored: the
+  // detail is painted without waiting for it, and a route change cannot leave
+  // the previous beach's score on screen because there is nothing to clear.
+  const puntuada = useMemo(
+    () =>
+      codigoResuelto
+        ? ranking?.resumenTodas.find((b) => b.codigo === codigoResuelto) ?? null
+        : null,
+    [ranking, codigoResuelto],
+  );
+  // Scale of each factor, sent once per response: it travels so the bars of the
+  // breakdown cannot drift from the weights the backend actually applies.
+  const maximos = ranking?.maximos ?? null;
 
   const [selectedDay, setSelectedDay] = useState(0);
   const pred = datos?.prediccionCompleta;

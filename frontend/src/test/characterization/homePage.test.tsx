@@ -111,8 +111,9 @@ describe('HomePage — sin ubicación', () => {
     await renderHome();
 
     expect(screen.getByText('21° media')).toBeInTheDocument();
-    // The counter comes from getPlayas (7 in the fixture), not from featured.
-    expect(screen.getByText('7 playas')).toBeInTheDocument();
+    // The counter comes from getPlayas (7 in the fixture), not from featured,
+    // and therefore lands on its own schedule: awaited, not read on the spot.
+    expect(await screen.findByText('7 playas')).toBeInTheDocument();
     expect(screen.getByText('actualizado hace 30 min')).toBeInTheDocument();
   });
 

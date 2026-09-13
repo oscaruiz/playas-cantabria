@@ -1,13 +1,6 @@
-import { useCallback, useEffect, useState } from 'react';
-import {
-  Playa,
-  FeaturedBeach,
-  FeaturedBeachesResponse,
-  getPlayas,
-  getFeaturedBeaches,
-} from '../../services/api';
-import { useFeaturedFresco } from '../../hooks/useFeaturedFresco';
-import { normalizarInstante } from '../../features/provenance/procedencia';
+import { useEffect, useMemo, useState } from 'react';
+import { Playa, FeaturedBeach, getPlayas } from '../../services/api';
+import { useRanking } from '../../features/ranking/useRanking';
 
 /**
  * Catalog + current conditions for the landing pages. `getPlayas` never
@@ -21,32 +14,21 @@ export function useCatalogo(): {
   instanteCondiciones: number | null;
 } {
   const [playas, setPlayas] = useState<Playa[] | null>(null);
-  const [condiciones, setCondiciones] = useState<Map<string, FeaturedBeach>>(new Map());
-  const [instanteCondiciones, setInstanteCondiciones] = useState<number | null>(null);
-
-  const aplicarCondiciones = useCallback((r: FeaturedBeachesResponse) => {
-    setCondiciones(new Map(r.resumenTodas.map((b) => [b.codigo, b])));
-    // The snapshot may come from the service worker's cache: its own
-    // timestamp is what lets the page say HOW current "current" is.
-    setInstanteCondiciones(normalizarInstante(r.timestamp));
-  }, []);
-
-  // And when the copy it served is superseded, the landing says so too.
-  useFeaturedFresco(aplicarCondiciones);
+  // The landing says HOW current "current" is, so it takes the instant from
+  // the same module that decides which ranking is in force.
+  const { ranking, actualizadoMs: instanteCondiciones } = useRanking();
+  const condiciones = useMemo(
+    () => new Map((ranking?.resumenTodas ?? []).map((b) => [b.codigo, b])),
+    [ranking],
+  );
 
   useEffect(() => {
     let activo = true;
     getPlayas({ onBackendData: (d) => { if (activo) setPlayas(d); } }).then((d) => {
       if (activo) setPlayas(d);
     });
-    getFeaturedBeaches()
-      .then((r) => {
-        if (!activo) return;
-        aplicarCondiciones(r);
-      })
-      .catch(() => { /* enrichment only */ });
     return () => { activo = false; };
-  }, [aplicarCondiciones]);
+  }, []);
 
   return { playas, condiciones, instanteCondiciones };
 }

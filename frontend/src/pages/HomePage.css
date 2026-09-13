@@ -160,6 +160,13 @@
   flex-shrink: 0;
 }
 
+.hp-retry-spinner {
+  width: 14px;
+  height: 14px;
+  margin-right: 6px;
+  vertical-align: -2px;
+}
+
 .hp-aviso-cache-spinner {
   width: 18px;
   height: 18px;

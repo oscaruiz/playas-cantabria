@@ -9,12 +9,9 @@ import {
 import { searchOutline, locateOutline, starOutline, videocamOutline } from 'ionicons/icons';
 import {
   Playa,
-  FeaturedBeach,
-  FeaturedBeachesResponse,
   getPlayas,
-  getFeaturedBeaches,
 } from '../services/api';
-import { useFeaturedFresco } from '../hooks/useFeaturedFresco';
+import { useRanking } from '../features/ranking/useRanking';
 import { coincidePlaya, normalizarBusqueda, webcamDisponible } from '../utils/beachHelpers';
 import { haversineKm } from '../shared/geo/haversine';
 import { useUserLocation } from '../hooks/useUserLocation';
@@ -38,7 +35,6 @@ type OrdenMode = 'az' | 'cerca';
 
 const PlayasList: React.FC = () => {
   const [playas, setPlayas] = useState<Playa[] | null>(null);
-  const [weatherMap, setWeatherMap] = useState<Map<string, FeaturedBeach>>(new Map());
   const [filtro, setFiltro] = useState('');
   const [orden, setOrden] = useState<OrdenMode>('az');
   const [soloFavoritas, setSoloFavoritas] = useState(false);
@@ -55,15 +51,13 @@ const PlayasList: React.FC = () => {
   const blurTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const history = useHistory();
 
-  const indexarPorCodigo = useCallback(
-    (res: FeaturedBeachesResponse) =>
-      setWeatherMap(new Map(res.resumenTodas.map((b) => [b.codigo, b]))),
-    [],
+  // The list paints the same sky as the home page, so it reads the same
+  // ranking in force.
+  const { ranking } = useRanking();
+  const weatherMap = useMemo(
+    () => new Map((ranking?.resumenTodas ?? []).map((b) => [b.codigo, b])),
+    [ranking],
   );
-
-  // The list paints the same sky as the home page and was left out of the
-  // repaint: the service worker's stored copy stayed on screen.
-  useFeaturedFresco(indexarPorCodigo);
 
   useEffect(() => {
     getPlayas({
@@ -78,11 +72,7 @@ const PlayasList: React.FC = () => {
         setDatosNoDisponibles(false);
       },
     }).then(setPlayas);
-
-    getFeaturedBeaches()
-      .then(indexarPorCodigo)
-      .catch(() => { /* no-op: weather is optional enrichment */ });
-  }, [indexarPorCodigo]);
+  }, []);
 
   // No toggle needed — two separate buttons
 

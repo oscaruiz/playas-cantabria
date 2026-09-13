@@ -8,6 +8,7 @@ import {
   Procedencia,
   normalizarInstante,
   formatearInstanteAbsoluto,
+  UMBRAL_DATOS_VIEJOS_MS,
 } from './procedencia';
 import { atribucionDeFuente } from './atribuciones';
 import './provenance.css';
@@ -151,14 +152,14 @@ export const EstimatedValues: React.FC<{
  * how old the numbers are.
  *
  * `umbralCacheMs` is the age past which the copy is no longer the one this
- * request produced. It matches the backend's fresh TTL: below it, the answer
- * is what a recomputation would have given anyway.
+ * request produced. It defaults to `UMBRAL_DATOS_VIEJOS_MS`, the same one the
+ * ranking uses: the two screens must not disagree about what counts as old.
  */
 export const ComputedAt: React.FC<{
   generadoEn: string | null | undefined;
   umbralCacheMs?: number;
   className?: string;
-}> = ({ generadoEn, umbralCacheMs = 10 * 60 * 1000, className }) => {
+}> = ({ generadoEn, umbralCacheMs = UMBRAL_DATOS_VIEJOS_MS, className }) => {
   const { t, idioma } = useIdioma();
   const ms = normalizarInstante(generadoEn);
   if (ms == null) return null;
