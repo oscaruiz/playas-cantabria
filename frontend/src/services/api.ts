@@ -613,6 +613,13 @@ export type CausaPronostico =
 
 export interface FeaturedBeachesResponse {
   timestamp: number;
+  /**
+   * When the backend built THIS response, as opposed to when it assembled the
+   * ranking. Breaks the tie between two responses carrying the same ranking
+   * with the flags judged at different moments. Optional: an older backend
+   * does not send it.
+   */
+  servidoEn?: number;
   playas: FeaturedBeach[];
   revisar: FeaturedBeach[];
   resumenTodas: FeaturedBeach[];
@@ -636,13 +643,90 @@ export async function getFeaturedBeaches(
       if (!res.ok) throw new Error('No se pudieron cargar las playas destacadas');
       return res.json() as Promise<FeaturedBeachesResponse>;
     })
-    .then((value) => {
-      featuredCache = { value, expiresAt: Date.now() + FEATURED_CACHE_TTL_MS };
-      return value;
-    })
+    // Whatever comes back from `guardarFeatured` is what every other screen
+    // will read, so it is what this caller gets too: two surfaces painting two
+    // different rankings is the bug, whichever of them is the newer one.
+    .then(guardarFeatured)
     .finally(() => {
       featuredRequest = null;
     });
 
   return featuredRequest;
+}
+
+/** Path suffix of the ranking endpoint, so the pages don't each spell it out. */
+export const RUTA_FEATURED = '/beaches/featured';
+
+/**
+ * Single writer of `featuredCache`, because there are two of them racing: the
+ * request the app has in flight, and the body the service worker hands over
+ * when the response it had given up on finally lands. They can finish in
+ * either order, and whoever wrote last used to win — so a request that was
+ * resolved with the worker's stored copy could put the superseded ranking
+ * back on top of the one the message had just delivered.
+ *
+ * `timestamp` orders them, and it can: the backend stamps it when the ranking
+ * is ASSEMBLED and carries it inside the cached value, so a stale-while-
+ * revalidate hit keeps the instant of the sky it is actually holding. Older
+ * of the two loses, and losing is the right outcome — it is the older sky.
+ *
+ * It said the opposite until 13-sep-2026, when the instant was `Date.now()` at
+ * response time and every body looked equally new. The guard worked anyway,
+ * because that stamp still ordered them by when the API had served each one;
+ * now it orders them by the data, which is what it was always reaching for.
+ */
+/**
+ * Is `candidato` the older reading of the two?
+ *
+ * Two levels, because two different things can make one body older. The ranking
+ * itself is ordered by `timestamp`, the instant it was assembled. But the SAME
+ * assembled ranking goes out many times from the backend's stale cache, and
+ * each of those responses judges the lifeguard flags again against the clock:
+ * a green that was current at 10:00 is published as no flag at all by 19:00.
+ * So on a tie it is `servidoEn` that decides — otherwise the 10:00 reading,
+ * arriving second from a cache, would put the flag back on a beach whose
+ * reading had already expired. That is the one direction this must never fail
+ * in. A backend that predates `servidoEn` sends nothing and ties simply resolve
+ * in favour of what is already painted, as they did before.
+ */
+function esAnterior(
+  candidato: FeaturedBeachesResponse,
+  actual: FeaturedBeachesResponse,
+): boolean {
+  if (typeof candidato.timestamp !== 'number' || typeof actual.timestamp !== 'number') {
+    return false;
+  }
+  if (candidato.timestamp !== actual.timestamp) return candidato.timestamp < actual.timestamp;
+  if (typeof candidato.servidoEn !== 'number' || typeof actual.servidoEn !== 'number') {
+    return false;
+  }
+  return candidato.servidoEn < actual.servidoEn;
+}
+
+function guardarFeatured(value: FeaturedBeachesResponse): FeaturedBeachesResponse {
+  // Only a ranking that is still IN FORCE gets a vote. An expired entry is one
+  // nobody will be served again — letting it veto meant a plain refetch after
+  // the minute was up could be thrown away for losing to something already
+  // dead, and the screen kept painting from the discarded body.
+  const vigente = featuredCache && featuredCache.expiresAt > Date.now();
+  const enCache = vigente ? featuredCache?.value : undefined;
+  if (enCache && esAnterior(value, enCache)) return enCache;
+  featuredCache = { value, expiresAt: Date.now() + FEATURED_CACHE_TTL_MS };
+  return value;
+}
+
+/**
+ * Takes in the ranking that arrived AFTER the service worker had already
+ * served its stored copy, and returns the one now in force.
+ *
+ * It has to land here and not only on the page that received the message: this
+ * module cache is what every surface reads, and while it kept the superseded
+ * value the map, the list and the landings went on painting the old sky — and
+ * coming back to the home page re-served it from here, undoing the repaint the
+ * message had just produced.
+ */
+export function aplicarFeaturedFresco(
+  value: FeaturedBeachesResponse,
+): FeaturedBeachesResponse {
+  return guardarFeatured(value);
 }

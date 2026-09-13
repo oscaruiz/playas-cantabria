@@ -7,7 +7,14 @@ import {
   IonIcon,
 } from '@ionic/react';
 import { searchOutline, locateOutline, starOutline, videocamOutline } from 'ionicons/icons';
-import { Playa, FeaturedBeach, getPlayas, getFeaturedBeaches } from '../services/api';
+import {
+  Playa,
+  FeaturedBeach,
+  FeaturedBeachesResponse,
+  getPlayas,
+  getFeaturedBeaches,
+} from '../services/api';
+import { useFeaturedFresco } from '../hooks/useFeaturedFresco';
 import { coincidePlaya, normalizarBusqueda, webcamDisponible } from '../utils/beachHelpers';
 import { haversineKm } from '../shared/geo/haversine';
 import { useUserLocation } from '../hooks/useUserLocation';
@@ -48,6 +55,16 @@ const PlayasList: React.FC = () => {
   const blurTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const history = useHistory();
 
+  const indexarPorCodigo = useCallback(
+    (res: FeaturedBeachesResponse) =>
+      setWeatherMap(new Map(res.resumenTodas.map((b) => [b.codigo, b]))),
+    [],
+  );
+
+  // The list paints the same sky as the home page and was left out of the
+  // repaint: the service worker's stored copy stayed on screen.
+  useFeaturedFresco(indexarPorCodigo);
+
   useEffect(() => {
     getPlayas({
       onFallback: () => setEsFallback(true),
@@ -63,13 +80,9 @@ const PlayasList: React.FC = () => {
     }).then(setPlayas);
 
     getFeaturedBeaches()
-      .then((res) => {
-        const map = new Map<string, FeaturedBeach>();
-        for (const b of res.resumenTodas) map.set(b.codigo, b);
-        setWeatherMap(map);
-      })
+      .then(indexarPorCodigo)
       .catch(() => { /* no-op: weather is optional enrichment */ });
-  }, []);
+  }, [indexarPorCodigo]);
 
   // No toggle needed — two separate buttons
 

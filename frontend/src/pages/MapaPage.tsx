@@ -1,6 +1,13 @@
 import { IonPage, IonContent, IonFooter, IonSpinner } from '@ionic/react';
-import React, { Suspense, useEffect, useState } from 'react';
-import { Playa, FeaturedBeach, getPlayas, getFeaturedBeaches } from '../services/api';
+import React, { Suspense, useCallback, useEffect, useState } from 'react';
+import {
+  Playa,
+  FeaturedBeach,
+  FeaturedBeachesResponse,
+  getPlayas,
+  getFeaturedBeaches,
+} from '../services/api';
+import { useFeaturedFresco } from '../hooks/useFeaturedFresco';
 import { useIdioma } from '../shared/i18n/IdiomaContext';
 import BottomNavBar from '../shared/ui/BottomNavBar';
 import HeaderActions from '../shared/ui/HeaderActions';
@@ -19,6 +26,17 @@ const MapaPage: React.FC = () => {
   const [weatherMap, setWeatherMap] = useState<Map<string, FeaturedBeach>>(new Map());
   const { t } = useIdioma();
 
+  const indexarPorCodigo = useCallback(
+    (res: FeaturedBeachesResponse) =>
+      setWeatherMap(new Map(res.resumenTodas.map((b) => [b.codigo, b]))),
+    [],
+  );
+
+  // Same repaint the home page does: the markers were drawing the sky the
+  // service worker had served from its cache while the detail of the beach
+  // behind the marker showed the current one.
+  useFeaturedFresco(indexarPorCodigo);
+
   useEffect(() => {
     const handlePlayas = (data: Playa[]) => {
       const validas = data
@@ -36,13 +54,9 @@ const MapaPage: React.FC = () => {
     getPlayas({ onBackendData: handlePlayas }).then(handlePlayas);
 
     getFeaturedBeaches()
-      .then((res) => {
-        const map = new Map<string, FeaturedBeach>();
-        for (const b of res.resumenTodas) map.set(b.codigo, b);
-        setWeatherMap(map);
-      })
+      .then(indexarPorCodigo)
       .catch(() => { /* fallback: numbered markers */ });
-  }, []);
+  }, [indexarPorCodigo]);
 
   return (
     <IonPage className="mapa-page">

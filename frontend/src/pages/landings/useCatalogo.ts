@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   Playa,
   FeaturedBeach,
+  FeaturedBeachesResponse,
   getPlayas,
   getFeaturedBeaches,
 } from '../../services/api';
+import { useFeaturedFresco } from '../../hooks/useFeaturedFresco';
 import { normalizarInstante } from '../../features/provenance/procedencia';
 
 /**
@@ -22,6 +24,16 @@ export function useCatalogo(): {
   const [condiciones, setCondiciones] = useState<Map<string, FeaturedBeach>>(new Map());
   const [instanteCondiciones, setInstanteCondiciones] = useState<number | null>(null);
 
+  const aplicarCondiciones = useCallback((r: FeaturedBeachesResponse) => {
+    setCondiciones(new Map(r.resumenTodas.map((b) => [b.codigo, b])));
+    // The snapshot may come from the service worker's cache: its own
+    // timestamp is what lets the page say HOW current "current" is.
+    setInstanteCondiciones(normalizarInstante(r.timestamp));
+  }, []);
+
+  // And when the copy it served is superseded, the landing says so too.
+  useFeaturedFresco(aplicarCondiciones);
+
   useEffect(() => {
     let activo = true;
     getPlayas({ onBackendData: (d) => { if (activo) setPlayas(d); } }).then((d) => {
@@ -30,14 +42,11 @@ export function useCatalogo(): {
     getFeaturedBeaches()
       .then((r) => {
         if (!activo) return;
-        setCondiciones(new Map(r.resumenTodas.map((b) => [b.codigo, b])));
-        // The snapshot may come from the service worker's cache: its own
-        // timestamp is what lets the page say HOW current "current" is.
-        setInstanteCondiciones(normalizarInstante(r.timestamp));
+        aplicarCondiciones(r);
       })
       .catch(() => { /* enrichment only */ });
     return () => { activo = false; };
-  }, []);
+  }, [aplicarCondiciones]);
 
   return { playas, condiciones, instanteCondiciones };
 }

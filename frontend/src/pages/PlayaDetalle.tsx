@@ -41,6 +41,7 @@ import { WebcamCard } from './playa-detalle/WebcamCard';
 import { BlueFlagBadge } from './playa-detalle/BlueFlagBadge';
 import { ComputedAt } from '../features/provenance/SourceAndFreshness';
 import { useRefrescoDelServiceWorker } from '../hooks/useRefrescoDelServiceWorker';
+import { useFeaturedFresco } from '../hooks/useFeaturedFresco';
 import InfoDatos from '../features/provenance/InfoDatos';
 import { rutaMunicipio } from '../shared/seo/landings';
 import { FavoriteButton } from '../modules/favorites';
@@ -158,6 +159,15 @@ const PlayaDetallePage: React.FC = () => {
     if (url.endsWith(`/beaches/${codigoResuelto}/details`)) {
       setCargado({ ruta: identidadRuta, detalle: datos as PlayaDetalleData });
     }
+  });
+
+  // The score card is built from the ranking, not from the detail: without
+  // this it kept the score of the sky the service worker had cached while the
+  // headline right above it already showed the current one.
+  useFeaturedFresco((res) => {
+    if (!codigoResuelto) return;
+    setPuntuada(res.resumenTodas.find((b) => b.codigo === codigoResuelto) ?? null);
+    setMaximos(res.maximos ?? null);
   });
 
   const [selectedDay, setSelectedDay] = useState(0);

@@ -16,7 +16,7 @@ import { rankearPlayas, codigoMejorPuntuacionNoHero } from '../utils/beachRankin
 import { haversineKm } from '../shared/geo/haversine';
 import { useUserLocation } from '../hooks/useUserLocation';
 import { useRevalidarAlVolver } from '../hooks/useRevalidarAlVolver';
-import { useRefrescoDelServiceWorker } from '../hooks/useRefrescoDelServiceWorker';
+import { useFeaturedFresco } from '../hooks/useFeaturedFresco';
 import BottomNavBar from '../shared/ui/BottomNavBar';
 import HeaderActions from '../shared/ui/HeaderActions';
 import LogoMarca from '../shared/ui/LogoMarca';
@@ -392,9 +392,7 @@ const HomePage: React.FC = () => {
   // Se pinta lo que TRAE el mensaje. Volver a pedir aquí sería un bucle: la
   // petición escribe la caché y escribir la caché es justo lo que emite este
   // mensaje.
-  useRefrescoDelServiceWorker(({ url, datos }) => {
-    if (url.endsWith('/beaches/featured')) setFeatured(datos as FeaturedBeachesResponse);
-  });
+  useFeaturedFresco(setFeatured);
 
   const cautionBeaches = featured?.revisar ?? [];
 
