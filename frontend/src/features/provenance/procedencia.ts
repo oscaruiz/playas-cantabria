@@ -39,15 +39,39 @@ export function normalizarInstante(
 }
 
 /**
- * Past this age, what is painted is no longer a reading from now: it is a copy
- * the service worker or the backend's stale cache handed over.
+ * Past this age, what `/details` painted is no longer a reading from now: it is
+ * a copy the service worker or the backend's stale cache handed over.
  *
- * One definition, because two screens must not disagree about it — the ranking
- * on the front page and the detail's `ComputedAt` were each carrying their own
- * ten minutes. It matches the backend's fresh TTL: below it, the answer is what
- * a recomputation would have given anyway.
+ * Ten minutes is that endpoint's whole window — 60 s fresh plus 600 s stale —
+ * so past it the backend cannot be the source. The ranking used to share this
+ * number and must not: `/featured` answers from a window six times longer, and
+ * the two constants below say so.
  */
 export const UMBRAL_DATOS_VIEJOS_MS = 10 * 60 * 1000;
+
+/**
+ * Age at which the ranking asks again, on its own and in silence.
+ *
+ * Ten minutes because `/featured`'s fresh TTL is five: past that the backend
+ * already has something newer to give. This is the ONLY thing that refreshes a
+ * screen left open and untouched — the phone face-up on the towel — because
+ * there is no polling anywhere, so it cannot be folded back into the notice's
+ * threshold below however alike the two numbers look today.
+ */
+export const EDAD_REVALIDAR_RANKING_MS = 10 * 60 * 1000;
+
+/**
+ * Age past which the painted ranking CANNOT have come from the backend, and is
+ * therefore said out loud.
+ *
+ * `/featured` answers from `getOrSetStale(300 s, 3600 s)`: for up to an hour it
+ * legitimately returns the same `generadoEn` while it recomputes behind. Judging
+ * it by the `/details` threshold lit the notice on ordinary days, and nothing
+ * the user could do would retire it — the backend was going to hand back that
+ * same body. Past the stale window it means what it says: this is a copy from
+ * the service worker or the snapshot.
+ */
+export const UMBRAL_RANKING_VIEJO_MS = 60 * 60 * 1000;
 
 /**
  * Absolute, human-readable instant in Europe/Madrid — the accessible

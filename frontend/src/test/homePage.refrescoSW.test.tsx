@@ -17,7 +17,8 @@ import React from 'react';
 import { screen, waitFor, act } from '@testing-library/react';
 import HomePage from '../pages/HomePage';
 import { renderWithProviders } from './render';
-import { installFetchMock, restoreFetch, route } from './http/fakeFetch';
+import { installFetchMock, restoreFetch, route, deferred } from './http/fakeFetch';
+import type { RouteSpec } from './http/fakeFetch';
 import { beachesResponse } from './fixtures/beaches';
 import { featuredResponse } from './fixtures/featured';
 import { RUTA_DESTACADAS as FEATURED, RUTA_PLAYAS as BEACHES } from './apiRoutes';
@@ -106,8 +107,9 @@ describe('HomePage — respuesta servida por el service worker', () => {
 
   it('vuelve a pedir el ranking por su cuenta cuando lo pintado es viejo', async () => {
     // El mensaje del worker puede no llegar nunca: la petición que abandonó
-    // falla, o el backend devuelve el mismo ranking viejo. El aviso decía
-    // "buscando los de ahora…" y no había nadie buscando.
+    // falla, o el backend devuelve el mismo ranking viejo. Por eso la portada
+    // vuelve a pedir sola — y sola es la palabra: el aviso es un párrafo, no un
+    // botón, porque el toque no tenía forma de ganar.
     let llamadas = 0;
     installFetchMock([
       route(FEATURED, () => ({ json: llamadas++ === 0 ? conEdad(12) : conEdad(0) })),
@@ -161,5 +163,29 @@ describe('HomePage — respuesta servida por el service worker', () => {
     });
 
     expect(screen.getByText(AVISO)).toBeInTheDocument();
+  });
+
+  it('enseña que está actualizando mientras la petición está en vuelo', async () => {
+    // La app pide sola, pero callada parecía atascada: el reloj del chip de
+    // frescura se vuelve spinner mientras hay una petición DE VERDAD en vuelo,
+    // y vuelve a ser reloj cuando termina — traiga algo nuevo o no.
+    const enVuelo = deferred<RouteSpec>();
+    let llamadas = 0;
+    installFetchMock([
+      route(FEATURED, () => (llamadas++ === 0 ? { json: conEdad(12) } : enVuelo.promise)),
+      route(BEACHES, { json: beachesResponse }),
+    ]);
+
+    renderWithProviders(<HomePage />, { route: '/' });
+
+    expect(await screen.findByLabelText(/actualizando/i)).toBeInTheDocument();
+
+    await act(async () => {
+      enVuelo.resolve({ json: conEdad(0) });
+    });
+
+    await waitFor(() =>
+      expect(screen.queryByLabelText(/actualizando/i)).not.toBeInTheDocument(),
+    );
   });
 });

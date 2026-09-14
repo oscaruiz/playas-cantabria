@@ -116,47 +116,24 @@
   max-width: 640px;
 }
 
-/* Notice for data served by the service worker. A button, because the
-   automatic retry can fail: then this is all that stands between the user
-   and last night's sky. Discreet, but tappable. */
+/* Notice for a ranking older than the backend's own stale window. Discreet on
+   purpose: it informs, it does not alarm, and it is not tappable — there is
+   nothing a tap could do that the app is not already doing. */
 .hp-aviso-cache {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  width: 100%;
   margin: 0 0 16px;
-  padding: 10px 14px;
-  border: 1px solid var(--playa-border, #e0e2e6);
-  border-radius: 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
   background: var(--ion-color-light, #f4f5f8);
   color: var(--ion-color-medium-shade, #808289);
-  font-family: inherit;
   font-size: 0.8125rem;
   line-height: 1.35;
-  text-align: left;
-  cursor: pointer;
 }
 
-.hp-aviso-cache:disabled {
-  cursor: default;
-}
-
-.hp-aviso-cache-texto {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.hp-aviso-cache-titulo {
-  font-weight: 600;
-  color: var(--ion-color-dark, #2b2c2e);
-}
-
-.hp-aviso-cache-icono {
-  font-size: 1.125rem;
-  line-height: 1;
+/* The clock of the freshness badge while a refetch is in flight. Sized to the
+   emoji it replaces, so the badge does not jump when it swaps. */
+.hp-badge-spinner {
+  width: 13px;
+  height: 13px;
   flex-shrink: 0;
 }
 
@@ -165,12 +142,6 @@
   height: 14px;
   margin-right: 6px;
   vertical-align: -2px;
-}
-
-.hp-aviso-cache-spinner {
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
 }
 
 /* --- Section --- */

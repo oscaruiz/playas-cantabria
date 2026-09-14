@@ -79,7 +79,7 @@ describe('useRanking', () => {
 
   it('dice que lo pintado es de una visita anterior cuando es viejo', async () => {
     // Un solo reintento sale solo; devuelve lo mismo, así que el aviso se queda.
-    installFetchMock([route(FEATURED, { json: ranking(60, 'cielo de anoche') })]);
+    installFetchMock([route(FEATURED, { json: ranking(90, 'cielo de anoche') })]);
 
     render(<Sonda />);
 
@@ -90,7 +90,7 @@ describe('useRanking', () => {
     let llamadas = 0;
     installFetchMock([
       route(FEATURED, () => ({
-        json: llamadas++ === 0 ? ranking(60, 'cielo de anoche') : ranking(0, 'cielo claro'),
+        json: llamadas++ === 0 ? ranking(90, 'cielo de anoche') : ranking(0, 'cielo claro'),
       })),
     ]);
 
@@ -101,6 +101,28 @@ describe('useRanking', () => {
       expect(screen.queryByText('de visita anterior')).not.toBeInTheDocument(),
     );
     expect(llamadas).toBe(2);
+  });
+
+  it('vuelve a pedir a los diez minutos sin avisar de nada', async () => {
+    // Los dos umbrales son preguntas distintas: a los diez minutos el backend ya
+    // tiene algo más nuevo que dar —su TTL fresco son cinco—, pero sigue siendo
+    // SU respuesta, así que no hay nada que decirle al usuario. Juntarlos otra
+    // vez significa o encender el aviso en un día normal, o dejar de refrescar
+    // una pantalla abierta y quieta durante una hora.
+    let llamadas = 0;
+    installFetchMock([
+      route(FEATURED, () => ({
+        json: llamadas++ === 0 ? ranking(20, 'cielo de hace un rato') : ranking(0, 'cielo recién hecho'),
+      })),
+    ]);
+
+    render(<Sonda />);
+
+    // Cielos con nombre propio: el ranking en vigor no se reinicia entre casos,
+    // así que reutilizar el de otro test haría pasar este sin pedir nada.
+    expect(await screen.findByText('cielo recién hecho')).toBeInTheDocument();
+    expect(llamadas).toBe(2);
+    expect(screen.queryByText('de visita anterior')).not.toBeInTheDocument();
   });
 
   it('pinta el ranking que el service worker entrega tarde', async () => {

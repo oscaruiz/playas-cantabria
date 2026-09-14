@@ -43,8 +43,7 @@ export const en = {
   'fav.vacio': 'No favorite beaches yet. Tap the star on a beach to save it here.',
   'home.favoritas': 'Your favorite beaches',
   'home.datosDeCache': 'Saved from your last visit',
-  'home.datosDeCacheAccion': 'Tap to refresh',
-  'home.datosDeCacheBuscando': 'Fetching the current ones…',
+  'home.actualizando': 'Refreshing the data…',
 
   // ---- Install as an app (PWA) ----
   'instalar.chip': 'Install app',

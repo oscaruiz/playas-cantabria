@@ -109,7 +109,9 @@ const HeroBody: React.FC<{
   totalBeaches: number;
   /** Epoch ms of the featured snapshot; null hides the badge. */
   actualizadoMs: number | null;
-}> = ({ avgTemp, totalBeaches, actualizadoMs }) => {
+  /** A refetch is in flight right now — said here, where the age already is. */
+  actualizando: boolean;
+}> = ({ avgTemp, totalBeaches, actualizadoMs, actualizando }) => {
   const { t, tPlural } = useIdioma();
   return (
     <div className="hp-hero">
@@ -132,7 +134,25 @@ const HeroBody: React.FC<{
             can check against your own watch. */}
         {actualizadoMs != null && (
           <span className="hp-badge">
-            <span aria-hidden="true">{'\uD83D\uDD52'}</span>{' '}
+            {/* The clock becomes a spinner while a refetch is really in
+                flight. The app does go looking on its own — every ten minutes,
+                and on the way back to the tab — and saying nothing about it
+                made a screen that was working look stuck. It REPLACES the
+                clock instead of sitting beside it, so the badge neither moves
+                nor grows, and it hangs on a request that is running, never on
+                an intention: that is the whole difference from the notice that
+                promised "buscando los de ahora…" with nobody looking. What it
+                does not promise is that the number will change — the backend
+                may legitimately answer with the same reading it just gave. */}
+            {actualizando ? (
+              <IonSpinner
+                name="crescent"
+                className="hp-badge-spinner"
+                aria-label={t('home.actualizando')}
+              />
+            ) : (
+              <span aria-hidden="true">{'\uD83D\uDD52'}</span>
+            )}{' '}
             <FreshnessLabel instante={actualizadoMs} />
             {' · '}
             {horaLocalMadrid(new Date(actualizadoMs).toISOString())}
@@ -456,37 +476,26 @@ const HomePage: React.FC = () => {
           avgTemp={avgTemp}
           totalBeaches={totalBeaches}
           actualizadoMs={actualizadoMs}
+          actualizando={reintentando}
         />
 
         <div className="hp-body">
-          {/* The service worker served its copy because the backend was slow.
-              It is said, rather than passing last night's sky off as this
-              morning's, and HOW old it is is said too: it used to read
-              "fetching the current ones…" when nobody was fetching — the
-              request that abandoned it may never come back — so the notice
-              sat there promising something that was not happening. It now
-              retries once on its own; the rest is up to whoever taps it. */}
+          {/* What is painted is older than anything the backend can still be
+              serving, so it came from the service worker's copy or the
+              snapshot. It is said, rather than passing last night's sky off as
+              this morning's — and said and nothing more: it was a retry button
+              for a day, and the tap could not win. The backend answers a forced
+              refetch from the same stale window, the worker resolves it with
+              the same stored body at three seconds, and the user was left
+              pressing a button that had never had anything to give. What can
+              retire this is a real answer, and the app already asks for one on
+              its own. */}
           {deVisitaAnterior && (
-            <button
-              type="button"
-              className="hp-aviso-cache"
-              onClick={reintentar}
-              disabled={reintentando}
-            >
-              <span className="hp-aviso-cache-texto">
-                <span className="hp-aviso-cache-titulo">{t('home.datosDeCache')}</span>
-                <span className="hp-aviso-cache-sub" role="status">
-                  {reintentando
-                    ? t('home.datosDeCacheBuscando')
-                    : `${formatearHaceTiempo(actualizadoMs as number, t)} · ${t('home.datosDeCacheAccion')}`}
-                </span>
-              </span>
-              {reintentando ? (
-                <IonSpinner name="crescent" className="hp-aviso-cache-spinner" />
-              ) : (
-                <span className="hp-aviso-cache-icono" aria-hidden="true">&#8635;</span>
-              )}
-            </button>
+            <p className="hp-aviso-cache" role="status">
+              {t('home.datosDeCache')}
+              {' · '}
+              {formatearHaceTiempo(actualizadoMs as number, t)}
+            </p>
           )}
 
           {/* Favorites first — independent of the featured ranking's fate

@@ -7,7 +7,11 @@ import {
   leerRankingEnVigor,
   suscribirRanking,
 } from '../../services/api';
-import { normalizarInstante, UMBRAL_DATOS_VIEJOS_MS } from '../provenance/procedencia';
+import {
+  normalizarInstante,
+  EDAD_REVALIDAR_RANKING_MS,
+  UMBRAL_RANKING_VIEJO_MS,
+} from '../provenance/procedencia';
 import { useRefrescoDelServiceWorker } from '../../hooks/useRefrescoDelServiceWorker';
 import { useRevalidarAlVolver } from '../../hooks/useRevalidarAlVolver';
 
@@ -37,7 +41,11 @@ export interface RankingEnUso {
   ranking: FeaturedBeachesResponse | null;
   /** When the backend ASSEMBLED it (epoch ms), null if it did not say. */
   actualizadoMs: number | null;
-  /** The painted ranking is a stored copy, not a reading from now. */
+  /**
+   * The painted ranking is a stored copy: older than anything `/featured` can
+   * still be serving, so it came from the service worker or the snapshot.
+   * Nothing the user does retires it — only a real answer does.
+   */
   deVisitaAnterior: boolean;
   /** No answer yet, of any kind. */
   cargando: boolean;
@@ -50,7 +58,7 @@ export interface RankingEnUso {
 }
 
 /**
- * Instant of the stale ranking the automatic retry has already been spent on.
+ * Instant of the ranking the automatic refetch has already been spent on.
  *
  * Module-level and not a ref per screen, because every mounted screen would
  * otherwise spend its own retry on the same old body, and each attempt wakes a
@@ -119,29 +127,41 @@ export function useRanking(): RankingEnUso {
   }, []);
 
   const actualizadoMs = ranking ? normalizarInstante(ranking.timestamp) : null;
-  const deVisitaAnterior =
-    actualizadoMs != null && Date.now() - actualizadoMs > UMBRAL_DATOS_VIEJOS_MS;
+  const edadMs = actualizadoMs == null ? null : Date.now() - actualizadoMs;
 
-  // Crossing the threshold is an event nothing else announces. A ranking that
-  // was nine minutes old when the screen opened is old one minute later, and a
-  // phone left face-up on the towel renders nothing in between: without this,
-  // neither the notice nor the automatic retry would ever happen.
+  // When to ASK AGAIN and when to TELL THE USER are two different questions, and
+  // they were one constant. The notice fired at ten minutes, which the backend
+  // answers from its stale window all day long: it lit up on ordinary days and
+  // no tap could retire it, because the same body was coming back. Asking again
+  // at ten minutes is right — that IS when there is something newer to get.
+  const convieneRevalidar = edadMs != null && edadMs > EDAD_REVALIDAR_RANKING_MS;
+  const deVisitaAnterior = edadMs != null && edadMs > UMBRAL_RANKING_VIEJO_MS;
+
+  // Growing old is an event nothing else announces. A ranking that was nine
+  // minutes old when the screen opened is due one minute later, and a phone left
+  // face-up on the towel renders nothing in between: without this, a screen open
+  // and untouched would never refresh at all — there is no polling anywhere.
   const [, repintar] = useReducer((n: number) => n + 1, 0);
   useEffect(() => {
-    if (actualizadoMs == null || deVisitaAnterior) return;
-    const falta = UMBRAL_DATOS_VIEJOS_MS - (Date.now() - actualizadoMs);
+    if (actualizadoMs == null || convieneRevalidar) return;
+    // `actualizadoMs` and not the age as a dependency: the age changes on every
+    // render, so the wait would start over each time anything else repainted.
+    const falta = EDAD_REVALIDAR_RANKING_MS - (Date.now() - actualizadoMs);
     const temporizador = setTimeout(repintar, Math.max(falta, 0) + 1000);
     return () => clearTimeout(temporizador);
-  }, [actualizadoMs, deVisitaAnterior]);
+  }, [actualizadoMs, convieneRevalidar]);
 
-  // One automatic retry: the response the service worker gave up on may never
-  // arrive (backend asleep, bad network, or the same old ranking again), and
-  // without this the screen kept that copy until someone reloaded by hand.
+  // One automatic refetch per ranking: the response the service worker gave up
+  // on may never arrive (backend asleep, bad network, or the same old ranking
+  // again), and without this the screen kept that copy until someone reloaded by
+  // hand. It hangs on `convieneRevalidar` and NOT on the notice: the day the two
+  // thresholds were one, raising the notice to something honest would have
+  // silently turned this into an hourly refresh.
   useEffect(() => {
-    if (!deVisitaAnterior || actualizadoMs === reintentadoPara) return;
+    if (!convieneRevalidar || actualizadoMs === reintentadoPara) return;
     reintentadoPara = actualizadoMs;
     void reintentar();
-  }, [deVisitaAnterior, actualizadoMs, reintentar]);
+  }, [convieneRevalidar, actualizadoMs, reintentar]);
 
   return {
     ranking,
