@@ -1,19 +1,14 @@
 {
-  "ranAt": "2026-09-15T17:43:42.525Z",
+  "ranAt": "2026-09-16T12:42:04.879Z",
   "region": "cantabria",
   "ids": 69,
-  "conFicha": 69,
-  "conColor": 67,
+  "conFicha": 0,
+  "conColor": 0,
   "rechazadas403": 0,
   "estadosHttp": {
     "200": 69
   },
-  "alts": {
-    "Verde": 53,
-    "Amarilla": 11,
-    "No hay información": 2,
-    "Roja": 3
-  },
-  "escrito": true,
-  "motivo": "captura escrita"
+  "alts": {},
+  "escrito": false,
+  "motivo": "demasiadas fichas sin respuesta"
 }
