@@ -17,19 +17,19 @@ import React, { useEffect } from 'react';
  * case for one Firebase site per region.
  */
 
-const ORIGEN_CANONICO =
+const CANONICAL_ORIGIN =
   process.env.REACT_APP_SITE_ORIGIN?.trim().replace(/\/+$/, '') || null;
 
 /** Absolute canonical URL of a path — also what the share button shares. */
-export function urlCanonica(ruta: string): string {
-  return `${ORIGEN_CANONICO ?? window.location.origin}${ruta}`;
+export function canonicalUrl(path: string): string {
+  return `${CANONICAL_ORIGIN ?? window.location.origin}${path}`;
 }
 
-function metaPorNombre(atributo: 'name' | 'property', valor: string): HTMLMetaElement {
-  let el = document.head.querySelector<HTMLMetaElement>(`meta[${atributo}="${valor}"]`);
+function metaByName(attribute: 'name' | 'property', value: string): HTMLMetaElement {
+  let el = document.head.querySelector<HTMLMetaElement>(`meta[${attribute}="${value}"]`);
   if (!el) {
     el = document.createElement('meta');
-    el.setAttribute(atributo, valor);
+    el.setAttribute(attribute, value);
     document.head.appendChild(el);
   }
   return el;
@@ -46,41 +46,41 @@ const SeoHead: React.FC<{
    * must never keep declaring another beach's URL as its own.
    */
   noindex?: boolean;
-}> = ({ title: titulo, description: descripcion, canonicalPath: rutaCanonica, noindex }) => {
+}> = ({ title, description, canonicalPath, noindex }) => {
   useEffect(() => {
-    const urlAbsoluta = urlCanonica(rutaCanonica);
+    const absoluteUrl = canonicalUrl(canonicalPath);
 
-    document.title = titulo;
-    metaPorNombre('name', 'description').setAttribute('content', descripcion);
-    metaPorNombre('property', 'og:title').setAttribute('content', titulo);
-    metaPorNombre('property', 'og:description').setAttribute('content', descripcion);
-    metaPorNombre('property', 'og:type').setAttribute('content', 'website');
-    metaPorNombre('name', 'twitter:card').setAttribute('content', 'summary');
+    document.title = title;
+    metaByName('name', 'description').setAttribute('content', description);
+    metaByName('property', 'og:title').setAttribute('content', title);
+    metaByName('property', 'og:description').setAttribute('content', description);
+    metaByName('property', 'og:type').setAttribute('content', 'website');
+    metaByName('name', 'twitter:card').setAttribute('content', 'summary');
 
-    const canonicalExistente =
+    const existingCanonical =
       document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
-    const robotsExistente =
+    const existingRobots =
       document.head.querySelector<HTMLMetaElement>('meta[name="robots"]');
-    const ogUrlExistente =
+    const existingOgUrl =
       document.head.querySelector<HTMLMetaElement>('meta[property="og:url"]');
 
     if (noindex) {
-      canonicalExistente?.remove();
-      ogUrlExistente?.remove();
-      metaPorNombre('name', 'robots').setAttribute('content', 'noindex');
+      existingCanonical?.remove();
+      existingOgUrl?.remove();
+      metaByName('name', 'robots').setAttribute('content', 'noindex');
       return;
     }
 
-    robotsExistente?.remove();
-    metaPorNombre('property', 'og:url').setAttribute('content', urlAbsoluta);
-    let canonical = canonicalExistente;
+    existingRobots?.remove();
+    metaByName('property', 'og:url').setAttribute('content', absoluteUrl);
+    let canonical = existingCanonical;
     if (!canonical) {
       canonical = document.createElement('link');
       canonical.rel = 'canonical';
       document.head.appendChild(canonical);
     }
-    canonical.href = urlAbsoluta;
-  }, [titulo, descripcion, rutaCanonica, noindex]);
+    canonical.href = absoluteUrl;
+  }, [title, description, canonicalPath, noindex]);
 
   return null;
 };

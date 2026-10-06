@@ -18,12 +18,12 @@
 import React from 'react';
 import { fireEvent, screen } from '@testing-library/react';
 import HomePage from '../../pages/HomePage';
-import { recargarFavoritas } from '../../modules/favorites';
+import { reloadFavorites } from '../../modules/favorites';
 import { renderWithProviders } from '../render';
 import { installFetchMock, restoreFetch, route, deferred, RouteSpec } from '../http/fakeFetch';
 import { beachesResponse } from '../fixtures/beaches';
 import { featuredResponse } from '../fixtures/featured';
-import { RUTA_DESTACADAS as FEATURED, RUTA_PLAYAS as BEACHES } from '../apiRoutes';
+import { FEATURED_PATH as FEATURED, BEACHES_PATH as BEACHES } from '../apiRoutes';
 
 
 beforeEach(() => {
@@ -43,7 +43,7 @@ describe('HomePage — estados', () => {
       'playas:favoritas',
       JSON.stringify({ version: 1, beachCodes: [beachesResponse[0].codigo] }),
     );
-    recargarFavoritas();
+    reloadFavorites();
 
     const pending = deferred<RouteSpec>();
     installFetchMock([
@@ -66,7 +66,7 @@ describe('HomePage — estados', () => {
     expect(screen.getByText('No se pudieron cargar las condiciones actuales')).toBeInTheDocument();
 
     localStorage.removeItem('playas:favoritas');
-    recargarFavoritas();
+    reloadFavorites();
   });
 
   it('muestra el mensaje de búsqueda y da paso al error si falla', async () => {
@@ -106,11 +106,11 @@ describe('HomePage — estados', () => {
   });
 
   it('el botón de reintentar vuelve a pedir y recupera la página', async () => {
-    let intentos = 0;
+    let attempts = 0;
     const fetchMock = installFetchMock([
       route(FEATURED, () => {
-        intentos += 1;
-        return intentos === 1 ? { status: 500 } : { json: featuredResponse };
+        attempts += 1;
+        return attempts === 1 ? { status: 500 } : { json: featuredResponse };
       }),
       route(BEACHES, { json: beachesResponse }),
     ]);

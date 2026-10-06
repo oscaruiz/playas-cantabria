@@ -1,41 +1,41 @@
-import { TraducirFn, Idioma } from '../../shared/i18n/IdiomaContext';
-import { capitalizar } from '../../shared/format/texto';
-import { nombreDia, traducirNombreDiaApi, formatearFechaCorta } from '../../shared/i18n/fechas';
+import { TranslateFn, Language } from '../../shared/i18n/IdiomaContext';
+import { capitalize } from '../../shared/format/texto';
+import { dayName, translateApiDayName, formatShortDate } from '../../shared/i18n/fechas';
 
 /**
  * Extract day-of-month from fecha string.
  * Handles both "domingo 05" (AEMET HTML scraper) and "2026-04-06" (ISO) formats.
  */
-export function parseDayOfMonth(fecha: string): number {
-  if (!fecha) return -1;
+export function parseDayOfMonth(date: string): number {
+  if (!date) return -1;
   // ISO format: "2026-04-06"
-  if (/^\d{4}-\d{2}-\d{2}/.test(fecha)) {
-    return new Date(fecha + 'T12:00:00').getDate();
+  if (/^\d{4}-\d{2}-\d{2}/.test(date)) {
+    return new Date(date + 'T12:00:00').getDate();
   }
   // AEMET format: "domingo 05"
-  const match = fecha.match(/(\d+)/);
+  const match = date.match(/(\d+)/);
   return match ? parseInt(match[1], 10) : -1;
 }
 
-export function dayTitle(fecha: string, t: TraducirFn, idioma: Idioma): string {
-  const dayNum = parseDayOfMonth(fecha);
-  if (dayNum < 0) return fecha || '?';
+export function dayTitle(date: string, t: TranslateFn, language: Language): string {
+  const dayNum = parseDayOfMonth(date);
+  if (dayNum < 0) return date || '?';
 
   const now = new Date();
-  const hoy = now.getDate();
-  const manana = new Date(now);
-  manana.setDate(hoy + 1);
-  const pasado = new Date(now);
-  pasado.setDate(hoy + 2);
+  const today = now.getDate();
+  const morning = new Date(now);
+  morning.setDate(today + 1);
+  const past = new Date(now);
+  past.setDate(today + 2);
 
-  if (dayNum === hoy) return t('fecha.hoy');
-  if (dayNum === manana.getDate()) return t('fecha.manana');
-  if (dayNum === pasado.getDate()) return t('fecha.pasadoManana');
+  if (dayNum === today) return t('fecha.hoy');
+  if (dayNum === morning.getDate()) return t('fecha.manana');
+  if (dayNum === past.getDate()) return t('fecha.pasadoManana');
 
   // Date out of range — extract the day name from the string (Spanish, from the API)
-  const nombreDiaApi = fecha.split(/\s/)[0];
-  const traducido = traducirNombreDiaApi(nombreDiaApi, idioma);
-  return capitalizar(traducido ?? nombreDiaApi) || fecha;
+  const apiDayName = date.split(/\s/)[0];
+  const translated = translateApiDayName(apiDayName, language);
+  return capitalize(translated ?? apiDayName) || date;
 }
 
 /**
@@ -50,22 +50,22 @@ export function forecastMonth(dayNum: number, now: Date): number {
   return new Date(now.getFullYear(), month, dayNum, 12).getMonth();
 }
 
-export function daySubtitle(fecha: string, idioma: Idioma): string {
-  const dayNum = parseDayOfMonth(fecha);
+export function daySubtitle(date: string, language: Language): string {
+  const dayNum = parseDayOfMonth(date);
   if (dayNum < 0) return '';
 
   // AEMET format like "domingo 05" — name from the string + day + resolved month
-  const nombreDiaApi = fecha.split(/\s/)[0];
-  if (nombreDiaApi && /^[a-z\u00e1-\u00fa]/i.test(nombreDiaApi)) {
-    const traducido = traducirNombreDiaApi(nombreDiaApi, idioma) ?? nombreDiaApi;
-    return formatearFechaCorta(capitalizar(traducido), dayNum, forecastMonth(dayNum, new Date()), idioma);
+  const apiDayName = date.split(/\s/)[0];
+  if (apiDayName && /^[a-z\u00e1-\u00fa]/i.test(apiDayName)) {
+    const translated = translateApiDayName(apiDayName, language) ?? apiDayName;
+    return formatShortDate(capitalize(translated), dayNum, forecastMonth(dayNum, new Date()), language);
   }
 
   // ISO fallback
-  const d = new Date(fecha + 'T12:00:00');
-  return formatearFechaCorta(capitalizar(nombreDia(d.getDay(), idioma)), d.getDate(), d.getMonth(), idioma);
+  const d = new Date(date + 'T12:00:00');
+  return formatShortDate(capitalize(dayName(d.getDay(), language)), d.getDate(), d.getMonth(), language);
 }
 
-export function isToday(fecha: string): boolean {
-  return parseDayOfMonth(fecha) === new Date().getDate();
+export function isToday(date: string): boolean {
+  return parseDayOfMonth(date) === new Date().getDate();
 }

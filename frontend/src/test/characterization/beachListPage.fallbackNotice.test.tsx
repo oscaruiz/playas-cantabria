@@ -12,21 +12,21 @@
 
 import React from 'react';
 import { screen, waitFor } from '@testing-library/react';
-import PlayasList from '../../pages/PlayasList';
+import BeachList from '../../pages/PlayasList';
 import { renderWithProviders } from '../render';
 import { installFetchMock, restoreFetch, route, deferred, RouteSpec } from '../http/fakeFetch';
 import { beachesResponse } from '../fixtures/beaches';
 import { featuredResponse } from '../fixtures/featured';
-import { RUTA_DESTACADAS as FEATURED, RUTA_PLAYAS as BEACHES } from '../apiRoutes';
+import { FEATURED_PATH as FEATURED, BEACHES_PATH as BEACHES } from '../apiRoutes';
 import { BEACH_COUNT_ES, BEACH_COUNT_EN } from '../localCatalog';
 
 
-const AVISO = 'Sin conexión: mostrando datos guardados, puede que estén desactualizados';
-let ahora = Date.now();
+const WARNING = 'Sin conexión: mostrando datos guardados, puede que estén desactualizados';
+let now = Date.now();
 
 beforeEach(() => {
-  ahora += 5 * 60 * 1000 + 1;
-  jest.spyOn(Date, 'now').mockReturnValue(ahora);
+  now += 5 * 60 * 1000 + 1;
+  jest.spyOn(Date, 'now').mockReturnValue(now);
   Object.defineProperty(navigator, 'geolocation', { configurable: true, value: undefined });
 });
 
@@ -41,13 +41,13 @@ it('avisa cuando el backend está caído, y sigue mostrando el listado', async (
     route(BEACHES, { networkError: true }),
   ]);
 
-  renderWithProviders(<PlayasList />, { route: '/playas' });
+  renderWithProviders(<BeachList />, { route: '/playas' });
 
   await screen.findByText(BEACH_COUNT_ES);
-  const aviso = screen.getByText(AVISO);
-  expect(aviso).toBeInTheDocument();
+  const warning = screen.getByText(WARNING);
+  expect(warning).toBeInTheDocument();
   // `role="status"` so that screen readers announce it without stealing focus.
-  expect(aviso.closest('[role="status"]')).not.toBeNull();
+  expect(warning.closest('[role="status"]')).not.toBeNull();
 });
 
 it('el aviso se traduce', async () => {
@@ -56,7 +56,7 @@ it('el aviso se traduce', async () => {
     route(BEACHES, { networkError: true }),
   ]);
 
-  renderWithProviders(<PlayasList />, { route: '/playas', language: 'en' });
+  renderWithProviders(<BeachList />, { route: '/playas', language: 'en' });
 
   await screen.findByText(BEACH_COUNT_EN);
   expect(
@@ -65,23 +65,23 @@ it('el aviso se traduce', async () => {
 });
 
 it('el aviso desaparece si el backend acaba respondiendo', async () => {
-  const tardio = deferred<RouteSpec>();
+  const late = deferred<RouteSpec>();
   installFetchMock([
     route(FEATURED, { networkError: true }),
-    route(BEACHES, () => tardio.promise),
+    route(BEACHES, () => late.promise),
   ]);
 
-  renderWithProviders(<PlayasList />, { route: '/playas' });
+  renderWithProviders(<BeachList />, { route: '/playas' });
 
   // After the default 2.5 s the local JSON is served and the notice shows up.
   await screen.findByText(BEACH_COUNT_ES, undefined, { timeout: 4000 });
-  expect(screen.getByText(AVISO)).toBeInTheDocument();
+  expect(screen.getByText(WARNING)).toBeInTheDocument();
 
   // And when the backend finally answers, both data and notice are replaced.
-  tardio.resolve({ json: beachesResponse });
+  late.resolve({ json: beachesResponse });
 
   await waitFor(() => expect(screen.getByText('7 playas')).toBeInTheDocument());
-  expect(screen.queryByText(AVISO)).not.toBeInTheDocument();
+  expect(screen.queryByText(WARNING)).not.toBeInTheDocument();
 }, 10000);
 
 it('no avisa cuando el backend responde a tiempo', async () => {
@@ -90,10 +90,10 @@ it('no avisa cuando el backend responde a tiempo', async () => {
     route(BEACHES, { json: beachesResponse }),
   ]);
 
-  renderWithProviders(<PlayasList />, { route: '/playas' });
+  renderWithProviders(<BeachList />, { route: '/playas' });
 
   await screen.findByText('7 playas');
-  expect(screen.queryByText(AVISO)).not.toBeInTheDocument();
+  expect(screen.queryByText(WARNING)).not.toBeInTheDocument();
   expect(
     fetchMock.mock.calls.filter(([url]) => BEACHES.test(String(url))),
   ).toHaveLength(1);

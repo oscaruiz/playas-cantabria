@@ -9,18 +9,18 @@ import {
 import { chevronBackOutline, navigateOutline, mapOutline } from 'ionicons/icons';
 import { useHistory, useParams, Link } from 'react-router-dom';
 import {
-  getDetallePlaya,
-  getPlayas,
-  ErrorDetalle,
-  PlayaDetalle as PlayaDetalleData,
+  getBeachDetail,
+  getBeaches,
+  DetailError,
+  BeachDetail as PlayaDetalleData,
 } from '../services/api';
 import { beachPath, findBySlugs } from '../shared/seo/beachUrls';
-import SeoHead, { urlCanonica } from '../shared/seo/SeoHead';
+import SeoHead, { canonicalUrl } from '../shared/seo/SeoHead';
 import BottomNavBar from '../shared/ui/BottomNavBar';
 import HeaderActions from '../shared/ui/HeaderActions';
-import { BotonCompartir } from '../modules/compartir';
+import { ShareButton } from '../modules/compartir';
 import './PlayaDetalle.css';
-import { useIdioma } from '../shared/i18n/IdiomaContext';
+import { useLanguage } from '../shared/i18n/IdiomaContext';
 import { isToday } from './playa-detalle/dates';
 import FlagBanner from './playa-detalle/FlagBanner';
 import ScoreCard from './playa-detalle/ScoreCard';
@@ -29,39 +29,39 @@ import ForecastHero from './playa-detalle/ForecastHero';
 import HalfDayDetail from './playa-detalle/HalfDayDetail';
 import DailyStats from './playa-detalle/DailyStats';
 import TidesSection from './playa-detalle/TidesSection';
-import ProximasHoras from './playa-detalle/ProximasHoras';
-import ClimaHero from './playa-detalle/ClimaHero';
+import NextHours from './playa-detalle/ProximasHoras';
+import WeatherHero from './playa-detalle/ClimaHero';
 import MetadataFooter from './playa-detalle/MetadataFooter';
-import CruzRojaCard from './playa-detalle/CruzRojaCard';
+import RedCrossCard from './playa-detalle/CruzRojaCard';
 import { BeachInfoSection, BeachAttributesSection } from './playa-detalle/BeachInfoSection';
 import { WebcamCard } from './playa-detalle/WebcamCard';
 import { BlueFlagBadge } from './playa-detalle/BlueFlagBadge';
 import { ComputedAt } from '../features/provenance/SourceAndFreshness';
-import { useRefrescoDelServiceWorker } from '../hooks/useRefrescoDelServiceWorker';
+import { useServiceWorkerRefresh } from '../hooks/useRefrescoDelServiceWorker';
 import { useRanking } from '../features/ranking/useRanking';
-import InfoDatos from '../features/provenance/InfoDatos';
+import DataInfo from '../features/provenance/InfoDatos';
 import { municipalityPath } from '../shared/seo/landings';
 import { FavoriteButton } from '../modules/favorites';
 
-const PlayaDetallePage: React.FC = () => {
+const BeachDetailPage: React.FC = () => {
   // Two routes land here: canonical /playas/:municipio/:playa and legacy
   // /playas/:codigo. The canonical one is resolved to a codigo against the
   // catalog (getPlayas never rejects: backend, saved copy or bundled JSON).
-  const { codigo, municipio, playa } = useParams<{
+  const { codigo: code, municipio: municipality, playa: beach } = useParams<{
     codigo?: string;
     municipio?: string;
     playa?: string;
   }>();
-  const [codigoResuelto, setCodigoResuelto] = useState<string | null>(codigo ?? null);
+  const [resolvedCode, setResolvedCode] = useState<string | null>(code ?? null);
   const history = useHistory();
-  const { t } = useIdioma();
+  const { t } = useLanguage();
   // Loaded detail TAGGED with the route it belongs to. `datos` derives from
   // it: the instant the route identity changes, the previous beach vanishes
   // SYNCHRONOUSLY — no frame where the old beach (or its canonical URL and
   // star) shows under the new route while effects catch up.
-  const identidadRuta = codigo ?? `${municipio ?? ''}/${playa ?? ''}`;
-  const [cargado, setCargado] = useState<{ ruta: string; detalle: PlayaDetalleData } | null>(null);
-  const datos = cargado && cargado.ruta === identidadRuta ? cargado.detalle : null;
+  const routeIdentity = code ?? `${municipality ?? ''}/${beach ?? ''}`;
+  const [loaded, setLoaded] = useState<{ ruta: string; detalle: PlayaDetalleData } | null>(null);
+  const data = loaded && loaded.ruta === routeIdentity ? loaded.detalle : null;
   const [error, setError] = useState(false);
   /** Estado HTTP del fallo; null = la petición no volvió (red, CORS, SW). */
   const [statusError, setStatusError] = useState<number | null>(null);
@@ -83,57 +83,57 @@ const PlayaDetallePage: React.FC = () => {
   // this reset the previous beach would stay on screen (with its canonical
   // URL and favorite star) while — or even after — the new one fails to load.
   useEffect(() => {
-    setCargado(null);
+    setLoaded(null);
     setSelectedDay(0);
     setError(false);
     setStatusError(null);
-    if (codigo) {
-      setCodigoResuelto(codigo);
+    if (code) {
+      setResolvedCode(code);
       return;
     }
-    let activo = true;
-    setCodigoResuelto(null);
-    getPlayas().then((todas) => {
-      if (!activo) return;
-      const encontrada = findBySlugs(todas, municipio ?? '', playa ?? '');
-      if (encontrada) {
-        setCodigoResuelto(encontrada.codigo);
+    let active = true;
+    setResolvedCode(null);
+    getBeaches().then((all) => {
+      if (!active) return;
+      const found = findBySlugs(all, municipality ?? '', beach ?? '');
+      if (found) {
+        setResolvedCode(found.codigo);
       } else {
         // Same shape as a backend 404: unknown beach.
         setError(true);
         setStatusError(404);
       }
     });
-    return () => { activo = false; };
-  }, [codigo, municipio, playa]);
+    return () => { active = false; };
+  }, [code, municipality, beach]);
 
   useEffect(() => {
-    if (!codigoResuelto) return;
-    let activo = true;
+    if (!resolvedCode) return;
+    let active = true;
     setError(false);
     setStatusError(null);
-    getDetallePlaya(codigoResuelto)
-      .then((detalle) => {
-        if (!activo) return;
-        setCargado({ ruta: identidadRuta, detalle });
+    getBeachDetail(resolvedCode)
+      .then((detail) => {
+        if (!active) return;
+        setLoaded({ ruta: routeIdentity, detalle: detail });
         setError(false);
       })
       .catch((e) => {
-        if (!activo) return;
+        if (!active) return;
         setError(true);
-        setStatusError(e instanceof ErrorDetalle ? e.status : null);
+        setStatusError(e instanceof DetailError ? e.status : null);
       });
-    return () => { activo = false; };
-  }, [codigoResuelto]);
+    return () => { active = false; };
+  }, [resolvedCode]);
 
   // `ComputedAt` ya dice que lo pintado es viejo, pero decirlo no es arreglarlo:
   // cuando el service worker entrega la respuesta que llegó tarde, se pinta. Se
   // usa el cuerpo del mensaje, nunca una petición nueva — eso realimentaría la
   // caché y volvería a disparar el mensaje.
-  useRefrescoDelServiceWorker(({ url, datos }) => {
-    if (!codigoResuelto) return;
-    if (url.endsWith(`/beaches/${codigoResuelto}/details`)) {
-      setCargado({ ruta: identidadRuta, detalle: datos as PlayaDetalleData });
+  useServiceWorkerRefresh(({ url, datos: data }) => {
+    if (!resolvedCode) return;
+    if (url.endsWith(`/beaches/${resolvedCode}/details`)) {
+      setLoaded({ ruta: routeIdentity, detalle: data as PlayaDetalleData });
     }
   });
 
@@ -144,43 +144,43 @@ const PlayaDetallePage: React.FC = () => {
   // Ranking score (featured endpoint). Optional and derived, never stored: the
   // detail is painted without waiting for it, and a route change cannot leave
   // the previous beach's score on screen because there is nothing to clear.
-  const puntuada = useMemo(
+  const scored = useMemo(
     () =>
-      codigoResuelto
-        ? ranking?.resumenTodas.find((b) => b.codigo === codigoResuelto) ?? null
+      resolvedCode
+        ? ranking?.resumenTodas.find((b) => b.codigo === resolvedCode) ?? null
         : null,
-    [ranking, codigoResuelto],
+    [ranking, resolvedCode],
   );
   // Scale of each factor, sent once per response: it travels so the bars of the
   // breakdown cannot drift from the weights the backend actually applies.
-  const maximos = ranking?.maximos ?? null;
+  const maxima = ranking?.maximos ?? null;
 
   const [selectedDay, setSelectedDay] = useState(0);
-  const pred = datos?.prediccionCompleta;
+  const pred = data?.prediccionCompleta;
   const safeDayIndex = pred ? Math.min(selectedDay, pred.dias.length - 1) : 0;
   // TODAY, not the tab that happens to be open: the shared card is always
   // today's reading, and it must not change because someone tapped "Tomorrow"
   // before sharing. Same precedence as `ForecastHero` — afternoon, then morning.
   // The tide table is indexed by the SAME position as the day, so the index is
   // what travels, not the day: `mareas[i]` belongs to `dias[i]`.
-  const indiceDeHoy = pred ? Math.max(0, pred.dias.findIndex((d) => isToday(d.fecha))) : -1;
-  const diaDeHoy = indiceDeHoy >= 0 ? pred?.dias[indiceDeHoy] : undefined;
+  const todayIndex = pred ? Math.max(0, pred.dias.findIndex((d) => isToday(d.fecha))) : -1;
+  const todaysDay = todayIndex >= 0 ? pred?.dias[todayIndex] : undefined;
 
   return (
     <IonPage className="playa-detalle-page">
       {/* Whether reached by slug or by legacy code, the canonical URL is
           always the slug one: that is what "resolves" old links for SEO
           without remounting the Ionic view stack with a client redirect. */}
-      {datos && (
+      {data && (
         <SeoHead
-          title={t('seo.tituloDetalle', { nombre: datos.nombre })}
-          description={t('seo.descDetalle', { nombre: datos.nombre, municipio: datos.municipio })}
-          canonicalPath={beachPath(datos)}
+          title={t('seo.tituloDetalle', { nombre: data.nombre })}
+          description={t('seo.descDetalle', { nombre: data.nombre, municipio: data.municipio })}
+          canonicalPath={beachPath(data)}
         />
       )}
       {/* Unknown beach: noindex and no inherited canonical — this URL must
           not present itself to crawlers as some other page. */}
-      {error && !datos && statusError === 404 && (
+      {error && !data && statusError === 404 && (
         <SeoHead
           title={t('seo.tituloNoEncontrada')}
           description={t('seo.descNoEncontrada')}
@@ -193,17 +193,17 @@ const PlayaDetallePage: React.FC = () => {
           <IonIcon icon={chevronBackOutline} aria-hidden="true" />
         </button>
         <div>
-          <h1 className="pd-sticky-title">{datos?.nombre || t('detalle.titulo')}</h1>
-          <p className="pd-sticky-subtitle">{datos?.municipio || ''}</p>
+          <h1 className="pd-sticky-title">{data?.nombre || t('detalle.titulo')}</h1>
+          <p className="pd-sticky-subtitle">{data?.municipio || ''}</p>
         </div>
-        {datos && <FavoriteButton code={datos.codigo} name={datos.nombre} />}
+        {data && <FavoriteButton code={data.codigo} name={data.nombre} />}
         <HeaderActions />
       </div>
 
       <IonContent>
         {/* Nunca junto a los datos: un cartel de "no se pudo cargar" encima de
             una ficha cargada es, simplemente, falso. */}
-        {error && !datos && (
+        {error && !data && (
           <div className="error-container">
             <p style={{ margin: 0 }}>{t('detalle.errorCarga')}</p>
             {/* La causa, que es lo primero que hace falta: el estado HTTP no
@@ -214,22 +214,22 @@ const PlayaDetallePage: React.FC = () => {
           </div>
         )}
 
-        {!datos && !error && (
+        {!data && !error && (
           <div className="loading-container">
             <IonSpinner name="crescent" />
             <span className="loading-text">{t('detalle.cargando')}</span>
           </div>
         )}
 
-        {datos && (
+        {data && (
           <>
             {/* HERO SECTION */}
             <div className="hero-section">
-              {datos.lat != null && datos.lon != null && (
+              {data.lat != null && data.lon != null && (
                 <div className="hero-links">
                   <a
                     className="hero-directions-link"
-                    href={`https://www.google.com/maps/dir/?api=1&destination=${datos.lat},${datos.lon}`}
+                    href={`https://www.google.com/maps/dir/?api=1&destination=${data.lat},${data.lon}`}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -237,7 +237,7 @@ const PlayaDetallePage: React.FC = () => {
                   </a>
                   <button
                     className="hero-directions-link"
-                    onClick={() => history.push(`/mapa?lat=${datos.lat}&lon=${datos.lon}&codigo=${datos.codigo}`)}
+                    onClick={() => history.push(`/mapa?lat=${data.lat}&lon=${data.lon}&codigo=${data.codigo}`)}
                   >
                     <IonIcon icon={mapOutline} aria-hidden="true" /> {t('detalle.verEnMapa')}
                   </button>
@@ -251,30 +251,30 @@ const PlayaDetallePage: React.FC = () => {
                       segundo tramo, una playa sin hoja compartía "Sin dato"
                       mientras su propia ficha decía "Tranquilo" dos dedos más
                       abajo. */}
-                  <BotonCompartir
-                    beach={datos}
-                    scored={puntuada}
-                    url={urlCanonica(beachPath(datos))}
+                  <ShareButton
+                    beach={data}
+                    scored={scored}
+                    url={canonicalUrl(beachPath(data))}
                     forecast={{
                       wind:
-                        diaDeHoy?.tarde.viento ??
-                        diaDeHoy?.manana.viento ??
-                        datos.clima?.hoy?.wind,
+                        todaysDay?.tarde.viento ??
+                        todaysDay?.manana.viento ??
+                        data.clima?.hoy?.wind,
                       waves:
-                        diaDeHoy?.tarde.oleaje ??
-                        diaDeHoy?.manana.oleaje ??
-                        datos.clima?.hoy?.waves,
+                        todaysDay?.tarde.oleaje ??
+                        todaysDay?.manana.oleaje ??
+                        data.clima?.hoy?.waves,
                     }}
-                    hours={datos.tiempoActual?.previsionHoras}
-                    tides={indiceDeHoy >= 0 ? pred?.mareas?.[indiceDeHoy] : undefined}
+                    hours={data.tiempoActual?.previsionHoras}
+                    tides={todayIndex >= 0 ? pred?.mareas?.[todayIndex] : undefined}
                     tidePort={pred?.fuenteMareas}
                   />
                 </div>
               )}
 
-              <FlagBanner redCross={datos.cruzRoja} beach={datos} />
+              <FlagBanner redCross={data.cruzRoja} beach={data} />
 
-              {puntuada && <ScoreCard scored={puntuada} maxima={maximos} />}
+              {scored && <ScoreCard scored={scored} maxima={maxima} />}
             </div>
 
             {/* DETAIL CONTENT */}
@@ -290,8 +290,8 @@ const PlayaDetallePage: React.FC = () => {
                   <div className="detail-card prevision-panel">
                     <ForecastHero
                       day={pred.dias[safeDayIndex]}
-                      currentWeather={isToday(pred.dias[safeDayIndex].fecha) ? datos.temperaturaActual : undefined}
-                      currentConditions={isToday(pred.dias[safeDayIndex].fecha) ? datos.tiempoActual : undefined}
+                      currentWeather={isToday(pred.dias[safeDayIndex].fecha) ? data.temperaturaActual : undefined}
+                      currentConditions={isToday(pred.dias[safeDayIndex].fecha) ? data.tiempoActual : undefined}
                     />
                     <h3 className="section-kicker">{t('detalle.previsionAemet')}</h3>
                     <HalfDayDetail
@@ -303,10 +303,10 @@ const PlayaDetallePage: React.FC = () => {
                   {/* Solo tiene sentido junto al día de hoy: la previsión
                       horaria es de las próximas horas, no del día elegido. */}
                   {safeDayIndex === 0 && (
-                    <ProximasHoras
-                      hours={datos.tiempoActual?.previsionHoras}
-                      source={datos.tiempoActual?.previsionHorasFuente}
-                      timeWindow={datos.tiempoActual?.ventanaDia}
+                    <NextHours
+                      hours={data.tiempoActual?.previsionHoras}
+                      source={data.tiempoActual?.previsionHorasFuente}
+                      timeWindow={data.tiempoActual?.ventanaDia}
                     />
                   )}
                   {pred.mareas?.[safeDayIndex] && (
@@ -323,34 +323,34 @@ const PlayaDetallePage: React.FC = () => {
                     warningZone={pred.zonaAvisos}
                     issued={pred.elaboracion}
                     source={pred.fuente}
-                    observationSource={datos.tiempoActual?.fuente}
+                    observationSource={data.tiempoActual?.fuente}
                   />
                 </>
-              ) : datos.clima ? (
+              ) : data.clima ? (
                 <>
-                  <ClimaHero
-                    weather={datos.clima}
-                    currentTemperature={datos.temperaturaActual}
-                    currentConditions={datos.tiempoActual}
+                  <WeatherHero
+                    weather={data.clima}
+                    currentTemperature={data.temperaturaActual}
+                    currentConditions={data.tiempoActual}
                   />
                   {/* La previsión horaria es de Open-Meteo, así que las playas
                       sin ficha de AEMET también la tienen. */}
-                  <ProximasHoras
-                    hours={datos.tiempoActual?.previsionHoras}
-                    source={datos.tiempoActual?.previsionHorasFuente}
-                    timeWindow={datos.tiempoActual?.ventanaDia}
+                  <NextHours
+                    hours={data.tiempoActual?.previsionHoras}
+                    source={data.tiempoActual?.previsionHorasFuente}
+                    timeWindow={data.tiempoActual?.ventanaDia}
                   />
                   {/* Tampoco tienen tabla de mareas propia: se presta la de
                       la playa con ficha AEMET más cercana (índice 0 = hoy,
                       igual que prediccionCompleta.mareas). */}
-                  {datos.mareaReferencia?.mareas[0] && (
+                  {data.mareaReferencia?.mareas[0] && (
                     <TidesSection
-                      tide={datos.mareaReferencia.mareas[0]}
-                      tideSource={datos.mareaReferencia.fuenteMareas}
+                      tide={data.mareaReferencia.mareas[0]}
+                      tideSource={data.mareaReferencia.fuenteMareas}
                       isToday
                       reference={{
-                        playa: datos.mareaReferencia.playa,
-                        distanciaKm: datos.mareaReferencia.distanciaKm,
+                        playa: data.mareaReferencia.playa,
+                        distanciaKm: data.mareaReferencia.distanciaKm,
                       }}
                     />
                   )}
@@ -359,23 +359,23 @@ const PlayaDetallePage: React.FC = () => {
               </div>
 
               <div className="detail-col detail-col--info">
-              <BlueFlagBadge year={datos.banderaAzul} />
+              <BlueFlagBadge year={data.banderaAzul} />
 
-              {datos.cruzRoja != null && <CruzRojaCard redCross={datos.cruzRoja} beach={datos} />}
+              {data.cruzRoja != null && <RedCrossCard redCross={data.cruzRoja} beach={data} />}
 
-              <WebcamCard webcam={datos.webcam} />
+              <WebcamCard webcam={data.webcam} />
 
-              <BeachInfoSection data={datos} />
-              {datos.atributos && (
+              <BeachInfoSection data={data} />
+              {data.atributos && (
                 <BeachAttributesSection
-                  attributes={{ ...datos.atributos, ...(datos.submarinismo ? { submarinismo: true } : {}) }}
+                  attributes={{ ...data.atributos, ...(data.submarinismo ? { submarinismo: true } : {}) }}
                 />
               )}
 
               {/* Sibling beaches: the canonical municipality page. */}
               <div className="pd-otras-playas">
-                <Link className="ld-enlace" to={municipalityPath(datos.municipio)}>
-                  {t('detalle.otrasPlayasMunicipio', { municipio: datos.municipio })} &#8250;
+                <Link className="ld-enlace" to={municipalityPath(data.municipio)}>
+                  {t('detalle.otrasPlayasMunicipio', { municipio: data.municipio })} &#8250;
                 </Link>
               </div>
               </div>
@@ -385,10 +385,10 @@ const PlayaDetallePage: React.FC = () => {
                   stale-while-revalidate, así que "acabo de abrir la página" no
                   dice nada de la edad de los números) y que acreditar a estas
                   fuentes no es decir que colaboren. */}
-              <InfoDatos label="info.sobreDatos" aria="info.aria.ficha" className="pd-info-ficha">
-                <ComputedAt generatedAt={datos.generadoEn} />
+              <DataInfo label="info.sobreDatos" aria="info.aria.ficha" className="pd-info-ficha">
+                <ComputedAt generatedAt={data.generadoEn} />
                 <p className="procedencia-estatica">{t('atribucion.independiente')}</p>
-              </InfoDatos>
+              </DataInfo>
             </div>
           </>
         )}
@@ -398,4 +398,4 @@ const PlayaDetallePage: React.FC = () => {
   );
 };
 
-export default PlayaDetallePage;
+export default BeachDetailPage;

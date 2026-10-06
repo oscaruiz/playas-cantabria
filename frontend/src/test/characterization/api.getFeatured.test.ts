@@ -12,7 +12,7 @@
 
 import { installFetchMock, restoreFetch, route } from '../http/fakeFetch';
 import { featuredResponse } from '../fixtures/featured';
-import { RUTA_DESTACADAS as FEATURED } from '../apiRoutes';
+import { FEATURED_PATH as FEATURED } from '../apiRoutes';
 
 const TTL_MS = 5 * 60 * 1000;
 

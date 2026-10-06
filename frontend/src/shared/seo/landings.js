@@ -22,12 +22,12 @@
 const { slugify, beachPath } = require('./beachUrls');
 
 /** Webcam exists and is not editorially disabled (mirror of webcamDisponible). */
-function conWebcam(p) {
+function withWebcam(p) {
   return Boolean(p.webcam) && p.webcam.estado !== 'desactivada';
 }
 
 /** Explicitly marked accessible. Absent attribute = unknown, NOT false → excluded. */
-function esAccesible(p) {
+function isAccessible(p) {
   return p.atributos?.accesible === true;
 }
 
@@ -36,13 +36,13 @@ function esAccesible(p) {
  * flagAggregation convention: a station with id > 0, or idCruzRoja > 0
  * ("0 = no coverage").
  */
-function conSocorrista(p) {
+function withLifeguard(p) {
   if ((p.cruzRojaStations ?? []).some((e) => typeof e.id === 'number' && e.id > 0)) return true;
   return (p.idCruzRoja ?? 0) > 0;
 }
 
 /** Explicitly marked for surf. */
-function paraSurf(p) {
+function forSurf(p) {
   return p.atributos?.surf === true;
 }
 
@@ -53,7 +53,7 @@ function paraSurf(p) {
 const LANDINGS = [
   {
     id: 'playas-con-webcam',
-    filtro: conWebcam,
+    filtro: withWebcam,
     textos: {
       titulo: 'Playas con webcam en {region}',
       intro:
@@ -62,7 +62,7 @@ const LANDINGS = [
   },
   {
     id: 'playas-accesibles',
-    filtro: esAccesible,
+    filtro: isAccessible,
     textos: {
       titulo: 'Playas accesibles en {region}',
       intro:
@@ -71,7 +71,7 @@ const LANDINGS = [
   },
   {
     id: 'playas-con-socorrista',
-    filtro: conSocorrista,
+    filtro: withLifeguard,
     textos: {
       titulo: 'Playas con socorrismo en {region}',
       intro:
@@ -80,7 +80,7 @@ const LANDINGS = [
   },
   {
     id: 'playas-para-surf',
-    filtro: paraSurf,
+    filtro: forSurf,
     textos: {
       titulo: 'Playas para surf en {region}',
       intro:
@@ -90,17 +90,17 @@ const LANDINGS = [
 ];
 
 /** Landings with at least one beach: empty categories are never published. */
-function nonEmptyLandings(playas) {
-  return LANDINGS.filter((l) => playas.some(l.filtro));
+function nonEmptyLandings(beaches) {
+  return LANDINGS.filter((l) => beaches.some(l.filtro));
 }
 
 /** Unique municipality names, alphabetical. */
-function municipalitiesOf(playas) {
-  return Array.from(new Set(playas.map((p) => p.municipio))).sort((a, b) => a.localeCompare(b));
+function municipalitiesOf(beaches) {
+  return Array.from(new Set(beaches.map((p) => p.municipio))).sort((a, b) => a.localeCompare(b));
 }
 
-function municipalityPath(municipio) {
-  return `/municipios/${slugify(municipio)}`;
+function municipalityPath(municipality) {
+  return `/municipios/${slugify(municipality)}`;
 }
 
 /**
@@ -108,17 +108,17 @@ function municipalityPath(municipio) {
  * /municipios index (app page and prerendered file) is built from THIS,
  * so both always agree.
  */
-function municipalitiesSummary(playas) {
-  return municipalitiesOf(playas).map((municipio) => ({
-    municipio,
-    ruta: municipalityPath(municipio),
-    total: playas.filter((p) => p.municipio === municipio).length,
+function municipalitiesSummary(beaches) {
+  return municipalitiesOf(beaches).map((municipality) => ({
+    municipio: municipality,
+    ruta: municipalityPath(municipality),
+    total: beaches.filter((p) => p.municipio === municipality).length,
   }));
 }
 
 /** Beaches of the municipality a slug points at (empty array if unknown). */
-function beachesOfMunicipalitySlug(playas, municipioSlug) {
-  return playas.filter((p) => slugify(p.municipio) === municipioSlug);
+function beachesOfMunicipalitySlug(beaches, municipalitySlug) {
+  return beaches.filter((p) => slugify(p.municipio) === municipalitySlug);
 }
 
 module.exports = {

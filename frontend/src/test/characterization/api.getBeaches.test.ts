@@ -18,7 +18,7 @@
 import { waitFor } from '@testing-library/react';
 import { installFetchMock, restoreFetch, route, flushMicrotasks } from '../http/fakeFetch';
 import { beachesResponse } from '../fixtures/beaches';
-import { RUTA_PLAYAS as BEACHES } from '../apiRoutes';
+import { BEACHES_PATH as BEACHES } from '../apiRoutes';
 import { LOCAL_CATALOG_SIZE } from '../localCatalog';
 
 
@@ -48,10 +48,10 @@ afterEach(() => {
 describe('getPlayas — carrera contra el fallback local', () => {
   it('devuelve los datos del backend cuando responde antes del timeout', async () => {
     installFetchMock([route(BEACHES, { json: beachesResponse })]);
-    const { getPlayas } = await loadApi();
+    const { getBeaches } = await loadApi();
     const onBackendData = jest.fn();
 
-    const result = await getPlayas({ timeoutMs: 50, onBackendData });
+    const result = await getBeaches({ timeoutMs: 50, onBackendData });
 
     expect(result).toEqual(beachesResponse);
     // If the backend wins the race nobody has seen fallback data, so there is
@@ -61,10 +61,10 @@ describe('getPlayas — carrera contra el fallback local', () => {
 
   it('devuelve el JSON local cuando el backend tarda más que el timeout', async () => {
     installFetchMock([route(BEACHES, { json: beachesResponse, delayMs: 200 })]);
-    const { getPlayas } = await loadApi();
+    const { getBeaches } = await loadApi();
     const onBackendData = jest.fn();
 
-    const result = await getPlayas({ timeoutMs: 20, onBackendData });
+    const result = await getBeaches({ timeoutMs: 20, onBackendData });
 
     // The fallback is the whole `src/data/beaches.json`, not the fixture.
     expect(result).toHaveLength(LOCAL_CATALOG_SIZE);
@@ -73,10 +73,10 @@ describe('getPlayas — carrera contra el fallback local', () => {
 
   it('avisa por `onBackendData` exactamente una vez cuando el backend llega tarde', async () => {
     installFetchMock([route(BEACHES, { json: beachesResponse, delayMs: 100 })]);
-    const { getPlayas } = await loadApi();
+    const { getBeaches } = await loadApi();
     const onBackendData = jest.fn();
 
-    await getPlayas({ timeoutMs: 20, onBackendData });
+    await getBeaches({ timeoutMs: 20, onBackendData });
 
     await waitFor(() => expect(onBackendData).toHaveBeenCalledTimes(1));
     expect(onBackendData).toHaveBeenCalledWith(beachesResponse);
@@ -86,10 +86,10 @@ describe('getPlayas — carrera contra el fallback local', () => {
     jest.useFakeTimers();
     // The backend never answers within the observed window.
     installFetchMock([route(BEACHES, { json: beachesResponse, delayMs: 60_000 })]);
-    const { getPlayas } = await loadApi();
+    const { getBeaches } = await loadApi();
 
     let resolved: unknown = null;
-    const pending = getPlayas().then((value) => {
+    const pending = getBeaches().then((value) => {
       resolved = value;
     });
 
@@ -108,16 +108,16 @@ describe('getPlayas — carrera contra el fallback local', () => {
 describe('getPlayas — nunca rechaza', () => {
   it('cae al JSON local si el backend responde 500', async () => {
     installFetchMock([route(BEACHES, { status: 500 })]);
-    const { getPlayas } = await loadApi();
+    const { getBeaches } = await loadApi();
 
-    await expect(getPlayas({ timeoutMs: 50 })).resolves.toHaveLength(LOCAL_CATALOG_SIZE);
+    await expect(getBeaches({ timeoutMs: 50 })).resolves.toHaveLength(LOCAL_CATALOG_SIZE);
   });
 
   it('cae al JSON local si falla la red', async () => {
     installFetchMock([route(BEACHES, { networkError: true })]);
-    const { getPlayas } = await loadApi();
+    const { getBeaches } = await loadApi();
 
-    await expect(getPlayas({ timeoutMs: 50 })).resolves.toHaveLength(LOCAL_CATALOG_SIZE);
+    await expect(getBeaches({ timeoutMs: 50 })).resolves.toHaveLength(LOCAL_CATALOG_SIZE);
   });
 });
 
@@ -125,10 +125,10 @@ describe('getPlayas — caché y deduplicación', () => {
   it('reutiliza la caché dentro de los 5 min (una sola petición)', async () => {
     jest.useFakeTimers();
     const fetchMock = installFetchMock([route(BEACHES, { json: beachesResponse })]);
-    const { getPlayas } = await loadApi();
+    const { getBeaches } = await loadApi();
 
-    await getPlayas({ timeoutMs: 50 });
-    await getPlayas({ timeoutMs: 50 });
+    await getBeaches({ timeoutMs: 50 });
+    await getBeaches({ timeoutMs: 50 });
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
@@ -136,22 +136,22 @@ describe('getPlayas — caché y deduplicación', () => {
   it('vuelve a pedir cuando la caché ha caducado', async () => {
     jest.useFakeTimers();
     const fetchMock = installFetchMock([route(BEACHES, { json: beachesResponse })]);
-    const { getPlayas } = await loadApi();
+    const { getBeaches } = await loadApi();
 
-    await getPlayas({ timeoutMs: 50 });
+    await getBeaches({ timeoutMs: 50 });
     jest.advanceTimersByTime(TTL_MS + 1);
-    await getPlayas({ timeoutMs: 50 });
+    await getBeaches({ timeoutMs: 50 });
 
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
   it('deduplica dos llamadas concurrentes en una sola petición', async () => {
     const fetchMock = installFetchMock([route(BEACHES, { json: beachesResponse, delayMs: 10 })]);
-    const { getPlayas } = await loadApi();
+    const { getBeaches } = await loadApi();
 
     const [a, b] = await Promise.all([
-      getPlayas({ timeoutMs: 500 }),
-      getPlayas({ timeoutMs: 500 }),
+      getBeaches({ timeoutMs: 500 }),
+      getBeaches({ timeoutMs: 500 }),
     ]);
 
     expect(fetchMock).toHaveBeenCalledTimes(1);

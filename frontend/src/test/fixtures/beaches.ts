@@ -1,4 +1,4 @@
-import type { Playa } from '../../services/api';
+import type { Beach } from '../../services/api';
 
 /**
  * Response of `GET /api/beaches`, trimmed to the cases that matter.
@@ -20,7 +20,7 @@ import type { Playa } from '../../services/api';
  * `characterization/lifeguardedStations.test.ts`.
  */
 
-export const laConcha: Playa = {
+export const laConcha: Beach = {
   nombre: 'La Concha',
   municipio: 'Suances',
   codigo: '3908503',
@@ -61,7 +61,7 @@ export const laConcha: Playa = {
   banderaAzul: 2026,
 };
 
-export const elSardinero: Playa = {
+export const elSardinero: Beach = {
   nombre: 'El Sardinero',
   municipio: 'Santander',
   codigo: '3907501',
@@ -89,7 +89,7 @@ export const elSardinero: Playa = {
   submarinismo: false,
 };
 
-export const laArnia: Playa = {
+export const laArnia: Beach = {
   nombre: 'La Arnía',
   municipio: 'Piélagos',
   codigo: '3905201',
@@ -112,7 +112,7 @@ export const laArnia: Playa = {
   submarinismo: true,
 };
 
-export const laSalve: Playa = {
+export const laSalve: Beach = {
   nombre: 'La Salvé',
   municipio: 'Laredo',
   codigo: '3903501',
@@ -148,7 +148,7 @@ export const laSalve: Playa = {
  * results and the cap of 5 suggestions can be verified. `langre` shares
  * its code with `featuredLangre`, so it also arrives with weather data.
  */
-export const laMaruca: Playa = {
+export const laMaruca: Beach = {
   nombre: 'La Maruca',
   municipio: 'Santander',
   codigo: '3907502',
@@ -158,7 +158,7 @@ export const laMaruca: Playa = {
   fuenteBanderas: null,
 };
 
-export const langre: Playa = {
+export const langre: Beach = {
   nombre: 'Langre',
   municipio: 'Ribamontán al Mar',
   codigo: '3906002',
@@ -168,7 +168,7 @@ export const langre: Playa = {
   fuenteBanderas: null,
 };
 
-export const laredo: Playa = {
+export const laredo: Beach = {
   nombre: 'Laredo',
   municipio: 'Laredo',
   codigo: '3903502',
@@ -178,7 +178,7 @@ export const laredo: Playa = {
   fuenteBanderas: 'Cruz Roja',
 };
 
-export const beachesResponse: Playa[] = [
+export const beachesResponse: Beach[] = [
   laConcha,
   elSardinero,
   laArnia,

@@ -1,35 +1,35 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { es, ClaveTexto, BasePlural } from './es';
+import { es, TextKey, BasePlural } from './es';
 import { en } from './en';
 import { REGION } from '../config/region';
 
-export type Idioma = 'es' | 'en';
+export type Language = 'es' | 'en';
 
-const IDIOMA_KEY = 'app_idioma';
+const LANGUAGE_KEY = 'app_idioma';
 
-const DICCIONARIOS: Record<Idioma, Record<ClaveTexto, string>> = { es, en };
+const DICTIONARIES: Record<Language, Record<TextKey, string>> = { es, en };
 
 type Vars = Record<string, string | number>;
 
 /** Signature of t(), useful for helpers that receive it as a parameter. */
-export type TraducirFn = (clave: ClaveTexto, vars?: Vars) => string;
+export type TranslateFn = (key: TextKey, vars?: Vars) => string;
 
-interface IdiomaContextValue {
-  language: Idioma;
-  setLanguage: (idioma: Idioma) => void;
+interface LanguageContextValue {
+  language: Language;
+  setLanguage: (language: Language) => void;
   /** Translates a key, with {variables} interpolation. */
-  t: TraducirFn;
+  t: TranslateFn;
   /** Resolves the plural form (`_one`/`_other`) according to count. */
   tPlural: (base: BasePlural, count: number) => string;
 }
 
-const IdiomaContext = createContext<IdiomaContextValue | null>(null);
+const LanguageContext = createContext<LanguageContextValue | null>(null);
 
 /** Saved language, or Spanish the first time. */
-export function detectarIdiomaInicial(): Idioma {
+export function detectInitialLanguage(): Language {
   try {
-    const guardado = localStorage.getItem(IDIOMA_KEY);
-    if (guardado === 'es' || guardado === 'en') return guardado;
+    const saved = localStorage.getItem(LANGUAGE_KEY);
+    if (saved === 'es' || saved === 'en') return saved;
   } catch {
     /* localStorage not available */
   }
@@ -45,57 +45,57 @@ export function detectarIdiomaInicial(): Idioma {
  * lets the titles and subtitles be the same key in every region, each with its
  * own brand name from region.json.
  */
-const VARS_IMPLICITAS: Vars = { region: REGION.name, marca: REGION.branding.appName };
+const IMPLICIT_VARS: Vars = { region: REGION.name, marca: REGION.branding.appName };
 
-function interpolar(plantilla: string, vars?: Vars): string {
-  const todas = vars ? { ...VARS_IMPLICITAS, ...vars } : VARS_IMPLICITAS;
-  return plantilla.replace(/\{(\w+)\}/g, (original, nombre) =>
-    todas[nombre] != null ? String(todas[nombre]) : original
+function interpolate(template: string, vars?: Vars): string {
+  const all = vars ? { ...IMPLICIT_VARS, ...vars } : IMPLICIT_VARS;
+  return template.replace(/\{(\w+)\}/g, (original, name) =>
+    all[name] != null ? String(all[name]) : original
   );
 }
 
-export const IdiomaProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [idioma, setIdioma] = useState<Idioma>(detectarIdiomaInicial);
+export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [language, setLanguage] = useState<Language>(detectInitialLanguage);
 
   useEffect(() => {
-    document.documentElement.lang = idioma;
+    document.documentElement.lang = language;
     // The title is no longer set here: each page owns it via SeoHead
     // (src/shared/seo/SeoHead.tsx). A provider-level title would overwrite the
     // page's one on every language switch, because parent effects run
     // after child effects.
     try {
-      localStorage.setItem(IDIOMA_KEY, idioma);
+      localStorage.setItem(LANGUAGE_KEY, language);
     } catch {
       /* localStorage not available */
     }
-  }, [idioma]);
+  }, [language]);
 
   const t = useCallback(
-    (clave: ClaveTexto, vars?: Vars) => {
-      const plantilla = DICCIONARIOS[idioma][clave] ?? es[clave];
-      return interpolar(plantilla, vars);
+    (key: TextKey, vars?: Vars) => {
+      const template = DICTIONARIES[language][key] ?? es[key];
+      return interpolate(template, vars);
     },
-    [idioma]
+    [language]
   );
 
   const tPlural = useCallback(
     (base: BasePlural, count: number) => {
-      const clave = `${base}_${count === 1 ? 'one' : 'other'}` as ClaveTexto;
-      const plantilla = DICCIONARIOS[idioma][clave] ?? es[clave];
-      return interpolar(plantilla, { count });
+      const key = `${base}_${count === 1 ? 'one' : 'other'}` as TextKey;
+      const template = DICTIONARIES[language][key] ?? es[key];
+      return interpolate(template, { count });
     },
-    [idioma]
+    [language]
   );
 
   return (
-    <IdiomaContext.Provider value={{ language: idioma, setLanguage: setIdioma, t, tPlural }}>
+    <LanguageContext.Provider value={{ language, setLanguage, t, tPlural }}>
       {children}
-    </IdiomaContext.Provider>
+    </LanguageContext.Provider>
   );
 };
 
-export function useIdioma(): IdiomaContextValue {
-  const ctx = useContext(IdiomaContext);
+export function useLanguage(): LanguageContextValue {
+  const ctx = useContext(LanguageContext);
   if (!ctx) throw new Error('useIdioma debe usarse dentro de <IdiomaProvider>');
   return ctx;
 }

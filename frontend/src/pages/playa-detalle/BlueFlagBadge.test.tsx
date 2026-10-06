@@ -1,13 +1,13 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import { IdiomaProvider } from '../../shared/i18n/IdiomaContext';
+import { LanguageProvider } from '../../shared/i18n/IdiomaContext';
 import { BlueFlagBadge } from './BlueFlagBadge';
 
 const renderBadge = (year?: number | null) =>
   render(
-    <IdiomaProvider>
+    <LanguageProvider>
       <BlueFlagBadge year={year} />
-    </IdiomaProvider>
+    </LanguageProvider>
   );
 
 describe('BlueFlagBadge', () => {

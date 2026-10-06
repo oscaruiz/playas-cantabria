@@ -8,10 +8,10 @@
  */
 
 /** Person responsible, as the legal pages must name them. */
-export const AUTOR = 'Oscar Ruiz';
+export const AUTHOR = 'Oscar Ruiz';
 
 /** Their profile, so the name is verifiable and not just a string. */
-export const AUTOR_GITHUB = 'https://github.com/oscaruiz/';
+export const AUTHOR_GITHUB = 'https://github.com/oscaruiz/';
 
 /** The project's source code. */
 export const GITHUB = 'https://github.com/oscaruiz/playas-cantabria';

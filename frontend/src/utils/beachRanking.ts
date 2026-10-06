@@ -14,13 +14,13 @@ export const PENALIZACION_PTS_POR_KM = 0.4;
 export const PENALIZACION_MAX_PTS = 25;
 
 /** Internal sort score. NEVER shown in the UI (the UI always displays the raw score). */
-export function scoreAjustado(puntuacion: number, distKm: number): number {
-  if (!Number.isFinite(distKm)) return puntuacion;
-  return puntuacion - Math.min(distKm * PENALIZACION_PTS_POR_KM, PENALIZACION_MAX_PTS);
+export function adjustedScore(score: number, distKm: number): number {
+  if (!Number.isFinite(distKm)) return score;
+  return score - Math.min(distKm * PENALIZACION_PTS_POR_KM, PENALIZACION_MAX_PTS);
 }
 
 /** Structural subset of FeaturedBeach — the minimum the ranking needs. */
-export interface PlayaRankeable {
+export interface RankableBeach {
   codigo: string;
   nombre: string;
   lat: number;
@@ -28,7 +28,7 @@ export interface PlayaRankeable {
   puntuacion: number;
 }
 
-function compararDesempate(a: PlayaRankeable, b: PlayaRankeable): number {
+function compareTiebreak(a: RankableBeach, b: RankableBeach): number {
   return b.puntuacion - a.puntuacion || a.nombre.localeCompare(b.nombre, 'es');
 }
 
@@ -37,21 +37,21 @@ function compararDesempate(a: PlayaRankeable, b: PlayaRankeable): number {
  * distance-adjusted score desc; without it, by raw score desc.
  * Tiebreakers: score desc, then name. Does not mutate the input array.
  */
-export function rankearPlayas<T extends PlayaRankeable>(
+export function rankBeaches<T extends RankableBeach>(
   pool: T[],
   userLocation: [number, number] | null,
   max = 5
 ): T[] {
   if (!userLocation) {
-    return [...pool].sort(compararDesempate).slice(0, max);
+    return [...pool].sort(compareTiebreak).slice(0, max);
   }
   const [uLat, uLon] = userLocation;
   return pool
-    .map((playa) => ({
-      playa,
-      ajustado: scoreAjustado(playa.puntuacion, haversineKm(uLat, uLon, playa.lat, playa.lon)),
+    .map((beach) => ({
+      playa: beach,
+      ajustado: adjustedScore(beach.puntuacion, haversineKm(uLat, uLon, beach.lat, beach.lon)),
     }))
-    .sort((a, b) => b.ajustado - a.ajustado || compararDesempate(a.playa, b.playa))
+    .sort((a, b) => b.ajustado - a.ajustado || compareTiebreak(a.playa, b.playa))
     .slice(0, max)
     .map((d) => d.playa);
 }
@@ -62,12 +62,12 @@ export function rankearPlayas<T extends PlayaRankeable>(
  * maximum. Serves both to enable the hero's "priorizada por cercanía" note
  * and the "mejor puntuación" chip on that alternative.
  */
-export function codigoMejorPuntuacionNoHero(ordenadas: PlayaRankeable[]): string | null {
-  if (ordenadas.length < 2) return null;
-  const hero = ordenadas[0];
-  let mejor: PlayaRankeable | null = null;
-  for (const playa of ordenadas.slice(1)) {
-    if (!mejor || playa.puntuacion > mejor.puntuacion) mejor = playa;
+export function topScoreCodeNoHero(sorted: RankableBeach[]): string | null {
+  if (sorted.length < 2) return null;
+  const hero = sorted[0];
+  let best: RankableBeach | null = null;
+  for (const beach of sorted.slice(1)) {
+    if (!best || beach.puntuacion > best.puntuacion) best = beach;
   }
-  return mejor && mejor.puntuacion > hero.puntuacion ? mejor.codigo : null;
+  return best && best.puntuacion > hero.puntuacion ? best.codigo : null;
 }

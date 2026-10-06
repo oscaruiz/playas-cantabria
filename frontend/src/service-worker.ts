@@ -85,7 +85,7 @@ registerRoute(
 // useful at the beach with poor coverage, and revisits don't spend quota of the
 // free APIs.
 /** Posted to the open tabs together with the response that supersedes a cached one. */
-const MENSAJE_API_ACTUALIZADA = 'API_ACTUALIZADA';
+const API_UPDATED_MESSAGE = 'API_ACTUALIZADA';
 
 /**
  * Hands the tabs the answer that arrived late, instead of leaving them on the
@@ -110,29 +110,29 @@ const MENSAJE_API_ACTUALIZADA = 'API_ACTUALIZADA';
  * the API is on another origin, so the browser CORS-filters the response the
  * worker returns and any header of ours is stripped before the page sees it.
  */
-const entregarRespuestaNueva: WorkboxPlugin = {
+const deliverFreshResponse: WorkboxPlugin = {
   cacheDidUpdate: async ({ cacheName, oldResponse, request }) => {
     // Sin `oldResponse` esta entrada se llena por primera vez y la app ya está
     // pintando ese mismo cuerpo: no hay nada que corregir.
     if (!oldResponse) return;
 
-    let datos: unknown;
+    let data: unknown;
     try {
       // Se relee del caché en vez de clonar `newResponse`: para cuando este
       // callback corre, workbox ya ha gastado ese cuerpo en el `cache.put`, y
       // clonarlo lanza. El fallo era mudo —el `catch` se lo tragaba— y el aviso
       // sencillamente no salía nunca.
       const cache = await caches.open(cacheName);
-      const guardada = await cache.match(request);
-      if (!guardada) return;
-      datos = await guardada.json();
+      const saved = await cache.match(request);
+      if (!saved) return;
+      data = await saved.json();
     } catch {
       return; // no es JSON utilizable: mejor callar que mandar basura
     }
 
-    const clientes = await self.clients.matchAll({ type: 'window' });
-    for (const cliente of clientes) {
-      cliente.postMessage({ type: MENSAJE_API_ACTUALIZADA, url: request.url, datos });
+    const clients = await self.clients.matchAll({ type: 'window' });
+    for (const client of clients) {
+      client.postMessage({ type: API_UPDATED_MESSAGE, url: request.url, datos: data });
     }
   },
 };
@@ -147,7 +147,7 @@ registerRoute(
       // get stuck as if it were the good data.
       new CacheableResponsePlugin({ statuses: [200] }),
       new ExpirationPlugin({ maxEntries: 60, maxAgeSeconds: 24 * 60 * 60 }),
-      entregarRespuestaNueva,
+      deliverFreshResponse,
     ],
   })
 );

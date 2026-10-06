@@ -31,26 +31,26 @@
 import React from 'react';
 import { screen } from '@testing-library/react';
 import beachesJson from '../../data/beaches.json';
-import PlayasList from '../../pages/PlayasList';
+import BeachList from '../../pages/PlayasList';
 import { renderWithProviders } from '../render';
 import { installFetchMock, restoreFetch, route } from '../http/fakeFetch';
 import { beachesResponse } from '../fixtures/beaches';
 import { featuredResponse } from '../fixtures/featured';
-import { RUTA_DESTACADAS as FEATURED, RUTA_PLAYAS as BEACHES } from '../apiRoutes';
+import { FEATURED_PATH as FEATURED, BEACHES_PATH as BEACHES } from '../apiRoutes';
 import { BEACH_COUNT_ES, LOCAL_CATALOG_SIZE } from '../localCatalog';
 
 
-interface EntradaJson {
+interface JsonEntry {
   nombre: string;
   idCruzRoja?: number;
   cruzRojaStations?: unknown[];
 }
 
-function badgeDe(container: HTMLElement, nombre: string): Element | null {
+function badgeFor(container: HTMLElement, name: string): Element | null {
   const card = Array.from(container.querySelectorAll('.beach-card')).find(
-    (c) => c.querySelector('.beach-card-name')?.textContent === nombre,
+    (c) => c.querySelector('.beach-card-name')?.textContent === name,
   ) as HTMLElement | undefined;
-  if (!card) throw new Error(`No hay tarjeta para ${nombre}`);
+  if (!card) throw new Error(`No hay tarjeta para ${name}`);
   return card.querySelector('.badge-vigilada');
 }
 
@@ -63,19 +63,19 @@ afterEach(() => {
 });
 
 it('el JSON empaquetado reparte la vigilancia entre dos campos distintos', () => {
-  const playas = beachesJson as EntradaJson[];
+  const beaches = beachesJson as JsonEntry[];
 
-  const conId = playas.filter((p) => (p.idCruzRoja ?? 0) > 0);
-  const soloConPuestos = playas.filter(
+  const withId = beaches.filter((p) => (p.idCruzRoja ?? 0) > 0);
+  const onlyWithStations = beaches.filter(
     (p) => (p.idCruzRoja ?? 0) === 0 && (p.cruzRojaStations?.length ?? 0) > 0,
   );
 
   // Invariant over the output of `sync-beaches`: if the backend changed the
   // split, this test warns before it shows up in the interface.
-  expect(playas).toHaveLength(LOCAL_CATALOG_SIZE);
-  expect(conId).toHaveLength(10);
-  expect(soloConPuestos).toHaveLength(32);
-  expect(conId.length + soloConPuestos.length).toBe(42);
+  expect(beaches).toHaveLength(LOCAL_CATALOG_SIZE);
+  expect(withId).toHaveLength(10);
+  expect(onlyWithStations).toHaveLength(32);
+  expect(withId.length + onlyWithStations.length).toBe(42);
 });
 
 it('con el backend caído, La Concha sigue mostrando el badge', async () => {
@@ -84,12 +84,12 @@ it('con el backend caído, La Concha sigue mostrando el badge', async () => {
     route(BEACHES, { networkError: true }),
   ]);
 
-  const { container } = renderWithProviders(<PlayasList />, { route: '/playas' });
+  const { container } = renderWithProviders(<BeachList />, { route: '/playas' });
   // The local JSON is being rendered, without `idCruzRoja` for this beach.
   await screen.findByText(BEACH_COUNT_ES);
 
   // This is the assertion that failed before the fix.
-  expect(badgeDe(container, 'La Concha')).not.toBeNull();
+  expect(badgeFor(container, 'La Concha')).not.toBeNull();
 });
 
 it('las playas sin ninguna fuente de vigilancia no muestran badge', async () => {
@@ -98,12 +98,12 @@ it('las playas sin ninguna fuente de vigilancia no muestran badge', async () => 
     route(BEACHES, { networkError: true }),
   ]);
 
-  const { container } = renderWithProviders(<PlayasList />, { route: '/playas' });
+  const { container } = renderWithProviders(<BeachList />, { route: '/playas' });
   await screen.findByText(BEACH_COUNT_ES);
 
   // Four real beaches have neither an id nor stations.
-  expect(badgeDe(container, 'La Arena')).toBeNull();
-  expect(badgeDe(container, 'Ostende')).toBeNull();
+  expect(badgeFor(container, 'La Arena')).toBeNull();
+  expect(badgeFor(container, 'Ostende')).toBeNull();
 });
 
 // It goes last: it is the only one that responds well and therefore the only one
@@ -114,9 +114,9 @@ it('con datos del backend, La Concha muestra el badge', async () => {
     route(BEACHES, { json: beachesResponse }),
   ]);
 
-  const { container } = renderWithProviders(<PlayasList />, { route: '/playas' });
+  const { container } = renderWithProviders(<BeachList />, { route: '/playas' });
   await screen.findByText('7 playas');
 
   // The DTO carries idCruzRoja 373 and also both stations.
-  expect(badgeDe(container, 'La Concha')).not.toBeNull();
+  expect(badgeFor(container, 'La Concha')).not.toBeNull();
 });

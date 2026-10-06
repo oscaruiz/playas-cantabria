@@ -15,14 +15,14 @@ import { REGION, REGION_API_PATH } from '../../shared/config/region';
 import { buildRegionApiUrl, buildApiUrl } from '../../shared/config/api';
 import { renderWithProviders } from '../render';
 import { installFetchMock, restoreFetch, route } from '../http/fakeFetch';
-import { RUTA_PLAYAS, RUTA_DESTACADAS } from '../apiRoutes';
+import { BEACHES_PATH, FEATURED_PATH } from '../apiRoutes';
 import { beachesResponse } from '../fixtures/beaches';
 import { featuredResponse } from '../fixtures/featured';
-import PlayasList from '../../pages/PlayasList';
+import BeachList from '../../pages/PlayasList';
 
 // The `mock` prefix is what lets jest.mock's factory reference them.
-const mockCentroMapa: Array<[number, number]> = [];
-const mockZoomMapa: number[] = [];
+const mockMapCenter: Array<[number, number]> = [];
+const mockMapZoom: number[] = [];
 
 jest.mock('react-leaflet', () => {
   const ReactMock = jest.requireActual<typeof import('react')>('react');
@@ -35,8 +35,8 @@ jest.mock('react-leaflet', () => {
         ReactMock.useEffect(() => {
           if (typeof ref === 'function') ref({ flyTo: jest.fn(), closePopup: jest.fn(), invalidateSize: jest.fn() });
         });
-        mockCentroMapa.push(center);
-        mockZoomMapa.push(zoom);
+        mockMapCenter.push(center);
+        mockMapZoom.push(zoom);
         return ReactMock.createElement('div', null, children);
       },
     ),
@@ -64,10 +64,10 @@ describe('la URL del API lleva la región del build', () => {
 
   it('la app pide realmente esa ruta', async () => {
     const fetchMock = installFetchMock([
-      route(RUTA_DESTACADAS, { json: featuredResponse }),
-      route(RUTA_PLAYAS, { json: beachesResponse }),
+      route(FEATURED_PATH, { json: featuredResponse }),
+      route(BEACHES_PATH, { json: beachesResponse }),
     ]);
-    renderWithProviders(<PlayasList />, { route: '/playas' });
+    renderWithProviders(<BeachList />, { route: '/playas' });
     await screen.findByText(beachesResponse[0].nombre);
 
     const urls = fetchMock.mock.calls.map((c) => String(c[0]));
@@ -79,10 +79,10 @@ describe('la URL del API lleva la región del build', () => {
 describe('los textos de cabecera llevan el nombre de la región', () => {
   it('interpola {region} sin que la página tenga que pasarlo', async () => {
     installFetchMock([
-      route(RUTA_DESTACADAS, { json: featuredResponse }),
-      route(RUTA_PLAYAS, { json: beachesResponse }),
+      route(FEATURED_PATH, { json: featuredResponse }),
+      route(BEACHES_PATH, { json: beachesResponse }),
     ]);
-    renderWithProviders(<PlayasList />, { route: '/playas' });
+    renderWithProviders(<BeachList />, { route: '/playas' });
 
     expect(await screen.findByText(REGION.branding.appName)).toBeInTheDocument();
     // Since Phase 4 the list page titles itself via SeoHead — still with
@@ -97,18 +97,18 @@ describe('los textos de cabecera llevan el nombre de la región', () => {
 
 describe('el mapa arranca donde dice la región', () => {
   it('toma el centro y el zoom de region.json', async () => {
-    mockCentroMapa.length = 0;
-    mockZoomMapa.length = 0;
+    mockMapCenter.length = 0;
+    mockMapZoom.length = 0;
     installFetchMock([
-      route(RUTA_DESTACADAS, { json: featuredResponse }),
-      route(RUTA_PLAYAS, { json: beachesResponse }),
+      route(FEATURED_PATH, { json: featuredResponse }),
+      route(BEACHES_PATH, { json: beachesResponse }),
     ]);
     // Imported here so the react-leaflet mock is in place before the module loads.
-    const MapaPage = (await import('../../pages/MapaPage')).default;
-    renderWithProviders(<MapaPage />, { route: '/mapa' });
+    const MapPage = (await import('../../pages/MapaPage')).default;
+    renderWithProviders(<MapPage />, { route: '/mapa' });
     await screen.findByText(beachesResponse[0].nombre);
 
-    expect(mockCentroMapa[0]).toEqual([REGION.map.center.lat, REGION.map.center.lon]);
-    expect(mockZoomMapa[0]).toBe(REGION.map.zoom);
+    expect(mockMapCenter[0]).toEqual([REGION.map.center.lat, REGION.map.center.lon]);
+    expect(mockMapZoom[0]).toBe(REGION.map.zoom);
   });
 });

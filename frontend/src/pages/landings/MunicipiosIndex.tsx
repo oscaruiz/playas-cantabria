@@ -1,28 +1,28 @@
 import React, { useMemo } from 'react';
 import { IonPage, IonContent, IonFooter, IonSpinner } from '@ionic/react';
 import { Link } from 'react-router-dom';
-import { useIdioma } from '../../shared/i18n/IdiomaContext';
+import { useLanguage } from '../../shared/i18n/IdiomaContext';
 import SeoHead from '../../shared/seo/SeoHead';
 import { municipalitiesSummary } from '../../shared/seo/landings';
 import BottomNavBar from '../../shared/ui/BottomNavBar';
 import HeaderActions from '../../shared/ui/HeaderActions';
-import { useCatalogo } from './useCatalogo';
+import { useCatalog } from './useCatalogo';
 import './landings.css';
 
-interface FilaMunicipio {
+interface MunicipalityRow {
   municipio: string;
   ruta: string;
   total: number;
 }
 
 /** Index of every municipality with beaches, each linking to its page. */
-const MunicipiosIndex: React.FC = () => {
-  const { t, tPlural } = useIdioma();
-  const { beaches: playas } = useCatalogo();
+const MunicipalitiesIndex: React.FC = () => {
+  const { t, tPlural } = useLanguage();
+  const { beaches } = useCatalog();
 
-  const municipios = useMemo(
-    () => municipalitiesSummary(playas ?? []) as FilaMunicipio[],
-    [playas]
+  const municipalities = useMemo(
+    () => municipalitiesSummary(beaches ?? []) as MunicipalityRow[],
+    [beaches]
   );
 
   return (
@@ -42,14 +42,14 @@ const MunicipiosIndex: React.FC = () => {
       <IonContent fullscreen>
         <div className="home-hero"><div className="home-hero-spacer" /></div>
         <p className="ld-intro">{t('municipios.intro')}</p>
-        {!playas && (
+        {!beaches && (
           <div className="home-loading">
             <IonSpinner name="crescent" />
           </div>
         )}
-        {playas && (
+        {beaches && (
           <div className="ld-lista">
-            {municipios.map((m) => (
+            {municipalities.map((m) => (
               <Link
                 key={m.ruta}
                 to={m.ruta}
@@ -71,4 +71,4 @@ const MunicipiosIndex: React.FC = () => {
   );
 };
 
-export default MunicipiosIndex;
+export default MunicipalitiesIndex;

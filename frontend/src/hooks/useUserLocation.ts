@@ -25,7 +25,7 @@ const GEO_OPTIONS: PositionOptions = {
  * (NaN, NaN)` and takes the map down with it, while the distance sorting on
  * Home and the listing would just come out silently wrong, which is worse.
  */
-function esCoordenadaValida(value: unknown): value is [number, number] {
+function isValidCoordinate(value: unknown): value is [number, number] {
   if (!Array.isArray(value) || value.length !== 2) return false;
   const [lat, lon] = value;
   return (
@@ -44,7 +44,7 @@ function getCachedLocation(): [number, number] | null {
     // would sail through as if it were fresh.
     if (typeof cached?.timestamp !== 'number' || !Number.isFinite(cached.timestamp)) return null;
     if (Date.now() - cached.timestamp > CACHE_MAX_AGE) return null;
-    return esCoordenadaValida(cached.coords) ? cached.coords : null;
+    return isValidCoordinate(cached.coords) ? cached.coords : null;
   } catch {
     return null;
   }
@@ -85,7 +85,7 @@ export function useUserLocation(): UserLocationResult {
       (pos) => {
         const coords = [pos?.coords?.latitude, pos?.coords?.longitude];
         setLocationLoading(false);
-        if (!esCoordenadaValida(coords)) {
+        if (!isValidCoordinate(coords)) {
           // An unusable reading is a failure, not a location. Reported as
           // "denied" but never as "blocked": nobody refused a permission here,
           // so the interface must not send the user to the browser settings.

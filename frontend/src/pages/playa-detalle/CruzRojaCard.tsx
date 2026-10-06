@@ -1,36 +1,36 @@
 import React, { useState } from 'react';
-import { PlayaDetalle as PlayaDetalleData } from '../../services/api';
-import { estadoBandera, operadorVigilancia } from '../../utils/beachHelpers';
+import { BeachDetail } from '../../services/api';
+import { flagStatus, lifeguardOperator } from '../../utils/beachHelpers';
 import { AttributionNote, FreshnessLabel } from '../../features/provenance/SourceAndFreshness';
-import InfoDatos from '../../features/provenance/InfoDatos';
-import { normalizarInstante } from '../../features/provenance/procedencia';
-import { useIdioma, TraducirFn } from '../../shared/i18n/IdiomaContext';
-import { traducirTextoApi, traducirOperador } from '../../shared/i18n/apiText';
+import DataInfo from '../../features/provenance/InfoDatos';
+import { normalizeInstant } from '../../features/provenance/procedencia';
+import { useLanguage, TranslateFn } from '../../shared/i18n/IdiomaContext';
+import { translateApiText, translateOperator } from '../../shared/i18n/apiText';
 
-function cruzRojaField(value: string | undefined, t: TraducirFn): string {
+function redCrossField(value: string | undefined, t: TranslateFn): string {
   if (!value || value.trim() === '' || value === 'N/A') return t('comun.noDisponible');
   return value;
 }
 
 /** Collapsible card with the lifeguard flag, coverage dates and schedule. */
-const CruzRojaCard: React.FC<{
-  redCross?: PlayaDetalleData['cruzRoja'];
+const RedCrossCard: React.FC<{
+  redCross?: BeachDetail['cruzRoja'];
   /** Beach whose operator names the card; absent = the legacy Cruz Roja one. */
-  beach?: Pick<PlayaDetalleData, 'fuenteBanderas'>;
-}> = ({ redCross: cruzRoja, beach: playa }) => {
-  const { t, language: idioma } = useIdioma();
-  const operador = operadorVigilancia(playa);
-  const estado = estadoBandera(cruzRoja);
-  const hasData = estado === 'color';
+  beach?: Pick<BeachDetail, 'fuenteBanderas'>;
+}> = ({ redCross, beach }) => {
+  const { t, language } = useLanguage();
+  const operator = lifeguardOperator(beach);
+  const status = flagStatus(redCross);
+  const hasData = status === 'color';
   // It can also be expanded outside of hours to see coverage/schedule.
-  const expandable = estado !== 'sinDatos';
+  const expandable = status !== 'sinDatos';
   const [expanded, setExpanded] = useState(hasData);
 
   // No operator watches this beach: there is no flag service to report, and an
   // empty card would read as "the data failed" instead of "there is none".
-  if (!operador) return null;
+  if (!operator) return null;
 
-  const nombreOperador = traducirOperador(operador, idioma);
+  const operatorName = translateOperator(operator, language);
 
   return (
     <div className="detail-disclosure">
@@ -41,7 +41,7 @@ const CruzRojaCard: React.FC<{
         tabIndex={expandable ? 0 : undefined}
         aria-expanded={expandable ? expanded : undefined}
         aria-controls={expandable ? 'cruzroja-content' : undefined}
-        aria-label={expandable ? `${expanded ? t('detalle.contraer') : t('detalle.expandir')} ${nombreOperador}` : undefined}
+        aria-label={expandable ? `${expanded ? t('detalle.contraer') : t('detalle.expandir')} ${operatorName}` : undefined}
         aria-disabled={!expandable ? true : undefined}
         onKeyDown={expandable ? (e) => {
           if (e.key === 'Enter' || e.key === ' ') {
@@ -51,13 +51,13 @@ const CruzRojaCard: React.FC<{
         } : undefined}
       >
         <div>
-          <div className="card-header-title">{nombreOperador}</div>
+          <div className="card-header-title">{operatorName}</div>
           <div className="card-header-subtitle">
             {hasData
               ? t('cruzroja.vigilanciaCobertura')
-              : estado === 'fueraDeHorario'
+              : status === 'fueraDeHorario'
                 ? t('bandera.fueraDeHorario')
-                : t('cruzroja.sinInfo', { operador: nombreOperador })}
+                : t('cruzroja.sinInfo', { operador: operatorName })}
           </div>
         </div>
         {expandable && <span className={`card-header-chevron ${expanded ? 'open' : ''}`} aria-hidden="true">&#9662;</span>}
@@ -70,47 +70,47 @@ const CruzRojaCard: React.FC<{
               <span className="info-row-label">{t('cruzroja.banderaActual')}</span>
               <span className={`info-row-value ${!hasData ? 'muted' : ''}`}>
                 {hasData
-                  ? traducirTextoApi(cruzRoja!.bandera, idioma)
-                  : estado === 'fueraDeHorario'
+                  ? translateApiText(redCross!.bandera, language)
+                  : status === 'fueraDeHorario'
                     ? t('bandera.fueraDeHorario')
                     : t('comun.noDisponible')}
               </span>
             </div>
             <div className="info-row">
               <span className="info-row-label">{t('cruzroja.coberturaDesde')}</span>
-              <span className={`info-row-value ${!cruzRoja?.coberturaDesde ? 'muted' : ''}`}>
-                {cruzRojaField(cruzRoja?.coberturaDesde, t)}
+              <span className={`info-row-value ${!redCross?.coberturaDesde ? 'muted' : ''}`}>
+                {redCrossField(redCross?.coberturaDesde, t)}
               </span>
             </div>
             <div className="info-row">
               <span className="info-row-label">{t('cruzroja.coberturaHasta')}</span>
-              <span className={`info-row-value ${!cruzRoja?.coberturaHasta ? 'muted' : ''}`}>
-                {cruzRojaField(cruzRoja?.coberturaHasta, t)}
+              <span className={`info-row-value ${!redCross?.coberturaHasta ? 'muted' : ''}`}>
+                {redCrossField(redCross?.coberturaHasta, t)}
               </span>
             </div>
             <div className="info-row">
               <span className="info-row-label">{t('cruzroja.horario')}</span>
-              <span className={`info-row-value ${!cruzRoja?.horario ? 'muted' : ''}`}>
-                {cruzRojaField(cruzRoja?.horario, t)}
+              <span className={`info-row-value ${!redCross?.horario ? 'muted' : ''}`}>
+                {redCrossField(redCross?.horario, t)}
               </span>
             </div>
           </div>
-          {normalizarInstante(cruzRoja?.ultimaActualizacion) != null && (
+          {normalizeInstant(redCross?.ultimaActualizacion) != null && (
             <p className="cruzroja-actualizado">
-              <FreshnessLabel instant={cruzRoja?.ultimaActualizacion} capitalized />
+              <FreshnessLabel instant={redCross?.ultimaActualizacion} capitalized />
             </p>
           )}
           {/* Quién publica esto, enlazado a su propio servicio. Va aquí y no
               solo en el banner porque esta tarjeta se pinta también cuando no
               hay bandera vigente: la cobertura y el horario siguen siendo
               suyos y hay que acreditarlos igual. */}
-          <InfoDatos label="info.fuente" aria="info.aria.vigilancia">
-            <AttributionNote source={operador} />
-          </InfoDatos>
+          <DataInfo label="info.fuente" aria="info.aria.vigilancia">
+            <AttributionNote source={operator} />
+          </DataInfo>
         </div>
       )}
     </div>
   );
 };
 
-export default CruzRojaCard;
+export default RedCrossCard;

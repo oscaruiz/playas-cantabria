@@ -18,21 +18,21 @@
 import React from 'react';
 import { screen } from '@testing-library/react';
 import { es } from '../../shared/i18n/es';
-import PlayaDetallePage from '../../pages/PlayaDetalle';
+import BeachDetailPage from '../../pages/PlayaDetalle';
 import { renderWithProviders } from '../render';
 import { installFetchMock, restoreFetch, route } from '../http/fakeFetch';
 import { featuredResponse } from '../fixtures/featured';
 import { buildBlackFlagDetail } from '../fixtures/beachDetail';
-import { RUTA_DESTACADAS as FEATURED, RUTA_DETALLE as DETAILS } from '../apiRoutes';
+import { FEATURED_PATH as FEATURED, DETAIL_PATH as DETAILS } from '../apiRoutes';
 
 
-const AHORA = new Date('2026-07-27T12:00:00.000Z'); // 14:00 Madrid, within opening hours
+const NOW_ISO = new Date('2026-07-27T12:00:00.000Z'); // 14:00 Madrid, within opening hours
 
 beforeEach(() => {
-  jest.useFakeTimers().setSystemTime(AHORA);
+  jest.useFakeTimers().setSystemTime(NOW_ISO);
   installFetchMock([
     route(FEATURED, { json: featuredResponse }),
-    route(DETAILS, { json: buildBlackFlagDetail(AHORA) }),
+    route(DETAILS, { json: buildBlackFlagDetail(NOW_ISO) }),
   ]);
 });
 
@@ -46,7 +46,7 @@ it('existe una clave de traducción para la bandera negra', () => {
 });
 
 it('la bandera negra pinta el banner de prohibición', async () => {
-  const { container } = renderWithProviders(<PlayaDetallePage />, {
+  const { container } = renderWithProviders(<BeachDetailPage />, {
     route: '/playas/3906002',
     path: '/playas/:codigo',
   });
@@ -58,7 +58,7 @@ it('la bandera negra pinta el banner de prohibición', async () => {
 });
 
 it('la tarjeta de Cruz Roja conserva el valor negro recibido', async () => {
-  renderWithProviders(<PlayaDetallePage />, {
+  renderWithProviders(<BeachDetailPage />, {
     route: '/playas/3906002',
     path: '/playas/:codigo',
   });

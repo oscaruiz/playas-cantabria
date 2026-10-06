@@ -14,21 +14,21 @@ import {
   walkOutline,
   bodyOutline,
 } from 'ionicons/icons';
-import type { ClaveTexto } from '../shared/i18n/es';
+import type { TextKey } from '../shared/i18n/es';
 import { withoutAccents } from '../shared/seo/beachUrls';
-import { fechaMadrid, minutosMadrid } from '../shared/format/tiempo';
+import { madridDate, madridMinutes } from '../shared/format/tiempo';
 import { classifySky, hasPrecipitation, skyEmoji } from '../shared/cielo/sky';
 
 // Sky classification lives in shared/cielo/sky.ts; the Spanish names remain
 // here as compatibility aliases for the existing call sites.
-export { skyEmoji as emojiCielo, skyWord as palabraCielo } from '../shared/cielo/sky';
+export { skyEmoji, skyWord } from '../shared/cielo/sky';
 
 /** Normalizes for search: lowercase + no accents (Arn\u00EDa \u2192 arnia). */
-export function normalizarBusqueda(texto: string): string {
+export function normalizeSearch(text: string): string {
   // Shares the accent-stripper with the URL module: the previous inline
   // `\p{M}` regex cost ~4 kB of bundle once Babel expanded it (see
   // seo/beachUrls.js).
-  return withoutAccents(texto.toLowerCase());
+  return withoutAccents(text.toLowerCase());
 }
 
 /**
@@ -36,19 +36,19 @@ export function normalizarBusqueda(texto: string): string {
  * `nombre`, `municipio` and `alias`, so that a canonical name or an alias (place name,
  * sector or Cruz Roja station name) finds the beach without duplicating results.
  */
-export function coincidePlaya(
+export function matchesBeach(
   p: { nombre: string; municipio: string; alias?: string[] },
-  termino: string
+  term: string
 ): boolean {
-  const t = normalizarBusqueda(termino);
-  if (normalizarBusqueda(p.nombre).includes(t) || normalizarBusqueda(p.municipio).includes(t)) {
+  const t = normalizeSearch(term);
+  if (normalizeSearch(p.nombre).includes(t) || normalizeSearch(p.municipio).includes(t)) {
     return true;
   }
-  return (p.alias ?? []).some((a) => normalizarBusqueda(a).includes(t));
+  return (p.alias ?? []).some((a) => normalizeSearch(a).includes(t));
 }
 
-export function flagColorClass(bandera?: string): string {
-  const b = bandera?.toLowerCase() || '';
+export function flagColorClass(flag?: string): string {
+  const b = flag?.toLowerCase() || '';
   if (b.includes('negra')) return 'black';
   if (b.includes('roja')) return 'red';
   if (b.includes('amarilla')) return 'yellow';
@@ -56,18 +56,18 @@ export function flagColorClass(bandera?: string): string {
   return 'unknown';
 }
 
-export function isFlagAvailable(cruzRoja?: { bandera?: string }): boolean {
-  if (!cruzRoja) return false;
-  const b = cruzRoja.bandera?.toLowerCase() || '';
+export function isFlagAvailable(redCross?: { bandera?: string }): boolean {
+  if (!redCross) return false;
+  const b = redCross.bandera?.toLowerCase() || '';
   return b.includes('negra') || b.includes('roja') || b.includes('amarilla') || b.includes('verde');
 }
 
-export type EstadoBandera = 'color' | 'fueraDeHorario' | 'sinDatos';
+export type FlagStatus = 'color' | 'fueraDeHorario' | 'sinDatos';
 
 /** Converts "DD-MM-YYYY" (Cruz Roja format) to "YYYY-MM-DD"; null if it doesn't parse. */
-function isoDesdeDDMMYYYY(fecha?: string | null): string | null {
-  if (!fecha) return null;
-  const m = fecha.match(/(\d{2})-(\d{2})-(\d{4})/);
+function isoDesdeDDMMYYYY(date?: string | null): string | null {
+  if (!date) return null;
+  const m = date.match(/(\d{2})-(\d{2})-(\d{4})/);
   return m ? `${m[3]}-${m[2]}-${m[1]}` : null;
 }
 
@@ -79,41 +79,41 @@ function isoDesdeDDMMYYYY(fecha?: string | null): string | null {
  * numbers meant the detail could still show a flag the home page had already
  * dropped. Mirror of `MAX_EDAD_BANDERA_MS` in flagVigencia.ts; keep in sync.
  */
-const MAX_EDAD_BANDERA_MS = 8 * 60 * 60 * 1000; // 8h — mirror of flagVigencia.ts
+const MAX_FLAG_AGE_MS = 8 * 60 * 60 * 1000; // 8h — mirror of flagVigencia.ts
 
 /**
  * Is the flag capture (ISO) recent (≤8h)?
  * If the ISO doesn't parse, it is assumed fresh (lenient) so as not to hide good data.
  */
-export function esInfoReciente(iso: string, ahora: Date = new Date()): boolean {
+export function isRecentInfo(iso: string, now: Date = new Date()): boolean {
   const ms = new Date(iso).getTime();
   if (Number.isNaN(ms)) return true;
-  return ahora.getTime() - ms <= MAX_EDAD_BANDERA_MS;
+  return now.getTime() - ms <= MAX_FLAG_AGE_MS;
 }
 
 /**
  * Are we within the lifeguard hours (and season), in Madrid time?
  * Returns null if there is no schedule data to decide.
  */
-export function dentroDeHorario(
-  cruzRoja?: { horario?: string | null; coberturaDesde?: string | null; coberturaHasta?: string | null },
-  ahora: Date = new Date()
+export function withinHours(
+  redCross?: { horario?: string | null; coberturaDesde?: string | null; coberturaHasta?: string | null },
+  now: Date = new Date()
 ): boolean | null {
-  if (!cruzRoja?.horario) return null;
-  const m = cruzRoja.horario.match(/(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})/);
+  if (!redCross?.horario) return null;
+  const m = redCross.horario.match(/(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})/);
   if (!m) return null;
 
   // Out of season (coverage) → no service even if it's mid-afternoon.
-  const hoy = fechaMadrid(ahora);
-  const desde = isoDesdeDDMMYYYY(cruzRoja.coberturaDesde);
-  const hasta = isoDesdeDDMMYYYY(cruzRoja.coberturaHasta);
-  if (desde && hoy < desde) return false;
-  if (hasta && hoy > hasta) return false;
+  const today = madridDate(now);
+  const from = isoDesdeDDMMYYYY(redCross.coberturaDesde);
+  const until = isoDesdeDDMMYYYY(redCross.coberturaHasta);
+  if (from && today < from) return false;
+  if (until && today > until) return false;
 
-  const cur = minutosMadrid(ahora);
-  const ini = +m[1] * 60 + +m[2];
-  const fin = +m[3] * 60 + +m[4];
-  return cur >= ini && cur <= fin;
+  const cur = madridMinutes(now);
+  const start = +m[1] * 60 + +m[2];
+  const end = +m[3] * 60 + +m[4];
+  return cur >= start && cur <= end;
 }
 
 /**
@@ -129,15 +129,15 @@ export function dentroDeHorario(
  * MIRROR of the backend: same rule in `domain/services/flagVigencia.ts`, whose
  * `vigenciaBandera` draws the same three states ('sin-servicio' / 'caducada').
  */
-export function estadoBandera(
-  cruzRoja?: { bandera?: string; horario?: string | null; coberturaDesde?: string | null; coberturaHasta?: string | null; ultimaActualizacion?: string | null },
-  ahora: Date = new Date()
-): EstadoBandera {
-  if (dentroDeHorario(cruzRoja, ahora) === false) return 'fueraDeHorario';
-  const fresca = cruzRoja?.ultimaActualizacion
-    ? esInfoReciente(cruzRoja.ultimaActualizacion, ahora)
+export function flagStatus(
+  redCross?: { bandera?: string; horario?: string | null; coberturaDesde?: string | null; coberturaHasta?: string | null; ultimaActualizacion?: string | null },
+  now: Date = new Date()
+): FlagStatus {
+  if (withinHours(redCross, now) === false) return 'fueraDeHorario';
+  const fresh = redCross?.ultimaActualizacion
+    ? isRecentInfo(redCross.ultimaActualizacion, now)
     : true;
-  if (isFlagAvailable(cruzRoja) && fresca) return 'color';
+  if (isFlagAvailable(redCross) && fresh) return 'color';
   return 'sinDatos';
 }
 
@@ -153,45 +153,45 @@ export function estadoBandera(
  * than the freshness window (then the detail keeps showing plain "Fuera de
  * horario", with no colour).
  */
-export function ultimaBanderaRegistrada(
-  cruzRoja?: {
+export function lastRecordedFlag(
+  redCross?: {
     bandera?: string;
     horario?: string | null;
     coberturaDesde?: string | null;
     coberturaHasta?: string | null;
     ultimaActualizacion?: string | null;
   },
-  ahora: Date = new Date()
+  now: Date = new Date()
 ): { bandera: string; registradaIso: string } | null {
-  if (!isFlagAvailable(cruzRoja) || dentroDeHorario(cruzRoja, ahora) !== false) return null;
+  if (!isFlagAvailable(redCross) || withinHours(redCross, now) !== false) return null;
 
-  const captura = cruzRoja?.ultimaActualizacion ? new Date(cruzRoja.ultimaActualizacion) : null;
-  if (!captura || Number.isNaN(captura.getTime())) return null;
+  const capture = redCross?.ultimaActualizacion ? new Date(redCross.ultimaActualizacion) : null;
+  if (!capture || Number.isNaN(capture.getTime())) return null;
 
-  const m = cruzRoja!.horario!.match(/(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})/);
+  const m = redCross!.horario!.match(/(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})/);
   if (!m) return null;
-  const ini = +m[1] * 60 + +m[2];
-  const fin = +m[3] * 60 + +m[4];
+  const start = +m[1] * 60 + +m[2];
+  const end = +m[3] * 60 + +m[4];
 
   // Clamp the capture to the closing of the lifeguard day it belongs to.
-  const capturaMin = minutosMadrid(captura);
-  let registrada = captura.getTime();
-  if (capturaMin > fin) registrada -= (capturaMin - fin) * 60000; // closed that same day
-  else if (capturaMin < ini) registrada -= (capturaMin + 1440 - fin) * 60000; // closed the previous day
+  const captureMin = madridMinutes(capture);
+  let registrada = capture.getTime();
+  if (captureMin > end) registrada -= (captureMin - end) * 60000; // closed that same day
+  else if (captureMin < start) registrada -= (captureMin + 1440 - end) * 60000; // closed the previous day
 
-  if (ahora.getTime() - registrada > MAX_EDAD_BANDERA_MS) return null;
+  if (now.getTime() - registrada > MAX_FLAG_AGE_MS) return null;
 
   // A record outside the coverage season does not correspond to real lifeguarding.
-  const dia = fechaMadrid(new Date(registrada));
-  const desde = isoDesdeDDMMYYYY(cruzRoja?.coberturaDesde);
-  const hasta = isoDesdeDDMMYYYY(cruzRoja?.coberturaHasta);
-  if ((desde && dia < desde) || (hasta && dia > hasta)) return null;
+  const day = madridDate(new Date(registrada));
+  const from = isoDesdeDDMMYYYY(redCross?.coberturaDesde);
+  const until = isoDesdeDDMMYYYY(redCross?.coberturaHasta);
+  if ((from && day < from) || (until && day > until)) return null;
 
-  return { bandera: cruzRoja!.bandera!, registradaIso: new Date(registrada).toISOString() };
+  return { bandera: redCross!.bandera!, registradaIso: new Date(registrada).toISOString() };
 }
 
 /** Does the beach have a showable webcam? (it exists and is not deactivated). */
-export function webcamDisponible(
+export function webcamAvailable(
   webcam?: { estado?: 'activa' | 'desactivada' } | null
 ): boolean {
   return !!webcam && webcam.estado !== 'desactivada';
@@ -210,8 +210,8 @@ export function webcamDisponible(
  * MIRROR of the backend: same order of preference as
  * `domain/services/flagAggregation.ts` → `resolveFlagForStations`.
  */
-export function vigilanciaDisponible(
-  playa?: {
+export function lifeguardAvailable(
+  beach?: {
     fuenteBanderas?: string | null;
     idCruzRoja?: number;
     cruzRojaStations?: Array<{ id?: number }>;
@@ -219,15 +219,15 @@ export function vigilanciaDisponible(
 ): boolean {
   // The explicit operator from current DTOs is authoritative. Consult the
   // Cruz Roja fields only for old backends and the local fallback catalog.
-  if (playa?.fuenteBanderas !== undefined) {
-    return playa.fuenteBanderas !== null;
+  if (beach?.fuenteBanderas !== undefined) {
+    return beach.fuenteBanderas !== null;
   }
 
-  const conPuesto = (playa?.cruzRojaStations ?? []).some(
+  const withStation = (beach?.cruzRojaStations ?? []).some(
     (p) => typeof p.id === 'number' && p.id > 0
   );
-  if (conPuesto) return true;
-  return (playa?.idCruzRoja ?? 0) > 0;
+  if (withStation) return true;
+  return (beach?.idCruzRoja ?? 0) > 0;
 }
 
 /**
@@ -239,24 +239,24 @@ export function vigilanciaDisponible(
  * for them the answer is the one that was always shown. Remove
  * `OPERADOR_LEGADO` once no such client is left.
  */
-const OPERADOR_LEGADO = 'Cruz Roja';
+const LEGACY_OPERATOR = 'Cruz Roja';
 
-export function operadorVigilancia(
-  playa?: { fuenteBanderas?: string | null } | null
+export function lifeguardOperator(
+  beach?: { fuenteBanderas?: string | null } | null
 ): string | null {
-  if (!playa || playa.fuenteBanderas === undefined) return OPERADOR_LEGADO;
-  return playa.fuenteBanderas;
+  if (!beach || beach.fuenteBanderas === undefined) return LEGACY_OPERATOR;
+  return beach.fuenteBanderas;
 }
 
-export type CoberturaWebcam = 'exacta' | 'compartida' | 'cercana';
+export type WebcamCoverage = 'exacta' | 'compartida' | 'cercana';
 
 /**
  * i18n key for a webcam's title/label according to its coverage. The label is
  * the honest signal to the user: a shared or nearby camera is NEVER presented
  * as exact. Returns a `ClaveTexto` to pass to `t()`.
  */
-export function claveCoberturaWebcam(cobertura: CoberturaWebcam): ClaveTexto {
-  switch (cobertura) {
+export function webcamCoverageKey(coverage: WebcamCoverage): TextKey {
+  switch (coverage) {
     case 'compartida':
       return 'webcam.vistaPanoramica';
     case 'cercana':
@@ -268,7 +268,7 @@ export function claveCoberturaWebcam(cobertura: CoberturaWebcam): ClaveTexto {
 }
 
 /** Waves glyph for "surf" (doesn't exist in Ionicons) \u2014 same data-URI format as ionicons */
-const olasIcon =
+const wavesIcon =
   "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><path d='M48 192c48-44 112-44 160 0s112 44 160 0 88-38 96-42' fill='none' stroke='currentColor' stroke-width='32' stroke-linecap='round'/><path d='M48 320c48-44 112-44 160 0s112 44 160 0 88-38 96-42' fill='none' stroke='currentColor' stroke-width='32' stroke-linecap='round'/></svg>";
 
 export const ATTR_CONFIG: Record<string, { emoji: string; icon: string; label: string }> = {
@@ -277,7 +277,7 @@ export const ATTR_CONFIG: Record<string, { emoji: string; icon: string; label: s
   parking:       { emoji: '\u{1F17F}\uFE0F', icon: carOutline, label: 'Parking' },
   accesible:     { emoji: '\u267F', icon: accessibilityOutline, label: 'Accesible' },
   chiringuito:   { emoji: '\u{1F379}', icon: restaurantOutline, label: 'Chiringuito' },
-  surf:          { emoji: '\u{1F3C4}', icon: olasIcon, label: 'Surf' },
+  surf:          { emoji: '\u{1F3C4}', icon: wavesIcon, label: 'Surf' },
   mascotas:      { emoji: '\u{1F415}', icon: pawOutline, label: 'Mascotas' },
   socorrismo:    { emoji: '\u{1F6DF}', icon: medkitOutline, label: 'Socorrismo' },
   nudista:       { emoji: '\u{1F3D6}\uFE0F', icon: bodyOutline, label: 'Nudista' },
@@ -286,9 +286,9 @@ export const ATTR_CONFIG: Record<string, { emoji: string; icon: string; label: s
 };
 
 /** Returns active attribute entries from a beach's atributos object */
-export function getActiveAttrs(atributos?: Record<string, boolean | undefined> | null): Array<{ key: string; emoji: string; icon: string; label: string }> {
-  if (!atributos) return [];
-  return Object.entries(atributos)
+export function getActiveAttrs(attributes?: Record<string, boolean | undefined> | null): Array<{ key: string; emoji: string; icon: string; label: string }> {
+  if (!attributes) return [];
+  return Object.entries(attributes)
     .filter(([key, val]) => val === true && ATTR_CONFIG[key])
     .map(([key]) => ({ key, ...ATTR_CONFIG[key] }));
 }
@@ -298,34 +298,34 @@ export function getActiveAttrs(atributos?: Record<string, boolean | undefined> |
  * (`lluvia.estado`, multi-source) → observed mm → regex over the sky
  * text (fallback for old backends without the field).
  */
-export function esLluviaActiva(
-  tiempoActual?: {
+export function isRainActive(
+  currentConditions?: {
     cielo?: string | null;
     precipitacionMm?: number | null;
     lluvia?: { estado: string } | null;
   } | null
 ): boolean {
-  if (!tiempoActual) return false;
-  if (tiempoActual.lluvia?.estado === 'lloviendo') return true;
-  if (tiempoActual.lluvia?.estado === 'sin_lluvia') return false;
-  if ((tiempoActual.precipitacionMm ?? 0) > 0) return true;
-  return hasPrecipitation(classifySky(tiempoActual.cielo));
+  if (!currentConditions) return false;
+  if (currentConditions.lluvia?.estado === 'lloviendo') return true;
+  if (currentConditions.lluvia?.estado === 'sin_lluvia') return false;
+  if ((currentConditions.precipitacionMm ?? 0) > 0) return true;
+  return hasPrecipitation(classifySky(currentConditions.cielo));
 }
 
 /**
  * FORECAST rain to display. Returns null if it is already raining (the active
  * rain badge has priority — never two badges at once) or if there is no signal.
  */
-export function lluviaPrevista(
-  tiempoActual?: {
+export function expectedRain(
+  currentConditions?: {
     cielo?: string | null;
     precipitacionMm?: number | null;
     lluvia?: { estado: string; prevista?: { desdeIso: string | null; mm: number | null; fuentes: string[] } | null } | null;
   } | null
 ): { desdeIso: string | null; mm: number | null; fuentes: string[] } | null {
-  if (!tiempoActual) return null;
-  if (esLluviaActiva(tiempoActual)) return null;
-  return tiempoActual.lluvia?.prevista ?? null;
+  if (!currentConditions) return null;
+  if (isRainActive(currentConditions)) return null;
+  return currentConditions.lluvia?.prevista ?? null;
 }
 
 /**
@@ -337,7 +337,7 @@ export function lluviaPrevista(
  * The detail does not go through here — its observation carries an explicit
  * `esNoche`, because `iconToLegacy` drops the suffix on that path.
  */
-export function esNocheEn(weather?: { iconoClima?: string | null } | null): boolean {
+export function isNightAt(weather?: { iconoClima?: string | null } | null): boolean {
   return weather?.iconoClima?.endsWith('n') === true;
 }
 
@@ -355,8 +355,8 @@ export function rankedSkyEmoji(
     lluvia?: { estado: string } | null;
   },
 ): string {
-  if (esLluviaActiva({ cielo: weather.descripcionClima, lluvia: weather.lluvia ?? null })) {
+  if (isRainActive({ cielo: weather.descripcionClima, lluvia: weather.lluvia ?? null })) {
     return '\u{1F327}️';
   }
-  return skyEmoji(weather.descripcionClima, esNocheEn(weather));
+  return skyEmoji(weather.descripcionClima, isNightAt(weather));
 }

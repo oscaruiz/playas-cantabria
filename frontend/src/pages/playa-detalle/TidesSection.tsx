@@ -1,6 +1,6 @@
 import React from 'react';
-import { useIdioma } from '../../shared/i18n/IdiomaContext';
-import { ClaveTexto } from '../../shared/i18n/es';
+import { useLanguage } from '../../shared/i18n/IdiomaContext';
+import { TextKey } from '../../shared/i18n/es';
 
 function parseTimeMinutes(t: string): number {
   const [h, m] = t.split(':').map(Number);
@@ -10,7 +10,7 @@ function parseTimeMinutes(t: string): number {
 function getTideStatus(
   entries: Array<{ time: string; type: 'pleamar' | 'bajamar'; minutes: number }>,
   isToday: boolean,
-): { labelKey: ClaveTexto; className: string } | null {
+): { labelKey: TextKey; className: string } | null {
   if (!isToday || entries.length === 0) return null;
 
   const now = new Date();
@@ -49,14 +49,14 @@ const TidesSection: React.FC<{
    * always relative to a reference point anyway — this just says which one.
    */
   reference?: { playa: string; distanciaKm: number };
-}> = ({ tide: marea, tideSource: fuenteMareas, isToday, reference: referencia }) => {
-  const { t } = useIdioma();
-  if (marea.pleamar.length === 0 && marea.bajamar.length === 0) return null;
+}> = ({ tide, tideSource, isToday, reference }) => {
+  const { t } = useLanguage();
+  if (tide.pleamar.length === 0 && tide.bajamar.length === 0) return null;
 
   // Combine and sort by time
   const entries = [
-    ...marea.pleamar.map((t) => ({ time: t, type: 'pleamar' as const, minutes: parseTimeMinutes(t) })),
-    ...marea.bajamar.map((t) => ({ time: t, type: 'bajamar' as const, minutes: parseTimeMinutes(t) })),
+    ...tide.pleamar.map((t) => ({ time: t, type: 'pleamar' as const, minutes: parseTimeMinutes(t) })),
+    ...tide.bajamar.map((t) => ({ time: t, type: 'bajamar' as const, minutes: parseTimeMinutes(t) })),
   ].sort((a, b) => a.minutes - b.minutes);
 
   const status = getTideStatus(entries, isToday);
@@ -64,11 +64,11 @@ const TidesSection: React.FC<{
   return (
     <section className="tides-section">
       <h3 className="section-kicker">{t('detalle.mareas')}</h3>
-      {referencia && (
+      {reference && (
         <p className="tides-referencia-aviso">
           {t('marea.referenciaAviso', {
-            playa: referencia.playa,
-            km: Math.round(referencia.distanciaKm * 10) / 10,
+            playa: reference.playa,
+            km: Math.round(reference.distanciaKm * 10) / 10,
           })}
         </p>
       )}
@@ -91,8 +91,8 @@ const TidesSection: React.FC<{
       {/* El puerto de referencia es DATO, no letra pequeña: sin él las horas
           no significan nada. El crédito de AEMET, que publica esta tabla, va
           en la ⓘ que cierra la columna — es la misma hoja que la previsión. */}
-      {fuenteMareas && (
-        <div className="tides-source">{fuenteMareas.replace(/^\*/, '')}</div>
+      {tideSource && (
+        <div className="tides-source">{tideSource.replace(/^\*/, '')}</div>
       )}
     </section>
   );

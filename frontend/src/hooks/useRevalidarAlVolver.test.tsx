@@ -1,10 +1,10 @@
 import React from 'react';
 import { render, act } from '@testing-library/react';
-import { useRevalidarAlVolver } from './useRevalidarAlVolver';
+import { useRevalidateOnReturn } from './useRevalidarAlVolver';
 
-function ponerVisibilidad(estado: DocumentVisibilityState) {
+function setVisibility(status: DocumentVisibilityState) {
   Object.defineProperty(document, 'visibilityState', {
-    value: estado,
+    value: status,
     configurable: true,
   });
   act(() => {
@@ -12,43 +12,43 @@ function ponerVisibilidad(estado: DocumentVisibilityState) {
   });
 }
 
-const Sonda: React.FC<{ onReturn: () => void }> = ({ onReturn: alVolver }) => {
-  useRevalidarAlVolver(alVolver);
+const Probe: React.FC<{ onReturn: () => void }> = ({ onReturn }) => {
+  useRevalidateOnReturn(onReturn);
   return null;
 };
 
-afterEach(() => ponerVisibilidad('visible'));
+afterEach(() => setVisibility('visible'));
 
 describe('useRevalidarAlVolver', () => {
   it('revalida al volver a la pestaña, no al dejarla', () => {
-    const revalidar = jest.fn();
-    render(<Sonda onReturn={revalidar} />);
+    const revalidate = jest.fn();
+    render(<Probe onReturn={revalidate} />);
 
-    ponerVisibilidad('hidden');
-    expect(revalidar).not.toHaveBeenCalled();
+    setVisibility('hidden');
+    expect(revalidate).not.toHaveBeenCalled();
 
-    ponerVisibilidad('visible');
-    expect(revalidar).toHaveBeenCalledTimes(1);
+    setVisibility('visible');
+    expect(revalidate).toHaveBeenCalledTimes(1);
   });
 
   it('llama a la ÚLTIMA función recibida, sin resuscribirse en cada render', () => {
-    const vieja = jest.fn();
-    const nueva = jest.fn();
-    const { rerender } = render(<Sonda onReturn={vieja} />);
-    rerender(<Sonda onReturn={nueva} />);
+    const old = jest.fn();
+    const newValue = jest.fn();
+    const { rerender } = render(<Probe onReturn={old} />);
+    rerender(<Probe onReturn={newValue} />);
 
-    ponerVisibilidad('visible');
+    setVisibility('visible');
 
-    expect(vieja).not.toHaveBeenCalled();
-    expect(nueva).toHaveBeenCalledTimes(1);
+    expect(old).not.toHaveBeenCalled();
+    expect(newValue).toHaveBeenCalledTimes(1);
   });
 
   it('deja de escuchar al desmontar', () => {
-    const revalidar = jest.fn();
-    const { unmount } = render(<Sonda onReturn={revalidar} />);
+    const revalidate = jest.fn();
+    const { unmount } = render(<Probe onReturn={revalidate} />);
     unmount();
 
-    ponerVisibilidad('visible');
-    expect(revalidar).not.toHaveBeenCalled();
+    setVisibility('visible');
+    expect(revalidate).not.toHaveBeenCalled();
   });
 });

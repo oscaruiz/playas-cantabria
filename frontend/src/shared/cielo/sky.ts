@@ -66,11 +66,11 @@ export function hasPrecipitation(code: SkyCode): boolean {
   return code === 'storm' || code === 'rain';
 }
 
-export function skyEmoji(cielo: string | null, esNoche = false): string {
+export function skyEmoji(sky: string | null, isNight = false): string {
   // No text at night → moon; by day → the neutral placeholder.
-  if (!cielo) return esNoche ? '\u{1F319}' : '⛅';
+  if (!sky) return isNight ? '\u{1F319}' : '⛅';
 
-  switch (classifySky(cielo)) {
+  switch (classifySky(sky)) {
     case 'storm':
       return '⛈️';
     case 'snow':
@@ -83,9 +83,9 @@ export function skyEmoji(cielo: string | null, esNoche = false): string {
     // moon-behind-cloud emoji: clear and partly clear both become the moon.
     // Nothing is lost — `skyWord` still tells them apart in words.
     case 'partlyCloudy':
-      return esNoche ? '\u{1F319}' : '\u{1F324}️';
+      return isNight ? '\u{1F319}' : '\u{1F324}️';
     case 'clear':
-      return esNoche ? '\u{1F319}' : '☀️';
+      return isNight ? '\u{1F319}' : '☀️';
     case 'overcast':
       return '☁️';
     case 'cloudy':
@@ -120,10 +120,10 @@ export function skyEmoji(cielo: string | null, esNoche = false): string {
  * text rather than dropping information.
  */
 export function skyWord(
-  cielo: string | null | undefined,
-  esNoche = false,
+  sky: string | null | undefined,
+  isNight = false,
 ): string | null {
-  switch (classifySky(cielo)) {
+  switch (classifySky(sky)) {
     case 'storm':
       return 'Tormenta';
     case 'snow':
@@ -133,10 +133,10 @@ export function skyWord(
     case 'fog':
       return 'Niebla';
     case 'partlyCloudy':
-      return esNoche ? 'Parcialmente despejado' : 'Parcialmente soleado';
+      return isNight ? 'Parcialmente despejado' : 'Parcialmente soleado';
     // At night there is no sun to name: the same sky is "Despejado".
     case 'clear':
-      return esNoche ? 'Despejado' : 'Sol';
+      return isNight ? 'Despejado' : 'Sol';
     case 'overcast':
     case 'cloudy':
       return 'Nublado';

@@ -3,12 +3,12 @@ import { createRoot } from 'react-dom/client';
 import App from './app/App';
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 import reportWebVitals from './reportWebVitals';
-import { escucharInstalacion } from './modules/instalacion';
+import { listenForInstall } from './modules/instalacion';
 
 // Before rendering, not inside a component: Chrome fires `beforeinstallprompt`
 // during page load and only once, so a listener added after mount would miss
 // it and the install chip would never appear.
-escucharInstalacion();
+listenForInstall();
 
 const container = document.getElementById('root');
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -27,14 +27,14 @@ root.render(
 // once, so nobody gets stuck on an old version of the bundle.
 serviceWorkerRegistration.register({
   onUpdate: (registration) => {
-    const esperando = registration.waiting;
-    if (!esperando) return;
-    esperando.addEventListener('statechange', (event) => {
+    const waiting = registration.waiting;
+    if (!waiting) return;
+    waiting.addEventListener('statechange', (event) => {
       if ((event.target as ServiceWorker).state === 'activated') {
         window.location.reload();
       }
     });
-    esperando.postMessage({ type: 'SKIP_WAITING' });
+    waiting.postMessage({ type: 'SKIP_WAITING' });
   },
 });
 

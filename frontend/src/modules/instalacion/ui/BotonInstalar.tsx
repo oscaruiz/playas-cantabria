@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { IonIcon } from '@ionic/react';
 import { downloadOutline, openOutline, shareOutline } from 'ionicons/icons';
-import { useIdioma } from '../../../shared/i18n/IdiomaContext';
-import { useInstalacion } from '../application/useInstalacion';
+import { useLanguage } from '../../../shared/i18n/IdiomaContext';
+import { useInstall } from '../application/useInstalacion';
 import './instalacion.css';
 
 /**
@@ -14,30 +14,30 @@ import './instalacion.css';
  * passes `hp-badge`), so it stays a pill like its neighbours without this
  * module knowing anything about the page's palette.
  */
-const BotonInstalar: React.FC<{ className?: string }> = ({ className }) => {
-  const { t } = useIdioma();
-  const { offer: oferta, install: instalar, open: abrir } = useInstalacion();
-  const [ayudaVisible, setAyudaVisible] = useState(false);
+const InstallButton: React.FC<{ className?: string }> = ({ className }) => {
+  const { t } = useLanguage();
+  const { offer, install, open } = useInstall();
+  const [helpVisible, setHelpVisible] = useState(false);
 
-  if (!oferta) return null;
+  if (!offer) return null;
 
-  const esIOS = oferta === 'ios';
-  const esAbrir = oferta === 'open';
+  const isIOS = offer === 'ios';
+  const isOpenAction = offer === 'open';
 
   return (
     <>
       <button
         type="button"
         className={`instalar-chip${className ? ` ${className}` : ''}`}
-        onClick={() => (esIOS ? setAyudaVisible((v) => !v) : esAbrir ? abrir() : instalar())}
-        aria-expanded={esIOS ? ayudaVisible : undefined}
-        aria-controls={esIOS ? 'instalar-ayuda' : undefined}
+        onClick={() => (isIOS ? setHelpVisible((v) => !v) : isOpenAction ? open() : install())}
+        aria-expanded={isIOS ? helpVisible : undefined}
+        aria-controls={isIOS ? 'instalar-ayuda' : undefined}
       >
-        <IonIcon icon={esIOS ? shareOutline : esAbrir ? openOutline : downloadOutline} aria-hidden="true" />
-        {t(esAbrir ? 'instalar.abrir' : 'instalar.chip')}
+        <IonIcon icon={isIOS ? shareOutline : isOpenAction ? openOutline : downloadOutline} aria-hidden="true" />
+        {t(isOpenAction ? 'instalar.abrir' : 'instalar.chip')}
       </button>
 
-      {esIOS && ayudaVisible && (
+      {isIOS && helpVisible && (
         <div className="instalar-ayuda" id="instalar-ayuda">
           <p className="instalar-ayuda__titulo">{t('instalar.iosTitulo')}</p>
           <ol className="instalar-ayuda__pasos">
@@ -50,4 +50,4 @@ const BotonInstalar: React.FC<{ className?: string }> = ({ className }) => {
   );
 };
 
-export default BotonInstalar;
+export default InstallButton;

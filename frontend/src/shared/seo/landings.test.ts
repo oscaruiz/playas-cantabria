@@ -9,7 +9,7 @@ import {
 import { beachesResponse } from '../../test/fixtures/beaches';
 import catalogoReal from '../../data/beaches.json';
 
-function porId(id: string): { id: string; filtro: (p: unknown) => boolean } {
+function byId(id: string): { id: string; filtro: (p: unknown) => boolean } {
   const landing = LANDINGS.find((l: { id: string }) => l.id === id);
   if (!landing) throw new Error(`landing ${id} no existe`);
   return landing;
@@ -17,35 +17,35 @@ function porId(id: string): { id: string; filtro: (p: unknown) => boolean } {
 
 describe('selectores de landings (solo datos estáticos del catálogo)', () => {
   it('webcam: presente y no desactivada', () => {
-    const filtro = porId('playas-con-webcam').filtro;
-    const nombres = beachesResponse.filter(filtro).map((p) => p.nombre);
-    expect(nombres).toContain('La Concha');
+    const filter = byId('playas-con-webcam').filtro;
+    const names = beachesResponse.filter(filter).map((p) => p.nombre);
+    expect(names).toContain('La Concha');
     // La Salvé has a webcam with estado 'desactivada': out.
-    expect(nombres).not.toContain('La Salvé');
+    expect(names).not.toContain('La Salvé');
   });
 
   it('accesible: solo el atributo explícito a true; ausente = desconocido, fuera', () => {
-    const filtro = porId('playas-accesibles').filtro;
-    expect(filtro({ atributos: { accesible: true } })).toBe(true);
-    expect(filtro({ atributos: { accesible: false } })).toBe(false);
-    expect(filtro({ atributos: {} })).toBe(false);
-    expect(filtro({})).toBe(false);
+    const filter = byId('playas-accesibles').filtro;
+    expect(filter({ atributos: { accesible: true } })).toBe(true);
+    expect(filter({ atributos: { accesible: false } })).toBe(false);
+    expect(filter({ atributos: {} })).toBe(false);
+    expect(filter({})).toBe(false);
   });
 
   it('socorrista: puesto con id > 0 o idCruzRoja > 0 (el 0 es "sin cobertura")', () => {
-    const filtro = porId('playas-con-socorrista').filtro;
-    expect(filtro({ cruzRojaStations: [{ id: 373 }] })).toBe(true);
-    expect(filtro({ idCruzRoja: 310 })).toBe(true);
-    expect(filtro({ idCruzRoja: 0 })).toBe(false);
-    expect(filtro({ cruzRojaStations: [{}] })).toBe(false);
-    expect(filtro({})).toBe(false);
+    const filter = byId('playas-con-socorrista').filtro;
+    expect(filter({ cruzRojaStations: [{ id: 373 }] })).toBe(true);
+    expect(filter({ idCruzRoja: 310 })).toBe(true);
+    expect(filter({ idCruzRoja: 0 })).toBe(false);
+    expect(filter({ cruzRojaStations: [{}] })).toBe(false);
+    expect(filter({})).toBe(false);
   });
 
   it('surf: solo el atributo explícito', () => {
-    const filtro = porId('playas-para-surf').filtro;
-    expect(filtro({ atributos: { surf: true } })).toBe(true);
-    expect(filtro({ atributos: { surf: false } })).toBe(false);
-    expect(filtro({})).toBe(false);
+    const filter = byId('playas-para-surf').filtro;
+    expect(filter({ atributos: { surf: true } })).toBe(true);
+    expect(filter({ atributos: { surf: false } })).toBe(false);
+    expect(filter({})).toBe(false);
   });
 
   it('no existe una landing de familias: el catálogo no tiene ese dato', () => {
@@ -86,25 +86,25 @@ describe('municipios', () => {
   });
 
   it('el resumen del índice trae ruta y número de playas por municipio', () => {
-    const resumen = municipalitiesSummary(beachesResponse);
-    expect(resumen).toContainEqual({
+    const summary = municipalitiesSummary(beachesResponse);
+    expect(summary).toContainEqual({
       municipio: 'Santander',
       ruta: '/municipios/santander',
       total: 2,
     });
-    expect(resumen).toContainEqual({
+    expect(summary).toContainEqual({
       municipio: 'Suances',
       ruta: '/municipios/suances',
       total: 1,
     });
-    expect(resumen.map((m: { municipio: string }) => m.municipio)).toEqual(
+    expect(summary.map((m: { municipio: string }) => m.municipio)).toEqual(
       municipalitiesOf(beachesResponse)
     );
   });
 
   it('el slug reencuentra sus playas; uno desconocido, ninguna', () => {
-    const deSantander = beachesOfMunicipalitySlug(beachesResponse, 'santander');
-    expect(deSantander.map((p: { nombre: string }) => p.nombre).sort()).toEqual([
+    const fromSantander = beachesOfMunicipalitySlug(beachesResponse, 'santander');
+    expect(fromSantander.map((p: { nombre: string }) => p.nombre).sort()).toEqual([
       'El Sardinero',
       'La Maruca',
     ]);

@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react';
-import { leerFavoritas, guardarFavoritas } from '../infrastructure/favoritesStorage';
+import { readFavorites, saveFavorites } from '../infrastructure/favoritesStorage';
 
 /**
  * Shared favorites store: ONE in-memory set backed by localStorage, so the
@@ -9,47 +9,47 @@ import { leerFavoritas, guardarFavoritas } from '../infrastructure/favoritesStor
  * `toggleFavorita` directly.
  */
 
-let codigos: ReadonlySet<string> | null = null;
-const oyentes = new Set<() => void>();
+let codes: ReadonlySet<string> | null = null;
+const listeners = new Set<() => void>();
 
-function actual(): ReadonlySet<string> {
-  if (codigos === null) codigos = new Set(leerFavoritas());
-  return codigos;
+function current(): ReadonlySet<string> {
+  if (codes === null) codes = new Set(readFavorites());
+  return codes;
 }
 
-function emitir(): void {
-  oyentes.forEach((cb) => cb());
+function emit(): void {
+  listeners.forEach((cb) => cb());
 }
 
-function suscribir(cb: () => void): () => void {
-  oyentes.add(cb);
+function subscribe(cb: () => void): () => void {
+  listeners.add(cb);
   return () => {
-    oyentes.delete(cb);
+    listeners.delete(cb);
   };
 }
 
-export function toggleFavorita(codigo: string): void {
-  const siguiente = new Set(actual());
-  if (!siguiente.delete(codigo)) siguiente.add(codigo);
-  codigos = siguiente;
-  guardarFavoritas(Array.from(siguiente));
-  emitir();
+export function toggleFavorite(code: string): void {
+  const next = new Set(current());
+  if (!next.delete(code)) next.add(code);
+  codes = next;
+  saveFavorites(Array.from(next));
+  emit();
 }
 
 /**
  * Drops the in-memory copy and re-reads storage. For tests, and for an
  * eventual cross-tab `storage` event listener.
  */
-export function recargarFavoritas(): void {
-  codigos = null;
-  emitir();
+export function reloadFavorites(): void {
+  codes = null;
+  emit();
 }
 
-export function useFavoritas(): {
+export function useFavoriteCodes(): {
   favorites: ReadonlySet<string>;
-  isFavorite: (codigo: string) => boolean;
-  toggleFavorite: (codigo: string) => void;
+  isFavorite: (code: string) => boolean;
+  toggleFavorite: (code: string) => void;
 } {
-  const favoritas = useSyncExternalStore(suscribir, actual);
-  return { favorites: favoritas, isFavorite: (codigo) => favoritas.has(codigo), toggleFavorite: toggleFavorita };
+  const favorites = useSyncExternalStore(subscribe, current);
+  return { favorites, isFavorite: (code) => favorites.has(code), toggleFavorite };
 }

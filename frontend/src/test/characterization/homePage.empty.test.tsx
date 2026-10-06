@@ -19,11 +19,11 @@ import { renderWithProviders } from '../render';
 import { installFetchMock, restoreFetch, route } from '../http/fakeFetch';
 import { beachesResponse } from '../fixtures/beaches';
 import { featuredLaSalve, featuredBerria, featuredSomo } from '../fixtures/featured';
-import { RUTA_DESTACADAS as FEATURED, RUTA_PLAYAS as BEACHES } from '../apiRoutes';
+import { FEATURED_PATH as FEATURED, BEACHES_PATH as BEACHES } from '../apiRoutes';
 
 
 /** The best one scores 59: just below the cut. */
-const sinDestacadas: FeaturedBeachesResponse = {
+const noFeatured: FeaturedBeachesResponse = {
   timestamp: Date.parse('2026-07-27T10:00:00.000Z'),
   playas: [],
   revisar: [featuredBerria],
@@ -37,7 +37,7 @@ afterEach(() => {
 it('muestra el aviso de "sin destacadas" cuando ninguna playa llega a 60', async () => {
   Object.defineProperty(navigator, 'geolocation', { configurable: true, value: undefined });
   installFetchMock([
-    route(FEATURED, { json: sinDestacadas }),
+    route(FEATURED, { json: noFeatured }),
     route(BEACHES, { json: beachesResponse }),
   ]);
 
@@ -53,7 +53,7 @@ it('muestra el aviso de "sin destacadas" cuando ninguna playa llega a 60', async
 it('el aviso de "sin destacadas" lleva un botón al listado completo', async () => {
   Object.defineProperty(navigator, 'geolocation', { configurable: true, value: undefined });
   installFetchMock([
-    route(FEATURED, { json: sinDestacadas }),
+    route(FEATURED, { json: noFeatured }),
     route(BEACHES, { json: beachesResponse }),
   ]);
 
@@ -65,8 +65,8 @@ it('el aviso de "sin destacadas" lleva un botón al listado completo', async () 
     { route: '/' },
   );
 
-  const boton = await screen.findByRole('button', { name: 'Ver listado de playas' });
-  fireEvent.click(boton);
+  const button = await screen.findByRole('button', { name: 'Ver listado de playas' });
+  fireEvent.click(button);
 
   expect(await screen.findByText('EN-LISTADO')).toBeInTheDocument();
 });

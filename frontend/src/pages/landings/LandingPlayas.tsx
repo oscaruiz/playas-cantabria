@@ -1,13 +1,13 @@
 import React, { useMemo } from 'react';
 import { IonPage, IonContent, IonFooter, IonSpinner } from '@ionic/react';
-import { useIdioma } from '../../shared/i18n/IdiomaContext';
-import { ClaveTexto } from '../../shared/i18n/es';
+import { useLanguage } from '../../shared/i18n/IdiomaContext';
+import { TextKey } from '../../shared/i18n/es';
 import SeoHead from '../../shared/seo/SeoHead';
 import { LANDINGS } from '../../shared/seo/landings';
 import BottomNavBar from '../../shared/ui/BottomNavBar';
 import HeaderActions from '../../shared/ui/HeaderActions';
 import BeachCard from '../../components/BeachCard';
-import { useCatalogo } from './useCatalogo';
+import { useCatalog } from './useCatalogo';
 import { FreshnessLabel } from '../../features/provenance/SourceAndFreshness';
 import './landings.css';
 
@@ -24,59 +24,59 @@ export type LandingId =
  * the data-source clarification; nothing here claims live conditions from
  * static attributes.
  */
-const LandingPlayas: React.FC<{ id: LandingId }> = ({ id }) => {
-  const { t, tPlural } = useIdioma();
-  const { beaches: playas, conditions: condiciones, conditionsInstant: instanteCondiciones } = useCatalogo();
-  const filtro = LANDINGS.find((l: { id: string }) => l.id === id)?.filtro as
+const BeachLanding: React.FC<{ id: LandingId }> = ({ id }) => {
+  const { t, tPlural } = useLanguage();
+  const { beaches, conditions, conditionsInstant } = useCatalog();
+  const filter = LANDINGS.find((l: { id: string }) => l.id === id)?.filtro as
     | ((p: unknown) => boolean)
     | undefined;
 
-  const lista = useMemo(
+  const list = useMemo(
     () =>
-      filtro
-        ? (playas ?? []).filter(filtro).sort((a, b) => a.nombre.localeCompare(b.nombre))
+      filter
+        ? (beaches ?? []).filter(filter).sort((a, b) => a.nombre.localeCompare(b.nombre))
         : [],
-    [playas, filtro]
+    [beaches, filter]
   );
 
   return (
     <IonPage className="home-page">
       <SeoHead
-        title={t(`landing.${id}.titulo` as ClaveTexto)}
-        description={t(`landing.${id}.intro` as ClaveTexto)}
+        title={t(`landing.${id}.titulo` as TextKey)}
+        description={t(`landing.${id}.intro` as TextKey)}
         canonicalPath={`/${id}`}
       />
       <div className="home-sticky-header">
         <div className="home-sticky-marca">
-          <h1 className="home-sticky-title">{t(`landing.${id}.titulo` as ClaveTexto)}</h1>
+          <h1 className="home-sticky-title">{t(`landing.${id}.titulo` as TextKey)}</h1>
           <p className="home-sticky-subtitle">{t('app.titulo')}</p>
         </div>
         <HeaderActions />
       </div>
       <IonContent fullscreen>
         <div className="home-hero"><div className="home-hero-spacer" /></div>
-        <p className="ld-intro">{t(`landing.${id}.intro` as ClaveTexto)}</p>
-        {!playas && (
+        <p className="ld-intro">{t(`landing.${id}.intro` as TextKey)}</p>
+        {!beaches && (
           <div className="home-loading">
             <IonSpinner name="crescent" />
           </div>
         )}
-        {playas && (
+        {beaches && (
           <>
             <div className="beach-count">
-              {tPlural('lista.contador', lista.length)}
+              {tPlural('lista.contador', list.length)}
               {/* The rows show conditions from the featured snapshot; say
                   how old that snapshot is (it can come from the SW cache). */}
-              {condiciones.size > 0 && instanteCondiciones != null && (
+              {conditions.size > 0 && conditionsInstant != null && (
                 <>
                   {' · '}
-                  <FreshnessLabel instant={instanteCondiciones} />
+                  <FreshnessLabel instant={conditionsInstant} />
                 </>
               )}
             </div>
             <div className="beach-list">
-              {lista.map((p) => (
-                <BeachCard key={p.codigo} beach={p} weather={condiciones.get(p.codigo)} />
+              {list.map((p) => (
+                <BeachCard key={p.codigo} beach={p} weather={conditions.get(p.codigo)} />
               ))}
             </div>
           </>
@@ -87,4 +87,4 @@ const LandingPlayas: React.FC<{ id: LandingId }> = ({ id }) => {
   );
 };
 
-export default LandingPlayas;
+export default BeachLanding;

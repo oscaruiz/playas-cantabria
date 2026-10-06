@@ -1,6 +1,6 @@
-import { leerFavoritas, guardarFavoritas } from './favoritesStorage';
+import { readFavorites, saveFavorites } from './favoritesStorage';
 
-const CLAVE = 'playas:favoritas';
+const KEY = 'playas:favoritas';
 
 beforeEach(() => {
   localStorage.clear();
@@ -8,23 +8,23 @@ beforeEach(() => {
 
 describe('guardar y leer favoritas', () => {
   it('sobrevive al ciclo guardar → leer conservando el orden', () => {
-    guardarFavoritas(['3908503', '3900101']);
-    expect(leerFavoritas()).toEqual(['3908503', '3900101']);
+    saveFavorites(['3908503', '3900101']);
+    expect(readFavorites()).toEqual(['3908503', '3900101']);
   });
 
   it('deduplica al guardar', () => {
-    guardarFavoritas(['a', 'a', 'b', 'a']);
-    expect(leerFavoritas()).toEqual(['a', 'b']);
-    expect(JSON.parse(localStorage.getItem(CLAVE) as string)).toEqual({
+    saveFavorites(['a', 'a', 'b', 'a']);
+    expect(readFavorites()).toEqual(['a', 'b']);
+    expect(JSON.parse(localStorage.getItem(KEY) as string)).toEqual({
       version: 1,
       beachCodes: ['a', 'b'],
     });
   });
 
   it('una lista vacía también persiste (quitar la última favorita)', () => {
-    guardarFavoritas(['a']);
-    guardarFavoritas([]);
-    expect(leerFavoritas()).toEqual([]);
+    saveFavorites(['a']);
+    saveFavorites([]);
+    expect(readFavorites()).toEqual([]);
   });
 });
 
@@ -37,17 +37,17 @@ describe('leerFavoritas con almacenamiento corrupto', () => {
     ['sin versión', '{"beachCodes":["a"]}'],
     ['beachCodes no-array', '{"version":1,"beachCodes":"a"}'],
     ['sin beachCodes', '{"version":1}'],
-  ])('%s → sin favoritas, sin explotar', (_caso, crudo) => {
-    localStorage.setItem(CLAVE, crudo);
-    expect(leerFavoritas()).toEqual([]);
+  ])('%s → sin favoritas, sin explotar', (_case, raw) => {
+    localStorage.setItem(KEY, raw);
+    expect(readFavorites()).toEqual([]);
   });
 
   it('filtra las entradas que no son códigos y deduplica', () => {
     localStorage.setItem(
-      CLAVE,
+      KEY,
       JSON.stringify({ version: 1, beachCodes: [1, null, 'ok', '', 'ok', {}, 'otro'] })
     );
-    expect(leerFavoritas()).toEqual(['ok', 'otro']);
+    expect(readFavorites()).toEqual(['ok', 'otro']);
   });
 });
 
@@ -56,7 +56,7 @@ describe('fallos del propio localStorage', () => {
     const spy = jest.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       throw new Error('QuotaExceededError');
     });
-    expect(() => guardarFavoritas(['a'])).not.toThrow();
+    expect(() => saveFavorites(['a'])).not.toThrow();
     spy.mockRestore();
   });
 
@@ -64,7 +64,7 @@ describe('fallos del propio localStorage', () => {
     const spy = jest.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
       throw new Error('SecurityError');
     });
-    expect(leerFavoritas()).toEqual([]);
+    expect(readFavorites()).toEqual([]);
     spy.mockRestore();
   });
 });

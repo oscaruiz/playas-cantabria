@@ -1,16 +1,16 @@
 import React from 'react';
-import { useIdioma } from '../../shared/i18n/IdiomaContext';
-import type { ClaveTexto } from '../../shared/i18n/es';
-import type { CampoEstimado } from '../../services/api';
-import { formatearHaceTiempo } from '../../shared/format/tiempo';
-import { capitalizar } from '../../shared/format/texto';
+import { useLanguage } from '../../shared/i18n/IdiomaContext';
+import type { TextKey } from '../../shared/i18n/es';
+import type { EstimatedField } from '../../services/api';
+import { formatTimeAgo } from '../../shared/format/tiempo';
+import { capitalize } from '../../shared/format/texto';
 import {
-  Procedencia,
-  normalizarInstante,
-  formatearInstanteAbsoluto,
-  UMBRAL_DATOS_VIEJOS_MS,
+  Provenance,
+  normalizeInstant,
+  formatAbsoluteInstant,
+  STALE_DATA_THRESHOLD_MS,
 } from './procedencia';
-import { atribucionDeFuente } from './atribuciones';
+import { sourceAttribution } from './atribuciones';
 import './provenance.css';
 
 /**
@@ -19,33 +19,33 @@ import './provenance.css';
  * sentence, without splitting every phrase into two halves in the dictionaries.
  * It never survives to the DOM: it is always consumed by the split.
  */
-const HUECO = '@@FUENTE@@';
+const GAP = '@@FUENTE@@';
 
 /**
  * A template with a `{fuente}` slot, rendered with the source credited and
  * linked to its own terms. An unknown source still gets its name — plain,
  * because we have no page to send the user to.
  */
-const TextoConFuente: React.FC<{ labelKey: ClaveTexto; source: string }> = ({ labelKey: clave, source: fuente }) => {
-  const { t } = useIdioma();
-  const atribucion = atribucionDeFuente(fuente);
-  const [antes, despues = ''] = t(clave, { fuente: HUECO }).split(HUECO);
+const TextWithSource: React.FC<{ labelKey: TextKey; source: string }> = ({ labelKey: key, source }) => {
+  const { t } = useLanguage();
+  const attribution = sourceAttribution(source);
+  const [before, after = ''] = t(key, { fuente: GAP }).split(GAP);
   return (
     <>
-      {antes}
-      {atribucion ? (
+      {before}
+      {attribution ? (
         <a
           className="procedencia-enlace"
-          href={atribucion.url}
+          href={attribution.url}
           target="_blank"
           rel="noopener noreferrer"
         >
-          {atribucion.name}
+          {attribution.name}
         </a>
       ) : (
-        fuente
+        source
       )}
-      {despues}
+      {after}
     </>
   );
 };
@@ -66,21 +66,21 @@ export const FreshnessLabel: React.FC<{
   /** Capitalize the visible relative text ("Actualizado hace…"). */
   capitalized?: boolean;
   className?: string;
-}> = ({ instant: instante, capitalized: capitalizado, className }) => {
-  const { t, language: idioma } = useIdioma();
-  const ms = normalizarInstante(instante);
+}> = ({ instant, capitalized, className }) => {
+  const { t, language } = useLanguage();
+  const ms = normalizeInstant(instant);
   if (ms == null) return null;
-  const relativo = formatearHaceTiempo(ms, t);
-  if (!relativo) return null;
-  const absoluto = formatearInstanteAbsoluto(ms, idioma);
+  const relative = formatTimeAgo(ms, t);
+  if (!relative) return null;
+  const absolute = formatAbsoluteInstant(ms, language);
   return (
     <time
       className={className}
       dateTime={new Date(ms).toISOString()}
-      aria-label={absoluto}
-      title={absoluto}
+      aria-label={absolute}
+      title={absolute}
     >
-      {capitalizado ? capitalizar(relativo) : relativo}
+      {capitalized ? capitalize(relative) : relative}
     </time>
   );
 };
@@ -92,12 +92,12 @@ export const FreshnessLabel: React.FC<{
 export const DataSourceLabel: React.FC<{
   source: string | null | undefined;
   /** i18n template with a `{fuente}` placeholder. */
-  textKey?: ClaveTexto;
-}> = ({ source: fuente, textKey: claveTexto = 'detalle.datosMeteo' }) => {
-  if (!fuente) return null;
+  textKey?: TextKey;
+}> = ({ source, textKey = 'detalle.datosMeteo' }) => {
+  if (!source) return null;
   return (
     <span>
-      <TextoConFuente labelKey={claveTexto} source={fuente} />
+      <TextWithSource labelKey={textKey} source={source} />
     </span>
   );
 };
@@ -112,12 +112,12 @@ export const DataSourceLabel: React.FC<{
 export const AttributionNote: React.FC<{
   source: string | null | undefined;
   className?: string;
-}> = ({ source: fuente, className }) => {
-  const atribucion = atribucionDeFuente(fuente);
-  if (!fuente || !atribucion?.note) return null;
+}> = ({ source, className }) => {
+  const attribution = sourceAttribution(source);
+  if (!source || !attribution?.note) return null;
   return (
     <p className={`procedencia-atribucion ${className ?? ''}`.trim()}>
-      <TextoConFuente labelKey={atribucion.note} source={fuente} />
+      <TextWithSource labelKey={attribution.note} source={source} />
     </p>
   );
 };
@@ -132,15 +132,15 @@ export const AttributionNote: React.FC<{
  * beach with a full AEMET sheet.
  */
 export const EstimatedValues: React.FC<{
-  fields: CampoEstimado[] | null | undefined;
+  fields: EstimatedField[] | null | undefined;
   className?: string;
-}> = ({ fields: campos, className }) => {
-  const { t } = useIdioma();
-  if (!campos || campos.length === 0) return null;
-  const nombres = campos.map((c) => t(`datos.estimado.${c}` as ClaveTexto));
+}> = ({ fields, className }) => {
+  const { t } = useLanguage();
+  if (!fields || fields.length === 0) return null;
+  const names = fields.map((c) => t(`datos.estimado.${c}` as TextKey));
   return (
     <p className={`procedencia-estatica ${className ?? ''}`.trim()}>
-      {t('datos.estimados', { campos: nombres.join(', ') })}
+      {t('datos.estimados', { campos: names.join(', ') })}
     </p>
   );
 };
@@ -159,22 +159,22 @@ export const ComputedAt: React.FC<{
   generatedAt: string | null | undefined;
   cacheThresholdMs?: number;
   className?: string;
-}> = ({ generatedAt: generadoEn, cacheThresholdMs: umbralCacheMs = UMBRAL_DATOS_VIEJOS_MS, className }) => {
-  const { t, language: idioma } = useIdioma();
-  const ms = normalizarInstante(generadoEn);
+}> = ({ generatedAt, cacheThresholdMs = STALE_DATA_THRESHOLD_MS, className }) => {
+  const { t, language } = useLanguage();
+  const ms = normalizeInstant(generatedAt);
   if (ms == null) return null;
-  const desdeCache = Date.now() - ms > umbralCacheMs;
+  const fromCache = Date.now() - ms > cacheThresholdMs;
   // The absolute instant, not "X ago": this is the one line that answers
   // "date and time of last update" for the whole page, and the relative
   // wording is already taken by each block's own freshness.
-  const absoluto = formatearInstanteAbsoluto(ms, idioma);
+  const absolute = formatAbsoluteInstant(ms, language);
   return (
     <p className={`procedencia-estatica ${className ?? ''}`.trim()}>
       {t('datos.calculado', {
         hace: '',
       }).trim()}{' '}
-      <time dateTime={new Date(ms).toISOString()}>{absoluto}</time>
-      {desdeCache && ` · ${t('datos.desdeCache')}`}
+      <time dateTime={new Date(ms).toISOString()}>{absolute}</time>
+      {fromCache && ` · ${t('datos.desdeCache')}`}
     </p>
   );
 };
@@ -184,11 +184,11 @@ export const ComputedAt: React.FC<{
  * external services. Just a translated muted line — visible, not alarming.
  */
 export const DataStatus: React.FC<{
-  labelKey: ClaveTexto;
+  labelKey: TextKey;
   className?: string;
-}> = ({ labelKey: clave, className }) => {
-  const { t } = useIdioma();
-  return <p className={`procedencia-estatica ${className ?? ''}`.trim()}>{t(clave)}</p>;
+}> = ({ labelKey: key, className }) => {
+  const { t } = useLanguage();
+  return <p className={`procedencia-estatica ${className ?? ''}`.trim()}>{t(key)}</p>;
 };
 
 /**
@@ -197,18 +197,18 @@ export const DataStatus: React.FC<{
  * missing; with neither, the whole line disappears.
  */
 export const SourceAndFreshness: React.FC<{
-  provenance: Procedencia | null;
-  sourceKey?: ClaveTexto;
+  provenance: Provenance | null;
+  sourceKey?: TextKey;
   className?: string;
-}> = ({ provenance: procedencia, sourceKey: claveFuente, className }) => {
-  if (!procedencia || (!procedencia.source && procedencia.instantMs == null)) {
+}> = ({ provenance, sourceKey, className }) => {
+  if (!provenance || (!provenance.source && provenance.instantMs == null)) {
     return null;
   }
   return (
     <div className={`procedencia-linea ${className ?? ''}`.trim()}>
-      <DataSourceLabel source={procedencia.source} textKey={claveFuente} />
-      {procedencia.source && procedencia.instantMs != null && ' · '}
-      <FreshnessLabel instant={procedencia.instantMs} />
+      <DataSourceLabel source={provenance.source} textKey={sourceKey} />
+      {provenance.source && provenance.instantMs != null && ' · '}
+      <FreshnessLabel instant={provenance.instantMs} />
     </div>
   );
 };

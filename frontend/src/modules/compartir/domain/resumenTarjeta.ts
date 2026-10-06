@@ -1,51 +1,51 @@
-import type { FeaturedBeach, PrevisionHora } from '../../../services/api';
-import type { Idioma, TraducirFn } from '../../../shared/i18n/IdiomaContext';
+import type { FeaturedBeach, HourlyForecast } from '../../../services/api';
+import type { Language, TranslateFn } from '../../../shared/i18n/IdiomaContext';
 import {
-  traducirTextoApi,
-  razonLegible,
-  claveNivelVientoMs,
-  sinFragmentoDePronostico,
+  translateApiText,
+  readableReason,
+  windLevelKey,
+  noForecastFragment,
 } from '../../../shared/i18n/apiText';
-import { emojiCielo, esNocheEn, flagColorClass } from '../../../utils/beachHelpers';
-import { capitalizar } from '../../../shared/format/texto';
-import { horaLocalMadrid } from '../../../shared/format/tiempo';
-import { formatearFechaCorta, nombreDia } from '../../../shared/i18n/fechas';
+import { skyEmoji, isNightAt, flagColorClass } from '../../../utils/beachHelpers';
+import { capitalize } from '../../../shared/format/texto';
+import { madridLocalHour } from '../../../shared/format/tiempo';
+import { formatShortDate, dayName } from '../../../shared/i18n/fechas';
 
 /** Flag band, as a name — the hex lives in the layer that paints. */
-export type ColorBandera = 'green' | 'yellow' | 'red' | 'black' | 'unknown';
+export type FlagColor = 'green' | 'yellow' | 'red' | 'black' | 'unknown';
 
-export interface CeldaTarjeta {
+export interface CardCell {
   label: string;
   value: string;
   /** Only the flag cell carries a colour swatch. */
-  flag?: ColorBandera;
+  flag?: FlagColor;
 }
 
-export interface HoraTarjeta {
+export interface CardHour {
   hour: string;
   emoji: string;
   temperature: string;
   wind: string;
 }
 
-export interface MareaTarjeta {
+export interface CardTide {
   arrow: string;
   label: string;
   hour: string;
 }
 
 /** Everything the card says, already translated and ready to be painted. */
-export interface ResumenTarjeta {
+export interface CardSummary {
   name: string;
   context: string;
   score: number;
   emoji: string;
   summary: string;
-  cells: CeldaTarjeta[];
+  cells: CardCell[];
   hoursTitle: string;
-  hours: HoraTarjeta[];
+  hours: CardHour[];
   tidesTitle: string;
-  tides: MareaTarjeta[];
+  tides: CardTide[];
   /** Reference port of the tide times. Without it the times mean nothing. */
   tidePort: string | null;
   warning: string;
@@ -53,7 +53,7 @@ export interface ResumenTarjeta {
   site: string;
 }
 
-export interface EntradaTarjeta {
+export interface CardInput {
   beach: { nombre: string; municipio: string };
   scored: FeaturedBeach;
   /** Region brand and site, injected: the domain does not read configuration. */
@@ -70,16 +70,16 @@ export interface EntradaTarjeta {
    * cell and one in the summary line right above it.
    */
   forecast?: { wind?: string | null; waves?: string | null };
-  hours?: PrevisionHora[] | null;
+  hours?: HourlyForecast[] | null;
   tides?: { pleamar: string[]; bajamar: string[] } | null;
   tidePort?: string | null;
   now: Date;
-  t: TraducirFn;
-  language: Idioma;
+  t: TranslateFn;
+  language: Language;
 }
 
 /** Cloud cover → sky glyph. Same three states as `iconoDeNubes` on the page. */
-function emojiDeNubes(pct: number | null): string {
+function cloudEmoji(pct: number | null): string {
   if (pct == null) return '⛅';
   if (pct <= 25) return '☀️';
   if (pct <= 50) return '⛅';
@@ -87,8 +87,8 @@ function emojiDeNubes(pct: number | null): string {
 }
 
 /** "6:05" and "16:05" both sort right; plain string order would not. */
-function minutosDelDia(hora: string): number {
-  const [h, m] = hora.split(':').map(Number);
+function minutesOfDayOf(hour: string): number {
+  const [h, m] = hour.split(':').map(Number);
   return (h || 0) * 60 + (m || 0);
 }
 
@@ -98,95 +98,95 @@ function minutosDelDia(hora: string): number {
  * worst possible bug here: it travels on its own, with no way to check it
  * against the app.
  */
-export function resumenTarjeta({
-  beach: playa,
-  scored: puntuada,
-  brand: marca,
-  site: sitio,
-  forecast: prevision,
-  hours: horas,
-  tides: mareas,
-  tidePort: puertoMareas,
-  now: ahora,
+export function cardSummary({
+  beach,
+  scored,
+  brand,
+  site,
+  forecast,
+  hours,
+  tides,
+  tidePort,
+  now,
   t,
-  language: idioma,
-}: EntradaTarjeta): ResumenTarjeta {
+  language,
+}: CardInput): CardSummary {
   // Same trim as the score card: with an outlook, the reason drops the
   // fragment that repeats it, or the card would say it twice.
-  const razon = puntuada.pronostico
-    ? sinFragmentoDePronostico(puntuada.razonRanking)
-    : puntuada.razonRanking;
+  const rationale = scored.pronostico
+    ? noForecastFragment(scored.razonRanking)
+    : scored.razonRanking;
 
-  const sinDato = capitalizar(t('detalle.scoreInfo.sinDato'));
+  const noData = capitalize(t('detalle.scoreInfo.sinDato'));
   /** Backend Spanish → the cell's text, or nothing if there is none. */
-  const deLaApi = (texto?: string | null): string | null =>
-    texto ? capitalizar(traducirTextoApi(texto, idioma)) : null;
+  const fromApi = (text?: string | null): string | null =>
+    text ? capitalize(translateApiText(text, language)) : null;
 
-  const celdas: CeldaTarjeta[] = [
+  const cells: CardCell[] = [
     {
       label: t('detalle.viento'),
       value:
-        deLaApi(prevision?.wind) ??
-        (puntuada.vientoMs != null
-          ? capitalizar(t(claveNivelVientoMs(puntuada.vientoMs)))
-          : sinDato),
+        fromApi(forecast?.wind) ??
+        (scored.vientoMs != null
+          ? capitalize(t(windLevelKey(scored.vientoMs)))
+          : noData),
     },
     {
       label: t('detalle.oleaje'),
-      value: deLaApi(prevision?.waves) ?? deLaApi(puntuada.oleaje) ?? sinDato,
+      value: fromApi(forecast?.waves) ?? fromApi(scored.oleaje) ?? noData,
     },
   ];
 
   // No flag: no cell. On a beach nobody watches there is nothing to report,
   // and a cell saying so read as a failure — the two that remain simply take
   // the width. Printed only when a flag is actually flying.
-  if (puntuada.bandera) {
-    celdas.push({
+  if (scored.bandera) {
+    cells.push({
       label: t('detalle.bandera'),
-      value: capitalizar(traducirTextoApi(puntuada.bandera, idioma)),
-      flag: flagColorClass(puntuada.bandera) as ColorBandera,
+      value: capitalize(translateApiText(scored.bandera, language)),
+      flag: flagColorClass(scored.bandera) as FlagColor,
     });
   }
 
   return {
-    name: playa.nombre,
-    context: `${playa.municipio} · ${formatearFechaCorta(
-      capitalizar(nombreDia(ahora.getDay(), idioma)),
-      ahora.getDate(),
-      ahora.getMonth(),
-      idioma,
+    name: beach.nombre,
+    context: `${beach.municipio} · ${formatShortDate(
+      capitalize(dayName(now.getDay(), language)),
+      now.getDate(),
+      now.getMonth(),
+      language,
     )}`,
-    score: Math.round(puntuada.puntuacion),
-    emoji: emojiCielo(puntuada.descripcionClima, esNocheEn(puntuada)),
-    summary: capitalizar(traducirTextoApi(razonLegible(razon), idioma)),
-    cells: celdas,
+    score: Math.round(scored.puntuacion),
+    emoji: skyEmoji(scored.descripcionClima, isNightAt(scored)),
+    summary: capitalize(translateApiText(readableReason(rationale), language)),
+    cells,
     hoursTitle: t('detalle.pronostico.titulo'),
     // Four, like the section it comes from: the strip answers "and if I go
     // later?", and a longer tail turns it into a forecast nobody asked for.
-    hours: (horas ?? []).slice(0, 4).map((h) => ({
-      hour: horaLocalMadrid(h.horaIso) ?? '--:--',
-      emoji: emojiDeNubes(h.nubesPct),
+    hours: (hours ?? []).slice(0, 4).map((h) => ({
+      hour: madridLocalHour(h.horaIso) ?? '--:--',
+      emoji: cloudEmoji(h.nubesPct),
       temperature: h.temperaturaC != null ? `${Math.round(h.temperaturaC)}°` : '--',
       wind: h.vientoMs != null ? `${Math.round(h.vientoMs)} m/s` : '--',
     })),
     tidesTitle: t('detalle.mareas'),
     tides: [
-      ...(mareas?.pleamar ?? []).map((hora) => ({
+      ...(tides?.pleamar ?? []).map((hour) => ({
         arrow: '↑',
         label: t('marea.pleamar'),
-        hour: hora,
+        hour,
       })),
-      ...(mareas?.bajamar ?? []).map((hora) => ({
+      ...(tides?.bajamar ?? []).map((hour) => ({
         arrow: '↓',
         label: t('marea.bajamar'),
-        hour: hora,
+        hour,
       })),
-    ].sort((a, b) => minutosDelDia(a.hour) - minutosDelDia(b.hour)),
+    ].sort((a, b) => minutesOfDayOf(a.hour) - minutesOfDayOf(b.hour)),
     // AEMET annotates the port with a leading asterisk; it is a footnote mark
     // in their table and means nothing here.
-    tidePort: puertoMareas ? puertoMareas.replace(/^\*/, '') : null,
+    tidePort: tidePort ? tidePort.replace(/^\*/, '') : null,
     warning: t('aviso.ranking'),
-    brand: marca,
-    site: sitio,
+    brand,
+    site,
   };
 }

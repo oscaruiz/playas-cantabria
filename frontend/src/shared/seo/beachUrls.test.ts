@@ -41,11 +41,11 @@ describe('beachPath', () => {
 
 describe('findBySlugs', () => {
   it('cada playa del fixture se reencuentra por su propia ruta', () => {
-    for (const playa of beachesResponse) {
-      const ruta = beachPath(playa);
-      const [, , municipioSlug, playaSlug] = ruta.split('/');
-      expect(findBySlugs(beachesResponse, municipioSlug, playaSlug)?.codigo).toBe(
-        playa.codigo
+    for (const beach of beachesResponse) {
+      const path = beachPath(beach);
+      const [, , municipalitySlug, beachSlug] = path.split('/');
+      expect(findBySlugs(beachesResponse, municipalitySlug, beachSlug)?.codigo).toBe(
+        beach.codigo
       );
     }
   });
@@ -64,11 +64,11 @@ describe('detectCollisions', () => {
   });
 
   it('dos playas homónimas del mismo municipio se detectan', () => {
-    const colision = detectCollisions([
+    const collision = detectCollisions([
       { nombre: 'La Arena', municipio: 'Arnuero', codigo: '1' },
       { nombre: 'La aréna', municipio: 'Arnuero', codigo: '2' },
     ]);
-    expect(colision).toEqual([{ ruta: '/playas/arnuero/la-arena', codigos: ['1', '2'] }]);
+    expect(collision).toEqual([{ ruta: '/playas/arnuero/la-arena', codigos: ['1', '2'] }]);
   });
 
   it('un nombre que sluggea a vacío también es conflicto', () => {

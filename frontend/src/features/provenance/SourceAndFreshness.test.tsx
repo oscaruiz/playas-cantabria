@@ -5,31 +5,31 @@ import {
   FreshnessLabel,
   SourceAndFreshness,
 } from './SourceAndFreshness';
-import { formatearInstanteAbsoluto } from './procedencia';
+import { formatAbsoluteInstant } from './procedencia';
 import ForecastHero from '../../pages/playa-detalle/ForecastHero';
-import type { DiaPrediccionDTO, TiempoActual } from '../../services/api';
+import type { ForecastDayDTO, CurrentConditions } from '../../services/api';
 
-const hace7Min = () => Date.now() - 7 * 60000;
+const sevenMinAgo = () => Date.now() - 7 * 60000;
 
 describe('FreshnessLabel', () => {
   it('shows the translated relative time inside a <time> with the absolute instant', () => {
-    const ms = hace7Min();
+    const ms = sevenMinAgo();
     const { container } = renderWithProviders(<FreshnessLabel instant={ms} />);
     const time = container.querySelector('time');
     if (!time) throw new Error('FreshnessLabel no renderizó un <time>');
     expect(time).toHaveTextContent('actualizado hace 7 min');
     expect(time.getAttribute('dateTime')).toBe(new Date(ms).toISOString());
     // The accessible name is the ABSOLUTE instant — what "7 min ago" cannot say.
-    expect(time.getAttribute('aria-label')).toBe(formatearInstanteAbsoluto(ms, 'es'));
+    expect(time.getAttribute('aria-label')).toBe(formatAbsoluteInstant(ms, 'es'));
   });
 
   it('remains translated in English', () => {
-    renderWithProviders(<FreshnessLabel instant={hace7Min()} />, { language: 'en' });
+    renderWithProviders(<FreshnessLabel instant={sevenMinAgo()} />, { language: 'en' });
     expect(screen.getByText('updated 7 min ago')).toBeInTheDocument();
   });
 
   it('capitalizes on request without touching the <time> semantics', () => {
-    renderWithProviders(<FreshnessLabel instant={hace7Min()} capitalized />);
+    renderWithProviders(<FreshnessLabel instant={sevenMinAgo()} capitalized />);
     expect(screen.getByText('Actualizado hace 7 min')).toBeInTheDocument();
   });
 
@@ -65,9 +65,9 @@ describe('SourceAndFreshness', () => {
         provenance={{ kind: 'prevision', source: 'Open-Meteo', instantMs: null }}
       />
     );
-    const enlace = container.querySelector('a.procedencia-enlace');
-    expect(enlace).toHaveTextContent('Open-Meteo');
-    expect(enlace).toHaveAttribute('href', 'https://open-meteo.com');
+    const link = container.querySelector('a.procedencia-enlace');
+    expect(link).toHaveTextContent('Open-Meteo');
+    expect(link).toHaveAttribute('href', 'https://open-meteo.com');
   });
 
   it('names an unknown source without inventing a link for it', () => {
@@ -85,7 +85,7 @@ describe('SourceAndFreshness', () => {
   it('joins source and freshness for a live observation', () => {
     const { container } = renderWithProviders(
       <SourceAndFreshness
-        provenance={{ kind: 'directo', source: 'OpenWeather', instantMs: hace7Min() }}
+        provenance={{ kind: 'directo', source: 'OpenWeather', instantMs: sevenMinAgo() }}
         sourceKey="datos.enDirectoFuente"
       />
     );
@@ -109,7 +109,7 @@ describe('SourceAndFreshness', () => {
 });
 
 describe('ForecastHero wiring', () => {
-  const DIA: DiaPrediccionDTO = {
+  const DAY: ForecastDayDTO = {
     fecha: '2026-08-02',
     manana: { cielo: null, iconoCielo: null, viento: null, oleaje: null },
     tarde: { cielo: null, iconoCielo: null, viento: null, oleaje: null },
@@ -120,18 +120,18 @@ describe('ForecastHero wiring', () => {
     nivelUV: null,
     aviso: null,
   };
-  const AHORA: TiempoActual = {
+  const NOW_ISO: CurrentConditions = {
     cielo: 'Despejado',
     icono: 1,
     temperatura: 24,
     precipitacionMm: null,
     fuente: 'OpenWeather',
-    timestamp: new Date(hace7Min()).toISOString(),
+    timestamp: new Date(sevenMinAgo()).toISOString(),
   };
 
   it('the live headline credits its observer and capture time', () => {
     const { container } = renderWithProviders(
-      <ForecastHero day={DIA} currentConditions={AHORA} />
+      <ForecastHero day={DAY} currentConditions={NOW_ISO} />
     );
     expect(container.querySelector('.procedencia-linea')).toHaveTextContent(
       'Observación en directo de OpenWeather'
@@ -141,7 +141,7 @@ describe('ForecastHero wiring', () => {
 
   it('keeps the freshness visible and the licence wording out of the way', () => {
     const { container } = renderWithProviders(
-      <ForecastHero day={DIA} currentConditions={AHORA} />
+      <ForecastHero day={DAY} currentConditions={NOW_ISO} />
     );
     // La frescura no es letra pequeña: es el dato. La nota de licencia del
     // observador viaja con el resto bajo la ⓘ que cierra la columna.
@@ -152,7 +152,7 @@ describe('ForecastHero wiring', () => {
   });
 
   it('without an observation there is no provenance line at all', () => {
-    const { container } = renderWithProviders(<ForecastHero day={DIA} />);
+    const { container } = renderWithProviders(<ForecastHero day={DAY} />);
     expect(container.querySelector('.procedencia-linea')).toBeNull();
   });
 });

@@ -8,12 +8,12 @@
 import React from 'react';
 import { screen } from '@testing-library/react';
 import HomePage from '../../pages/HomePage';
-import MejorMomento from '../../components/MejorMomento';
+import BestTime from '../../components/MejorMomento';
 import { renderWithProviders } from '../render';
 import { installFetchMock, restoreFetch, route } from '../http/fakeFetch';
 import { beachesResponse } from '../fixtures/beaches';
 import { featuredResponse } from '../fixtures/featured';
-import { RUTA_DESTACADAS as FEATURED, RUTA_PLAYAS as BEACHES } from '../apiRoutes';
+import { FEATURED_PATH as FEATURED, BEACHES_PATH as BEACHES } from '../apiRoutes';
 
 const NOW = featuredResponse.timestamp + 30 * 60 * 1000;
 
@@ -55,13 +55,13 @@ describe('MejorMomento — sin datos no se inventa nada', () => {
   });
 
   it('sin ventana no pinta nada', () => {
-    const { container } = renderWithProviders(<MejorMomento timeWindow={null} />, { route: '/' });
+    const { container } = renderWithProviders(<BestTime timeWindow={null} />, { route: '/' });
     expect(container.querySelector('.mejor-momento')).toBeNull();
   });
 
   it('una ventana que llega al final de la franja no avisa de ningún cambio', () => {
     renderWithProviders(
-      <MejorMomento
+      <BestTime
         timeWindow={{
           inicio: '2026-07-27T09:00:00.000Z',
           fin: '2026-07-27T19:00:00.000Z',
@@ -80,7 +80,7 @@ describe('MejorMomento — el reloj manda sobre la caché', () => {
   it('una ventana ya terminada no se pinta: venía de una respuesta cacheada', () => {
     jest.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-07-27T20:00:00.000Z'));
     const { container } = renderWithProviders(
-      <MejorMomento
+      <BestTime
         timeWindow={{ inicio: '2026-07-27T09:00:00.000Z', fin: '2026-07-27T12:00:00.000Z', cambio: null }}
       />,
       { route: '/' },
@@ -92,7 +92,7 @@ describe('MejorMomento — el reloj manda sobre la caché', () => {
   it('una ventana empezada dice lo que queda, no un inicio en el pasado', () => {
     jest.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-07-27T10:30:00.000Z'));
     renderWithProviders(
-      <MejorMomento
+      <BestTime
         timeWindow={{ inicio: '2026-07-27T09:00:00.000Z', fin: '2026-07-27T12:00:00.000Z', cambio: null }}
       />,
       { route: '/' },
@@ -108,7 +108,7 @@ describe('MejorMomento — el porqué, solo en la vista detallada', () => {
     jest.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-07-27T08:00:00.000Z'));
   });
 
-  const ventanaConMotivo = {
+  const windowWithReason = {
     inicio: '2026-07-27T09:00:00.000Z',
     fin: '2026-07-27T13:00:00.000Z',
     cambio: { desde: '2026-07-27T13:00:00.000Z', causa: 'lluvia_prevista' as const },
@@ -117,21 +117,21 @@ describe('MejorMomento — el porqué, solo en la vista detallada', () => {
   };
 
   it('con `detallada` nombra el motivo del tramo junto al cambio', () => {
-    renderWithProviders(<MejorMomento timeWindow={ventanaConMotivo} detailed />, { route: '/' });
+    renderWithProviders(<BestTime timeWindow={windowWithReason} detailed />, { route: '/' });
 
     expect(screen.getByText('Elegido por ser el tramo sin lluvia previsto')).toBeInTheDocument();
     expect(screen.getByText('A partir de las 15:00 se espera lluvia')).toBeInTheDocument();
   });
 
   it('sin `detallada` (la portada) el motivo no sale: la tarjeta se queda compacta', () => {
-    renderWithProviders(<MejorMomento timeWindow={ventanaConMotivo} />, { route: '/' });
+    renderWithProviders(<BestTime timeWindow={windowWithReason} />, { route: '/' });
 
     expect(screen.queryByText(/Elegido por/)).toBeNull();
   });
 
   it('sin motivo ni cambio, la calma también se dice', () => {
     renderWithProviders(
-      <MejorMomento
+      <BestTime
         timeWindow={{ inicio: '2026-07-27T09:00:00.000Z', fin: '2026-07-27T19:00:00.000Z', cambio: null, motivo: null }}
         detailed
       />,

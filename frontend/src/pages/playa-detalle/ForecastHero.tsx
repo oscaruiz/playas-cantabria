@@ -1,16 +1,16 @@
 import React from 'react';
-import { PlayaDetalle as PlayaDetalleData, DiaPrediccionDTO } from '../../services/api';
+import { BeachDetail, ForecastDayDTO } from '../../services/api';
 import {
-  emojiCielo,
-  esLluviaActiva,
-  lluviaPrevista,
-  palabraCielo,
+  skyEmoji,
+  isRainActive,
+  expectedRain,
+  skyWord,
 } from '../../utils/beachHelpers';
-import { horaLocalMadrid } from '../../shared/format/tiempo';
-import { capitalizar } from '../../shared/format/texto';
-import { useIdioma } from '../../shared/i18n/IdiomaContext';
-import { traducirTextoApi } from '../../shared/i18n/apiText';
-import { procedenciaObservacion, observacionVigente } from '../../features/provenance/procedencia';
+import { madridLocalHour } from '../../shared/format/tiempo';
+import { capitalize } from '../../shared/format/texto';
+import { useLanguage } from '../../shared/i18n/IdiomaContext';
+import { translateApiText } from '../../shared/i18n/apiText';
+import { observationProvenance, currentObservation } from '../../features/provenance/procedencia';
 import {
   FreshnessLabel,
   SourceAndFreshness,
@@ -34,7 +34,7 @@ function windSpeedLevel(text: string): number {
 const WIND_DURATIONS = [7, 4, 2, 1, 0.5];
 
 const WindTurbine: React.FC<{ level: number; label: string }> = ({ level, label }) => {
-  const { t } = useIdioma();
+  const { t } = useLanguage();
   const duration = WIND_DURATIONS[level] ?? 2;
   const paused = false;
 
@@ -68,7 +68,7 @@ const WindTurbine: React.FC<{ level: number; label: string }> = ({ level, label 
 };
 
 const WavesIndicator: React.FC<{ label: string }> = ({ label }) => {
-  const { t } = useIdioma();
+  const { t } = useLanguage();
   return (
   <div className="waves-indicator-wrap">
     <div className="waves-indicator-icon">
@@ -89,68 +89,68 @@ const WavesIndicator: React.FC<{ label: string }> = ({ label }) => {
 
 /** Big icon + temperature + rain badges for the selected day. */
 const ForecastHero: React.FC<{
-  day: DiaPrediccionDTO;
+  day: ForecastDayDTO;
   currentWeather?: number | null;
-  currentConditions?: PlayaDetalleData['tiempoActual'];
-}> = ({ day: dia, currentWeather: climaActual, currentConditions: recibido }) => {
-  const { t, language: idioma } = useIdioma();
+  currentConditions?: BeachDetail['tiempoActual'];
+}> = ({ day, currentWeather, currentConditions: received }) => {
+  const { t, language } = useLanguage();
   // An observation older than the limit is NOT "now": it is dropped here, at
   // the single point where it enters the headline, so no downstream line
   // (sky, temperature, rain badges, freshness) can keep presenting it as
   // current. What it was is reported below, in its own line.
-  const vigente = observacionVigente(recibido);
-  const tiempoActual = vigente ? recibido : undefined;
-  const caducada = recibido != null && !vigente;
+  const inForce = currentObservation(received);
+  const currentConditions = inForce ? received : undefined;
+  const expired = received != null && !inForce;
   // skyText/viento/oleaje are the raw Spanish from the API: emojiCielo and
   // windSpeedLevel run regexes over it — translate only when displaying.
   // For TODAY we prioritize the real observation ("now") over the afternoon
   // forecast; that way the headline stops contradicting the morning/afternoon breakdown.
-  const skyText = capitalizar(tiempoActual?.cielo ?? dia.tarde.cielo ?? dia.manana.cielo ?? '');
-  const viento = capitalizar(dia.tarde.viento ?? dia.manana.viento ?? '');
-  const oleaje = capitalizar(dia.tarde.oleaje ?? dia.manana.oleaje ?? '');
+  const skyText = capitalize(currentConditions?.cielo ?? day.tarde.cielo ?? day.manana.cielo ?? '');
+  const wind = capitalize(day.tarde.viento ?? day.manana.viento ?? '');
+  const waves = capitalize(day.tarde.oleaje ?? day.manana.oleaje ?? '');
   // Solo la observación de HOY sabe si es de noche; una previsión de pasado
   // mañana no describe un instante concreto, así que se pinta como día.
-  const esNoche = tiempoActual?.esNoche === true;
-  const skyEmoji = emojiCielo(skyText || null, esNoche);
+  const isNight = currentConditions?.esNoche === true;
+  const skyGlyph = skyEmoji(skyText || null, isNight);
 
   // The headline temperature is part of the same "right now" reading: if that
   // reading is too old, it falls back to the forecast maximum, and where there
   // is none (beaches with no AEMET sheet) it simply is not shown.
-  const tempObservada = vigente ? climaActual : null;
-  const tempPrincipal = tempObservada ?? dia.temperaturaMaxima;
-  const showMax = tempObservada != null && dia.temperaturaMaxima != null && tempObservada <= dia.temperaturaMaxima;
-  const wLevel = viento ? windSpeedLevel(viento) : 1;
+  const observedTemp = inForce ? currentWeather : null;
+  const mainTemp = observedTemp ?? day.temperaturaMaxima;
+  const showMax = observedTemp != null && day.temperaturaMaxima != null && observedTemp <= day.temperaturaMaxima;
+  const wLevel = wind ? windSpeedLevel(wind) : 1;
 
   // Rain detected NOW (multi-source signal from the backend). `tiempoActual`
   // only arrives when the selected day is TODAY, so the badge is not
   // shown on future days.
-  const lloviendo = esLluviaActiva(tiempoActual);
-  const mmLluvia = tiempoActual?.lluvia?.mm ?? tiempoActual?.precipitacionMm ?? null;
+  const raining = isRainActive(currentConditions);
+  const rainMm = currentConditions?.lluvia?.mm ?? currentConditions?.precipitacionMm ?? null;
   // FORECAST rain (next few hours). Null if it is already raining: never two badges.
-  const prevista = lluviaPrevista(tiempoActual);
-  const horaPrevista = horaLocalMadrid(prevista?.desdeIso);
+  const expected = expectedRain(currentConditions);
+  const expectedHour = madridLocalHour(expected?.desdeIso);
 
   return (
     <div className="forecast-hero">
       <div className="forecast-hero-main">
         <div className="forecast-hero-col">
-          <span className="forecast-hero-icon-emoji">{lloviendo ? '\u{1F327}\uFE0F' : skyEmoji}</span>
-          {tempPrincipal != null && (
-            <span className="forecast-hero-temp">{Math.round(tempPrincipal)}&deg;</span>
+          <span className="forecast-hero-icon-emoji">{raining ? '\u{1F327}\uFE0F' : skyGlyph}</span>
+          {mainTemp != null && (
+            <span className="forecast-hero-temp">{Math.round(mainTemp)}&deg;</span>
           )}
           {showMax && (
-            <span className="forecast-hero-max">{t('detalle.max')} {dia.temperaturaMaxima}&deg;</span>
+            <span className="forecast-hero-max">{t('detalle.max')} {day.temperaturaMaxima}&deg;</span>
           )}
-          {lloviendo && (
+          {raining && (
             <span className="forecast-hero-lluvia" role="status">
-              {tiempoActual?.lluvia?.ultimaHora ? t('detalle.lluviaUltimaHora') : t('detalle.lloviendoAhora')}
-              {mmLluvia != null && mmLluvia > 0 && ` · ${mmLluvia.toFixed(1)} mm`}
+              {currentConditions?.lluvia?.ultimaHora ? t('detalle.lluviaUltimaHora') : t('detalle.lloviendoAhora')}
+              {rainMm != null && rainMm > 0 && ` · ${rainMm.toFixed(1)} mm`}
             </span>
           )}
-          {prevista && (
+          {expected && (
             <span className="forecast-hero-lluvia forecast-hero-lluvia-prevista" role="status">
-              {horaPrevista
-                ? t('detalle.lluviaPrevistaHora', { hora: horaPrevista })
+              {expectedHour
+                ? t('detalle.lluviaPrevistaHora', { hora: expectedHour })
                 : t('detalle.lluviaPrevistaHoy')}
             </span>
           )}
@@ -160,28 +160,28 @@ const ForecastHero: React.FC<{
               enseña el texto crudo antes que perder el dato. */}
           {skyText && (
             <span className="forecast-hero-sky">
-              {traducirTextoApi(palabraCielo(skyText, esNoche) ?? skyText, idioma)}
+              {translateApiText(skyWord(skyText, isNight) ?? skyText, language)}
             </span>
           )}
-          {dia.temperaturaAgua != null && (
-            <span className="forecast-hero-agua">{t('detalle.aguaGrados', { temp: dia.temperaturaAgua })}</span>
+          {day.temperaturaAgua != null && (
+            <span className="forecast-hero-agua">{t('detalle.aguaGrados', { temp: day.temperaturaAgua })}</span>
           )}
         </div>
-        {viento && <WindTurbine level={wLevel} label={traducirTextoApi(viento, idioma)} />}
-        {oleaje && <WavesIndicator label={traducirTextoApi(oleaje, idioma)} />}
+        {wind && <WindTurbine level={wLevel} label={translateApiText(wind, language)} />}
+        {waves && <WavesIndicator label={translateApiText(waves, language)} />}
       </div>
       {/* The headline mixes observation over forecast (skyText above): say
           who observed it and when, or the freshest value has no face. */}
-      {caducada ? (
+      {expired ? (
         /* Se dice que falta, y desde cuándo: callarlo dejaría la previsión
            pasando por observación sin que nadie pueda notarlo. */
         <p className="procedencia-linea procedencia-caducada">
           {t('datos.noDisponible')}{' '}
-          <FreshnessLabel instant={recibido?.timestamp} />
+          <FreshnessLabel instant={received?.timestamp} />
         </p>
       ) : (
         <SourceAndFreshness
-          provenance={procedenciaObservacion(tiempoActual)}
+          provenance={observationProvenance(currentConditions)}
           sourceKey="datos.enDirectoFuente"
         />
       )}

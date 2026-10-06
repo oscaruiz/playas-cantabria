@@ -17,7 +17,7 @@ import { renderWithProviders } from '../render';
 import { installFetchMock, restoreFetch, route } from '../http/fakeFetch';
 import { beachesResponse } from '../fixtures/beaches';
 import { featuredProximityResponse } from '../fixtures/featured';
-import { RUTA_DESTACADAS as FEATURED, RUTA_PLAYAS as BEACHES } from '../apiRoutes';
+import { FEATURED_PATH as FEATURED, BEACHES_PATH as BEACHES } from '../apiRoutes';
 
 
 beforeEach(() => {
@@ -55,7 +55,7 @@ it('avisa cuando preside una playa cercana con menos puntos que otra mostrada', 
   expect(chip).toHaveTextContent('Mejor puntuación');
 
   // And the chip is in the Lejana row, not in another one.
-  const filaLejana = container.querySelector('.hp-alt-row') as HTMLElement;
-  expect(filaLejana).toHaveTextContent('Lejana');
-  expect(filaLejana.querySelector('.hp-alt-chip-mejor')).not.toBeNull();
+  const farRow = container.querySelector('.hp-alt-row') as HTMLElement;
+  expect(farRow).toHaveTextContent('Lejana');
+  expect(farRow.querySelector('.hp-alt-chip-mejor')).not.toBeNull();
 });

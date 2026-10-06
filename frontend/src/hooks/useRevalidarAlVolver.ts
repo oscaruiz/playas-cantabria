@@ -12,17 +12,17 @@ import { useEffect, useRef } from 'react';
  * It does NOT force a refetch: it calls the loader, which serves its own cache
  * while it is fresh. Coming back every few seconds costs nothing.
  */
-export function useRevalidarAlVolver(revalidar: () => void): void {
+export function useRevalidateOnReturn(revalidate: () => void): void {
   // Kept in a ref so a caller passing an inline arrow does not re-subscribe on
   // every render — the listener would be torn down and rebuilt each time.
-  const ultimo = useRef(revalidar);
-  ultimo.current = revalidar;
+  const last = useRef(revalidate);
+  last.current = revalidate;
 
   useEffect(() => {
-    const alCambiar = () => {
-      if (document.visibilityState === 'visible') ultimo.current();
+    const onChange = () => {
+      if (document.visibilityState === 'visible') last.current();
     };
-    document.addEventListener('visibilitychange', alCambiar);
-    return () => document.removeEventListener('visibilitychange', alCambiar);
+    document.addEventListener('visibilitychange', onChange);
+    return () => document.removeEventListener('visibilitychange', onChange);
   }, []);
 }

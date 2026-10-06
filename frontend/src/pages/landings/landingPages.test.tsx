@@ -1,19 +1,19 @@
 import React from 'react';
 import { screen, waitFor } from '@testing-library/react';
-import MunicipioPage from './MunicipioPage';
-import MunicipiosIndex from './MunicipiosIndex';
-import LandingPlayas from './LandingPlayas';
-import PlayasList from '../PlayasList';
+import MunicipalityPage from './MunicipioPage';
+import MunicipalitiesIndex from './MunicipiosIndex';
+import BeachLanding from './LandingPlayas';
+import BeachList from '../PlayasList';
 import { renderWithProviders } from '../../test/render';
 import { installFetchMock, restoreFetch, route } from '../../test/http/fakeFetch';
 import { beachesResponse } from '../../test/fixtures/beaches';
 import { featuredResponse } from '../../test/fixtures/featured';
-import { RUTA_DESTACADAS, RUTA_PLAYAS } from '../../test/apiRoutes';
+import { FEATURED_PATH, BEACHES_PATH } from '../../test/apiRoutes';
 
 beforeEach(() => {
   installFetchMock([
-    route(RUTA_DESTACADAS, { json: featuredResponse }),
-    route(RUTA_PLAYAS, { json: beachesResponse }),
+    route(FEATURED_PATH, { json: featuredResponse }),
+    route(BEACHES_PATH, { json: beachesResponse }),
   ]);
 });
 
@@ -23,7 +23,7 @@ afterEach(() => {
 
 describe('MunicipioPage', () => {
   it('lista solo las playas del municipio, con título propio', async () => {
-    renderWithProviders(<MunicipioPage />, {
+    renderWithProviders(<MunicipalityPage />, {
       route: '/municipios/santander',
       path: '/municipios/:municipio',
     });
@@ -40,7 +40,7 @@ describe('MunicipioPage', () => {
   });
 
   it('marca la pestaña Playas y ofrece volver atrás', async () => {
-    renderWithProviders(<MunicipioPage />, {
+    renderWithProviders(<MunicipalityPage />, {
       route: '/municipios/santander',
       path: '/municipios/:municipio',
     });
@@ -54,7 +54,7 @@ describe('MunicipioPage', () => {
   });
 
   it('un municipio desconocido explica y ofrece el listado', async () => {
-    renderWithProviders(<MunicipioPage />, {
+    renderWithProviders(<MunicipalityPage />, {
       route: '/municipios/no-existe',
       path: '/municipios/:municipio',
     });
@@ -67,7 +67,7 @@ describe('MunicipioPage', () => {
 
 describe('MunicipiosIndex', () => {
   it('lista todos los municipios con su número de playas', async () => {
-    renderWithProviders(<MunicipiosIndex />, { route: '/municipios' });
+    renderWithProviders(<MunicipalitiesIndex />, { route: '/municipios' });
 
     expect(await screen.findByText('Suances')).toBeInTheDocument();
     // Santander has 2 beaches in the fixture; its row says so — and the row
@@ -84,21 +84,21 @@ describe('MunicipiosIndex', () => {
 
 describe('acceso al municipio desde el listado de playas', () => {
   it('el nombre del municipio es un enlace real a su página', async () => {
-    renderWithProviders(<PlayasList />, { route: '/playas' });
+    renderWithProviders(<BeachList />, { route: '/playas' });
     await screen.findByText('La Concha');
 
     // A real <a>: copyable, middle-clickable, honest role — and pointing
     // at the municipality, not the beach.
-    const enlace = screen.getByRole('link', {
+    const link = screen.getByRole('link', {
       name: 'Ver todas las playas de Suances',
     });
-    expect(enlace).toHaveAttribute('href', '/municipios/suances');
+    expect(link).toHaveAttribute('href', '/municipios/suances');
   });
 });
 
 describe('LandingPlayas', () => {
   it('la landing de webcams lista solo playas con webcam activa', async () => {
-    renderWithProviders(<LandingPlayas id="playas-con-webcam" />, {
+    renderWithProviders(<BeachLanding id="playas-con-webcam" />, {
       route: '/playas-con-webcam',
     });
 
@@ -114,18 +114,18 @@ describe('LandingPlayas', () => {
 
   it('la landing de socorrismo usa el criterio del catálogo', async () => {
     const { container } = renderWithProviders(
-      <LandingPlayas id="playas-con-socorrista" />,
+      <BeachLanding id="playas-con-socorrista" />,
       { route: '/playas-con-socorrista' }
     );
 
     await screen.findByText('La Concha');
     // Row TITLES only — "Laredo" is also a municipality label under La Salvé.
-    const nombres = Array.from(container.querySelectorAll('.beach-card-name')).map(
+    const names = Array.from(container.querySelectorAll('.beach-card-name')).map(
       (el) => el.textContent
     );
     // Laredo (idCruzRoja 310) and La Concha (two posts) are in; La Arnía out.
-    expect(nombres).toContain('Laredo');
-    expect(nombres).toContain('La Concha');
-    expect(nombres).not.toContain('La Arnía');
+    expect(names).toContain('Laredo');
+    expect(names).toContain('La Concha');
+    expect(names).not.toContain('La Arnía');
   });
 });

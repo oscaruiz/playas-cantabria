@@ -1,4 +1,4 @@
-import type { ClaveTexto } from './es';
+import type { TextKey } from './es';
 
 /**
  * English dictionary. `satisfies` forces covering exactly the
@@ -364,4 +364,4 @@ export const en = {
   'attr.nudista': 'Nudist',
   'attr.accesoBanista': 'Swimmer access',
   'attr.submarinismo': 'Scuba diving',
-} satisfies Record<ClaveTexto, string>;
+} satisfies Record<TextKey, string>;

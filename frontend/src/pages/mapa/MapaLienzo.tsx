@@ -4,23 +4,23 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L, { Map as LeafletMap, DivIcon } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Playa, FeaturedBeach } from '../../services/api';
+import { Beach, FeaturedBeach } from '../../services/api';
 import {
   rankedSkyEmoji,
-  esNocheEn,
-  palabraCielo,
+  isNightAt,
+  skyWord,
   flagColorClass,
-  webcamDisponible,
-  vigilanciaDisponible,
-  operadorVigilancia,
+  webcamAvailable,
+  lifeguardAvailable,
+  lifeguardOperator,
 } from '../../utils/beachHelpers';
-import { useIdioma } from '../../shared/i18n/IdiomaContext';
+import { useLanguage } from '../../shared/i18n/IdiomaContext';
 import {
-  traducirTextoApi,
-  claveNivelVientoMs,
-  claveBandera,
-  traducirOperador,
-  sinFragmentoDePronostico,
+  translateApiText,
+  windLevelKey,
+  flagKey,
+  translateOperator,
+  noForecastFragment,
 } from '../../shared/i18n/apiText';
 import TrendBadge from '../../components/TrendBadge';
 import { REGION } from '../../shared/config/region';
@@ -75,9 +75,9 @@ function getBeachIcon(weather: FeaturedBeach, isBest: boolean): DivIcon {
   });
 }
 
-function getFallbackIcon(numero: number): DivIcon {
+function getFallbackIcon(num: number): DivIcon {
   return new L.DivIcon({
-    html: `<div class="fallback-marker">${numero}</div>`,
+    html: `<div class="fallback-marker">${num}</div>`,
     className: '',
     iconSize: [32, 32],
     iconAnchor: [16, 32],
@@ -86,17 +86,17 @@ function getFallbackIcon(numero: number): DivIcon {
 
 // ---- Component ----
 
-const MapaLienzo: React.FC<{
-  beaches: Playa[];
+const MapCanvas: React.FC<{
+  beaches: Beach[];
   weatherMap: Map<string, FeaturedBeach>;
-}> = ({ beaches: playas, weatherMap }) => {
+}> = ({ beaches, weatherMap }) => {
   const { userLocation, locationLoading, locationDenied, retryLocation } = useUserLocation();
   const [locateRequested, setLocateRequested] = useState(false);
   const mapRef = useRef<LeafletMap | null>(null);
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
   const history = useHistory();
   const location = useLocation();
-  const { t, language: idioma } = useIdioma();
+  const { t, language } = useLanguage();
 
   const userIcon = useMemo(() => new L.DivIcon({
     html: '<div class="user-marker"><span class="user-marker-dot"></span></div>',
@@ -106,7 +106,7 @@ const MapaLienzo: React.FC<{
   }), []);
 
   // Best beach = highest score
-  const bestCodigo = useMemo(() => {
+  const bestBeachCode = useMemo(() => {
     let bestCode: string | null = null;
     let bestScore = -1;
     weatherMap.forEach((w) => {
@@ -123,15 +123,15 @@ const MapaLienzo: React.FC<{
     const params = new URLSearchParams(location.search);
     const lat = parseFloat(params.get('lat') || '');
     const lon = parseFloat(params.get('lon') || '');
-    const codigo = params.get('codigo');
+    const code = params.get('codigo');
     if (!isNaN(lat) && !isNaN(lon) && mapRef.current) {
       mapRef.current.flyTo([lat, lon], 14, { duration: 0.8 });
-      if (codigo) {
-        const marker = markersRef.current.get(codigo);
+      if (code) {
+        const marker = markersRef.current.get(code);
         if (marker) setTimeout(() => marker.openPopup(), 900);
       }
     }
-  }, [location.search, playas]);
+  }, [location.search, beaches]);
 
   // When the location arrives after tapping "locate me", center the map on it.
   useEffect(() => {
@@ -186,33 +186,33 @@ const MapaLienzo: React.FC<{
           url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        {playas.map((playa, index) => {
-          const weather = weatherMap.get(playa.codigo);
+        {beaches.map((beach, index) => {
+          const weather = weatherMap.get(beach.codigo);
           const icon = weather
-            ? getBeachIcon(weather, playa.codigo === bestCodigo)
+            ? getBeachIcon(weather, beach.codigo === bestBeachCode)
             : getFallbackIcon(index + 1);
-          const isVigilada = vigilanciaDisponible(playa);
-          const operador = operadorVigilancia(playa);
+          const isLifeguarded = lifeguardAvailable(beach);
+          const operator = lifeguardOperator(beach);
 
           return (
             <Marker
-              key={playa.codigo}
-              position={[playa.lat!, playa.lon!]}
+              key={beach.codigo}
+              position={[beach.lat!, beach.lon!]}
               icon={icon}
-              ref={(ref) => { if (ref) markersRef.current.set(playa.codigo, ref); }}
+              ref={(ref) => { if (ref) markersRef.current.set(beach.codigo, ref); }}
             >
               <Popup>
                 <div className="mapa-popup">
-                  <h3 className="mapa-popup-title">{playa.nombre}</h3>
+                  <h3 className="mapa-popup-title">{beach.nombre}</h3>
                   <p className="mapa-popup-row">
-                    <strong>{t('mapa.municipio')}</strong> {playa.municipio}
+                    <strong>{t('mapa.municipio')}</strong> {beach.municipio}
                   </p>
                   {weather && (() => {
                     const status = markerStatus(weather.puntuacion);
                     // El chip de tendencia dice lo mismo justo debajo, así
                     // que el fragmento sale del texto (ver `TrendBadge`).
-                    const sinRepetir = (texto: string) =>
-                      weather.pronostico ? sinFragmentoDePronostico(texto) : texto;
+                    const noRepeat = (text: string) =>
+                      weather.pronostico ? noForecastFragment(text) : text;
                     return (
                       <>
                         <p className="mapa-popup-row">
@@ -221,25 +221,25 @@ const MapaLienzo: React.FC<{
                           {/* La palabra de la app: aquí se leía la cadena cruda
                               del proveedor ("nubes dispersas") mientras la
                               portada y el detalle decían "Parcialmente soleado". */}
-                          {traducirTextoApi(
-                            palabraCielo(weather.descripcionClima, esNocheEn(weather))
+                          {translateApiText(
+                            skyWord(weather.descripcionClima, isNightAt(weather))
                               ?? weather.descripcionClima,
-                            idioma,
-                          )}{weather.vientoMs != null ? `, ${t(claveNivelVientoMs(weather.vientoMs))}` : ''}
+                            language,
+                          )}{weather.vientoMs != null ? `, ${t(windLevelKey(weather.vientoMs))}` : ''}
                         </p>
                         {status === 'good' && (
                           <p className="mapa-popup-status mapa-popup-status--good">
-                            {traducirTextoApi(sinRepetir(weather.razonRanking), idioma)}
+                            {translateApiText(noRepeat(weather.razonRanking), language)}
                           </p>
                         )}
                         {status === 'medium' && weather.motivoBaja && (
                           <p className="mapa-popup-status mapa-popup-status--medium">
-                            {traducirTextoApi(sinRepetir(weather.motivoBaja), idioma)}
+                            {translateApiText(noRepeat(weather.motivoBaja), language)}
                           </p>
                         )}
                         {status === 'bad' && weather.motivoBaja && (
                           <p className="mapa-popup-status mapa-popup-status--bad">
-                            {traducirTextoApi(sinRepetir(weather.motivoBaja), idioma)}
+                            {translateApiText(noRepeat(weather.motivoBaja), language)}
                           </p>
                         )}
                         {/* Al abrir la playa: hacia dónde va y por qué. */}
@@ -247,7 +247,7 @@ const MapaLienzo: React.FC<{
                         {weather.bandera && (
                           <p className="mapa-popup-flag">
                             <span className={`mapa-pennant mapa-pennant--${flagColorClass(weather.bandera)}`} aria-hidden="true" />
-                            <span className="mapa-popup-flag-label">{t(claveBandera(weather.bandera))}</span>
+                            <span className="mapa-popup-flag-label">{t(flagKey(weather.bandera))}</span>
                           </p>
                         )}
                         {weather.vientoMs != null && weather.vientoMs > 8 && (
@@ -259,16 +259,16 @@ const MapaLienzo: React.FC<{
                     );
                   })()}
                   <p className="mapa-popup-row mapa-popup-muted">
-                    {isVigilada && operador
-                      ? t('mapa.vigilada', { operador: traducirOperador(operador, idioma) })
+                    {isLifeguarded && operator
+                      ? t('mapa.vigilada', { operador: translateOperator(operator, language) })
                       // null = the backend says nobody watches it; absent =
                       // it does not report the operator. Collapsing both
                       // into "no info" hid a fact we do know.
-                      : playa.fuenteBanderas === null
+                      : beach.fuenteBanderas === null
                         ? t('mapa.sinVigilancia')
                         : t('mapa.sinInfoCruzRoja')}
                   </p>
-                  {webcamDisponible(playa.webcam) && (
+                  {webcamAvailable(beach.webcam) && (
                     <p className="mapa-popup-row mapa-popup-webcam">
                       <IonIcon icon={videocamOutline} aria-hidden="true" />
                       {t('mapa.webcamDisponible')}
@@ -276,7 +276,7 @@ const MapaLienzo: React.FC<{
                   )}
                   <button
                     className="mapa-popup-btn"
-                    onClick={() => history.push(beachPath(playa))}
+                    onClick={() => history.push(beachPath(beach))}
                   >
                     {t('mapa.verDetalles')}
                   </button>
@@ -325,4 +325,4 @@ const MapaLienzo: React.FC<{
   );
 };
 
-export default MapaLienzo;
+export default MapCanvas;

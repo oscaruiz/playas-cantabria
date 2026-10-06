@@ -10,7 +10,7 @@
 import { SEO_TEMPLATES, ATTR_LABELS } from '../seo/metadata';
 import { LANDINGS } from '../seo/landings';
 
-const TEXTOS_LANDINGS = Object.fromEntries(LANDINGS.map((l) => [l.id, l.textos]));
+const LANDING_TEXTS = Object.fromEntries(LANDINGS.map((l) => [l.id, l.textos]));
 
 export const es = {
   // ---- App / global ----
@@ -300,14 +300,14 @@ export const es = {
   'municipio.titulo': 'Playas del Municipio de {municipio}',
   'municipio.intro': 'Las playas de {municipio} con enlace al estado de hoy de cada una.',
   'municipio.desconocido': 'No conocemos ese municipio. Consulta el listado completo de playas.',
-  'landing.playas-con-webcam.titulo': TEXTOS_LANDINGS['playas-con-webcam'].titulo,
-  'landing.playas-con-webcam.intro': TEXTOS_LANDINGS['playas-con-webcam'].intro,
-  'landing.playas-accesibles.titulo': TEXTOS_LANDINGS['playas-accesibles'].titulo,
-  'landing.playas-accesibles.intro': TEXTOS_LANDINGS['playas-accesibles'].intro,
-  'landing.playas-con-socorrista.titulo': TEXTOS_LANDINGS['playas-con-socorrista'].titulo,
-  'landing.playas-con-socorrista.intro': TEXTOS_LANDINGS['playas-con-socorrista'].intro,
-  'landing.playas-para-surf.titulo': TEXTOS_LANDINGS['playas-para-surf'].titulo,
-  'landing.playas-para-surf.intro': TEXTOS_LANDINGS['playas-para-surf'].intro,
+  'landing.playas-con-webcam.titulo': LANDING_TEXTS['playas-con-webcam'].titulo,
+  'landing.playas-con-webcam.intro': LANDING_TEXTS['playas-con-webcam'].intro,
+  'landing.playas-accesibles.titulo': LANDING_TEXTS['playas-accesibles'].titulo,
+  'landing.playas-accesibles.intro': LANDING_TEXTS['playas-accesibles'].intro,
+  'landing.playas-con-socorrista.titulo': LANDING_TEXTS['playas-con-socorrista'].titulo,
+  'landing.playas-con-socorrista.intro': LANDING_TEXTS['playas-con-socorrista'].intro,
+  'landing.playas-para-surf.titulo': LANDING_TEXTS['playas-para-surf'].titulo,
+  'landing.playas-para-surf.intro': LANDING_TEXTS['playas-para-surf'].intro,
 
   // ---- Atribuciones exigidas por cada fuente ----
   // El `{fuente}` de cada frase es el nombre acreditado, y va enlazado a los
@@ -401,7 +401,7 @@ export const es = {
   'attr.submarinismo': ATTR_LABELS.submarinismo,
 } as const;
 
-export type ClaveTexto = keyof typeof es;
+export type TextKey = keyof typeof es;
 
 /** Valid bases for tPlural(): `${base}_one` and `${base}_other` must exist. */
 export type BasePlural = 'lista.contador' | 'home.playasBadge';

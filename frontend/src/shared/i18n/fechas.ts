@@ -1,4 +1,4 @@
-import type { Idioma } from './IdiomaContext';
+import type { Language } from './IdiomaContext';
 
 /**
  * Day/month names and date formatting per language. Replaces the
@@ -8,18 +8,18 @@ import type { Idioma } from './IdiomaContext';
  * or ISO "2026-04-06".
  */
 
-const DIAS: Record<Idioma, string[]> = {
+const DAYS: Record<Language, string[]> = {
   es: ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'],
   en: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
 };
 
-const MESES: Record<Idioma, string[]> = {
+const MONTHS: Record<Language, string[]> = {
   es: ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'],
   en: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
 };
 
 // Day name from the API (Spanish, lowercase, accents optional) → index
-const INDICE_DIA_API: Record<string, number> = {
+const API_DAY_INDEX: Record<string, number> = {
   'domingo': 0,
   'lunes': 1,
   'martes': 2,
@@ -31,24 +31,24 @@ const INDICE_DIA_API: Record<string, number> = {
   'sabado': 6,
 };
 
-export function nombreDia(indice: number, idioma: Idioma): string {
-  return DIAS[idioma][indice] ?? '';
+export function dayName(index: number, language: Language): string {
+  return DAYS[language][index] ?? '';
 }
 
-export function nombreMes(indice: number, idioma: Idioma): string {
-  return MESES[idioma][indice] ?? '';
+export function monthName(index: number, language: Language): string {
+  return MONTHS[language][index] ?? '';
 }
 
 /** Translates the day name coming from the API ("domingo" → "Sunday"). */
-export function traducirNombreDiaApi(nombre: string, idioma: Idioma): string | null {
-  const indice = INDICE_DIA_API[nombre.toLowerCase().trim()];
-  if (indice === undefined) return null;
-  return DIAS[idioma][indice];
+export function translateApiDayName(name: string, language: Language): string | null {
+  const index = API_DAY_INDEX[name.toLowerCase().trim()];
+  if (index === undefined) return null;
+  return DAYS[language][index];
 }
 
 // Intl short weekday (en-US) → index into DIAS. Madrid's calendar day can
 // differ from the device's, so the weekday must be read in that timezone.
-const INDICE_DIA_INTL: Record<string, number> = {
+const INTL_DAY_INDEX: Record<string, number> = {
   Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6,
 };
 
@@ -57,25 +57,25 @@ const INDICE_DIA_INTL: Record<string, number> = {
  * The beach-window hours are Madrid hours, so the day they belong to must be
  * Madrid's too — a viewer in another timezone gets the beach's day, not theirs.
  */
-export function todayLabelMadrid(idioma: Idioma, ahora: Date = new Date()): string {
-  const partes = new Intl.DateTimeFormat('en-US', {
+export function todayLabelMadrid(language: Language, now: Date = new Date()): string {
+  const parts = new Intl.DateTimeFormat('en-US', {
     timeZone: 'Europe/Madrid',
     weekday: 'short',
     day: 'numeric',
-  }).formatToParts(ahora);
-  const semana = partes.find((p) => p.type === 'weekday')?.value ?? '';
-  const diaMes = partes.find((p) => p.type === 'day')?.value ?? '';
-  const nombre = nombreDia(INDICE_DIA_INTL[semana] ?? ahora.getDay(), idioma);
-  return `${nombre} ${diaMes}`;
+  }).formatToParts(now);
+  const week = parts.find((p) => p.type === 'weekday')?.value ?? '';
+  const dayOfMonth = parts.find((p) => p.type === 'day')?.value ?? '';
+  const name = dayName(INTL_DAY_INDEX[week] ?? now.getDay(), language);
+  return `${name} ${dayOfMonth}`;
 }
 
 /**
  * Readable short date: es → "Domingo 5 de junio" | en → "Sunday, June 5".
  * `nombreDiaTexto` must already come in the target language and capitalized.
  */
-export function formatearFechaCorta(nombreDiaTexto: string, diaMes: number, mesIndice: number, idioma: Idioma): string {
-  if (idioma === 'en') {
-    return `${nombreDiaTexto}, ${nombreMes(mesIndice, 'en')} ${diaMes}`;
+export function formatShortDate(dayNameText: string, dayOfMonth: number, monthIndex: number, language: Language): string {
+  if (language === 'en') {
+    return `${dayNameText}, ${monthName(monthIndex, 'en')} ${dayOfMonth}`;
   }
-  return `${nombreDiaTexto} ${diaMes} de ${nombreMes(mesIndice, 'es')}`;
+  return `${dayNameText} ${dayOfMonth} de ${monthName(monthIndex, 'es')}`;
 }

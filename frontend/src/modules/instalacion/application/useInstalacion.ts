@@ -1,27 +1,27 @@
 import { useSyncExternalStore } from 'react';
 import {
-  suscribirInstalacion,
-  ofertaActual,
-  lanzarPrompt,
-  abrirApp,
+  subscribeInstall,
+  currentOffer,
+  launchPrompt,
+  openApp,
 } from '../infrastructure/promptInstalacion';
-import type { Oferta } from '../domain/queOfrecer';
+import type { Offer } from '../domain/queOfrecer';
 
 /**
  * React binding over the module's single store. There is one install event per
  * page load, so there is one store: every component that asks gets the same
  * answer without a provider.
  */
-export function useInstalacion(): { offer: Oferta; install: () => void; open: () => void } {
+export function useInstall(): { offer: Offer; install: () => void; open: () => void } {
   // Third argument: the prerendered HTML has no browser to ask, and offering
   // an install button in a static page would be a lie.
-  const oferta = useSyncExternalStore(suscribirInstalacion, ofertaActual, () => null);
+  const offer = useSyncExternalStore(subscribeInstall, currentOffer, () => null);
 
   return {
-    offer: oferta,
+    offer,
     install: () => {
-      void lanzarPrompt();
+      void launchPrompt();
     },
-    open: abrirApp,
+    open: openApp,
   };
 }

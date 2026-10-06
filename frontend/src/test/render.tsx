@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, RenderResult } from '@testing-library/react';
 import { MemoryRouter, Route } from 'react-router-dom';
-import { IdiomaProvider, Idioma } from '../shared/i18n/IdiomaContext';
+import { LanguageProvider, Language } from '../shared/i18n/IdiomaContext';
 
 interface RenderOptions {
   /**
@@ -13,7 +13,7 @@ interface RenderOptions {
   /** Route pattern, needed when the page reads `useParams` (e.g. `/playas/:codigo`). */
   path?: string;
   /** Initial language. It is written to localStorage BEFORE mounting the provider. */
-  language?: Idioma;
+  language?: Language;
 }
 
 /**
@@ -26,18 +26,18 @@ interface RenderOptions {
  */
 export function renderWithProviders(
   ui: React.ReactElement,
-  { route = '/', path, language: idioma = 'es' }: RenderOptions = {},
+  { route = '/', path, language = 'es' }: RenderOptions = {},
 ): RenderResult {
-  localStorage.setItem('app_idioma', idioma);
+  localStorage.setItem('app_idioma', language);
 
   return render(
-    <IdiomaProvider>
+    <LanguageProvider>
       <MemoryRouter
         initialEntries={Array.isArray(route) ? route : [route]}
         initialIndex={Array.isArray(route) ? route.length - 1 : 0}
       >
         {path ? <Route path={path}>{ui}</Route> : ui}
       </MemoryRouter>
-    </IdiomaProvider>,
+    </LanguageProvider>,
   );
 }

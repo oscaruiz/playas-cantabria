@@ -1,13 +1,13 @@
 import { render, screen } from '@testing-library/react';
-import { IdiomaProvider } from '../shared/i18n/IdiomaContext';
+import { LanguageProvider } from '../shared/i18n/IdiomaContext';
 import { WebcamCard } from './playa-detalle/WebcamCard';
-import type { WebcamPlaya } from '../services/api';
+import type { BeachWebcam } from '../services/api';
 
-const renderCard = (webcam?: WebcamPlaya | null) =>
+const renderCard = (webcam?: BeachWebcam | null) =>
   render(
-    <IdiomaProvider>
+    <LanguageProvider>
       <WebcamCard webcam={webcam} />
-    </IdiomaProvider>
+    </LanguageProvider>
   );
 
 describe('WebcamCard', () => {

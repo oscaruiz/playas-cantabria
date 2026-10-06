@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
 import {
-  PlayaDetalle as PlayaDetalleData,
-  DiaPrediccionDTO,
+  BeachDetail as BeachDetail,
+  ForecastDayDTO,
   HalfDayDTO,
-  PrediccionDia,
+  ForecastDay,
 } from '../../services/api';
 import DaySelector from './DaySelector';
 import ForecastHero from './ForecastHero';
 import DailyStats from './DailyStats';
 import { AttributionNote, EstimatedValues } from '../../features/provenance/SourceAndFreshness';
-import InfoDatos from '../../features/provenance/InfoDatos';
-import { mismaFuente } from '../../features/provenance/atribuciones';
+import DataInfo from '../../features/provenance/InfoDatos';
+import { sameSource } from '../../features/provenance/atribuciones';
 
 /**
  * UV level (translatable label) derived from the index, WHO scale. OpenWeather
@@ -18,11 +18,11 @@ import { mismaFuente } from '../../features/provenance/atribuciones';
  * shows "10 — Muy alto" as on beaches with an AEMET sheet. Keys aligned
  * with `MAPA_UV` from `i18n/apiText.ts`.
  */
-function nivelUVDesdeIndice(indice: number): string {
+function uvLevelFromIndex(index: number): string {
   // Rounded first: Open-Meteo reports decimals and 7.25 would fall in the next
   // band, so the same real UV read as "Muy alto" here and "alto" on a beach
   // with an AEMET sheet.
-  const uv = Math.round(indice);
+  const uv = Math.round(index);
   if (uv <= 2) return 'Bajo';
   if (uv <= 5) return 'Medio';
   if (uv <= 7) return 'Alto';
@@ -38,17 +38,17 @@ function nivelUVDesdeIndice(indice: number): string {
  * real observation (`temperaturaActual`), so we leave `temperaturaMaxima`
  * as null to avoid painting a duplicated "Max" line.
  */
-function climaDiaAPrediccion(d: PrediccionDia, fecha: string, esHoy: boolean): DiaPrediccionDTO {
-  const medio: HalfDayDTO = { cielo: d.summary, iconoCielo: null, viento: d.wind, oleaje: d.waves };
+function weatherDayToForecast(d: ForecastDay, date: string, isToday: boolean): ForecastDayDTO {
+  const medium: HalfDayDTO = { cielo: d.summary, iconoCielo: null, viento: d.wind, oleaje: d.waves };
   return {
-    fecha,
-    manana: medio,
-    tarde: medio,
-    temperaturaMaxima: esHoy ? null : d.temperature,
+    fecha: date,
+    manana: medium,
+    tarde: medium,
+    temperaturaMaxima: isToday ? null : d.temperature,
     sensacionTermica: d.sensation,
     temperaturaAgua: d.waterTemperature,
     indiceUV: d.uvIndex ?? null,
-    nivelUV: d.uvIndex != null ? nivelUVDesdeIndice(d.uvIndex) : null,
+    nivelUV: d.uvIndex != null ? uvLevelFromIndex(d.uvIndex) : null,
     aviso: null,
   };
 }
@@ -59,55 +59,55 @@ function climaDiaAPrediccion(d: PrediccionDia, fecha: string, esHoy: boolean): D
  * built from `clima`, omitting the "Previsión AEMET" breakdown and the tides, which
  * this source does not provide.
  */
-const ClimaHero: React.FC<{
-  weather: NonNullable<PlayaDetalleData['clima']>;
+const WeatherHero: React.FC<{
+  weather: NonNullable<BeachDetail['clima']>;
   currentTemperature?: number | null;
-  currentConditions?: PlayaDetalleData['tiempoActual'];
-}> = ({ weather: clima, currentTemperature: temperaturaActual, currentConditions: tiempoActual }) => {
-  const [diaSel, setDiaSel] = useState(0);
+  currentConditions?: BeachDetail['tiempoActual'];
+}> = ({ weather, currentTemperature, currentConditions }) => {
+  const [chosenDay, setChosenDay] = useState(0);
 
-  const hoy = new Date();
-  const isoConOffset = (dias: number): string => {
-    const d = new Date(hoy);
-    d.setDate(hoy.getDate() + dias);
+  const today = new Date();
+  const isoConOffset = (days: number): string => {
+    const d = new Date(today);
+    d.setDate(today.getDate() + days);
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   };
 
-  const dias = [
-    { clima: clima.hoy, fecha: isoConOffset(0), esHoy: true },
-    ...(clima.manana ? [{ clima: clima.manana, fecha: isoConOffset(1), esHoy: false }] : []),
+  const days = [
+    { clima: weather.hoy, fecha: isoConOffset(0), esHoy: true },
+    ...(weather.manana ? [{ clima: weather.manana, fecha: isoConOffset(1), esHoy: false }] : []),
   ];
-  const sel = Math.min(diaSel, dias.length - 1);
-  const actual = dias[sel];
-  const dia = climaDiaAPrediccion(actual.clima, actual.fecha, actual.esHoy);
+  const sel = Math.min(chosenDay, days.length - 1);
+  const current = days[sel];
+  const day = weatherDayToForecast(current.clima, current.fecha, current.esHoy);
 
   return (
     <>
-      {dias.length > 1 && (
-        <DaySelector dates={dias.map((d) => d.fecha)} selectedDay={sel} onSelect={setDiaSel} />
+      {days.length > 1 && (
+        <DaySelector dates={days.map((d) => d.fecha)} selectedDay={sel} onSelect={setChosenDay} />
       )}
       <div className="detail-card prevision-panel">
         <ForecastHero
-          day={dia}
-          currentWeather={actual.esHoy ? temperaturaActual : undefined}
-          currentConditions={actual.esHoy ? tiempoActual : undefined}
+          day={day}
+          currentWeather={current.esHoy ? currentTemperature : undefined}
+          currentConditions={current.esHoy ? currentConditions : undefined}
         />
-        <DailyStats day={dia} embedded />
+        <DailyStats day={day} embedded />
         {/* Ésta es la ficha SIN hoja de AEMET: la que más valores rellena el
             backend por su cuenta, y donde más falta hace poder mirar de dónde
             sale cada cosa. Todo bajo la misma ⓘ que el resto de bloques. */}
-        <InfoDatos label="info.fuente" aria="info.aria.prevision">
-          <AttributionNote source={clima.fuente} />
+        <DataInfo label="info.fuente" aria="info.aria.prevision">
+          <AttributionNote source={weather.fuente} />
           {/* El observador solo se acredita aparte cuando NO es el mismo que
               firma la previsión: repetirlo sería decir dos veces lo mismo. */}
-          {actual.esHoy && !mismaFuente(clima.fuente, tiempoActual?.fuente) && (
-            <AttributionNote source={tiempoActual?.fuente} />
+          {current.esHoy && !sameSource(weather.fuente, currentConditions?.fuente) && (
+            <AttributionNote source={currentConditions?.fuente} />
           )}
-          <EstimatedValues fields={actual.clima.estimados} />
-        </InfoDatos>
+          <EstimatedValues fields={current.clima.estimados} />
+        </DataInfo>
       </div>
     </>
   );
 };
 
-export default ClimaHero;
+export default WeatherHero;

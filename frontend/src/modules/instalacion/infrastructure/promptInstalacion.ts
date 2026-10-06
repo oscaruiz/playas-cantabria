@@ -11,46 +11,46 @@
  * `escucharInstalacion()` is called from index.tsx.
  */
 
-import { queOfrecer, Oferta } from '../domain/queOfrecer';
+import { whatToOffer, Offer } from '../domain/queOfrecer';
 
 /** Not in lib.dom yet: Chrome-only, still outside the standard. */
-interface EventoInstalacion extends Event {
+interface InstallEvent extends Event {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
 /** Chromium-only too, and also outside lib.dom. */
-interface AppRelacionada {
+interface RelatedApp {
   platform: string;
   url?: string;
   id?: string;
 }
 
-let evento: EventoInstalacion | null = null;
-let instalada = false;
-let escuchando = false;
-const oyentes = new Set<() => void>();
+let event: InstallEvent | null = null;
+let installed = false;
+let listening = false;
+const listeners = new Set<() => void>();
 
-function emitir(): void {
-  oyentes.forEach((cb) => cb());
+function emit(): void {
+  listeners.forEach((cb) => cb());
 }
 
-export function suscribirInstalacion(cb: () => void): () => void {
-  oyentes.add(cb);
+export function subscribeInstall(cb: () => void): () => void {
+  listeners.add(cb);
   return () => {
-    oyentes.delete(cb);
+    listeners.delete(cb);
   };
 }
 
 /** iPadOS 13+ claims to be a Mac; the touch points give it away. */
-function esIOS(): boolean {
+function isIOS(): boolean {
   const ua = navigator.userAgent;
   if (/iphone|ipad|ipod/i.test(ua)) return true;
   return /macintosh/i.test(ua) && navigator.maxTouchPoints > 1;
 }
 
 /** Already launched as an app: standalone window (or iOS's own flag). */
-function enModoApp(): boolean {
+function inAppMode(): boolean {
   if ((navigator as { standalone?: boolean }).standalone === true) return true;
   return window.matchMedia?.('(display-mode: standalone)').matches === true;
 }
@@ -60,34 +60,34 @@ function enModoApp(): boolean {
  * snapshot changes identity, and an object rebuilt on every call would loop
  * forever.
  */
-export function ofertaActual(): Oferta {
-  return queOfrecer({
-    hasEvent: evento !== null,
-    isIOS: esIOS(),
-    inAppMode: enModoApp(),
-    installed: instalada,
+export function currentOffer(): Offer {
+  return whatToOffer({
+    hasEvent: event !== null,
+    isIOS: isIOS(),
+    inAppMode: inAppMode(),
+    installed,
   });
 }
 
-export function escucharInstalacion(): void {
-  if (escuchando) return;
-  escuchando = true;
+export function listenForInstall(): void {
+  if (listening) return;
+  listening = true;
 
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
-    evento = e as EventoInstalacion;
-    emitir();
+    event = e as InstallEvent;
+    emit();
   });
 
   // Fired by the browser however the install happened — our button, Chrome's
   // own menu, or another tab. The chip must go away in all three.
   window.addEventListener('appinstalled', () => {
-    evento = null;
-    instalada = true;
-    emitir();
+    event = null;
+    installed = true;
+    emit();
   });
 
-  void preguntarSiEstaInstalada();
+  void askIfInstalled();
 }
 
 /**
@@ -106,15 +106,15 @@ export function escucharInstalacion(): void {
  * simply does not meet the criteria, and a wrong guess sends someone to open
  * an app they never installed.
  */
-async function preguntarSiEstaInstalada(): Promise<void> {
-  const api = (navigator as { getInstalledRelatedApps?: () => Promise<AppRelacionada[]> })
+async function askIfInstalled(): Promise<void> {
+  const api = (navigator as { getInstalledRelatedApps?: () => Promise<RelatedApp[]> })
     .getInstalledRelatedApps;
   if (typeof api !== 'function') return;
   try {
     const apps = await api.call(navigator);
     if (apps.length > 0) {
-      instalada = true;
-      emitir();
+      installed = true;
+      emit();
     }
   } catch {
     // Out of scope, insecure context, or the browser refusing to answer:
@@ -122,28 +122,28 @@ async function preguntarSiEstaInstalada(): Promise<void> {
   }
 }
 
-export async function lanzarPrompt(): Promise<void> {
-  const actual = evento;
-  if (!actual) return;
+export async function launchPrompt(): Promise<void> {
+  const current = event;
+  if (!current) return;
   // One prompt per event: once shown it is spent, whatever the user answers.
   // Dropping it here also hides the chip immediately, instead of leaving a
   // button that would silently do nothing on a second click. Chrome fires a
   // new event later if the app is still installable.
-  evento = null;
-  emitir();
-  await actual.prompt();
-  await actual.userChoice;
+  event = null;
+  emit();
+  await current.prompt();
+  await current.userChoice;
 }
 
 /** Ask the browser/OS to handle the PWA start URL as a new app launch. */
-export function abrirApp(): void {
+export function openApp(): void {
   window.open(new URL('.', document.baseURI).href, '_blank', 'noopener');
 }
 
 /** Test seam: the listeners live on `window`, the state lives here. */
-export function reiniciarInstalacionParaTests(): void {
-  evento = null;
-  instalada = false;
-  escuchando = false;
-  oyentes.clear();
+export function resetInstallForTests(): void {
+  event = null;
+  installed = false;
+  listening = false;
+  listeners.clear();
 }

@@ -11,9 +11,9 @@
  * invented credit would be worse than none.
  */
 
-import type { ClaveTexto } from '../../shared/i18n/es';
+import type { TextKey } from '../../shared/i18n/es';
 
-export interface Atribucion {
+export interface Attribution {
   /** Public name of the producer, exactly as it must be credited. */
   name: string;
   /** The producer's own page: the link the terms require. */
@@ -23,10 +23,10 @@ export interface Atribucion {
    * `{fuente}` slot where the linked name goes. Null when crediting the name
    * with its link is all the source asks for.
    */
-  note: ClaveTexto | null;
+  note: TextKey | null;
 }
 
-const ATRIBUCIONES: Record<string, Atribucion> = {
+const ATTRIBUTIONS: Record<string, Attribution> = {
   AEMET: {
     name: 'AEMET',
     url: 'https://www.aemet.es',
@@ -64,22 +64,22 @@ const ATRIBUCIONES: Record<string, Atribucion> = {
  * AEMET_HTML are transports of the same producer: the user is always told
  * AEMET, and AEMET is who has to be credited.
  */
-function normalizar(fuente: string): string {
-  const limpio = fuente.trim().toUpperCase().replace(/[^A-Z]/g, '');
-  return limpio.startsWith('AEMET') ? 'AEMET' : limpio;
+function normalize(source: string): string {
+  const clean = source.trim().toUpperCase().replace(/[^A-Z]/g, '');
+  return clean.startsWith('AEMET') ? 'AEMET' : clean;
 }
 
 /** Attribution owed to a source, or null if we do not know that source. */
-export function atribucionDeFuente(
-  fuente: string | null | undefined
-): Atribucion | null {
-  if (!fuente) return null;
-  return ATRIBUCIONES[normalizar(fuente)] ?? null;
+export function sourceAttribution(
+  source: string | null | undefined
+): Attribution | null {
+  if (!source) return null;
+  return ATTRIBUTIONS[normalize(source)] ?? null;
 }
 
 /** The name a source must be credited by; the raw string if it is unknown. */
-export function nombrePublicoFuente(fuente: string): string {
-  return atribucionDeFuente(fuente)?.name ?? fuente;
+export function publicSourceName(source: string): string {
+  return sourceAttribution(source)?.name ?? source;
 }
 
 /**
@@ -87,10 +87,10 @@ export function nombrePublicoFuente(fuente: string): string {
  * `AEMET` do). Used to avoid crediting the same source twice in a row when
  * the observation and the forecast happen to come from it.
  */
-export function mismaFuente(
+export function sameSource(
   a: string | null | undefined,
   b: string | null | undefined
 ): boolean {
   if (!a || !b) return false;
-  return normalizar(a) === normalizar(b);
+  return normalize(a) === normalize(b);
 }

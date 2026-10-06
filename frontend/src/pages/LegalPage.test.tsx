@@ -42,13 +42,13 @@ describe('legal information pages', () => {
  */
 describe('LegalPage — volver', () => {
   /** Prints the current path so the test can assert where "back" landed. */
-  const Sonda: React.FC = () => <p data-testid="ruta">{useLocation().pathname}</p>;
+  const Probe: React.FC = () => <p data-testid="ruta">{useLocation().pathname}</p>;
 
   it('vuelve a la pantalla anterior, no a la portada', () => {
     renderWithProviders(
       <>
         <LegalPage kind="acerca" />
-        <Sonda />
+        <Probe />
       </>,
       { route: ['/playas/suances/tagle', '/acerca-de'] },
     );
@@ -63,7 +63,7 @@ describe('LegalPage — volver', () => {
     renderWithProviders(
       <>
         <LegalPage kind="privacidad" />
-        <Sonda />
+        <Probe />
       </>,
       { route: '/privacidad' },
     );

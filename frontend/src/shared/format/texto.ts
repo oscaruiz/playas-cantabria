@@ -1,11 +1,11 @@
 /** Text formatting with no domain knowledge. */
 
-export function limpiarTexto(texto: string | null | undefined): string {
-  if (!texto) return '';
-  return texto.replace(/\uFFFD/g, 'e');
+export function cleanText(text: string | null | undefined): string {
+  if (!text) return '';
+  return text.replace(/\uFFFD/g, 'e');
 }
 
-export function capitalizar(s: string | null | undefined): string {
+export function capitalize(s: string | null | undefined): string {
   if (!s) return '';
   return s.charAt(0).toUpperCase() + s.slice(1);
 }

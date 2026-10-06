@@ -6,8 +6,8 @@
 
 import React from 'react';
 import { fireEvent, screen, waitFor } from '@testing-library/react';
-import PlayasList from '../../pages/PlayasList';
-import PlayaDetallePage from '../../pages/PlayaDetalle';
+import BeachList from '../../pages/PlayasList';
+import BeachDetailPage from '../../pages/PlayaDetalle';
 import HomePage from '../../pages/HomePage';
 import { renderWithProviders } from '../../test/render';
 import { installFetchMock, restoreFetch, route } from '../../test/http/fakeFetch';
@@ -16,19 +16,19 @@ import { featuredResponse } from '../../test/fixtures/featured';
 import { buildOpenWeatherDetail } from '../../test/fixtures/beachDetail';
 import { localNoon } from '../../test/time';
 import {
-  RUTA_DESTACADAS,
-  RUTA_PLAYAS,
-  RUTA_DETALLE,
+  FEATURED_PATH,
+  BEACHES_PATH,
+  DETAIL_PATH,
 } from '../../test/apiRoutes';
-import { recargarFavoritas } from './application/useFavorites';
+import { reloadFavorites } from './application/useFavorites';
 
 beforeEach(() => {
   localStorage.clear();
-  recargarFavoritas();
+  reloadFavorites();
   installFetchMock([
-    route(RUTA_DESTACADAS, { json: featuredResponse }),
-    route(RUTA_PLAYAS, { json: beachesResponse }),
-    route(RUTA_DETALLE, { json: buildOpenWeatherDetail(localNoon('2026-07-27')) }),
+    route(FEATURED_PATH, { json: featuredResponse }),
+    route(BEACHES_PATH, { json: beachesResponse }),
+    route(DETAIL_PATH, { json: buildOpenWeatherDetail(localNoon('2026-07-27')) }),
   ]);
 });
 
@@ -37,12 +37,12 @@ afterEach(() => {
 });
 
 async function renderList() {
-  const view = renderWithProviders(<PlayasList />, { route: '/playas' });
+  const view = renderWithProviders(<BeachList />, { route: '/playas' });
   await screen.findByText('La Concha');
   return view;
 }
 
-function nombresDeTarjetas(container: HTMLElement): string[] {
+function cardNamesOf(container: HTMLElement): string[] {
   return Array.from(container.querySelectorAll('.beach-card-name')).map(
     (el) => el.textContent ?? ''
   );
@@ -67,7 +67,7 @@ describe('favoritas en el listado', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Guardar La Arnía en favoritas' }));
     fireEvent.click(screen.getByRole('button', { name: 'Mostrar solo favoritas' }));
 
-    expect(nombresDeTarjetas(container)).toEqual(['La Arnía']);
+    expect(cardNamesOf(container)).toEqual(['La Arnía']);
     expect(screen.getByText(/1 playa/)).toBeInTheDocument();
 
     // Search composes on top of the favorites filter.
@@ -77,7 +77,7 @@ describe('favoritas en el listado', () => {
     // And switching the filter off restores the full list.
     fireEvent.change(screen.getByRole('combobox'), { target: { value: '' } });
     fireEvent.click(screen.getByRole('button', { name: 'Mostrar solo favoritas' }));
-    expect(nombresDeTarjetas(container)).toHaveLength(7);
+    expect(cardNamesOf(container)).toHaveLength(7);
   });
 
   it('sin favoritas, el filtro muestra un estado vacío que explica cómo guardar', async () => {
@@ -90,26 +90,26 @@ describe('favoritas en el listado', () => {
 });
 
 describe('favoritas en la página de inicio', () => {
-  function guardarFavorita(codigo: string) {
+  function saveFavorite(code: string) {
     localStorage.setItem(
       'playas:favoritas',
-      JSON.stringify({ version: 1, beachCodes: [codigo] })
+      JSON.stringify({ version: 1, beachCodes: [code] })
     );
-    recargarFavoritas();
+    reloadFavorites();
   }
 
   it('la sección "Tus playas favoritas" sale la primera, con la playa guardada', async () => {
-    guardarFavorita('3908503'); // La Concha
+    saveFavorite('3908503'); // La Concha
     const { container } = renderWithProviders(<HomePage />, { route: '/' });
 
-    const seccion = await screen.findByText('Tus playas favoritas');
-    expect(seccion).toBeInTheDocument();
+    const section = await screen.findByText('Tus playas favoritas');
+    expect(section).toBeInTheDocument();
     // First section of the body: favorites go at the very top.
-    const primera = container.querySelector('.hp-body section');
-    expect(primera).toHaveClass('hp-section--favoritas');
-    expect(primera).toHaveTextContent('La Concha');
+    const first = container.querySelector('.hp-body section');
+    expect(first).toHaveClass('hp-section--favoritas');
+    expect(first).toHaveTextContent('La Concha');
     // With the ranking loaded, the row carries current conditions.
-    await waitFor(() => expect(primera).toHaveTextContent('22°'));
+    await waitFor(() => expect(first).toHaveTextContent('22°'));
   });
 
   it('sin favoritas no hay sección', async () => {
@@ -121,7 +121,7 @@ describe('favoritas en la página de inicio', () => {
 
 describe('favorita desde el detalle', () => {
   it('la estrella de la cabecera marca la playa y persiste', async () => {
-    renderWithProviders(<PlayaDetallePage />, {
+    renderWithProviders(<BeachDetailPage />, {
       route: '/playas/3908503',
       path: '/playas/:codigo',
     });

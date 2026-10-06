@@ -26,70 +26,70 @@
  * ranges — measured, it alone blew the bundle budget. U+0300–U+036F is
  * exactly what NFD emits for Latin names (á, ñ, ü, à…), which is all a
  * Spanish beach catalog contains.
- * @param {string} texto
+ * @param {string} text
  * @returns {string} the text without diacritics
  */
-function withoutAccents(texto) {
-  return texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+function withoutAccents(text) {
+  return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
 
 /**
  * Lowercase, accents stripped, every non-alphanumeric run collapsed to a
  * single dash. "L'Escala" → "l-escala", "La Arnía" → "la-arnia",
  * "Peñacastillo" → "penacastillo".
- * @param {string} texto
+ * @param {string} text
  * @returns {string}
  */
-function slugify(texto) {
-  return withoutAccents(texto.toLowerCase())
+function slugify(text) {
+  return withoutAccents(text.toLowerCase())
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
 }
 
 /**
  * Canonical route of a beach: /playas/<municipio>/<nombre>, both slugged.
- * @param {{ nombre: string, municipio: string }} playa
+ * @param {{ nombre: string, municipio: string }} beach
  * @returns {string}
  */
-function beachPath(playa) {
-  return `/playas/${slugify(playa.municipio)}/${slugify(playa.nombre)}`;
+function beachPath(beach) {
+  return `/playas/${slugify(beach.municipio)}/${slugify(beach.nombre)}`;
 }
 
 /**
  * Resolves the beach a canonical URL points at, or undefined.
  * @template {{ nombre: string, municipio: string }} P
- * @param {P[]} playas
- * @param {string} municipioSlug
- * @param {string} playaSlug
+ * @param {P[]} beaches
+ * @param {string} municipalitySlug
+ * @param {string} beachSlug
  * @returns {P | undefined}
  */
-function findBySlugs(playas, municipioSlug, playaSlug) {
-  return playas.find(
-    (p) => slugify(p.municipio) === municipioSlug && slugify(p.nombre) === playaSlug
+function findBySlugs(beaches, municipalitySlug, beachSlug) {
+  return beaches.find(
+    (p) => slugify(p.municipio) === municipalitySlug && slugify(p.nombre) === beachSlug
   );
 }
 
 /**
  * Routes shared by more than one beach, plus beaches whose name slugs to
  * nothing. Either one is a catalog problem that must fail the build.
- * @param {Array<{ nombre: string, municipio: string, codigo: string }>} playas
+ * @param {Array<{ nombre: string, municipio: string, codigo: string }>} beaches
  * @returns {Array<{ ruta: string, codigos: string[] }>}
  */
-function detectCollisions(playas) {
-  const porRuta = new Map();
-  for (const p of playas) {
-    const ruta = slugify(p.nombre) === '' ? '(slug vacío)' : beachPath(p);
-    const lista = porRuta.get(ruta) ?? [];
-    lista.push(p.codigo);
-    porRuta.set(ruta, lista);
+function detectCollisions(beaches) {
+  const byPath = new Map();
+  for (const p of beaches) {
+    const path = slugify(p.nombre) === '' ? '(slug vacío)' : beachPath(p);
+    const list = byPath.get(path) ?? [];
+    list.push(p.codigo);
+    byPath.set(path, list);
   }
-  const conflictos = [];
-  porRuta.forEach((codigos, ruta) => {
-    if (codigos.length > 1 || ruta === '(slug vacío)') {
-      conflictos.push({ ruta, codigos });
+  const conflicts = [];
+  byPath.forEach((codes, path) => {
+    if (codes.length > 1 || path === '(slug vacío)') {
+      conflicts.push({ ruta: path, codigos: codes });
     }
   });
-  return conflictos;
+  return conflicts;
 }
 
 module.exports = { withoutAccents, slugify, beachPath, findBySlugs, detectCollisions };

@@ -9,8 +9,8 @@ import { REGION_API_PATH } from '../shared/config/region';
  */
 
 /** Only `/beaches`, without catching `/beaches/featured` or the details. */
-export const RUTA_PLAYAS = new RegExp(`${REGION_API_PATH}/beaches$`);
+export const BEACHES_PATH = new RegExp(`${REGION_API_PATH}/beaches$`);
 
-export const RUTA_DESTACADAS = `${REGION_API_PATH}/beaches/featured`;
+export const FEATURED_PATH = `${REGION_API_PATH}/beaches/featured`;
 
-export const RUTA_DETALLE = new RegExp(`${REGION_API_PATH}/beaches/[^/]+/details$`);
+export const DETAIL_PATH = new RegExp(`${REGION_API_PATH}/beaches/[^/]+/details$`);

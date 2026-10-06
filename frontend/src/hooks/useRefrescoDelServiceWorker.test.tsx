@@ -1,86 +1,86 @@
 import React from 'react';
 import { render, act } from '@testing-library/react';
 import {
-  useRefrescoDelServiceWorker,
-  MENSAJE_API_ACTUALIZADA,
-  RespuestaFresca,
+  useServiceWorkerRefresh,
+  API_UPDATED_MESSAGE,
+  FreshResponse,
 } from './useRefrescoDelServiceWorker';
 
 /**
  * jsdom has no `navigator.serviceWorker`, so the container is faked with a plain
  * EventTarget. That is exactly the surface the hook uses.
  */
-const canal = new EventTarget();
+const channel = new EventTarget();
 
 beforeAll(() => {
   Object.defineProperty(navigator, 'serviceWorker', {
-    value: canal,
+    value: channel,
     configurable: true,
   });
 });
 
-function emitir(data: unknown) {
+function emit(data: unknown) {
   act(() => {
-    const evento = new Event('message') as Event & { data?: unknown };
-    evento.data = data;
-    canal.dispatchEvent(evento);
+    const event = new Event('message') as Event & { data?: unknown };
+    event.data = data;
+    channel.dispatchEvent(event);
   });
 }
 
-const FRESCA = {
-  type: MENSAJE_API_ACTUALIZADA,
+const FRESH = {
+  type: API_UPDATED_MESSAGE,
   url: 'https://api.example/api/cantabria/beaches/featured',
   datos: { timestamp: 1 },
 };
 
-const Sonda: React.FC<{ onArrive: (f: RespuestaFresca) => void }> = ({ onArrive: alLlegar }) => {
-  useRefrescoDelServiceWorker(alLlegar);
+const Probe: React.FC<{ onArrive: (f: FreshResponse) => void }> = ({ onArrive }) => {
+  useServiceWorkerRefresh(onArrive);
   return null;
 };
 
 describe('useRefrescoDelServiceWorker', () => {
   it('entrega url y datos de la respuesta que llegó tarde', () => {
-    const alLlegar = jest.fn();
-    render(<Sonda onArrive={alLlegar} />);
+    const onArrive = jest.fn();
+    render(<Probe onArrive={onArrive} />);
 
-    emitir(FRESCA);
+    emit(FRESH);
 
-    expect(alLlegar).toHaveBeenCalledTimes(1);
-    expect(alLlegar).toHaveBeenCalledWith({ url: FRESCA.url, datos: FRESCA.datos });
+    expect(onArrive).toHaveBeenCalledTimes(1);
+    expect(onArrive).toHaveBeenCalledWith({ url: FRESH.url, datos: FRESH.datos });
   });
 
   it('ignora otros mensajes y los que vienen incompletos', () => {
-    const alLlegar = jest.fn();
-    render(<Sonda onArrive={alLlegar} />);
+    const onArrive = jest.fn();
+    render(<Probe onArrive={onArrive} />);
 
-    emitir({ type: 'SKIP_WAITING' });
-    emitir(undefined);
+    emit({ type: 'SKIP_WAITING' });
+    emit(undefined);
     // Sin cuerpo no hay nada que pintar, y pedirlo sería el bucle que esto evita.
-    emitir({ type: MENSAJE_API_ACTUALIZADA, url: FRESCA.url });
-    emitir({ type: MENSAJE_API_ACTUALIZADA, datos: {} });
+    emit({ type: API_UPDATED_MESSAGE, url: FRESH.url });
+    emit({ type: API_UPDATED_MESSAGE, datos: {} });
 
-    expect(alLlegar).not.toHaveBeenCalled();
+    expect(onArrive).not.toHaveBeenCalled();
   });
 
   it('llama a la ÚLTIMA función recibida, sin resuscribirse en cada render', () => {
-    const vieja = jest.fn();
-    const nueva = jest.fn();
-    const { rerender } = render(<Sonda onArrive={vieja} />);
-    rerender(<Sonda onArrive={nueva} />);
+    const old = jest.fn();
+    const newValue = jest.fn();
+    const { rerender } = render(<Probe onArrive={old} />);
+    rerender(<Probe onArrive={newValue} />);
 
-    emitir(FRESCA);
+    emit(FRESH);
 
-    expect(vieja).not.toHaveBeenCalled();
-    expect(nueva).toHaveBeenCalledTimes(1);
+    expect(old).not.toHaveBeenCalled();
+    expect(newValue).toHaveBeenCalledTimes(1);
   });
 
   it('deja de escuchar al desmontar', () => {
-    const alLlegar = jest.fn();
-    const { unmount } = render(<Sonda onArrive={alLlegar} />);
+    const onArrive = jest.fn();
+    const { unmount } = render(<Probe onArrive={onArrive} />);
     unmount();
 
-    emitir(FRESCA);
+    emit(FRESH);
 
-    expect(alLlegar).not.toHaveBeenCalled();
+    expect(onArrive).not.toHaveBeenCalled();
   });
 });

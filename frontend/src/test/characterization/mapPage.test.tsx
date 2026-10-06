@@ -18,14 +18,14 @@
 
 import React from 'react';
 import { fireEvent, screen, within } from '@testing-library/react';
-import type { Playa, FeaturedBeach, FeaturedBeachesResponse } from '../../services/api';
+import type { Beach, FeaturedBeach, FeaturedBeachesResponse } from '../../services/api';
 import { renderWithProviders } from '../render';
 import { installFetchMock, restoreFetch, route } from '../http/fakeFetch';
-import MapaPage from '../../pages/MapaPage';
-import { RUTA_DESTACADAS as FEATURED, RUTA_PLAYAS as BEACHES } from '../apiRoutes';
+import MapPage from '../../pages/MapaPage';
+import { FEATURED_PATH as FEATURED, BEACHES_PATH as BEACHES } from '../apiRoutes';
 
 
-const mockMapa = {
+const mockMap = {
   flyTo: jest.fn(),
   closePopup: jest.fn(),
   invalidateSize: jest.fn(),
@@ -43,8 +43,8 @@ jest.mock('react-leaflet', () => {
         // react-leaflet hands over the map instance through a ref; the double
         // hands over `mockMapa` in an effect to respect the child→parent order.
         ReactMock.useEffect(() => {
-          if (typeof ref === 'function') ref(mockMapa);
-          else if (ref) (ref as React.MutableRefObject<unknown>).current = mockMapa;
+          if (typeof ref === 'function') ref(mockMap);
+          else if (ref) (ref as React.MutableRefObject<unknown>).current = mockMap;
         });
         return ReactMock.createElement('div', { 'data-testid': 'map' }, children);
       },
@@ -77,7 +77,7 @@ jest.mock('react-leaflet', () => {
 // They are declared here (and not in test/fixtures) because they exist to nail
 // down the 60/35 thresholds of `markerStatus`, which only this page uses.
 
-const clima = {
+const weather = {
   descripcionClima: 'cielo despejado',
   iconoClima: '11',
   motivoBaja: null,
@@ -85,70 +85,70 @@ const clima = {
 };
 
 function featured(
-  nombre: string,
-  codigo: string,
-  puntuacion: number,
+  name: string,
+  code: string,
+  score: number,
   extra: Partial<FeaturedBeach> = {},
 ): FeaturedBeach {
   return {
-    ...clima,
-    nombre,
+    ...weather,
+    nombre: name,
     municipio: 'Cantabria',
-    codigo,
+    codigo: code,
     lat: 43.4,
     lon: -3.8,
     temperatura: 21,
     vientoMs: 3,
     bandera: null,
-    puntuacion,
+    puntuacion: score,
     razonRanking: 'cielo despejado, viento flojo',
     ...extra,
   };
 }
 
-const enElCorte = featured('EnElCorte', 'C-60', 60, {
+const atCutoff = featured('EnElCorte', 'C-60', 60, {
   pronostico: { direccion: 'mejora', delta: 6, causa: 'despeja' },
 });
-const justoDebajo = featured('JustoDebajo', 'C-59', 59, { motivoBaja: 'oleaje' });
-const medioBajo = featured('MedioBajo', 'C-35', 35, { motivoBaja: 'viento' });
-const malo = featured('Malo', 'C-34', 34, { motivoBaja: 'bandera roja' });
-const conBanderaRoja = featured('BanderaRoja', 'C-BR', 70, { bandera: 'Roja' });
-const conVientoFuerte = featured('VientoFuerte', 'C-VF', 72, { vientoMs: 11.2 });
-const laMejor = featured('LaMejor', 'C-MAX', 95, { bandera: 'Verde' });
+const justBelow = featured('JustoDebajo', 'C-59', 59, { motivoBaja: 'oleaje' });
+const mediumLow = featured('MedioBajo', 'C-35', 35, { motivoBaja: 'viento' });
+const bad = featured('Malo', 'C-34', 34, { motivoBaja: 'bandera roja' });
+const withRedFlag = featured('BanderaRoja', 'C-BR', 70, { bandera: 'Roja' });
+const withStrongWind = featured('VientoFuerte', 'C-VF', 72, { vientoMs: 11.2 });
+const best = featured('LaMejor', 'C-MAX', 95, { bandera: 'Verde' });
 
 const featuredMapa: FeaturedBeachesResponse = {
   timestamp: Date.parse('2026-07-27T10:00:00.000Z'),
-  playas: [laMejor],
-  revisar: [malo],
+  playas: [best],
+  revisar: [bad],
   resumenTodas: [
-    enElCorte,
-    justoDebajo,
-    medioBajo,
-    malo,
-    conBanderaRoja,
-    conVientoFuerte,
-    laMejor,
+    atCutoff,
+    justBelow,
+    mediumLow,
+    bad,
+    withRedFlag,
+    withStrongWind,
+    best,
   ],
 };
 
 /** `lon` increasing the wrong way on purpose: the page must reorder from west to east. */
-function playa(nombre: string, codigo: string, lon: number, extra: Partial<Playa> = {}): Playa {
-  return { nombre, municipio: 'Cantabria', codigo, lat: 43.4, lon, idCruzRoja: 0, ...extra };
+function beach(name: string, code: string, lon: number, extra: Partial<Beach> = {}): Beach {
+  return { nombre: name, municipio: 'Cantabria', codigo: code, lat: 43.4, lon, idCruzRoja: 0, ...extra };
 }
 
-const playasMapa: Playa[] = [
-  playa('LaMejor', 'C-MAX', -3.4),
-  playa('EnElCorte', 'C-60', -3.5),
-  playa('JustoDebajo', 'C-59', -3.6),
-  playa('MedioBajo', 'C-35', -3.7),
-  playa('Malo', 'C-34', -3.8),
-  playa('BanderaRoja', 'C-BR', -3.9),
-  playa('VientoFuerte', 'C-VF', -4.0, {
+const mapBeaches: Beach[] = [
+  beach('LaMejor', 'C-MAX', -3.4),
+  beach('EnElCorte', 'C-60', -3.5),
+  beach('JustoDebajo', 'C-59', -3.6),
+  beach('MedioBajo', 'C-35', -3.7),
+  beach('Malo', 'C-34', -3.8),
+  beach('BanderaRoja', 'C-BR', -3.9),
+  beach('VientoFuerte', 'C-VF', -4.0, {
     idCruzRoja: 42,
     webcam: { url: 'https://example.test/w', cobertura: 'exacta' },
   }),
   // Invalid coordinates: it must not make it to the map.
-  playa('SinCoordenadas', 'C-NULL', 0, { lat: 0 }),
+  beach('SinCoordenadas', 'C-NULL', 0, { lat: 0 }),
 ];
 
 // ---- Helpers -------------------------------------------------------------
@@ -157,28 +157,28 @@ function markerHtml(marker: HTMLElement): string {
   return marker.getAttribute('data-icon-html') ?? '';
 }
 
-function markerByName(nombre: string): HTMLElement {
+function markerByName(name: string): HTMLElement {
   const found = screen
     .getAllByTestId('marker')
-    .find((m) => within(m).queryByText(nombre) !== null);
-  if (!found) throw new Error(`No hay marcador para ${nombre}`);
+    .find((m) => within(m).queryByText(name) !== null);
+  if (!found) throw new Error(`No hay marcador para ${name}`);
   return found;
 }
 
 async function renderMap(route_ = '/mapa') {
-  const view = renderWithProviders(<MapaPage />, { route: route_ });
+  const view = renderWithProviders(<MapPage />, { route: route_ });
   await screen.findByText('LaMejor');
   return view;
 }
 
 
 beforeEach(() => {
-  mockMapa.flyTo.mockClear();
+  mockMap.flyTo.mockClear();
   localStorage.removeItem('user_location');
   Object.defineProperty(navigator, 'geolocation', { configurable: true, value: undefined });
   installFetchMock([
     route(FEATURED, { json: featuredMapa }),
-    route(BEACHES, { json: playasMapa }),
+    route(BEACHES, { json: mapBeaches }),
   ]);
 });
 
@@ -190,11 +190,11 @@ describe('MapaPage — qué playas se pintan', () => {
   it('descarta las de coordenadas inválidas y ordena de oeste a este', async () => {
     await renderMap();
 
-    const nombres = screen
+    const names = screen
       .getAllByTestId('marker')
       .map((m) => m.querySelector('.mapa-popup-title')?.textContent);
 
-    expect(nombres).toEqual([
+    expect(names).toEqual([
       'VientoFuerte',
       'BanderaRoja',
       'Malo',
@@ -304,13 +304,13 @@ describe('MapaPage — navegación por query params', () => {
   it('vuela a las coordenadas indicadas en la URL', async () => {
     await renderMap('/mapa?lat=43.45&lon=-3.5&codigo=C-60');
 
-    expect(mockMapa.flyTo).toHaveBeenCalledWith([43.45, -3.5], 14, { duration: 0.8 });
+    expect(mockMap.flyTo).toHaveBeenCalledWith([43.45, -3.5], 14, { duration: 0.8 });
   });
 
   it('no vuela si la URL no trae coordenadas', async () => {
     await renderMap('/mapa');
 
-    expect(mockMapa.flyTo).not.toHaveBeenCalled();
+    expect(mockMap.flyTo).not.toHaveBeenCalled();
   });
 });
 
@@ -328,7 +328,7 @@ describe('MapaPage — botón de localizarme', () => {
     fireEvent.click(screen.getByLabelText('Localizarme'));
 
     expect(getCurrentPosition).toHaveBeenCalled();
-    expect(mockMapa.flyTo).not.toHaveBeenCalled();
+    expect(mockMap.flyTo).not.toHaveBeenCalled();
   });
 
   it('centra el mapa si ya se conoce la ubicación', async () => {
@@ -341,10 +341,10 @@ describe('MapaPage — botón de localizarme', () => {
     });
 
     await renderMap();
-    mockMapa.flyTo.mockClear();
+    mockMap.flyTo.mockClear();
 
     fireEvent.click(screen.getByLabelText('Localizarme'));
 
-    expect(mockMapa.flyTo).toHaveBeenCalledWith([43.46, -3.8], 14, { duration: 0.8 });
+    expect(mockMap.flyTo).toHaveBeenCalledWith([43.46, -3.8], 14, { duration: 0.8 });
   });
 });

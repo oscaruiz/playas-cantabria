@@ -1,15 +1,15 @@
 import React from 'react';
-import { useIdioma, Idioma } from '../i18n/IdiomaContext';
+import { useLanguage, Language } from '../i18n/IdiomaContext';
 import './SelectorIdioma.css';
 
-const IDIOMAS: Idioma[] = ['es', 'en'];
+const LANGUAGES: Language[] = ['es', 'en'];
 
 /**
  * ES/EN pill for the headers. The stopPropagation is necessary:
  * the sticky headers reload the page on click.
  */
-const SelectorIdioma: React.FC = () => {
-  const { language: idioma, setLanguage: setIdioma, t } = useIdioma();
+const LanguageSelector: React.FC = () => {
+  const { language, setLanguage, t } = useLanguage();
 
   return (
     <div
@@ -18,12 +18,12 @@ const SelectorIdioma: React.FC = () => {
       role="group"
       aria-label={t('selector.idioma')}
     >
-      {IDIOMAS.map((i) => (
+      {LANGUAGES.map((i) => (
         <button
           key={i}
-          className={`selector-idioma-btn${idioma === i ? ' active' : ''}`}
-          onClick={() => setIdioma(i)}
-          aria-pressed={idioma === i}
+          className={`selector-idioma-btn${language === i ? ' active' : ''}`}
+          onClick={() => setLanguage(i)}
+          aria-pressed={language === i}
         >
           {i.toUpperCase()}
         </button>
@@ -32,4 +32,4 @@ const SelectorIdioma: React.FC = () => {
   );
 };
 
-export default SelectorIdioma;
+export default LanguageSelector;

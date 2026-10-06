@@ -1,8 +1,8 @@
 import React from 'react';
 import { IonIcon } from '@ionic/react';
 import { star, starOutline } from 'ionicons/icons';
-import { useIdioma } from '../../../shared/i18n/IdiomaContext';
-import { useFavoritas } from '../application/useFavorites';
+import { useLanguage } from '../../../shared/i18n/IdiomaContext';
+import { useFavoriteCodes } from '../application/useFavorites';
 import './favorites.css';
 
 /**
@@ -15,30 +15,30 @@ const FavoriteButton: React.FC<{
   /** Beach name, only for the accessible label. */
   name: string;
   className?: string;
-}> = ({ code: codigo, name: nombre, className }) => {
-  const { t } = useIdioma();
-  const { isFavorite: esFavorita, toggleFavorite: toggleFavorita } = useFavoritas();
-  const activa = esFavorita(codigo);
-  const etiqueta = t(activa ? 'fav.quitar' : 'fav.marcar', { nombre });
+}> = ({ code, name, className }) => {
+  const { t } = useLanguage();
+  const { isFavorite, toggleFavorite } = useFavoriteCodes();
+  const active = isFavorite(code);
+  const label = t(active ? 'fav.quitar' : 'fav.marcar', { nombre: name });
 
   return (
     <button
       type="button"
-      className={`fav-btn${activa ? ' fav-btn--activa' : ''}${className ? ` ${className}` : ''}`}
-      aria-pressed={activa}
-      aria-label={etiqueta}
-      title={etiqueta}
+      className={`fav-btn${active ? ' fav-btn--activa' : ''}${className ? ` ${className}` : ''}`}
+      aria-pressed={active}
+      aria-label={label}
+      title={label}
       onClick={(e) => {
         e.preventDefault();
         e.stopPropagation();
-        toggleFavorita(codigo);
+        toggleFavorite(code);
       }}
       onKeyDown={(e) => {
         // The row underneath also navigates on these keys.
         if (e.key === 'Enter' || e.key === ' ') e.stopPropagation();
       }}
     >
-      <IonIcon icon={activa ? star : starOutline} aria-hidden="true" />
+      <IonIcon icon={active ? star : starOutline} aria-hidden="true" />
     </button>
   );
 };

@@ -1,9 +1,9 @@
 import { useEffect, useRef } from 'react';
 
 /** Sent by `service-worker.ts` when a real response supersedes a cached one. */
-export const MENSAJE_API_ACTUALIZADA = 'API_ACTUALIZADA';
+export const API_UPDATED_MESSAGE = 'API_ACTUALIZADA';
 
-export interface RespuestaFresca {
+export interface FreshResponse {
   /** Full URL of the endpoint, so the caller can ignore the ones it does not paint. */
   url: string;
   /** The body already parsed. Comes IN the message, so nobody has to ask again. */
@@ -27,20 +27,20 @@ export interface RespuestaFresca {
  * Same shape as `useRevalidarAlVolver`: the callback lives in a ref so an inline
  * arrow does not tear down and rebuild the listener on every render.
  */
-export function useRefrescoDelServiceWorker(alLlegar: (fresca: RespuestaFresca) => void): void {
-  const ultimo = useRef(alLlegar);
-  ultimo.current = alLlegar;
+export function useServiceWorkerRefresh(onArrive: (fresh: FreshResponse) => void): void {
+  const last = useRef(onArrive);
+  last.current = onArrive;
 
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return;
 
-    const alRecibir = (evento: MessageEvent) => {
-      const dato = evento.data;
-      if (dato?.type !== MENSAJE_API_ACTUALIZADA) return;
-      if (typeof dato.url !== 'string' || dato.datos == null) return;
-      ultimo.current({ url: dato.url, datos: dato.datos });
+    const onReceive = (event: MessageEvent) => {
+      const datum = event.data;
+      if (datum?.type !== API_UPDATED_MESSAGE) return;
+      if (typeof datum.url !== 'string' || datum.datos == null) return;
+      last.current({ url: datum.url, datos: datum.datos });
     };
-    navigator.serviceWorker.addEventListener('message', alRecibir);
-    return () => navigator.serviceWorker.removeEventListener('message', alRecibir);
+    navigator.serviceWorker.addEventListener('message', onReceive);
+    return () => navigator.serviceWorker.removeEventListener('message', onReceive);
   }, []);
 }

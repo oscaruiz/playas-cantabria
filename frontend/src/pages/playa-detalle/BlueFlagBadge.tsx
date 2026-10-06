@@ -1,5 +1,5 @@
 import React from 'react';
-import { useIdioma } from '../../shared/i18n/IdiomaContext';
+import { useLanguage } from '../../shared/i18n/IdiomaContext';
 
 /**
  * Blue Flag (ADEAC) card, always shown WITH its award year. The award is
@@ -11,7 +11,7 @@ import { useIdioma } from '../../shared/i18n/IdiomaContext';
  * flags read as the same kind of object; the link goes to the ADEAC site.
  */
 export const BlueFlagBadge: React.FC<{ year?: number | null }> = ({ year }) => {
-  const { t } = useIdioma();
+  const { t } = useLanguage();
   if (year == null) return null;
   return (
     <section className="detail-section blue-flag-section">

@@ -8,15 +8,15 @@ import {
   chevronBackOutline,
   chevronForwardOutline,
 } from 'ionicons/icons';
-import { PrevisionHora, VentanaDia } from '../../services/api';
-import MejorMomento from '../../components/MejorMomento';
-import { useIdioma } from '../../shared/i18n/IdiomaContext';
-import { horaLocalMadrid } from '../../shared/format/tiempo';
-import { procedenciaPrevisionHoras } from '../../features/provenance/procedencia';
+import { HourlyForecast, DayWindow } from '../../services/api';
+import BestTime from '../../components/MejorMomento';
+import { useLanguage } from '../../shared/i18n/IdiomaContext';
+import { madridLocalHour } from '../../shared/format/tiempo';
+import { hourlyForecastProvenance } from '../../features/provenance/procedencia';
 import { todayLabelMadrid } from '../../shared/i18n/fechas';
-import { atribucionDeFuente } from '../../features/provenance/atribuciones';
+import { sourceAttribution } from '../../features/provenance/atribuciones';
 import { AttributionNote, SourceAndFreshness } from '../../features/provenance/SourceAndFreshness';
-import InfoDatos from '../../features/provenance/InfoDatos';
+import DataInfo from '../../features/provenance/InfoDatos';
 
 /** Cloud cover → the same three states the score uses (clear / scattered / broken). */
 function iconoDeNubes(pct: number | null): string {
@@ -38,123 +38,123 @@ function iconoDeNubes(pct: number | null): string {
  * Renders nothing when there is neither an hourly strip nor a window: outside
  * the beach window, or with both hourly sources down.
  */
-const ProximasHoras: React.FC<{
-  hours?: PrevisionHora[] | null;
+const NextHours: React.FC<{
+  hours?: HourlyForecast[] | null;
   source?: string | null;
-  timeWindow?: VentanaDia | null;
-}> = ({ hours: horas, source: fuente, timeWindow: ventana }) => {
-  const { t, language: idioma } = useIdioma();
-  const hayHoras = (horas?.length ?? 0) > 0;
+  timeWindow?: DayWindow | null;
+}> = ({ hours, source, timeWindow }) => {
+  const { t, language } = useLanguage();
+  const hasHours = (hours?.length ?? 0) > 0;
   // The strip is always TODAY's remaining hours: with the day selector right
   // above, the title must say which day it belongs to (Madrid's day — the
   // hours are Madrid hours).
-  const titulo = t('detalle.pronostico.tituloRestoDia', { dia: todayLabelMadrid(idioma) });
+  const title = t('detalle.pronostico.tituloRestoDia', { dia: todayLabelMadrid(language) });
 
   // Scroll affordance: the strip overflows on phones, and a clean cut at the
   // card edge reads as "this is everything". Fixed-width hours make the last
   // visible one PEEK out half-cut, and an edge fade appears on whichever side
   // still hides content — the two standard signals for a horizontal rail.
   const scrollRef = useRef<HTMLUListElement | null>(null);
-  const [masDespues, setMasDespues] = useState(false);
-  const [masAntes, setMasAntes] = useState(false);
+  const [moreAfter, setMoreAfter] = useState(false);
+  const [moreBefore, setMoreBefore] = useState(false);
 
-  const medirScroll = useCallback(() => {
+  const measureScroll = useCallback(() => {
     const el = scrollRef.current;
     if (!el) return;
-    setMasAntes(el.scrollLeft > 1);
-    setMasDespues(el.scrollLeft + el.clientWidth < el.scrollWidth - 1);
+    setMoreBefore(el.scrollLeft > 1);
+    setMoreAfter(el.scrollLeft + el.clientWidth < el.scrollWidth - 1);
   }, []);
 
   useEffect(() => {
-    medirScroll();
+    measureScroll();
     // The container resizes with the viewport (rotation, window resize).
     const el = scrollRef.current;
     if (!el || typeof ResizeObserver === 'undefined') return;
-    const observer = new ResizeObserver(medirScroll);
+    const observer = new ResizeObserver(measureScroll);
     observer.observe(el);
     return () => observer.disconnect();
-  }, [medirScroll, horas]);
+  }, [measureScroll, hours]);
 
   // The arrows both SIGNAL the rail moves and move it: most of a screenful
   // per press, with an overlap so no hour is ever skipped past unseen.
-  const desplazar = (direccion: 1 | -1) => {
+  const scroll = (direction: 1 | -1) => {
     const el = scrollRef.current;
     if (!el) return;
-    const reducida =
+    const reduced =
       typeof window.matchMedia === 'function'
       && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     el.scrollBy({
-      left: direccion * el.clientWidth * 0.8,
-      behavior: reducida ? 'auto' : 'smooth',
+      left: direction * el.clientWidth * 0.8,
+      behavior: reduced ? 'auto' : 'smooth',
     });
   };
 
-  if (!hayHoras && !ventana) return null;
+  if (!hasHours && !timeWindow) return null;
 
   // Does this hour's SLOT overlap the recommended window? By interval, not by
   // start: the in-progress slot can start before the (clamped) window start
   // and still be the hour the window is recommending right now. The slot end
   // is the next slot's start; the last one borrows the previous step.
-  const lista = horas ?? [];
-  const enVentana = (i: number): boolean => {
-    if (!ventana) return false;
-    const inicioMs = Date.parse(ventana.inicio);
-    const finMs = Date.parse(ventana.fin);
-    const slotInicio = Date.parse(lista[i].horaIso);
-    if (!Number.isFinite(inicioMs) || !Number.isFinite(finMs) || !Number.isFinite(slotInicio)) {
+  const list = hours ?? [];
+  const inWindow = (i: number): boolean => {
+    if (!timeWindow) return false;
+    const startMs = Date.parse(timeWindow.inicio);
+    const endMs = Date.parse(timeWindow.fin);
+    const slotStart = Date.parse(list[i].horaIso);
+    if (!Number.isFinite(startMs) || !Number.isFinite(endMs) || !Number.isFinite(slotStart)) {
       return false;
     }
-    const siguiente = i + 1 < lista.length ? Date.parse(lista[i + 1].horaIso) : NaN;
-    const anterior = i > 0 ? Date.parse(lista[i - 1].horaIso) : NaN;
-    const paso = Number.isFinite(siguiente)
-      ? siguiente - slotInicio
-      : Number.isFinite(anterior)
-        ? slotInicio - anterior
+    const next = i + 1 < list.length ? Date.parse(list[i + 1].horaIso) : NaN;
+    const previous = i > 0 ? Date.parse(list[i - 1].horaIso) : NaN;
+    const step = Number.isFinite(next)
+      ? next - slotStart
+      : Number.isFinite(previous)
+        ? slotStart - previous
         : 3_600_000;
-    return slotInicio < finMs && slotInicio + paso > inicioMs;
+    return slotStart < endMs && slotStart + step > startMs;
   };
 
   return (
     <section className="proximas-horas-section">
-      <h3 className="section-kicker">{titulo}</h3>
-      {hayHoras && (
+      <h3 className="section-kicker">{title}</h3>
+      {hasHours && (
       <div
-        className={`pd-horas-marco${masAntes ? ' pd-horas-marco--antes' : ''}${masDespues ? ' pd-horas-marco--despues' : ''}`}
+        className={`pd-horas-marco${moreBefore ? ' pd-horas-marco--antes' : ''}${moreAfter ? ' pd-horas-marco--despues' : ''}`}
       >
       <ul
         className="pd-horas"
         ref={scrollRef}
-        onScroll={medirScroll}
+        onScroll={measureScroll}
         // A scrollable region must be reachable and named for the keyboard:
         // without tabindex its content is unreachable scrolling by keys.
         role="region"
-        aria-label={titulo}
+        aria-label={title}
         tabIndex={0}
       >
-        {lista.map((h, i) => {
-          const mojada = (h.precipitacionMm ?? 0) > 0;
+        {list.map((h, i) => {
+          const wet = (h.precipitacionMm ?? 0) > 0;
           return (
           /* Una frase por hora para quien no ve la tira: la nubosidad solo la
              cuenta el icono, y el icono es decorativo. */
           <li
-            className={`pd-hora${enVentana(i) ? ' pd-hora--mejor' : ''}`}
+            className={`pd-hora${inWindow(i) ? ' pd-hora--mejor' : ''}`}
             key={h.horaIso}
-            aria-label={t(mojada ? 'detalle.pronostico.ariaHoraLluvia' : 'detalle.pronostico.ariaHora', {
-              hora: horaLocalMadrid(h.horaIso) ?? '--:--',
+            aria-label={t(wet ? 'detalle.pronostico.ariaHoraLluvia' : 'detalle.pronostico.ariaHora', {
+              hora: madridLocalHour(h.horaIso) ?? '--:--',
               nubes: h.nubesPct ?? '--',
               temp: h.temperaturaC != null ? Math.round(h.temperaturaC) : '--',
               viento: h.vientoMs != null ? Math.round(h.vientoMs) : '--',
             })}
           >
             <span className="pd-hora-reloj" aria-hidden="true">
-              {horaLocalMadrid(h.horaIso) ?? '--:--'}
+              {madridLocalHour(h.horaIso) ?? '--:--'}
             </span>
             {/* Rain replaces the cloud icon outright: a wet hour is what the
                 window dodges, and a cloud there would hide the one fact that
                 explains the recommendation. */}
             <IonIcon
-              className={`pd-hora-icono${mojada ? ' pd-hora-icono--lluvia' : ''}`}
-              icon={mojada ? rainyOutline : iconoDeNubes(h.nubesPct)}
+              className={`pd-hora-icono${wet ? ' pd-hora-icono--lluvia' : ''}`}
+              icon={wet ? rainyOutline : iconoDeNubes(h.nubesPct)}
               aria-hidden="true"
             />
             <span className="pd-hora-temp" aria-hidden="true">
@@ -167,46 +167,46 @@ const ProximasHoras: React.FC<{
           );
         })}
       </ul>
-      {masAntes && (
+      {moreBefore && (
         <button
           type="button"
           className="pd-horas-flecha pd-horas-flecha--antes"
           aria-label={t('detalle.pronostico.horasAnteriores')}
-          onClick={() => desplazar(-1)}
+          onClick={() => scroll(-1)}
         >
           <IonIcon icon={chevronBackOutline} aria-hidden="true" />
         </button>
       )}
-      {masDespues && (
+      {moreAfter && (
         <button
           type="button"
           className="pd-horas-flecha pd-horas-flecha--despues"
           aria-label={t('detalle.pronostico.horasSiguientes')}
-          onClick={() => desplazar(1)}
+          onClick={() => scroll(1)}
         >
           <IonIcon icon={chevronForwardOutline} aria-hidden="true" />
         </button>
       )}
       </div>
       )}
-      <MejorMomento timeWindow={ventana} detailed />
+      <BestTime timeWindow={timeWindow} detailed />
       {/* Quién lo pronostica, y qué hacemos con ello: estas mismas horas
           alimentan la puntuación, así que la licencia obliga a decir que los
           datos van adaptados. Esa nota ya acredita y enlaza la fuente, de modo
           que el crédito genérico solo sale cuando no hay nota — repetirlo
           sería decir dos veces lo mismo. The API sends no emission time for
           the outlook, so none is shown either way. */}
-      {hayHoras && (
-        <InfoDatos label="info.fuente" aria="info.aria.horas" className="proximas-horas-fuente">
-          {atribucionDeFuente(fuente)?.note ? (
-            <AttributionNote source={fuente} />
+      {hasHours && (
+        <DataInfo label="info.fuente" aria="info.aria.horas" className="proximas-horas-fuente">
+          {sourceAttribution(source)?.note ? (
+            <AttributionNote source={source} />
           ) : (
-            <SourceAndFreshness provenance={procedenciaPrevisionHoras(fuente)} />
+            <SourceAndFreshness provenance={hourlyForecastProvenance(source)} />
           )}
-        </InfoDatos>
+        </DataInfo>
       )}
     </section>
   );
 };
 
-export default ProximasHoras;
+export default NextHours;

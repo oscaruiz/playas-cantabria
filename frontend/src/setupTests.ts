@@ -34,11 +34,11 @@ beforeEach(() => {
 // React 18.3 marks as deprecated. It's library noise, not from the app's
 // code, and it pollutes every render. ONLY that message is filtered: any other
 // console.error remains visible.
-const errorOriginal = console.error;
+const originalError = console.error;
 // eslint-disable-next-line no-console
 console.error = (...args: unknown[]) => {
   if (typeof args[0] === 'string' && args[0].includes('ReactDOMTestUtils.act` is deprecated')) {
     return;
   }
-  errorOriginal(...args);
+  originalError(...args);
 };

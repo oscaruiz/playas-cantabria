@@ -2,7 +2,7 @@ import React from 'react';
 import { IonIcon } from '@ionic/react';
 import { homeOutline, listOutline, mapOutline } from 'ionicons/icons';
 import { useHistory, useLocation } from 'react-router-dom';
-import { useIdioma } from '../i18n/IdiomaContext';
+import { useLanguage } from '../i18n/IdiomaContext';
 import './BottomNavBar.css';
 
 /**
@@ -26,7 +26,7 @@ function deriveTab(pathname: string): 'home' | 'lista' | 'mapa' | null {
 const BottomNavBar: React.FC = () => {
   const history = useHistory();
   const { pathname } = useLocation();
-  const { t } = useIdioma();
+  const { t } = useLanguage();
   const currentTab = deriveTab(pathname);
 
   return (

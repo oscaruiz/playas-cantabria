@@ -19,23 +19,23 @@
 
 import React from 'react';
 import { screen } from '@testing-library/react';
-import PlayasList from '../../pages/PlayasList';
-import PlayaDetallePage from '../../pages/PlayaDetalle';
+import BeachList from '../../pages/PlayasList';
+import BeachDetailPage from '../../pages/PlayaDetalle';
 import { renderWithProviders } from '../render';
 import { installFetchMock, restoreFetch, route } from '../http/fakeFetch';
 import { beachesResponse } from '../fixtures/beaches';
 import { featuredResponse } from '../fixtures/featured';
 import { buildAemetDetail } from '../fixtures/beachDetail';
-import { RUTA_DESTACADAS as FEATURED, RUTA_PLAYAS as BEACHES, RUTA_DETALLE as DETAILS } from '../apiRoutes';
+import { FEATURED_PATH as FEATURED, BEACHES_PATH as BEACHES, DETAIL_PATH as DETAILS } from '../apiRoutes';
 
 
-const AHORA = new Date('2026-07-27T12:00:00.000Z'); // 14:00 in Madrid
+const NOW_ISO = new Date('2026-07-27T12:00:00.000Z'); // 14:00 in Madrid
 
 beforeEach(() => {
   Object.defineProperty(navigator, 'geolocation', { configurable: true, value: undefined });
   installFetchMock([
     route(FEATURED, { json: featuredResponse }),
-    route(DETAILS, { json: buildAemetDetail(AHORA) }),
+    route(DETAILS, { json: buildAemetDetail(NOW_ISO) }),
     route(BEACHES, { json: beachesResponse }),
   ]);
 });
@@ -47,7 +47,7 @@ afterEach(() => {
 
 describe('i18n — texto propio de la app', () => {
   it('traduce el listado al cambiar de idioma', async () => {
-    renderWithProviders(<PlayasList />, { route: '/playas', language: 'en' });
+    renderWithProviders(<BeachList />, { route: '/playas', language: 'en' });
     await screen.findByText('La Concha');
 
     expect(screen.getByText('7 beaches')).toBeInTheDocument();
@@ -59,11 +59,11 @@ describe('i18n — texto propio de la app', () => {
 
 describe('i18n — contenido que viene del backend', () => {
   beforeEach(() => {
-    jest.useFakeTimers().setSystemTime(AHORA);
+    jest.useFakeTimers().setSystemTime(NOW_ISO);
   });
 
   it('traduce por diccionario el español crudo del detalle', async () => {
-    const { container } = renderWithProviders(<PlayaDetallePage />, {
+    const { container } = renderWithProviders(<BeachDetailPage />, {
       route: '/playas/3908503',
       path: '/playas/:codigo',
       language: 'en',
@@ -84,7 +84,7 @@ describe('i18n — contenido que viene del backend', () => {
   });
 
   it('traduce las descripciones compuestas de viento de AEMET', async () => {
-    const { container } = renderWithProviders(<PlayaDetallePage />, {
+    const { container } = renderWithProviders(<BeachDetailPage />, {
       route: '/playas/3908503',
       path: '/playas/:codigo',
       language: 'en',
@@ -99,7 +99,7 @@ describe('i18n — contenido que viene del backend', () => {
   });
 
   it('deja pasar en español el texto libre que no reconoce', async () => {
-    const { container } = renderWithProviders(<PlayaDetallePage />, {
+    const { container } = renderWithProviders(<BeachDetailPage />, {
       route: '/playas/3908503',
       path: '/playas/:codigo',
       language: 'en',

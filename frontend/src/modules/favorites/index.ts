@@ -8,5 +8,5 @@
  * Nothing outside `modules/favorites/` imports its internals; the storage
  * format lives in `infrastructure/` and can change without anyone noticing.
  */
-export { useFavoritas, toggleFavorita, recargarFavoritas } from './application/useFavorites';
+export { useFavoriteCodes, toggleFavorite, reloadFavorites } from './application/useFavorites';
 export { default as FavoriteButton } from './ui/FavoriteButton';

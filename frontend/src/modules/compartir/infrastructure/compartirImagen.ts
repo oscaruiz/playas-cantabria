@@ -1,9 +1,9 @@
 /** What actually happened, so the button can say it. */
-export type ResultadoCompartir = 'conImagen' | 'soloEnlace' | 'enlaceCopiado' | 'cancelada';
+export type ShareResult = 'conImagen' | 'soloEnlace' | 'enlaceCopiado' | 'cancelada';
 
 /** Combining marks left behind by NFD — written as escapes, not as the marks
     themselves, which are invisible in an editor and get mangled on edit. */
-const TILDES_SUELTAS = new RegExp('[\\u0300-\\u036f]', 'g');
+const LOOSE_ACCENTS = new RegExp('[\\u0300-\\u036f]', 'g');
 
 /**
  * One share, degrading in three steps: the card WITH the link, the link alone,
@@ -15,28 +15,28 @@ const TILDES_SUELTAS = new RegExp('[\\u0300-\\u036f]', 'g');
  * image is a bonus of the platform, not a different intention. What is being
  * shared is the beach; how much of it travels is up to the share sheet.
  */
-export async function compartirPlaya({
-  image: imagen,
-  fileName: nombreArchivo,
-  title: titulo,
+export async function shareBeach({
+  image,
+  fileName,
+  title,
   url,
 }: {
   image: Blob | null;
   fileName: string;
   title: string;
   url: string;
-}): Promise<ResultadoCompartir> {
-  if (imagen && navigator.share) {
-    const archivo = new File([imagen], nombreArchivo, { type: imagen.type || 'image/png' });
+}): Promise<ShareResult> {
+  if (image && navigator.share) {
+    const file = new File([image], fileName, { type: image.type || 'image/png' });
     // The URL travels as the text so it lands in the caption: a target that
     // takes files often drops a separate `url`, and then the card would leave
     // with no way back to the app.
-    const carga = { files: [archivo], title: titulo, text: url };
+    const load = { files: [file], title, text: url };
     // `canShare` is the only honest check: a browser can have `share` and still
     // refuse files, and calling `share` then throws after the user has tapped.
-    if (navigator.canShare?.(carga)) {
+    if (navigator.canShare?.(load)) {
       try {
-        await navigator.share(carga);
+        await navigator.share(load);
         return 'conImagen';
       } catch (error) {
         if ((error as Error)?.name === 'AbortError') return 'cancelada';
@@ -48,7 +48,7 @@ export async function compartirPlaya({
 
   if (navigator.share) {
     try {
-      await navigator.share({ title: titulo, url });
+      await navigator.share({ title, url });
       return 'soloEnlace';
     } catch (error) {
       if ((error as Error)?.name === 'AbortError') return 'cancelada';
@@ -60,17 +60,17 @@ export async function compartirPlaya({
 }
 
 /** Filename the receiver ends up seeing: beach and day, no ids. */
-export function nombreArchivoTarjeta(nombrePlaya: string, ahora: Date): string {
-  const limpio = nombrePlaya
+export function cardFileName(beachName: string, now: Date): string {
+  const clean = beachName
     .normalize('NFD')
-    .replace(TILDES_SUELTAS, '')
+    .replace(LOOSE_ACCENTS, '')
     .replace(/[^a-zA-Z0-9]+/g, '-')
     .replace(/^-|-$/g, '')
     .toLowerCase();
-  const dia = [
-    ahora.getFullYear(),
-    String(ahora.getMonth() + 1).padStart(2, '0'),
-    String(ahora.getDate()).padStart(2, '0'),
+  const day = [
+    now.getFullYear(),
+    String(now.getMonth() + 1).padStart(2, '0'),
+    String(now.getDate()).padStart(2, '0'),
   ].join('-');
-  return `${limpio || 'playa'}-${dia}.png`;
+  return `${clean || 'playa'}-${day}.png`;
 }

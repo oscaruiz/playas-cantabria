@@ -12,14 +12,14 @@
  * null field) when the API did not send the value.
  */
 
-import type { PlayaDetalle } from '../../services/api';
-import type { Idioma } from '../../shared/i18n/IdiomaContext';
+import type { BeachDetail } from '../../services/api';
+import type { Language } from '../../shared/i18n/IdiomaContext';
 
 /** Nature of a displayed value. Mirrors the plan's live/forecast/static/unavailable. */
-export type TipoDato = 'directo' | 'prevision' | 'estatico' | 'sinDatos';
+export type DataKind = 'directo' | 'prevision' | 'estatico' | 'sinDatos';
 
-export interface Procedencia {
-  kind: TipoDato;
+export interface Provenance {
+  kind: DataKind;
   /** Public name of the producer, exactly as the API credits it. */
   source: string | null;
   /** Instant the value was produced/captured, or null if the API sent none. */
@@ -30,11 +30,11 @@ export interface Procedencia {
  * ISO string or epoch milliseconds → epoch milliseconds; null if absent or
  * unparseable. The single place where the API's mixed timestamp formats meet.
  */
-export function normalizarInstante(
-  entrada: string | number | null | undefined
+export function normalizeInstant(
+  input: string | number | null | undefined
 ): number | null {
-  if (entrada == null || entrada === '') return null;
-  const ms = typeof entrada === 'number' ? entrada : new Date(entrada).getTime();
+  if (input == null || input === '') return null;
+  const ms = typeof input === 'number' ? input : new Date(input).getTime();
   return Number.isFinite(ms) && !Number.isNaN(ms) ? ms : null;
 }
 
@@ -47,7 +47,7 @@ export function normalizarInstante(
  * number and must not: `/featured` answers from a window six times longer, and
  * the two constants below say so.
  */
-export const UMBRAL_DATOS_VIEJOS_MS = 10 * 60 * 1000;
+export const STALE_DATA_THRESHOLD_MS = 10 * 60 * 1000;
 
 /**
  * Age at which the ranking asks again, on its own and in silence.
@@ -58,7 +58,7 @@ export const UMBRAL_DATOS_VIEJOS_MS = 10 * 60 * 1000;
  * there is no polling anywhere, so it cannot be folded back into the notice's
  * threshold below however alike the two numbers look today.
  */
-export const EDAD_REVALIDAR_RANKING_MS = 10 * 60 * 1000;
+export const RANKING_REVALIDATE_AGE_MS = 10 * 60 * 1000;
 
 /**
  * Age past which the painted ranking CANNOT have come from the backend, and is
@@ -71,15 +71,15 @@ export const EDAD_REVALIDAR_RANKING_MS = 10 * 60 * 1000;
  * same body. Past the stale window it means what it says: this is a copy from
  * the service worker or the snapshot.
  */
-export const UMBRAL_RANKING_VIEJO_MS = 60 * 60 * 1000;
+export const STALE_RANKING_THRESHOLD_MS = 60 * 60 * 1000;
 
 /**
  * Absolute, human-readable instant in Europe/Madrid — the accessible
  * counterpart of the relative "hace X min" text. Locale follows the UI
  * language; the timezone is always the beaches' own.
  */
-export function formatearInstanteAbsoluto(ms: number, idioma: Idioma): string {
-  return new Intl.DateTimeFormat(idioma === 'en' ? 'en-GB' : 'es-ES', {
+export function formatAbsoluteInstant(ms: number, language: Language): string {
+  return new Intl.DateTimeFormat(language === 'en' ? 'en-GB' : 'es-ES', {
     dateStyle: 'medium',
     timeStyle: 'short',
     timeZone: 'Europe/Madrid',
@@ -90,8 +90,8 @@ export function formatearInstanteAbsoluto(ms: number, idioma: Idioma): string {
  * Public name of a weather source. AEMET_XML / AEMET_HTML are transport
  * details of the same producer — the user is always told "AEMET".
  */
-export function nombreFuenteMeteo(fuente: string): string {
-  return fuente.replace('AEMET_HTML', 'AEMET').replace('AEMET_XML', 'AEMET');
+export function weatherSourceName(source: string): string {
+  return source.replace('AEMET_HTML', 'AEMET').replace('AEMET_XML', 'AEMET');
 }
 
 /**
@@ -103,20 +103,20 @@ export function nombreFuenteMeteo(fuente: string): string {
  * warning — it is WITHDRAWN, because a wrong "it is sunny" is worse than
  * "dato no disponible" on the screen someone uses to decide whether to go.
  */
-export const MAX_EDAD_OBSERVACION_MS = 3 * 60 * 60 * 1000;
+export const MAX_OBSERVATION_AGE_MS = 3 * 60 * 60 * 1000;
 
 /**
  * Whether an observation is recent enough to be shown as the current state.
  * An observation with NO timestamp cannot be vouched for, so it is not
  * current either.
  */
-export function observacionVigente(
-  tiempoActual: PlayaDetalle['tiempoActual'],
-  ahoraMs: number = Date.now()
+export function currentObservation(
+  currentConditions: BeachDetail['tiempoActual'],
+  nowMs: number = Date.now()
 ): boolean {
-  const ms = normalizarInstante(tiempoActual?.timestamp);
+  const ms = normalizeInstant(currentConditions?.timestamp);
   if (ms == null) return false;
-  return ahoraMs - ms <= MAX_EDAD_OBSERVACION_MS;
+  return nowMs - ms <= MAX_OBSERVATION_AGE_MS;
 }
 
 /**
@@ -124,23 +124,23 @@ export function observacionVigente(
  * value, credited to its provider, stamped when the backend captured it.
  * Null when there is no observation at all — never a fabricated source.
  */
-export function procedenciaObservacion(
-  tiempoActual: PlayaDetalle['tiempoActual']
-): Procedencia | null {
-  if (!tiempoActual) return null;
-  const fuente = tiempoActual.fuente || null;
-  const instanteMs = normalizarInstante(tiempoActual.timestamp);
-  if (!fuente && instanteMs == null) return null;
-  return { kind: 'directo', source: fuente, instantMs: instanteMs };
+export function observationProvenance(
+  currentConditions: BeachDetail['tiempoActual']
+): Provenance | null {
+  if (!currentConditions) return null;
+  const source = currentConditions.fuente || null;
+  const instantMs = normalizeInstant(currentConditions.timestamp);
+  if (!source && instantMs == null) return null;
+  return { kind: 'directo', source, instantMs };
 }
 
 /**
  * Provenance of the hourly outlook. The API credits a producer
  * (`previsionHorasFuente`) but sends no emission time — so none is shown.
  */
-export function procedenciaPrevisionHoras(
-  fuente: string | null | undefined
-): Procedencia | null {
-  if (!fuente) return null;
-  return { kind: 'prevision', source: fuente, instantMs: null };
+export function hourlyForecastProvenance(
+  source: string | null | undefined
+): Provenance | null {
+  if (!source) return null;
+  return { kind: 'prevision', source, instantMs: null };
 }

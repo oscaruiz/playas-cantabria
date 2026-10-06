@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Playa, FeaturedBeach, getPlayas } from '../../services/api';
+import { Beach, FeaturedBeach, getBeaches } from '../../services/api';
 import { useRanking } from '../../features/ranking/useRanking';
 
 /**
@@ -7,28 +7,28 @@ import { useRanking } from '../../features/ranking/useRanking';
  * rejects (backend → saved copy → bundled JSON); conditions are optional
  * enrichment and their failure only means plainer rows.
  */
-export function useCatalogo(): {
-  beaches: Playa[] | null;
+export function useCatalog(): {
+  beaches: Beach[] | null;
   conditions: Map<string, FeaturedBeach>;
   /** Snapshot instant of the conditions (epoch ms), or null while unknown. */
   conditionsInstant: number | null;
 } {
-  const [playas, setPlayas] = useState<Playa[] | null>(null);
+  const [beaches, setBeaches] = useState<Beach[] | null>(null);
   // The landing says HOW current "current" is, so it takes the instant from
   // the same module that decides which ranking is in force.
-  const { ranking, updatedMs: instanteCondiciones } = useRanking();
-  const condiciones = useMemo(
+  const { ranking, updatedMs: conditionsInstant } = useRanking();
+  const conditions = useMemo(
     () => new Map((ranking?.resumenTodas ?? []).map((b) => [b.codigo, b])),
     [ranking],
   );
 
   useEffect(() => {
-    let activo = true;
-    getPlayas({ onBackendData: (d) => { if (activo) setPlayas(d); } }).then((d) => {
-      if (activo) setPlayas(d);
+    let active = true;
+    getBeaches({ onBackendData: (d) => { if (active) setBeaches(d); } }).then((d) => {
+      if (active) setBeaches(d);
     });
-    return () => { activo = false; };
+    return () => { active = false; };
   }, []);
 
-  return { beaches: playas, conditions: condiciones, conditionsInstant: instanteCondiciones };
+  return { beaches, conditions, conditionsInstant };
 }

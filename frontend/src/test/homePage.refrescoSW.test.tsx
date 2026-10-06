@@ -21,17 +21,17 @@ import { installFetchMock, restoreFetch, route, deferred } from './http/fakeFetc
 import type { RouteSpec } from './http/fakeFetch';
 import { beachesResponse } from './fixtures/beaches';
 import { featuredResponse } from './fixtures/featured';
-import { RUTA_DESTACADAS as FEATURED, RUTA_PLAYAS as BEACHES } from './apiRoutes';
-import { MENSAJE_API_ACTUALIZADA } from '../hooks/useRefrescoDelServiceWorker';
+import { FEATURED_PATH as FEATURED, BEACHES_PATH as BEACHES } from './apiRoutes';
+import { API_UPDATED_MESSAGE } from '../hooks/useRefrescoDelServiceWorker';
 
 const URL_FEATURED = 'https://api.example/api/cantabria/beaches/featured';
-const AVISO = /última visita/i;
+const WARNING = /última visita/i;
 
 /** jsdom no trae `navigator.serviceWorker`: basta un EventTarget. */
-const canal = new EventTarget();
+const channel = new EventTarget();
 
 beforeAll(() => {
-  Object.defineProperty(navigator, 'serviceWorker', { value: canal, configurable: true });
+  Object.defineProperty(navigator, 'serviceWorker', { value: channel, configurable: true });
 });
 
 /**
@@ -43,11 +43,11 @@ beforeAll(() => {
  * casos esperan a que la pantalla SE ASIENTE, en vez de mirarla al instante.
  * Cada test arranca además dos minutos después, con el memo de 60 s caducado.
  */
-let ahora = Date.now();
+let now = Date.now();
 
 beforeEach(() => {
-  ahora += 2 * 60 * 1000;
-  jest.spyOn(Date, 'now').mockImplementation(() => ahora);
+  now += 2 * 60 * 1000;
+  jest.spyOn(Date, 'now').mockImplementation(() => now);
   localStorage.removeItem('user_location');
   Object.defineProperty(navigator, 'geolocation', { configurable: true, value: undefined });
 });
@@ -55,54 +55,54 @@ beforeEach(() => {
 afterEach(() => restoreFetch());
 
 /** Lo que el service worker manda cuando llega la respuesta que abandonó. */
-function entregarDesdeElSW(datos: unknown) {
+function deliverFromSW(data: unknown) {
   act(() => {
-    const evento = new Event('message') as Event & { data?: unknown };
-    evento.data = { type: MENSAJE_API_ACTUALIZADA, url: URL_FEATURED, datos };
-    canal.dispatchEvent(evento);
+    const event = new Event('message') as Event & { data?: unknown };
+    event.data = { type: API_UPDATED_MESSAGE, url: URL_FEATURED, datos: data };
+    channel.dispatchEvent(event);
   });
 }
 
-function conEdad(horas: number) {
-  return { ...featuredResponse, timestamp: Date.now() - horas * 60 * 60 * 1000 };
+function withAge(hours: number) {
+  return { ...featuredResponse, timestamp: Date.now() - hours * 60 * 60 * 1000 };
 }
 
 describe('HomePage — respuesta servida por el service worker', () => {
   it('avisa cuando lo pintado lo construyó el backend hace horas', async () => {
     installFetchMock([
-      route(FEATURED, { json: conEdad(12) }),
+      route(FEATURED, { json: withAge(12) }),
       route(BEACHES, { json: beachesResponse }),
     ]);
 
     renderWithProviders(<HomePage />, { route: '/' });
 
-    expect(await screen.findByText(AVISO)).toBeInTheDocument();
+    expect(await screen.findByText(WARNING)).toBeInTheDocument();
   });
 
   it('no avisa de nada cuando el dato es de ahora mismo', async () => {
     installFetchMock([
-      route(FEATURED, { json: conEdad(0) }),
+      route(FEATURED, { json: withAge(0) }),
       route(BEACHES, { json: beachesResponse }),
     ]);
 
     renderWithProviders(<HomePage />, { route: '/' });
 
     await screen.findByText('La Concha');
-    await waitFor(() => expect(screen.queryByText(AVISO)).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByText(WARNING)).not.toBeInTheDocument());
   });
 
   it('se repinta con lo que trae el mensaje, y el aviso se retira solo', async () => {
     installFetchMock([
-      route(FEATURED, { json: conEdad(12) }),
+      route(FEATURED, { json: withAge(12) }),
       route(BEACHES, { json: beachesResponse }),
     ]);
 
     renderWithProviders(<HomePage />, { route: '/' });
-    await screen.findByText(AVISO);
+    await screen.findByText(WARNING);
 
-    entregarDesdeElSW(conEdad(0));
+    deliverFromSW(withAge(0));
 
-    await waitFor(() => expect(screen.queryByText(AVISO)).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByText(WARNING)).not.toBeInTheDocument());
   });
 
   it('vuelve a pedir el ranking por su cuenta cuando lo pintado es viejo', async () => {
@@ -110,17 +110,17 @@ describe('HomePage — respuesta servida por el service worker', () => {
     // falla, o el backend devuelve el mismo ranking viejo. Por eso la portada
     // vuelve a pedir sola — y sola es la palabra: el aviso es un párrafo, no un
     // botón, porque el toque no tenía forma de ganar.
-    let llamadas = 0;
+    let calls = 0;
     installFetchMock([
-      route(FEATURED, () => ({ json: llamadas++ === 0 ? conEdad(12) : conEdad(0) })),
+      route(FEATURED, () => ({ json: calls++ === 0 ? withAge(12) : withAge(0) })),
       route(BEACHES, { json: beachesResponse }),
     ]);
 
     renderWithProviders(<HomePage />, { route: '/' });
 
-    await screen.findByText(AVISO);
-    await waitFor(() => expect(llamadas).toBe(2));
-    await waitFor(() => expect(screen.queryByText(AVISO)).not.toBeInTheDocument());
+    await screen.findByText(WARNING);
+    await waitFor(() => expect(calls).toBe(2));
+    await waitFor(() => expect(screen.queryByText(WARNING)).not.toBeInTheDocument());
   });
 
   it('dice la hora de Madrid del ranking aunque no haya ninguna recomendada', async () => {
@@ -128,51 +128,51 @@ describe('HomePage — respuesta servida por el service worker', () => {
     // playa recomendada —el día en que más importa saber de cuándo es el
     // dato— era justo el día en que no se decía.
     installFetchMock([
-      route(FEATURED, { json: { ...conEdad(0), playas: [], mejores: [] } }),
+      route(FEATURED, { json: { ...withAge(0), playas: [], mejores: [] } }),
       route(BEACHES, { json: beachesResponse }),
     ]);
 
     renderWithProviders(<HomePage />, { route: '/' });
 
-    const hora = new Intl.DateTimeFormat('en-GB', {
+    const hour = new Intl.DateTimeFormat('en-GB', {
       timeZone: 'Europe/Madrid',
       hour: '2-digit',
       minute: '2-digit',
       hour12: false,
     }).format(new Date(Date.now()));
-    expect(await screen.findByText(new RegExp(hora))).toBeInTheDocument();
+    expect(await screen.findByText(new RegExp(hour))).toBeInTheDocument();
   });
 
   it('ignora la entrega de otro endpoint: el ranking no es el catálogo', async () => {
     installFetchMock([
-      route(FEATURED, { json: conEdad(12) }),
+      route(FEATURED, { json: withAge(12) }),
       route(BEACHES, { json: beachesResponse }),
     ]);
 
     renderWithProviders(<HomePage />, { route: '/' });
-    await screen.findByText(AVISO);
+    await screen.findByText(WARNING);
 
     act(() => {
-      const evento = new Event('message') as Event & { data?: unknown };
-      evento.data = {
-        type: MENSAJE_API_ACTUALIZADA,
+      const event = new Event('message') as Event & { data?: unknown };
+      event.data = {
+        type: API_UPDATED_MESSAGE,
         url: 'https://api.example/api/cantabria/beaches',
         datos: beachesResponse,
       };
-      canal.dispatchEvent(evento);
+      channel.dispatchEvent(event);
     });
 
-    expect(screen.getByText(AVISO)).toBeInTheDocument();
+    expect(screen.getByText(WARNING)).toBeInTheDocument();
   });
 
   it('enseña que está actualizando mientras la petición está en vuelo', async () => {
     // La app pide sola, pero callada parecía atascada: el reloj del chip de
     // frescura se vuelve spinner mientras hay una petición DE VERDAD en vuelo,
     // y vuelve a ser reloj cuando termina — traiga algo nuevo o no.
-    const enVuelo = deferred<RouteSpec>();
-    let llamadas = 0;
+    const inFlight = deferred<RouteSpec>();
+    let calls = 0;
     installFetchMock([
-      route(FEATURED, () => (llamadas++ === 0 ? { json: conEdad(12) } : enVuelo.promise)),
+      route(FEATURED, () => (calls++ === 0 ? { json: withAge(12) } : inFlight.promise)),
       route(BEACHES, { json: beachesResponse }),
     ]);
 
@@ -181,7 +181,7 @@ describe('HomePage — respuesta servida por el service worker', () => {
     expect(await screen.findByLabelText(/actualizando/i)).toBeInTheDocument();
 
     await act(async () => {
-      enVuelo.resolve({ json: conEdad(0) });
+      inFlight.resolve({ json: withAge(0) });
     });
 
     await waitFor(() =>

@@ -1,19 +1,19 @@
 import React from 'react';
 import { IonPage, IonContent, IonFooter } from '@ionic/react';
 import { Link } from 'react-router-dom';
-import { useIdioma } from '../shared/i18n/IdiomaContext';
+import { useLanguage } from '../shared/i18n/IdiomaContext';
 import SeoHead from '../shared/seo/SeoHead';
 import BottomNavBar from '../shared/ui/BottomNavBar';
 import HeaderActions from '../shared/ui/HeaderActions';
-import LogoMarca from '../shared/ui/LogoMarca';
+import BrandLogo from '../shared/ui/LogoMarca';
 import './landings/landings.css';
 
 /**
  * Catch-all for URLs matching no route shape at all. noindex and no
  * canonical: a soft-404 must not present itself to crawlers as a page.
  */
-const NoEncontrada: React.FC = () => {
-  const { t } = useIdioma();
+const NotFound: React.FC = () => {
+  const { t } = useLanguage();
   return (
     <IonPage className="home-page">
       <SeoHead
@@ -24,7 +24,7 @@ const NoEncontrada: React.FC = () => {
       />
       <div className="home-sticky-header">
         <div className="home-sticky-marca marca-con-logo">
-          <LogoMarca />
+          <BrandLogo />
           <div className="marca-texto">
             <p className="home-sticky-title">{t('app.titulo')}</p>
           </div>
@@ -43,4 +43,4 @@ const NoEncontrada: React.FC = () => {
   );
 };
 
-export default NoEncontrada;
+export default NotFound;

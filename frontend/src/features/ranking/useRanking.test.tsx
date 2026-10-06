@@ -9,18 +9,18 @@
 import React from 'react';
 import { render, screen, waitFor, act } from '@testing-library/react';
 import { useRanking } from './useRanking';
-import { MENSAJE_API_ACTUALIZADA } from '../../hooks/useRefrescoDelServiceWorker';
+import { API_UPDATED_MESSAGE } from '../../hooks/useRefrescoDelServiceWorker';
 import { installFetchMock, restoreFetch, route } from '../../test/http/fakeFetch';
-import { RUTA_DESTACADAS as FEATURED } from '../../test/apiRoutes';
+import { FEATURED_PATH as FEATURED } from '../../test/apiRoutes';
 import type { FeaturedBeachesResponse } from '../../services/api';
 
 const URL_FEATURED = 'https://api.example/api/cantabria/beaches/featured';
 
 /** jsdom does not ship `navigator.serviceWorker`: an EventTarget is enough. */
-const canal = new EventTarget();
+const channel = new EventTarget();
 
 beforeAll(() => {
-  Object.defineProperty(navigator, 'serviceWorker', { value: canal, configurable: true });
+  Object.defineProperty(navigator, 'serviceWorker', { value: channel, configurable: true });
 });
 
 /**
@@ -29,39 +29,39 @@ beforeAll(() => {
  * whole point. Each case therefore moves the clock forward past its 60 s and
  * picks instants of its own.
  */
-let ahora = Date.now();
+let now = Date.now();
 
 beforeEach(() => {
-  ahora += 2 * 60 * 1000;
-  jest.spyOn(Date, 'now').mockImplementation(() => ahora);
+  now += 2 * 60 * 1000;
+  jest.spyOn(Date, 'now').mockImplementation(() => now);
 });
 
 afterEach(() => restoreFetch());
 
-function ranking(minutosDeEdad: number, cielo: string): FeaturedBeachesResponse {
+function ranking(ageMinutes: number, sky: string): FeaturedBeachesResponse {
   return {
-    timestamp: Date.now() - minutosDeEdad * 60 * 1000,
+    timestamp: Date.now() - ageMinutes * 60 * 1000,
     playas: [],
     revisar: [],
-    resumenTodas: [{ codigo: '1', descripcionClima: cielo }],
+    resumenTodas: [{ codigo: '1', descripcionClima: sky }],
   } as unknown as FeaturedBeachesResponse;
 }
 
-function entregarDesdeElSW(datos: unknown, url = URL_FEATURED) {
+function deliverFromSW(data: unknown, url = URL_FEATURED) {
   act(() => {
-    const evento = new Event('message') as Event & { data?: unknown };
-    evento.data = { type: MENSAJE_API_ACTUALIZADA, url, datos };
-    canal.dispatchEvent(evento);
+    const event = new Event('message') as Event & { data?: unknown };
+    event.data = { type: API_UPDATED_MESSAGE, url, datos: data };
+    channel.dispatchEvent(event);
   });
 }
 
-const Sonda: React.FC = () => {
-  const { ranking: enVigor, fromPreviousVisit: deVisitaAnterior, loading: cargando, error } = useRanking();
-  if (cargando) return <p>cargando</p>;
+const Probe: React.FC = () => {
+  const { ranking: inForce, fromPreviousVisit, loading, error } = useRanking();
+  if (loading) return <p>cargando</p>;
   return (
     <div>
-      <p>{enVigor?.resumenTodas[0]?.descripcionClima ?? 'sin ranking'}</p>
-      {deVisitaAnterior && <p>de visita anterior</p>}
+      <p>{inForce?.resumenTodas[0]?.descripcionClima ?? 'sin ranking'}</p>
+      {fromPreviousVisit && <p>de visita anterior</p>}
       {error && <p>falló</p>}
     </div>
   );
@@ -71,7 +71,7 @@ describe('useRanking', () => {
   it('pinta la primera respuesta y no avisa de nada si es de ahora', async () => {
     installFetchMock([route(FEATURED, { json: ranking(0, 'cielo claro') })]);
 
-    render(<Sonda />);
+    render(<Probe />);
 
     expect(await screen.findByText('cielo claro')).toBeInTheDocument();
     expect(screen.queryByText('de visita anterior')).not.toBeInTheDocument();
@@ -81,26 +81,26 @@ describe('useRanking', () => {
     // Un solo reintento sale solo; devuelve lo mismo, así que el aviso se queda.
     installFetchMock([route(FEATURED, { json: ranking(90, 'cielo de anoche') })]);
 
-    render(<Sonda />);
+    render(<Probe />);
 
     expect(await screen.findByText('de visita anterior')).toBeInTheDocument();
   });
 
   it('vuelve a pedir por su cuenta, y el aviso se retira al llegar lo nuevo', async () => {
-    let llamadas = 0;
+    let calls = 0;
     installFetchMock([
       route(FEATURED, () => ({
-        json: llamadas++ === 0 ? ranking(90, 'cielo de anoche') : ranking(0, 'cielo claro'),
+        json: calls++ === 0 ? ranking(90, 'cielo de anoche') : ranking(0, 'cielo claro'),
       })),
     ]);
 
-    render(<Sonda />);
+    render(<Probe />);
 
     expect(await screen.findByText('cielo claro')).toBeInTheDocument();
     await waitFor(() =>
       expect(screen.queryByText('de visita anterior')).not.toBeInTheDocument(),
     );
-    expect(llamadas).toBe(2);
+    expect(calls).toBe(2);
   });
 
   it('vuelve a pedir a los diez minutos sin avisar de nada', async () => {
@@ -109,29 +109,29 @@ describe('useRanking', () => {
     // SU respuesta, así que no hay nada que decirle al usuario. Juntarlos otra
     // vez significa o encender el aviso en un día normal, o dejar de refrescar
     // una pantalla abierta y quieta durante una hora.
-    let llamadas = 0;
+    let calls = 0;
     installFetchMock([
       route(FEATURED, () => ({
-        json: llamadas++ === 0 ? ranking(20, 'cielo de hace un rato') : ranking(0, 'cielo recién hecho'),
+        json: calls++ === 0 ? ranking(20, 'cielo de hace un rato') : ranking(0, 'cielo recién hecho'),
       })),
     ]);
 
-    render(<Sonda />);
+    render(<Probe />);
 
     // Cielos con nombre propio: el ranking en vigor no se reinicia entre casos,
     // así que reutilizar el de otro test haría pasar este sin pedir nada.
     expect(await screen.findByText('cielo recién hecho')).toBeInTheDocument();
-    expect(llamadas).toBe(2);
+    expect(calls).toBe(2);
     expect(screen.queryByText('de visita anterior')).not.toBeInTheDocument();
   });
 
   it('pinta el ranking que el service worker entrega tarde', async () => {
     installFetchMock([route(FEATURED, { json: ranking(0, 'nubes') })]);
 
-    render(<Sonda />);
+    render(<Probe />);
     await screen.findByText('nubes');
 
-    entregarDesdeElSW(ranking(0, 'cielo claro'));
+    deliverFromSW(ranking(0, 'cielo claro'));
 
     expect(await screen.findByText('cielo claro')).toBeInTheDocument();
   });
@@ -139,11 +139,11 @@ describe('useRanking', () => {
   it('ignora otros endpoints y cuerpos que no son un ranking', async () => {
     installFetchMock([route(FEATURED, { json: ranking(0, 'nubes') })]);
 
-    render(<Sonda />);
+    render(<Probe />);
     await screen.findByText('nubes');
 
-    entregarDesdeElSW(ranking(0, 'cielo claro'), 'https://api.example/api/cantabria/beaches');
-    entregarDesdeElSW({ timestamp: Date.now() });
+    deliverFromSW(ranking(0, 'cielo claro'), 'https://api.example/api/cantabria/beaches');
+    deliverFromSW({ timestamp: Date.now() });
 
     expect(screen.getByText('nubes')).toBeInTheDocument();
   });
@@ -153,7 +153,7 @@ describe('useRanking', () => {
     // exactamente lo que hace útil la app en la playa con mala cobertura.
     installFetchMock([route(FEATURED, { status: 503 })]);
 
-    render(<Sonda />);
+    render(<Probe />);
 
     expect(await screen.findByText('falló')).toBeInTheDocument();
     expect(screen.queryByText('sin ranking')).not.toBeInTheDocument();

@@ -153,7 +153,7 @@ describe('useUserLocation — coordenadas inservibles', () => {
     ['texto', ['43.4', '-4.05']],
     ['fuera de rango', [200, -4.05]],
     ['NaN', [NaN, NaN]],
-  ])('descarta la caché con %s', (_etiqueta, coords) => {
+  ])('descarta la caché con %s', (_label, coords) => {
     localStorage.setItem(CACHE_KEY, JSON.stringify({ coords, timestamp: Date.now() }));
 
     const { result } = renderHook(() => useUserLocation());

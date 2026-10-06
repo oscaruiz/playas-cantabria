@@ -1,4 +1,4 @@
-import type { PlayaDetalle, PrediccionDia } from '../../services/api';
+import type { BeachDetail, ForecastDay } from '../../services/api';
 
 /**
  * Fixtures for `GET /api/beaches/:codigo/details`.
@@ -18,7 +18,7 @@ import type { PlayaDetalle, PrediccionDia } from '../../services/api';
  * noon, which is what keeps the tides deterministic.
  */
 
-const DIAS_ES = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+const DAYS_ES = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
 
 function addDays(date: Date, days: number): Date {
   const next = new Date(date);
@@ -27,12 +27,12 @@ function addDays(date: Date, days: number): Date {
 }
 
 /** AEMET HTML scraper format: "domingo 05". */
-function aemetFecha(date: Date): string {
-  return `${DIAS_ES[date.getDay()]} ${String(date.getDate()).padStart(2, '0')}`;
+function aemetDate(date: Date): string {
+  return `${DAYS_ES[date.getDay()]} ${String(date.getDate()).padStart(2, '0')}`;
 }
 
 /** ISO of `n` whole hours after `now`, for the outlook strip. */
-function hora(now: Date, n: number): string {
+function hour(now: Date, n: number): string {
   return new Date(now.getTime() + n * 3_600_000).toISOString();
 }
 
@@ -43,9 +43,9 @@ function hhmm(minutesOfDay: number): string {
 }
 
 /** Surveillance schedule and season used by all factories. */
-export const HORARIO = '11:00 - 20:00';
-export const COBERTURA_DESDE = '15-06-2026';
-export const COBERTURA_HASTA = '15-09-2026';
+export const SCHEDULE = '11:00 - 20:00';
+export const COVERAGE_FROM = '15-06-2026';
+export const COVERAGE_TO = '15-09-2026';
 
 /**
  * Detail with a full AEMET sheet: 3 days, morning/afternoon breakdown, warnings,
@@ -61,12 +61,12 @@ export const COBERTURA_HASTA = '15-09-2026';
  *    component must trim ("Índice ultravioleta Muy alto" → "Muy alto").
  *  - `temperaturaActual` (21) < `temperaturaMaxima` (26) → the "Máx." line must appear.
  */
-export function buildAemetDetail(now: Date): PlayaDetalle {
+export function buildAemetDetail(now: Date): BeachDetail {
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
   // Previous tide 3 h behind and next one 2 h ahead: the next event is
   // `pleamar`, so the status must be "Subiendo" whatever the TZ.
-  const bajamarPasada = hhmm(Math.max(0, nowMinutes - 180));
-  const pleamarProxima = hhmm(Math.min(1439, nowMinutes + 120));
+  const pastLowTide = hhmm(Math.max(0, nowMinutes - 180));
+  const nextHighTide = hhmm(Math.min(1439, nowMinutes + 120));
 
   return {
     nombre: 'La Concha',
@@ -114,9 +114,9 @@ export function buildAemetDetail(now: Date): PlayaDetalle {
       // Next hours of the outlook, as the backend trims them: the sky opens
       // and the temperature climbs, which is what the score's chip announces.
       previsionHoras: [
-        { horaIso: hora(now, 1), nubesPct: 60, temperaturaC: 21, vientoMs: 3 },
-        { horaIso: hora(now, 2), nubesPct: 20, temperaturaC: 22, vientoMs: 3 },
-        { horaIso: hora(now, 3), nubesPct: 5, temperaturaC: 23, vientoMs: 4 },
+        { horaIso: hour(now, 1), nubesPct: 60, temperaturaC: 21, vientoMs: 3 },
+        { horaIso: hour(now, 2), nubesPct: 20, temperaturaC: 22, vientoMs: 3 },
+        { horaIso: hour(now, 3), nubesPct: 5, temperaturaC: 23, vientoMs: 4 },
       ],
       previsionHorasFuente: 'Open-Meteo',
     },
@@ -126,9 +126,9 @@ export function buildAemetDetail(now: Date): PlayaDetalle {
     fuenteBanderas: 'Cruz Roja',
     cruzRoja: {
       bandera: 'Verde',
-      coberturaDesde: COBERTURA_DESDE,
-      coberturaHasta: COBERTURA_HASTA,
-      horario: HORARIO,
+      coberturaDesde: COVERAGE_FROM,
+      coberturaHasta: COVERAGE_TO,
+      horario: SCHEDULE,
       // 30 min before `now` → fresh (<24 h).
       ultimaActualizacion: new Date(now.getTime() - 30 * 60 * 1000).toISOString(),
     },
@@ -139,7 +139,7 @@ export function buildAemetDetail(now: Date): PlayaDetalle {
       fuenteMareas: '*Puerto de Santander',
       dias: [
         {
-          fecha: aemetFecha(now),
+          fecha: aemetDate(now),
           // No morning data: forces the `single` layout.
           manana: { cielo: null, iconoCielo: null, viento: null, oleaje: null },
           tarde: {
@@ -156,7 +156,7 @@ export function buildAemetDetail(now: Date): PlayaDetalle {
           aviso: { nivel: 3, descripcion: 'aviso amarillo por oleaje' },
         },
         {
-          fecha: aemetFecha(addDays(now, 1)),
+          fecha: aemetDate(addDays(now, 1)),
           manana: {
             cielo: 'poco nuboso',
             iconoCielo: 12,
@@ -177,7 +177,7 @@ export function buildAemetDetail(now: Date): PlayaDetalle {
           aviso: null,
         },
         {
-          fecha: aemetFecha(addDays(now, 2)),
+          fecha: aemetDate(addDays(now, 2)),
           manana: {
             cielo: 'muy nuboso',
             iconoCielo: 15,
@@ -199,7 +199,7 @@ export function buildAemetDetail(now: Date): PlayaDetalle {
         },
       ],
       mareas: [
-        { pleamar: [pleamarProxima], bajamar: [bajamarPasada] },
+        { pleamar: [nextHighTide], bajamar: [pastLowTide] },
         { pleamar: ['04:12', '16:38'], bajamar: ['10:25', '22:51'] },
         { pleamar: ['05:01', '17:27'], bajamar: ['11:14', '23:40'] },
       ],
@@ -216,7 +216,7 @@ export function buildAemetDetail(now: Date): PlayaDetalle {
  * frontend type declares it required. Without `manana` the day selector
  * must not appear.
  */
-export function buildOpenWeatherDetail(now: Date): PlayaDetalle {
+export function buildOpenWeatherDetail(now: Date): BeachDetail {
   return {
     nombre: 'La Arnía',
     municipio: 'Piélagos',
@@ -256,7 +256,7 @@ export function buildOpenWeatherDetail(now: Date): PlayaDetalle {
       // The backend always sends null here; the frontend type declares it
       // required and non-nullable, hence the cast. It is exactly the contract
       // drift that F1 fixes in `domain/beach/types.ts`.
-      manana: null as unknown as PrediccionDia,
+      manana: null as unknown as ForecastDay,
     },
   };
 }
@@ -269,7 +269,7 @@ export function buildOpenWeatherDetail(now: Date): PlayaDetalle {
  * 11:00), with the capture at 19:30 Madrid time on the 27th: within that day's
  * schedule, ~11.5 h ago (< 36 h) and within the coverage season.
  */
-export function buildOutOfHoursDetail(): PlayaDetalle {
+export function buildOutOfHoursDetail(): BeachDetail {
   return {
     nombre: 'El Sardinero',
     municipio: 'Santander',
@@ -280,9 +280,9 @@ export function buildOutOfHoursDetail(): PlayaDetalle {
     fuenteBanderas: 'Cruz Roja',
     cruzRoja: {
       bandera: 'Verde',
-      coberturaDesde: COBERTURA_DESDE,
-      coberturaHasta: COBERTURA_HASTA,
-      horario: HORARIO,
+      coberturaDesde: COVERAGE_FROM,
+      coberturaHasta: COVERAGE_TO,
+      horario: SCHEDULE,
       ultimaActualizacion: '2026-07-27T17:30:00.000Z', // 19:30 in Madrid
     },
   };
@@ -292,7 +292,7 @@ export function buildOutOfHoursDetail(): PlayaDetalle {
  * Black flag safety fixture. The UI must render it as a swimming prohibition,
  * never as missing data. See `characterization/blackFlag.test.tsx`.
  */
-export function buildBlackFlagDetail(now: Date): PlayaDetalle {
+export function buildBlackFlagDetail(now: Date): BeachDetail {
   return {
     nombre: 'Langre',
     municipio: 'Ribamontán al Mar',
@@ -302,9 +302,9 @@ export function buildBlackFlagDetail(now: Date): PlayaDetalle {
     fuenteBanderas: 'Cruz Roja',
     cruzRoja: {
       bandera: 'Negra',
-      coberturaDesde: COBERTURA_DESDE,
-      coberturaHasta: COBERTURA_HASTA,
-      horario: HORARIO,
+      coberturaDesde: COVERAGE_FROM,
+      coberturaHasta: COVERAGE_TO,
+      horario: SCHEDULE,
       ultimaActualizacion: new Date(now.getTime() - 20 * 60 * 1000).toISOString(),
     },
   };

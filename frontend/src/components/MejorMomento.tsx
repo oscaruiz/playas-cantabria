@@ -1,11 +1,11 @@
 import React from 'react';
-import { VentanaDia, CausaPronostico, MotivoVentana } from '../services/api';
-import { useIdioma } from '../shared/i18n/IdiomaContext';
-import { ClaveTexto } from '../shared/i18n/es';
-import { horaLocalMadrid } from '../shared/format/tiempo';
+import { DayWindow, OutlookCause, WindowReason } from '../services/api';
+import { useLanguage } from '../shared/i18n/IdiomaContext';
+import { TextKey } from '../shared/i18n/es';
+import { madridLocalHour } from '../shared/format/tiempo';
 import './MejorMomento.css';
 
-const CAMBIO: Record<CausaPronostico, ClaveTexto> = {
+const CHANGE: Record<OutlookCause, TextKey> = {
   despeja: 'ventana.cambio.despeja',
   nubla: 'ventana.cambio.nubla',
   sube_temperatura: 'ventana.cambio.subeTemperatura',
@@ -15,7 +15,7 @@ const CAMBIO: Record<CausaPronostico, ClaveTexto> = {
   lluvia_prevista: 'ventana.cambio.lluviaPrevista',
 };
 
-const MOTIVO: Record<MotivoVentana, ClaveTexto> = {
+const REASON: Record<WindowReason, TextKey> = {
   sin_lluvia: 'ventana.motivo.sinLluvia',
   despeja: 'ventana.motivo.despeja',
   sube_temperatura: 'ventana.motivo.subeTemperatura',
@@ -34,44 +34,44 @@ const MOTIVO: Record<MotivoVentana, ClaveTexto> = {
  * the motive against the rejected hours, or that nothing worsens until the
  * window closes. The home card stays compact and does not pass it.
  */
-const MejorMomento: React.FC<{
-  timeWindow?: VentanaDia | null;
+const BestTime: React.FC<{
+  timeWindow?: DayWindow | null;
   detailed?: boolean;
-}> = ({ timeWindow: ventana, detailed: detallada = false }) => {
-  const { t } = useIdioma();
-  if (!ventana) return null;
+}> = ({ timeWindow, detailed = false }) => {
+  const { t } = useLanguage();
+  if (!timeWindow) return null;
 
   // The window travels through caches (featured: fresh + a stale hour, plus
   // 5 min in this client): check it against the CLOCK, not just render it. A
   // finished window disappears; a started one keeps only its honest half.
-  const ahora = Date.now();
-  const inicioMs = Date.parse(ventana.inicio);
-  const finMs = Date.parse(ventana.fin);
-  if (!Number.isFinite(inicioMs) || !Number.isFinite(finMs) || finMs <= ahora) return null;
-  const empezada = inicioMs <= ahora;
+  const now = Date.now();
+  const startMs = Date.parse(timeWindow.inicio);
+  const endMs = Date.parse(timeWindow.fin);
+  if (!Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= now) return null;
+  const started = startMs <= now;
 
-  const inicio = horaLocalMadrid(ventana.inicio);
-  const fin = horaLocalMadrid(ventana.fin);
-  if (!inicio || !fin) return null;
+  const start = madridLocalHour(timeWindow.inicio);
+  const end = madridLocalHour(timeWindow.fin);
+  if (!start || !end) return null;
 
-  const causa = ventana.cambio?.causa ?? null;
-  const horaCambio = horaLocalMadrid(ventana.cambio?.desde);
-  const cambio = causa && horaCambio ? t(CAMBIO[causa], { hora: horaCambio }) : null;
+  const cause = timeWindow.cambio?.causa ?? null;
+  const changeHour = madridLocalHour(timeWindow.cambio?.desde);
+  const change = cause && changeHour ? t(CHANGE[cause], { hora: changeHour }) : null;
 
-  const motivo = detallada && ventana.motivo ? t(MOTIVO[ventana.motivo]) : null;
-  const sinCambios = detallada && !motivo && !cambio ? t('ventana.sinCambios') : null;
+  const reason = detailed && timeWindow.motivo ? t(REASON[timeWindow.motivo]) : null;
+  const unchanged = detailed && !reason && !change ? t('ventana.sinCambios') : null;
 
   return (
     <div className="mejor-momento">
       <p className="mejor-momento-franja">
         <span className="mejor-momento-punto" aria-hidden="true" />
-        {empezada ? t('ventana.hastaFin', { fin }) : t('ventana.mejor', { inicio, fin })}
+        {started ? t('ventana.hastaFin', { fin: end }) : t('ventana.mejor', { inicio: start, fin: end })}
       </p>
-      {motivo && <p className="mejor-momento-motivo">{motivo}</p>}
-      {cambio && <p className="mejor-momento-cambio">{cambio}</p>}
-      {sinCambios && <p className="mejor-momento-cambio">{sinCambios}</p>}
+      {reason && <p className="mejor-momento-motivo">{reason}</p>}
+      {change && <p className="mejor-momento-cambio">{change}</p>}
+      {unchanged && <p className="mejor-momento-cambio">{unchanged}</p>}
     </div>
   );
 };
 
-export default MejorMomento;
+export default BestTime;

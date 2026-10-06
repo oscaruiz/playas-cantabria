@@ -1,11 +1,11 @@
 import { IonPage, IonContent, IonFooter, IonSpinner } from '@ionic/react';
 import React, { Suspense, useEffect, useMemo, useState } from 'react';
-import { Playa, getPlayas } from '../services/api';
+import { Beach, getBeaches } from '../services/api';
 import { useRanking } from '../features/ranking/useRanking';
-import { useIdioma } from '../shared/i18n/IdiomaContext';
+import { useLanguage } from '../shared/i18n/IdiomaContext';
 import BottomNavBar from '../shared/ui/BottomNavBar';
 import HeaderActions from '../shared/ui/HeaderActions';
-import LogoMarca from '../shared/ui/LogoMarca';
+import BrandLogo from '../shared/ui/LogoMarca';
 import SeoHead from '../shared/seo/SeoHead';
 import './MapaPage.css';
 
@@ -13,11 +13,11 @@ import './MapaPage.css';
 // it, so the whole canvas is code-split INSIDE the page — the only split
 // IonRouterOutlet tolerates (see App.tsx). Data is fetched here so the
 // requests start while the chunk downloads.
-const MapaLienzo = React.lazy(() => import('./mapa/MapaLienzo'));
+const MapCanvas = React.lazy(() => import('./mapa/MapaLienzo'));
 
-const MapaPage: React.FC = () => {
-  const [playas, setPlayas] = useState<Playa[]>([]);
-  const { t } = useIdioma();
+const MapPage: React.FC = () => {
+  const [beaches, setBeaches] = useState<Beach[]>([]);
+  const { t } = useLanguage();
 
   // The markers read the ranking in force, so they repaint with every screen
   // that paints a sky — including when the answer the service worker gave up
@@ -29,8 +29,8 @@ const MapaPage: React.FC = () => {
   );
 
   useEffect(() => {
-    const handlePlayas = (data: Playa[]) => {
-      const validas = data
+    const handleBeaches = (data: Beach[]) => {
+      const valid = data
         .filter(
           (p) =>
             typeof p.lat === 'number' &&
@@ -39,10 +39,10 @@ const MapaPage: React.FC = () => {
             p.lon !== 0
         )
         .sort((a, b) => a.lon - b.lon);
-      setPlayas(validas);
+      setBeaches(valid);
     };
 
-    getPlayas({ onBackendData: handlePlayas }).then(handlePlayas);
+    getBeaches({ onBackendData: handleBeaches }).then(handleBeaches);
   }, []);
 
   return (
@@ -63,7 +63,7 @@ const MapaPage: React.FC = () => {
           onClick={() => window.location.reload()}
           style={{ cursor: 'pointer' }}
         >
-          <LogoMarca />
+          <BrandLogo />
           <div className="marca-texto">
             <h1 className="mapa-sticky-title">{t('app.titulo')}</h1>
             <p className="mapa-sticky-subtitle">{t('mapa.subtitulo')}</p>
@@ -80,7 +80,7 @@ const MapaPage: React.FC = () => {
             </div>
           }
         >
-          <MapaLienzo beaches={playas} weatherMap={weatherMap} />
+          <MapCanvas beaches={beaches} weatherMap={weatherMap} />
         </Suspense>
       </IonContent>
       <IonFooter className="ion-no-border"><BottomNavBar /></IonFooter>
@@ -88,4 +88,4 @@ const MapaPage: React.FC = () => {
   );
 };
 
-export default MapaPage;
+export default MapPage;

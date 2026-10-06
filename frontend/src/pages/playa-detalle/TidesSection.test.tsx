@@ -1,15 +1,15 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import { IdiomaProvider } from '../../shared/i18n/IdiomaContext';
+import { LanguageProvider } from '../../shared/i18n/IdiomaContext';
 import TidesSection from './TidesSection';
 
-const MAREA = { pleamar: ['09:34', '21:57'], bajamar: ['03:25', '15:45'] };
+const TIDE = { pleamar: ['09:34', '21:57'], bajamar: ['03:25', '15:45'] };
 
-const renderSection = (referencia?: { playa: string; distanciaKm: number }) =>
+const renderSection = (reference?: { playa: string; distanciaKm: number }) =>
   render(
-    <IdiomaProvider>
-      <TidesSection tide={MAREA} tideSource={null} isToday={false} reference={referencia} />
-    </IdiomaProvider>
+    <LanguageProvider>
+      <TidesSection tide={TIDE} tideSource={null} isToday={false} reference={reference} />
+    </LanguageProvider>
   );
 
 describe('TidesSection — marea de referencia', () => {

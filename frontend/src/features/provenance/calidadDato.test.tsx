@@ -2,11 +2,11 @@ import React from 'react';
 import { screen } from '@testing-library/react';
 import { renderWithProviders } from '../../test/render';
 import { EstimatedValues, ComputedAt } from './SourceAndFreshness';
-import { observacionVigente, MAX_EDAD_OBSERVACION_MS } from './procedencia';
+import { currentObservation, MAX_OBSERVATION_AGE_MS } from './procedencia';
 import ForecastHero from '../../pages/playa-detalle/ForecastHero';
-import type { DiaPrediccionDTO, TiempoActual } from '../../services/api';
+import type { ForecastDayDTO, CurrentConditions } from '../../services/api';
 
-const DIA: DiaPrediccionDTO = {
+const DAY: ForecastDayDTO = {
   fecha: '2026-08-03',
   manana: { cielo: 'Nuboso', iconoCielo: null, viento: null, oleaje: null },
   tarde: { cielo: 'Nuboso', iconoCielo: null, viento: null, oleaje: null },
@@ -18,40 +18,40 @@ const DIA: DiaPrediccionDTO = {
   aviso: null,
 };
 
-const observacion = (hace: number): TiempoActual => ({
+const observation = (ago: number): CurrentConditions => ({
   cielo: 'Despejado',
   icono: 1,
   temperatura: 28,
   precipitacionMm: null,
   fuente: 'OpenWeather',
-  timestamp: new Date(Date.now() - hace).toISOString(),
+  timestamp: new Date(Date.now() - ago).toISOString(),
 });
 
 describe('observacionVigente', () => {
   it('accepts a reading within the window and rejects one past it', () => {
-    expect(observacionVigente(observacion(MAX_EDAD_OBSERVACION_MS - 60_000))).toBe(true);
-    expect(observacionVigente(observacion(MAX_EDAD_OBSERVACION_MS + 60_000))).toBe(false);
+    expect(currentObservation(observation(MAX_OBSERVATION_AGE_MS - 60_000))).toBe(true);
+    expect(currentObservation(observation(MAX_OBSERVATION_AGE_MS + 60_000))).toBe(false);
   });
 
   it('a reading with no timestamp cannot be vouched for, so it is not current', () => {
-    expect(observacionVigente({ ...observacion(0), timestamp: '' })).toBe(false);
-    expect(observacionVigente(null)).toBe(false);
+    expect(currentObservation({ ...observation(0), timestamp: '' })).toBe(false);
+    expect(currentObservation(null)).toBe(false);
   });
 });
 
 describe('ForecastHero — observación caducada', () => {
   it('uses the reading while it is recent', () => {
     const { container } = renderWithProviders(
-      <ForecastHero day={DIA} currentWeather={28} currentConditions={observacion(10 * 60_000)} />
+      <ForecastHero day={DAY} currentWeather={28} currentConditions={observation(10 * 60_000)} />
     );
     expect(container.querySelector('.forecast-hero-temp')).toHaveTextContent('28');
     expect(screen.getByText('Sol')).toBeInTheDocument();
   });
 
   it('withdraws it once it is too old: neither its sky nor its temperature is shown as now', () => {
-    const vieja = observacion(MAX_EDAD_OBSERVACION_MS + 60_000);
+    const old = observation(MAX_OBSERVATION_AGE_MS + 60_000);
     const { container } = renderWithProviders(
-      <ForecastHero day={DIA} currentWeather={28} currentConditions={vieja} />
+      <ForecastHero day={DAY} currentWeather={28} currentConditions={old} />
     );
     // Falls back to the forecast: 21°, "Nuboso" — not the 28° "Despejado"
     // that was observed hours ago.
@@ -88,16 +88,16 @@ describe('EstimatedValues', () => {
 
 describe('ComputedAt', () => {
   it('gives the absolute date and time the backend built the payload', () => {
-    const hace2min = new Date(Date.now() - 2 * 60_000).toISOString();
-    const { container } = renderWithProviders(<ComputedAt generatedAt={hace2min} />);
+    const twoMinAgo = new Date(Date.now() - 2 * 60_000).toISOString();
+    const { container } = renderWithProviders(<ComputedAt generatedAt={twoMinAgo} />);
     expect(container.firstChild).toHaveTextContent('Datos calculados el');
     expect(container.querySelector('time')).not.toBeNull();
     expect(container.firstChild).not.toHaveTextContent('caché');
   });
 
   it('marks the answer as cached once it is older than a recomputation would be', () => {
-    const hace40min = new Date(Date.now() - 40 * 60_000).toISOString();
-    const { container } = renderWithProviders(<ComputedAt generatedAt={hace40min} />);
+    const fortyMinAgo = new Date(Date.now() - 40 * 60_000).toISOString();
+    const { container } = renderWithProviders(<ComputedAt generatedAt={fortyMinAgo} />);
     expect(container.firstChild).toHaveTextContent('servidos desde caché');
   });
 

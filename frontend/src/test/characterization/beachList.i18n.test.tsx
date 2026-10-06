@@ -15,19 +15,19 @@
 
 import React from 'react';
 import { screen } from '@testing-library/react';
-import PlayasList from '../../pages/PlayasList';
+import BeachList from '../../pages/PlayasList';
 import { renderWithProviders } from '../render';
 import { installFetchMock, restoreFetch, route } from '../http/fakeFetch';
 import { beachesResponse } from '../fixtures/beaches';
 import { featuredResponse } from '../fixtures/featured';
-import { RUTA_DESTACADAS as FEATURED, RUTA_PLAYAS as BEACHES } from '../apiRoutes';
+import { FEATURED_PATH as FEATURED, BEACHES_PATH as BEACHES } from '../apiRoutes';
 
 
-function tarjeta(container: HTMLElement, nombre: string): HTMLElement {
+function findCard(container: HTMLElement, name: string): HTMLElement {
   const card = Array.from(container.querySelectorAll('.beach-card')).find(
-    (c) => c.querySelector('.beach-card-name')?.textContent === nombre,
+    (c) => c.querySelector('.beach-card-name')?.textContent === name,
   ) as HTMLElement | undefined;
-  if (!card) throw new Error(`No hay tarjeta para ${nombre}`);
+  if (!card) throw new Error(`No hay tarjeta para ${name}`);
   return card;
 }
 
@@ -52,22 +52,22 @@ afterEach(() => {
 
 describe('PlayasList — distancia de la tarjeta', () => {
   it('en español', async () => {
-    const { container } = renderWithProviders(<PlayasList />, { route: '/playas' });
+    const { container } = renderWithProviders(<BeachList />, { route: '/playas' });
     await screen.findByText('La Concha');
 
-    expect(tarjeta(container, 'La Concha').querySelector('.beach-card-dist')).toHaveTextContent(
+    expect(findCard(container, 'La Concha').querySelector('.beach-card-dist')).toHaveTextContent(
       '· a 50 km',
     );
   });
 
   it('en inglés usa la misma clave que el resto de la app', async () => {
-    const { container } = renderWithProviders(<PlayasList />, {
+    const { container } = renderWithProviders(<BeachList />, {
       route: '/playas',
       language: 'en',
     });
     await screen.findByText('La Concha');
 
-    expect(tarjeta(container, 'La Concha').querySelector('.beach-card-dist')).toHaveTextContent(
+    expect(findCard(container, 'La Concha').querySelector('.beach-card-dist')).toHaveTextContent(
       '· 50 km away',
     );
   });
@@ -75,25 +75,25 @@ describe('PlayasList — distancia de la tarjeta', () => {
 
 describe('PlayasList — tooltips de atributos', () => {
   it('en español', async () => {
-    const { container } = renderWithProviders(<PlayasList />, { route: '/playas' });
+    const { container } = renderWithProviders(<BeachList />, { route: '/playas' });
     await screen.findByText('La Concha');
 
     const titles = Array.from(
-      tarjeta(container, 'La Concha').querySelectorAll('.beach-attr-mini'),
+      findCard(container, 'La Concha').querySelectorAll('.beach-attr-mini'),
     ).map((el) => el.getAttribute('title'));
 
     expect(titles).toContain('Duchas');
   });
 
   it('en inglés', async () => {
-    const { container } = renderWithProviders(<PlayasList />, {
+    const { container } = renderWithProviders(<BeachList />, {
       route: '/playas',
       language: 'en',
     });
     await screen.findByText('La Concha');
 
     const titles = Array.from(
-      tarjeta(container, 'La Concha').querySelectorAll('.beach-attr-mini'),
+      findCard(container, 'La Concha').querySelectorAll('.beach-attr-mini'),
     ).map((el) => el.getAttribute('title'));
 
     expect(titles).toContain('Showers');

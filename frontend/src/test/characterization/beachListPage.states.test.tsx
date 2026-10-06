@@ -18,10 +18,10 @@
 
 import React from 'react';
 import { screen, waitFor } from '@testing-library/react';
-import PlayasList from '../../pages/PlayasList';
+import BeachList from '../../pages/PlayasList';
 import { renderWithProviders } from '../render';
 import { installFetchMock, restoreFetch, route, deferred, RouteSpec } from '../http/fakeFetch';
-import { RUTA_DESTACADAS as FEATURED, RUTA_PLAYAS as BEACHES } from '../apiRoutes';
+import { FEATURED_PATH as FEATURED, BEACHES_PATH as BEACHES } from '../apiRoutes';
 import { BEACH_COUNT_ES } from '../localCatalog';
 
 
@@ -37,7 +37,7 @@ describe('PlayasList — estados', () => {
       route(BEACHES, () => pending.promise),
     ]);
 
-    renderWithProviders(<PlayasList />, { route: '/playas' });
+    renderWithProviders(<BeachList />, { route: '/playas' });
 
     expect(screen.getByText('Cargando playas...')).toBeInTheDocument();
     expect(screen.queryByText('No se pudieron cargar las playas')).not.toBeInTheDocument();
@@ -59,7 +59,7 @@ describe('PlayasList — estados', () => {
       route(BEACHES, { networkError: true }),
     ]);
 
-    renderWithProviders(<PlayasList />, { route: '/playas' });
+    renderWithProviders(<BeachList />, { route: '/playas' });
 
     // The whole `src/data/beaches.json` file, however many beaches it holds.
     await waitFor(() => expect(screen.getByText(BEACH_COUNT_ES)).toBeInTheDocument());

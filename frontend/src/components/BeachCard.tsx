@@ -2,21 +2,21 @@ import React from 'react';
 import { IonIcon } from '@ionic/react';
 import { videocamOutline, flag } from 'ionicons/icons';
 import { Link } from 'react-router-dom';
-import { Playa, FeaturedBeach } from '../services/api';
+import { Beach, FeaturedBeach } from '../services/api';
 import {
   rankedSkyEmoji,
   getActiveAttrs,
-  vigilanciaDisponible,
-  operadorVigilancia,
-  webcamDisponible,
+  lifeguardAvailable,
+  lifeguardOperator,
+  webcamAvailable,
 } from '../utils/beachHelpers';
-import { useIdioma } from '../shared/i18n/IdiomaContext';
-import { ClaveTexto } from '../shared/i18n/es';
+import { useLanguage } from '../shared/i18n/IdiomaContext';
+import { TextKey } from '../shared/i18n/es';
 import {
-  traducirTextoApi,
-  razonLegible,
-  traducirOperador,
-  sinFragmentoDePronostico,
+  translateApiText,
+  readableReason,
+  translateOperator,
+  noForecastFragment,
 } from '../shared/i18n/apiText';
 import ScoreBadge from './ScoreBadge';
 import TrendBadge from './TrendBadge';
@@ -38,11 +38,11 @@ import { municipalityPath } from '../shared/seo/landings';
  * interactive-inside-interactive never happens.
  */
 const BeachCard: React.FC<{
-  beach: Playa;
+  beach: Beach;
   weather?: FeaturedBeach;
   distKm?: number | null;
-}> = ({ beach: playa, weather, distKm = null }) => {
-  const { t, language: idioma } = useIdioma();
+}> = ({ beach, weather, distKm = null }) => {
+  const { t, language } = useLanguage();
   const skyEmoji = weather ? rankedSkyEmoji(weather) : null;
 
   return (
@@ -56,20 +56,20 @@ const BeachCard: React.FC<{
       <div className="beach-card-info">
         <p className="beach-card-name">
           <Link
-            to={beachPath(playa)}
+            to={beachPath(beach)}
             className="beach-card-enlace"
-            aria-label={t('comun.verDetalleDe', { nombre: `${playa.nombre}, ${playa.municipio}` })}
+            aria-label={t('comun.verDetalleDe', { nombre: `${beach.nombre}, ${beach.municipio}` })}
           >
-            {playa.nombre}
+            {beach.nombre}
           </Link>
         </p>
         <p className="beach-card-municipio">
           <Link
-            to={municipalityPath(playa.municipio)}
+            to={municipalityPath(beach.municipio)}
             className="ld-enlace-municipio"
-            aria-label={t('municipio.verPlayas', { municipio: playa.municipio })}
+            aria-label={t('municipio.verPlayas', { municipio: beach.municipio })}
           >
-            {playa.municipio}
+            {beach.municipio}
           </Link>
           {distKm != null && (
             <span className="beach-card-dist">
@@ -79,7 +79,7 @@ const BeachCard: React.FC<{
           )}
         </p>
         {(() => {
-          const attrs = getActiveAttrs(playa.atributos).slice(0, 4);
+          const attrs = getActiveAttrs(beach.atributos).slice(0, 4);
           return attrs.length > 0 ? (
             <div className="beach-card-attrs">
               {attrs.map((a) => (
@@ -87,7 +87,7 @@ const BeachCard: React.FC<{
                   key={a.key}
                   className="beach-attr-mini"
                   icon={a.icon}
-                  title={t(`attr.${a.key}` as ClaveTexto)}
+                  title={t(`attr.${a.key}` as TextKey)}
                   aria-hidden="true"
                 />
               ))}
@@ -96,11 +96,11 @@ const BeachCard: React.FC<{
         })()}
         {weather?.razonRanking && (
           <p className="beach-card-reason">
-            {traducirTextoApi(
+            {translateApiText(
               weather.pronostico
-                ? sinFragmentoDePronostico(razonLegible(weather.razonRanking))
-                : razonLegible(weather.razonRanking),
-              idioma,
+                ? noForecastFragment(readableReason(weather.razonRanking))
+                : readableReason(weather.razonRanking),
+              language,
             )}
           </p>
         )}
@@ -108,18 +108,18 @@ const BeachCard: React.FC<{
       </div>
       {weather && <ScoreBadge score={weather.puntuacion} />}
       {(() => {
-        const vigilada = vigilanciaDisponible(playa);
+        const lifeguarded = lifeguardAvailable(beach);
         // Named by the beach's own operator: a region without
         // Cruz Roja must not be labelled with somebody else's badge.
-        const operador = operadorVigilancia(playa);
-        const conWebcam = webcamDisponible(playa.webcam);
-        return vigilada || conWebcam ? (
+        const operator = lifeguardOperator(beach);
+        const withWebcam = webcamAvailable(beach.webcam);
+        return lifeguarded || withWebcam ? (
           <div className="beach-card-badges">
-            {vigilada && operador && (
+            {lifeguarded && operator && (
               <span
                 className="badge-vigilada"
                 aria-label={t('lista.vigiladaAria', {
-                  operador: traducirOperador(operador, idioma),
+                  operador: translateOperator(operator, language),
                 })}
               >
                 <span className="badge-vigilada-dot" aria-hidden="true" />
@@ -127,16 +127,16 @@ const BeachCard: React.FC<{
                     and the aria-label above stay, so nothing is lost to
                     assistive tech. */}
                 <span className="badge-vigilada-texto">
-                  {traducirOperador(operador, idioma)}
+                  {translateOperator(operator, language)}
                 </span>
               </span>
             )}
-            {conWebcam && (
+            {withWebcam && (
               <span className="badge-webcam" aria-label={t('lista.webcamAria')}>
                 <IonIcon icon={videocamOutline} aria-hidden="true" />
               </span>
             )}
-            {playa.banderaAzul != null && (
+            {beach.banderaAzul != null && (
               <span className="badge-bandera-azul" aria-label={t('lista.banderaAzulAria')}>
                 <IonIcon icon={flag} aria-hidden="true" />
               </span>
@@ -144,7 +144,7 @@ const BeachCard: React.FC<{
           </div>
         ) : null;
       })()}
-      <FavoriteButton code={playa.codigo} name={playa.nombre} className="beach-card-fav" />
+      <FavoriteButton code={beach.codigo} name={beach.nombre} className="beach-card-fav" />
       <span className="beach-card-arrow" aria-hidden="true">&#8250;</span>
     </div>
   );

@@ -14,9 +14,9 @@ describe('firebase.json hosting', () => {
     ) as { hosting: Array<{ target: string; trailingSlash?: boolean }> };
 
     expect(config.hosting.length).toBeGreaterThan(0);
-    for (const sitio of config.hosting) {
-      expect({ target: sitio.target, trailingSlash: sitio.trailingSlash }).toEqual({
-        target: sitio.target,
+    for (const site of config.hosting) {
+      expect({ target: site.target, trailingSlash: site.trailingSlash }).toEqual({
+        target: site.target,
         trailingSlash: false,
       });
     }

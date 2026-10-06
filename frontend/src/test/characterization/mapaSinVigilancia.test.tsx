@@ -12,10 +12,10 @@
 
 import React from 'react';
 import { screen } from '@testing-library/react';
-import type { Playa } from '../../services/api';
+import type { Beach } from '../../services/api';
 import { renderWithProviders } from '../render';
 import { installFetchMock, restoreFetch, route } from '../http/fakeFetch';
-import { RUTA_PLAYAS as BEACHES, RUTA_DESTACADAS as FEATURED } from '../apiRoutes';
+import { BEACHES_PATH as BEACHES, FEATURED_PATH as FEATURED } from '../apiRoutes';
 import { beachesResponse } from '../fixtures/beaches';
 import { featuredResponse } from '../fixtures/featured';
 
@@ -40,7 +40,7 @@ jest.mock('react-leaflet', () => {
   };
 });
 
-const sinServicio: Playa = {
+const noService: Beach = {
   ...beachesResponse[0],
   nombre: 'Playa sin servicio',
   codigo: '9990001',
@@ -49,7 +49,7 @@ const sinServicio: Playa = {
   fuenteBanderas: null,
 };
 
-const sinReportar: Playa = {
+const unreported: Beach = {
   ...beachesResponse[0],
   nombre: 'Playa de backend viejo',
   codigo: '9990002',
@@ -68,10 +68,10 @@ afterEach(() => restoreFetch());
 it('distingue "sin servicio" de "sin información" en el popup', async () => {
   installFetchMock([
     route(FEATURED, { json: featuredResponse }),
-    route(BEACHES, { json: [sinServicio, sinReportar] }),
+    route(BEACHES, { json: [noService, unreported] }),
   ]);
-  const MapaPage = (await import('../../pages/MapaPage')).default;
-  renderWithProviders(<MapaPage />, { route: '/mapa' });
+  const MapPage = (await import('../../pages/MapaPage')).default;
+  renderWithProviders(<MapPage />, { route: '/mapa' });
   await screen.findByText('Playa sin servicio');
 
   expect(screen.getByText('Sin servicio de vigilancia')).toBeInTheDocument();

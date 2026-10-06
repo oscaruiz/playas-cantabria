@@ -13,7 +13,7 @@
 import { installFetchMock, restoreFetch, route } from '../http/fakeFetch';
 import { buildAemetDetail } from '../fixtures/beachDetail';
 import { localNoon } from '../time';
-import { RUTA_DETALLE as DETAILS } from '../apiRoutes';
+import { DETAIL_PATH as DETAILS } from '../apiRoutes';
 import { REGION_API_PATH } from '../../shared/config/region';
 
 
@@ -30,9 +30,9 @@ describe('getDetallePlaya', () => {
   it('pide /api/{region}/beaches/{codigo}/details y devuelve el cuerpo tal cual', async () => {
     const detail = buildAemetDetail(localNoon('2026-07-27'));
     const fetchMock = installFetchMock([route(DETAILS, { json: detail })]);
-    const { getDetallePlaya } = await loadApi();
+    const { getBeachDetail } = await loadApi();
 
-    const result = await getDetallePlaya('3908503');
+    const result = await getBeachDetail('3908503');
 
     expect(result).toEqual(detail);
     expect(String(fetchMock.mock.calls[0][0])).toContain(`${REGION_API_PATH}/beaches/3908503/details`);
@@ -40,27 +40,27 @@ describe('getDetallePlaya', () => {
 
   it('rechaza cuando la respuesta no es ok', async () => {
     installFetchMock([route(DETAILS, { status: 500 })]);
-    const { getDetallePlaya } = await loadApi();
+    const { getBeachDetail } = await loadApi();
 
-    await expect(getDetallePlaya('3908503')).rejects.toThrow(
+    await expect(getBeachDetail('3908503')).rejects.toThrow(
       'No se pudo cargar el detalle de la playa',
     );
   });
 
   it('rechaza cuando falla la red: no hay fallback local', async () => {
     installFetchMock([route(DETAILS, { networkError: 'offline' })]);
-    const { getDetallePlaya } = await loadApi();
+    const { getBeachDetail } = await loadApi();
 
-    await expect(getDetallePlaya('3908503')).rejects.toThrow();
+    await expect(getBeachDetail('3908503')).rejects.toThrow();
   });
 
   it('no cachea: dos llamadas seguidas hacen dos peticiones', async () => {
     const detail = buildAemetDetail(localNoon('2026-07-27'));
     const fetchMock = installFetchMock([route(DETAILS, { json: detail })]);
-    const { getDetallePlaya } = await loadApi();
+    const { getBeachDetail } = await loadApi();
 
-    await getDetallePlaya('3908503');
-    await getDetallePlaya('3908503');
+    await getBeachDetail('3908503');
+    await getBeachDetail('3908503');
 
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });

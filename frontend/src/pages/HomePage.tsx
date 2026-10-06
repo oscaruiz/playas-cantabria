@@ -3,37 +3,37 @@ import { IonPage, IonContent, IonFooter, IonSpinner, IonIcon } from '@ionic/reac
 import { locationOutline, warningOutline } from 'ionicons/icons';
 import { useHistory, Link } from 'react-router-dom';
 import {
-  Playa,
+  Beach,
   FeaturedBeach,
-  getPlayas,
+  getBeaches,
 } from '../services/api';
 import { rankedSkyEmoji, flagColorClass } from '../utils/beachHelpers';
-import { formatearHaceTiempo, horaLocalMadrid } from '../shared/format/tiempo';
+import { formatTimeAgo, madridLocalHour } from '../shared/format/tiempo';
 import { FreshnessLabel } from '../features/provenance/SourceAndFreshness';
-import { rankearPlayas, codigoMejorPuntuacionNoHero } from '../utils/beachRanking';
+import { rankBeaches, topScoreCodeNoHero } from '../utils/beachRanking';
 import { haversineKm } from '../shared/geo/haversine';
 import { useUserLocation } from '../hooks/useUserLocation';
 import { useRanking } from '../features/ranking/useRanking';
 import BottomNavBar from '../shared/ui/BottomNavBar';
 import HeaderActions from '../shared/ui/HeaderActions';
-import LogoMarca from '../shared/ui/LogoMarca';
-import { useIdioma } from '../shared/i18n/IdiomaContext';
+import BrandLogo from '../shared/ui/LogoMarca';
+import { useLanguage } from '../shared/i18n/IdiomaContext';
 import {
-  traducirTextoApi,
-  razonLegible,
-  claveBandera,
-  claveNivelVientoMs,
-  sinFragmentoDePronostico,
+  translateApiText,
+  readableReason,
+  flagKey,
+  windLevelKey,
+  noForecastFragment,
 } from '../shared/i18n/apiText';
 import ScoreBadge from '../components/ScoreBadge';
 import TrendBadge from '../components/TrendBadge';
-import MejorMomento from '../components/MejorMomento';
-import type { ClaveTexto } from '../shared/i18n/es';
+import BestTime from '../components/MejorMomento';
+import type { TextKey } from '../shared/i18n/es';
 import SafetyNotice from '../shared/ui/SafetyNotice';
 import { beachPath } from '../shared/seo/beachUrls';
 import SeoHead from '../shared/seo/SeoHead';
-import { useFavoritas } from '../modules/favorites';
-import { BotonInstalar } from '../modules/instalacion';
+import { useFavoriteCodes } from '../modules/favorites';
+import { InstallButton } from '../modules/instalacion';
 import './HomePage.css';
 
 /**
@@ -42,10 +42,10 @@ import './HomePage.css';
  * from the number shown next to it. Below 30 there is no phrase — a beach
  * that bad does not reach the hero card.
  */
-function claveFraseValoracion(puntuacion: number): ClaveTexto | null {
-  if (puntuacion >= 75) return 'home.frase.muyBien';
-  if (puntuacion >= 60) return 'home.frase.bien';
-  if (puntuacion >= 30) return 'home.frase.regular';
+function ratingPhraseKey(score: number): TextKey | null {
+  if (score >= 75) return 'home.frase.muyBien';
+  if (score >= 60) return 'home.frase.bien';
+  if (score >= 30) return 'home.frase.regular';
   return null;
 }
 
@@ -54,15 +54,15 @@ function claveFraseValoracion(puntuacion: number): ClaveTexto | null {
  * because `TrendBadge` is right underneath saying the same thing (and saying
  * it better, with the cause).
  */
-function razonSinPronostico(beach: FeaturedBeach, texto: string | null): string {
-  if (!texto) return '';
-  return beach.pronostico ? sinFragmentoDePronostico(texto) : texto;
+function noForecastReason(beach: FeaturedBeach, text: string | null): string {
+  if (!text) return '';
+  return beach.pronostico ? noForecastFragment(text) : text;
 }
 
 // ---- Helpers ----
 
-function averageTemp(playas: FeaturedBeach[]): number | null {
-  const temps = playas.filter((p) => p.temperatura != null).map((p) => p.temperatura!);
+function averageTemp(beaches: FeaturedBeach[]): number | null {
+  const temps = beaches.filter((p) => p.temperatura != null).map((p) => p.temperatura!);
   if (temps.length === 0) return null;
   return Math.round(temps.reduce((a, b) => a + b, 0) / temps.length);
 }
@@ -73,7 +73,7 @@ const NearestCard: React.FC<{
   beach: FeaturedBeach & { distKm: number };
   onClick: () => void;
 }> = ({ beach, onClick }) => {
-  const { t, language: idioma } = useIdioma();
+  const { t, language } = useLanguage();
   return (
     <div
       className="hp-nearest-card"
@@ -93,7 +93,7 @@ const NearestCard: React.FC<{
         <p className="hp-nearest-sub">{beach.municipio} &middot; {t('comun.aKm', { km: Math.round(beach.distKm) })}</p>
         {beach.razonRanking && (
           <p className="hp-nearest-reason">
-            {traducirTextoApi(razonSinPronostico(beach, razonLegible(beach.razonRanking)), idioma)}
+            {translateApiText(noForecastReason(beach, readableReason(beach.razonRanking)), language)}
           </p>
         )}
         <TrendBadge outlook={beach.pronostico} />
@@ -111,8 +111,8 @@ const HeroBody: React.FC<{
   updatedMs: number | null;
   /** A refetch is in flight right now — said here, where the age already is. */
   updating: boolean;
-}> = ({ avgTemp, totalBeaches, updatedMs: actualizadoMs, updating: actualizando }) => {
-  const { t, tPlural } = useIdioma();
+}> = ({ avgTemp, totalBeaches, updatedMs, updating }) => {
+  const { t, tPlural } = useLanguage();
   return (
     <div className="hp-hero">
       <div className="hp-hero-badges">
@@ -132,7 +132,7 @@ const HeroBody: React.FC<{
             Relative AND the Madrid clock time: "3 min ago" says whether it is
             alive, the time says which reading it is — and that is the one you
             can check against your own watch. */}
-        {actualizadoMs != null && (
+        {updatedMs != null && (
           <span className="hp-badge">
             {/* The clock becomes a spinner while a refetch is really in
                 flight. The app does go looking on its own — every ten minutes,
@@ -144,7 +144,7 @@ const HeroBody: React.FC<{
                 promised "buscando los de ahora…" with nobody looking. What it
                 does not promise is that the number will change — the backend
                 may legitimately answer with the same reading it just gave. */}
-            {actualizando ? (
+            {updating ? (
               <IonSpinner
                 name="crescent"
                 className="hp-badge-spinner"
@@ -153,13 +153,13 @@ const HeroBody: React.FC<{
             ) : (
               <span aria-hidden="true">{'\uD83D\uDD52'}</span>
             )}{' '}
-            <FreshnessLabel instant={actualizadoMs} />
+            <FreshnessLabel instant={updatedMs} />
             {' · '}
-            {horaLocalMadrid(new Date(actualizadoMs).toISOString())}
+            {madridLocalHour(new Date(updatedMs).toISOString())}
           </span>
         )}
         {/* Renders nothing unless this browser can really install the app. */}
-        <BotonInstalar className="hp-badge" />
+        <InstallButton className="hp-badge" />
       </div>
     </div>
   );
@@ -171,13 +171,13 @@ const HeroBeachCard: React.FC<{
   prioritizedByProximity?: boolean;
   onViewDetails: () => void;
   onViewOnMap: () => void;
-}> = ({ beach, distKm, prioritizedByProximity: priorizadaPorCercania, onViewDetails: onVerDetalles, onViewOnMap: onVerEnMapa }) => {
-  const { t, language: idioma } = useIdioma();
+}> = ({ beach, distKm, prioritizedByProximity, onViewDetails, onViewOnMap }) => {
+  const { t, language } = useLanguage();
   // `iconoClima` es el icono de OpenWeather ('01d'/'01n'): trae su propia
   // decisión de día o noche, que sigue al ocaso real de esas coordenadas.
   const emoji = rankedSkyEmoji(beach);
   const flagClass = beach.bandera ? flagColorClass(beach.bandera) : null;
-  const razon = razonSinPronostico(beach, razonLegible(beach.razonRanking));
+  const rationale = noForecastReason(beach, readableReason(beach.razonRanking));
 
   return (
     <article className="hp-hero-card" aria-labelledby="hp-hero-nombre">
@@ -198,31 +198,31 @@ const HeroBeachCard: React.FC<{
         </div>
       </div>
 
-      {claveFraseValoracion(beach.puntuacion) && (
+      {ratingPhraseKey(beach.puntuacion) && (
         <p className="hp-hero-frase">
-          {t(claveFraseValoracion(beach.puntuacion) as ClaveTexto, { nombre: beach.nombre })}
+          {t(ratingPhraseKey(beach.puntuacion) as TextKey, { nombre: beach.nombre })}
         </p>
       )}
 
-      <p className="hp-hero-reason">{traducirTextoApi(razon, idioma)}</p>
+      <p className="hp-hero-reason">{translateApiText(rationale, language)}</p>
 
       {/* CUÁNDO ir, no solo si está bien: la mejor franja del resto del día. */}
-      <MejorMomento timeWindow={beach.ventanaDia} />
+      <BestTime timeWindow={beach.ventanaDia} />
 
       {/* Lo más accionable de la portada: si la mejor playa de hoy va a peor
           dentro de dos horas, hay que decirlo aquí y no en el detalle. */}
       <TrendBadge outlook={beach.pronostico} />
 
-      {priorizadaPorCercania && (
+      {prioritizedByProximity && (
         <p className="hp-hero-caveat hp-hero-caveat--info">
           <IonIcon icon={locationOutline} aria-hidden="true" /> {t('home.notaCercania')}
         </p>
       )}
 
-      {beach.motivoBaja && razonSinPronostico(beach, beach.motivoBaja) && (
+      {beach.motivoBaja && noForecastReason(beach, beach.motivoBaja) && (
         <p className="hp-hero-caveat">
           <IonIcon icon={warningOutline} aria-hidden="true" />{' '}
-          {traducirTextoApi(razonSinPronostico(beach, beach.motivoBaja), idioma)}
+          {translateApiText(noForecastReason(beach, beach.motivoBaja), language)}
         </p>
       )}
 
@@ -230,11 +230,11 @@ const HeroBeachCard: React.FC<{
         {flagClass && flagClass !== 'unknown' && (
           <span className="hp-hero-meta-item">
             <span className={`hp-flag-dot hp-flag-${flagClass}`} aria-hidden="true" />
-            {t(claveBandera(beach.bandera ?? undefined))}
+            {t(flagKey(beach.bandera ?? undefined))}
           </span>
         )}
         {beach.vientoMs != null && (
-          <span className="hp-hero-meta-item">{t(claveNivelVientoMs(beach.vientoMs))}</span>
+          <span className="hp-hero-meta-item">{t(windLevelKey(beach.vientoMs))}</span>
         )}
         {distKm != null && (
           <span className="hp-hero-meta-item">{t('comun.aKm', { km: Math.round(distKm) })}</span>
@@ -244,14 +244,14 @@ const HeroBeachCard: React.FC<{
       <div className="hp-hero-actions">
         <button
           className="hp-hero-btn hp-hero-btn--primary"
-          onClick={onVerDetalles}
+          onClick={onViewDetails}
           aria-label={t('comun.verDetalleDe', { nombre: beach.nombre })}
         >
           {t('home.verDetalles')}
         </button>
         <button
           className="hp-hero-btn hp-hero-btn--secondary"
-          onClick={onVerEnMapa}
+          onClick={onViewOnMap}
           aria-label={t('home.verEnMapaDe', { nombre: beach.nombre })}
         >
           {t('home.verEnMapa')}
@@ -266,13 +266,13 @@ const AlternativeRow: React.FC<{
   distKm: number | null;
   isTopScore?: boolean;
   onClick: () => void;
-}> = ({ beach, distKm, isTopScore: esMejorPuntuacion, onClick }) => {
-  const { t, language: idioma } = useIdioma();
+}> = ({ beach, distKm, isTopScore, onClick }) => {
+  const { t, language } = useLanguage();
   // `iconoClima` es el icono de OpenWeather ('01d'/'01n'): trae su propia
   // decisión de día o noche, que sigue al ocaso real de esas coordenadas.
   const emoji = rankedSkyEmoji(beach);
   const flagClass = beach.bandera ? flagColorClass(beach.bandera) : null;
-  const razon = razonSinPronostico(beach, razonLegible(beach.razonRanking));
+  const rationale = noForecastReason(beach, readableReason(beach.razonRanking));
 
   return (
     <div
@@ -282,7 +282,7 @@ const AlternativeRow: React.FC<{
       tabIndex={0}
       aria-label={
         t('comun.verDetalleDe', { nombre: beach.nombre }) +
-        (esMejorPuntuacion ? `. ${t('home.mejorPuntuacion')}` : '')
+        (isTopScore ? `. ${t('home.mejorPuntuacion')}` : '')
       }
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -301,15 +301,15 @@ const AlternativeRow: React.FC<{
         <p className="hp-alt-name">{beach.nombre}</p>
         <p className="hp-alt-municipio">{beach.municipio}</p>
         <div className="hp-alt-meta">
-          {esMejorPuntuacion && (
+          {isTopScore && (
             <span className="hp-alt-chip-mejor">
               <span aria-hidden="true">{'⭐'}</span> {t('home.mejorPuntuacion')}
             </span>
           )}
           {flagClass && flagClass !== 'unknown' && (
-            <span className={`hp-flag-dot hp-flag-${flagClass}`} aria-label={t('home.banderaAria', { bandera: traducirTextoApi(beach.bandera, idioma) })} />
+            <span className={`hp-flag-dot hp-flag-${flagClass}`} aria-label={t('home.banderaAria', { bandera: translateApiText(beach.bandera, language) })} />
           )}
-          <span className="hp-alt-reason">{traducirTextoApi(razon, idioma)}</span>
+          <span className="hp-alt-reason">{translateApiText(rationale, language)}</span>
           {distKm != null && (
             <span className="hp-alt-dist">{t('comun.aKm', { km: Math.round(distKm) })}</span>
           )}
@@ -328,7 +328,7 @@ const CautionCard: React.FC<{
   beach: FeaturedBeach;
   onClick: () => void;
 }> = ({ beach, onClick }) => {
-  const { t, language: idioma } = useIdioma();
+  const { t, language } = useLanguage();
   return (
     <div
       className="hp-caution-card"
@@ -347,7 +347,7 @@ const CautionCard: React.FC<{
         <p className="hp-caution-name">{beach.nombre}</p>
         <p className="hp-caution-sub">
           {beach.municipio} &middot;{' '}
-          {traducirTextoApi(razonSinPronostico(beach, razonLegible(beach.razonRanking)), idioma)}
+          {translateApiText(noForecastReason(beach, readableReason(beach.razonRanking)), language)}
         </p>
         {/* Aquí importa el sentido contrario: una playa ya floja que además va
             a peor no es lo mismo que una que simplemente está floja. */}
@@ -363,24 +363,24 @@ const CautionCard: React.FC<{
 const HomePage: React.FC = () => {
   const {
     ranking: featured,
-    updatedMs: actualizadoMs,
-    fromPreviousVisit: deVisitaAnterior,
+    updatedMs,
+    fromPreviousVisit,
     loading: featuredLoading,
     error: featuredError,
-    retrying: reintentando,
-    retry: reintentar,
+    retrying,
+    retry,
   } = useRanking();
-  const [allPlayas, setAllPlayas] = useState<Playa[] | null>(null);
+  const [allBeaches, setAllBeaches] = useState<Beach[] | null>(null);
   const { userLocation, locationLoading, locationDenied, locationBlocked, retryLocation } = useUserLocation();
   const history = useHistory();
-  const { t } = useIdioma();
+  const { t } = useLanguage();
 
   useEffect(() => {
     let mounted = true;
 
-    getPlayas({ onBackendData: (data) => { if (mounted) setAllPlayas(data); } })
+    getBeaches({ onBackendData: (data) => { if (mounted) setAllBeaches(data); } })
       .then((data) => {
-        if (mounted) setAllPlayas(data);
+        if (mounted) setAllBeaches(data);
       });
 
     return () => { mounted = false; };
@@ -393,13 +393,13 @@ const HomePage: React.FC = () => {
   const sortedFeatured = useMemo(() => {
     if (!featured) return [];
     const pool = featured.resumenTodas.filter((b) => b.puntuacion >= 60);
-    return rankearPlayas(pool, userLocation);
+    return rankBeaches(pool, userLocation);
   }, [featured, userLocation]);
 
   // Displayed alternative with a higher raw score than the hero (if any):
   // enables the "prioritized by proximity" note and the "best score" chip
-  const codigoMejorPuntuacion = useMemo(
-    () => (userLocation ? codigoMejorPuntuacionNoHero(sortedFeatured) : null),
+  const topScoreCode = useMemo(
+    () => (userLocation ? topScoreCodeNoHero(sortedFeatured) : null),
     [sortedFeatured, userLocation]
   );
 
@@ -425,25 +425,25 @@ const HomePage: React.FC = () => {
   }, [featured, userLocation]);
 
   // The best-ranked beach presides over the page; the rest are alternatives
-  const mejorPlaya = sortedFeatured.length > 0 ? sortedFeatured[0] : null;
-  const alternativas = sortedFeatured.slice(1, 5);
+  const bestBeach = sortedFeatured.length > 0 ? sortedFeatured[0] : null;
+  const alternatives = sortedFeatured.slice(1, 5);
 
   // Favorites go at the very top, but as THEIR OWN section: they never
   // displace "the best beach today", which must remain the honestly ranked
   // one. Conditions are joined from resumenTodas when the ranking loaded;
   // without it the row still shows name and municipality from the catalog.
-  const { favorites: favoritas } = useFavoritas();
-  const favoritasEnHome = useMemo(() => {
-    if (!allPlayas || favoritas.size === 0) return [];
-    const porCodigo = new Map((featured?.resumenTodas ?? []).map((b) => [b.codigo, b]));
-    return allPlayas
-      .filter((p) => favoritas.has(p.codigo))
+  const { favorites } = useFavoriteCodes();
+  const favoritesOnHome = useMemo(() => {
+    if (!allBeaches || favorites.size === 0) return [];
+    const byCode = new Map((featured?.resumenTodas ?? []).map((b) => [b.codigo, b]));
+    return allBeaches
+      .filter((p) => favorites.has(p.codigo))
       .sort((a, b) => a.nombre.localeCompare(b.nombre))
-      .map((p) => ({ playa: p, condiciones: porCodigo.get(p.codigo) ?? null }));
-  }, [allPlayas, favoritas, featured]);
+      .map((p) => ({ playa: p, condiciones: byCode.get(p.codigo) ?? null }));
+  }, [allBeaches, favorites, featured]);
 
   const avgTemp = featured ? averageTemp(featured.playas) : null;
-  const totalBeaches = allPlayas?.length ?? 0;
+  const totalBeaches = allBeaches?.length ?? 0;
   return (
     <IonPage className="hp-page">
       <SeoHead
@@ -462,7 +462,7 @@ const HomePage: React.FC = () => {
           onClick={() => window.location.reload()}
           style={{ cursor: 'pointer' }}
         >
-          <LogoMarca />
+          <BrandLogo />
           <div className="marca-texto">
             <h1 className="hp-sticky-title">{t('app.titulo')}</h1>
             <p className="hp-sticky-subtitle">{t('home.subtitulo')}</p>
@@ -475,8 +475,8 @@ const HomePage: React.FC = () => {
         <HeroBody
           avgTemp={avgTemp}
           totalBeaches={totalBeaches}
-          updatedMs={actualizadoMs}
-          updating={reintentando}
+          updatedMs={updatedMs}
+          updating={retrying}
         />
 
         <div className="hp-body">
@@ -490,39 +490,39 @@ const HomePage: React.FC = () => {
               pressing a button that had never had anything to give. What can
               retire this is a real answer, and the app already asks for one on
               its own. */}
-          {deVisitaAnterior && (
+          {fromPreviousVisit && (
             <p className="hp-aviso-cache" role="status">
               {t('home.datosDeCache')}
               {' · '}
-              {formatearHaceTiempo(actualizadoMs as number, t)}
+              {formatTimeAgo(updatedMs as number, t)}
             </p>
           )}
 
           {/* Favorites first — independent of the featured ranking's fate
               (they still show if it fails), but not of its timing: painted
               alone above the spinner they looked like the whole page. */}
-          {!featuredLoading && favoritasEnHome.length > 0 && (
+          {!featuredLoading && favoritesOnHome.length > 0 && (
             <section className="hp-section hp-section--favoritas">
               <h2 className="section-kicker">{t('home.favoritas')}</h2>
               <div className="hp-alt-list">
-                {favoritasEnHome.map(({ playa, condiciones }) =>
-                  condiciones ? (
+                {favoritesOnHome.map(({ playa: beach, condiciones: conditions }) =>
+                  conditions ? (
                     <AlternativeRow
-                      key={playa.codigo}
-                      beach={condiciones}
-                      distKm={distanceMap.get(playa.codigo) ?? null}
-                      onClick={() => history.push(beachPath(playa))}
+                      key={beach.codigo}
+                      beach={conditions}
+                      distKm={distanceMap.get(beach.codigo) ?? null}
+                      onClick={() => history.push(beachPath(beach))}
                     />
                   ) : (
                     <Link
-                      key={playa.codigo}
-                      to={beachPath(playa)}
+                      key={beach.codigo}
+                      to={beachPath(beach)}
                       className="hp-alt-row"
-                      aria-label={t('comun.verDetalleDe', { nombre: playa.nombre })}
+                      aria-label={t('comun.verDetalleDe', { nombre: beach.nombre })}
                     >
                       <div className="hp-alt-body">
-                        <p className="hp-alt-name">{playa.nombre}</p>
-                        <p className="hp-alt-municipio">{playa.municipio}</p>
+                        <p className="hp-alt-name">{beach.nombre}</p>
+                        <p className="hp-alt-municipio">{beach.municipio}</p>
                       </div>
                     </Link>
                   )
@@ -567,16 +567,16 @@ const HomePage: React.FC = () => {
           )}
 
           {/* Best beach + alternatives */}
-          {!featuredLoading && !featuredError && mejorPlaya && (
+          {!featuredLoading && !featuredError && bestBeach && (
             <div className="hp-main-grid">
               <section className="hp-section hp-section--hero">
                 <h2 className="section-kicker">{t(userLocation ? 'home.mejorParaTi' : 'home.mejorHoy')}</h2>
                 <HeroBeachCard
-                  beach={mejorPlaya}
-                  distKm={distanceMap.get(mejorPlaya.codigo) ?? null}
-                  prioritizedByProximity={codigoMejorPuntuacion != null}
-                  onViewDetails={() => history.push(beachPath(mejorPlaya))}
-                  onViewOnMap={() => history.push(`/mapa?lat=${mejorPlaya.lat}&lon=${mejorPlaya.lon}&codigo=${mejorPlaya.codigo}`)}
+                  beach={bestBeach}
+                  distKm={distanceMap.get(bestBeach.codigo) ?? null}
+                  prioritizedByProximity={topScoreCode != null}
+                  onViewDetails={() => history.push(beachPath(bestBeach))}
+                  onViewOnMap={() => history.push(`/mapa?lat=${bestBeach.lat}&lon=${bestBeach.lon}&codigo=${bestBeach.codigo}`)}
                 />
                 {/* Colgado de la recomendación, no en una fila propia del
                     grid: ahí abría una banda vacía de ~70 px (margen de
@@ -587,16 +587,16 @@ const HomePage: React.FC = () => {
                 <SafetyNotice kind="ranking" />
               </section>
 
-              {alternativas.length > 0 && (
+              {alternatives.length > 0 && (
                 <section className="hp-section hp-section--alts">
                   <h2 className="section-kicker">{t('home.alternativas')}</h2>
                   <div className="hp-alt-list">
-                    {alternativas.map((beach) => (
+                    {alternatives.map((beach) => (
                       <AlternativeRow
                         key={beach.codigo}
                         beach={beach}
                         distKm={distanceMap.get(beach.codigo) ?? null}
-                        isTopScore={beach.codigo === codigoMejorPuntuacion}
+                        isTopScore={beach.codigo === topScoreCode}
                         onClick={() => history.push(beachPath(beach))}
                       />
                     ))}
@@ -607,7 +607,7 @@ const HomePage: React.FC = () => {
           )}
 
           {/* Featured empty */}
-          {!featuredLoading && !featuredError && featured && !mejorPlaya && (
+          {!featuredLoading && !featuredError && featured && !bestBeach && (
             <section className="hp-section">
               <h2 className="section-kicker">{t('home.mejorHoy')}</h2>
               <div className="hp-empty-msg">
@@ -628,10 +628,10 @@ const HomePage: React.FC = () => {
                     only greys out looks like a button that did nothing. */}
                 <button
                   className="hp-retry-btn"
-                  onClick={reintentar}
-                  disabled={reintentando}
+                  onClick={retry}
+                  disabled={retrying}
                 >
-                  {reintentando ? (
+                  {retrying ? (
                     <>
                       <IonSpinner name="crescent" className="hp-retry-spinner" />
                       {t('home.buscando')}

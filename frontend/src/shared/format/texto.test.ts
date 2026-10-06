@@ -1,27 +1,27 @@
-import { capitalizar, limpiarTexto } from './texto';
+import { capitalize, cleanText } from './texto';
 
 describe('capitalizar', () => {
   it('sube la primera letra y deja el resto intacto', () => {
-    expect(capitalizar('despejado')).toBe('Despejado');
-    expect(capitalizar('mar de fondo')).toBe('Mar de fondo');
+    expect(capitalize('despejado')).toBe('Despejado');
+    expect(capitalize('mar de fondo')).toBe('Mar de fondo');
   });
 
   it('cadena vacía para lo que no es texto', () => {
-    expect(capitalizar('')).toBe('');
-    expect(capitalizar(null)).toBe('');
-    expect(capitalizar(undefined)).toBe('');
+    expect(capitalize('')).toBe('');
+    expect(capitalize(null)).toBe('');
+    expect(capitalize(undefined)).toBe('');
   });
 });
 
 describe('limpiarTexto', () => {
   it('sustituye el carácter de reemplazo que deja el mojibake', () => {
-    expect(limpiarTexto('caf\uFFFD')).toBe('cafe');
-    expect(limpiarTexto('d\uFFFDbil, mar\uFFFDjada')).toBe('debil, marejada');
+    expect(cleanText('caf\uFFFD')).toBe('cafe');
+    expect(cleanText('d\uFFFDbil, mar\uFFFDjada')).toBe('debil, marejada');
   });
 
   it('deja intacto el texto correcto y devuelve "" sin dato', () => {
-    expect(limpiarTexto('Marejadilla')).toBe('Marejadilla');
-    expect(limpiarTexto(null)).toBe('');
-    expect(limpiarTexto(undefined)).toBe('');
+    expect(cleanText('Marejadilla')).toBe('Marejadilla');
+    expect(cleanText(null)).toBe('');
+    expect(cleanText(undefined)).toBe('');
   });
 });

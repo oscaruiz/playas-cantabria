@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { IonIcon } from '@ionic/react';
 import { shareSocialOutline } from 'ionicons/icons';
-import type { FeaturedBeach, PrevisionHora } from '../../../services/api';
-import { useIdioma } from '../../../shared/i18n/IdiomaContext';
+import type { FeaturedBeach, HourlyForecast } from '../../../services/api';
+import { useLanguage } from '../../../shared/i18n/IdiomaContext';
 import { REGION } from '../../../shared/config/region';
-import { resumenTarjeta } from '../domain/resumenTarjeta';
-import { tarjetaComoPng } from '../infrastructure/tarjetaCanvas';
-import { compartirPlaya, nombreArchivoTarjeta } from '../infrastructure/compartirImagen';
+import { cardSummary } from '../domain/resumenTarjeta';
+import { cardAsPng } from '../infrastructure/tarjetaCanvas';
+import { shareBeach, cardFileName } from '../infrastructure/compartirImagen';
 
-type Estado = 'listo' | 'generando' | 'copiado';
+type Status = 'listo' | 'generando' | 'copiado';
 
 /**
  * Shares the beach: today's reading as an image, with the canonical link in
@@ -20,40 +20,40 @@ type Estado = 'listo' | 'generando' | 'copiado';
  * without it the image would say nothing the link does not say better. Then
  * this behaves exactly as it did before the card existed.
  */
-const BotonCompartir: React.FC<{
+const ShareButton: React.FC<{
   beach: { nombre: string; municipio: string };
   scored: FeaturedBeach | null;
   url: string;
   forecast?: { wind?: string | null; waves?: string | null };
-  hours?: PrevisionHora[] | null;
+  hours?: HourlyForecast[] | null;
   tides?: { pleamar: string[]; bajamar: string[] } | null;
   tidePort?: string | null;
-}> = ({ beach: playa, scored: puntuada, url, forecast: prevision, hours: horas, tides: mareas, tidePort: puertoMareas }) => {
-  const { t, language: idioma } = useIdioma();
-  const [estado, setEstado] = useState<Estado>('listo');
+}> = ({ beach, scored, url, forecast, hours, tides, tidePort }) => {
+  const { t, language } = useLanguage();
+  const [status, setStatus] = useState<Status>('listo');
 
-  const alPulsar = async () => {
-    if (estado === 'generando') return;
-    const ahora = new Date();
-    const titulo = t('seo.tituloDetalle', { nombre: playa.nombre });
+  const onPress = async () => {
+    if (status === 'generando') return;
+    const now = new Date();
+    const title = t('seo.tituloDetalle', { nombre: beach.nombre });
 
-    let imagen: Blob | null = null;
-    if (puntuada) {
-      setEstado('generando');
+    let image: Blob | null = null;
+    if (scored) {
+      setStatus('generando');
       try {
-        imagen = await tarjetaComoPng(
-          resumenTarjeta({
-            beach: playa,
-            scored: puntuada,
+        image = await cardAsPng(
+          cardSummary({
+            beach,
+            scored,
             brand: REGION.branding.appName,
             site: new URL(url).host,
-            forecast: prevision,
-            hours: horas,
-            tides: mareas,
-            tidePort: puertoMareas,
-            now: ahora,
+            forecast,
+            hours,
+            tides,
+            tidePort,
+            now,
             t,
-            language: idioma,
+            language,
           }),
         );
       } catch {
@@ -63,35 +63,35 @@ const BotonCompartir: React.FC<{
     }
 
     try {
-      const resultado = await compartirPlaya({
-        image: imagen,
-        fileName: nombreArchivoTarjeta(playa.nombre, ahora),
-        title: titulo,
+      const result = await shareBeach({
+        image,
+        fileName: cardFileName(beach.nombre, now),
+        title,
         url,
       });
       // Only the clipboard needs saying: the share sheet showed itself, and a
       // dismissed sheet was a decision, not a failure.
-      if (resultado === 'enlaceCopiado') {
-        setEstado('copiado');
-        setTimeout(() => setEstado('listo'), 2000);
+      if (result === 'enlaceCopiado') {
+        setStatus('copiado');
+        setTimeout(() => setStatus('listo'), 2000);
         return;
       }
     } catch {
       // The clipboard was denied: nothing to report and nothing to undo.
     }
-    setEstado('listo');
+    setStatus('listo');
   };
 
   return (
-    <button className="hero-directions-link" onClick={alPulsar} aria-live="polite">
+    <button className="hero-directions-link" onClick={onPress} aria-live="polite">
       <IonIcon icon={shareSocialOutline} aria-hidden="true" />{' '}
-      {estado === 'generando'
+      {status === 'generando'
         ? t('detalle.generandoImagen')
-        : estado === 'copiado'
+        : status === 'copiado'
           ? t('detalle.enlaceCopiado')
           : t('detalle.compartir')}
     </button>
   );
 };
 
-export default BotonCompartir;
+export default ShareButton;

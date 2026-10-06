@@ -1,18 +1,18 @@
 import React from 'react';
 import { IonIcon } from '@ionic/react';
 import { informationCircleOutline } from 'ionicons/icons';
-import { useIdioma } from '../i18n/IdiomaContext';
+import { useLanguage } from '../i18n/IdiomaContext';
 import './SafetyNotice.css';
 
 const SafetyNotice: React.FC<{ kind: 'banderas' | 'ranking'; onDark?: boolean }> = ({
-  kind: tipo,
-  onDark: sobreOscuro = false,
+  kind,
+  onDark = false,
 }) => {
-  const { t } = useIdioma();
+  const { t } = useLanguage();
   return (
-    <p className={`safety-notice${sobreOscuro ? ' safety-notice--dark' : ''}`} role="note">
+    <p className={`safety-notice${onDark ? ' safety-notice--dark' : ''}`} role="note">
       <IonIcon icon={informationCircleOutline} aria-hidden="true" />
-      <span>{t(tipo === 'banderas' ? 'aviso.banderas' : 'aviso.ranking')}</span>
+      <span>{t(kind === 'banderas' ? 'aviso.banderas' : 'aviso.ranking')}</span>
     </p>
   );
 };

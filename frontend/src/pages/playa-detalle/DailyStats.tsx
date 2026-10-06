@@ -1,13 +1,13 @@
 import React from 'react';
-import { DiaPrediccionDTO } from '../../services/api';
-import { capitalizar } from '../../shared/format/texto';
-import { useIdioma } from '../../shared/i18n/IdiomaContext';
-import { traducirTextoApi } from '../../shared/i18n/apiText';
+import { ForecastDayDTO } from '../../services/api';
+import { capitalize } from '../../shared/format/texto';
+import { useLanguage } from '../../shared/i18n/IdiomaContext';
+import { translateApiText } from '../../shared/i18n/apiText';
 
-function avisoLevelClass(nivel: number | null): string {
-  if (nivel === 1) return 'aviso-red';
-  if (nivel === 2) return 'aviso-orange';
-  if (nivel === 3) return 'aviso-yellow';
+function avisoLevelClass(level: number | null): string {
+  if (level === 1) return 'aviso-red';
+  if (level === 2) return 'aviso-orange';
+  if (level === 3) return 'aviso-yellow';
   return 'aviso-green';
 }
 
@@ -19,36 +19,36 @@ function uvColorClass(uv: number): string {
 }
 
 /** Thermal sensation, UV badge and coastal warning for the selected day. */
-const DailyStats: React.FC<{ day: DiaPrediccionDTO; embedded?: boolean }> = ({ day: dia, embedded }) => {
-  const { t, language: idioma } = useIdioma();
-  const hasAny = dia.sensacionTermica || dia.indiceUV != null || (dia.aviso && dia.aviso.descripcion);
+const DailyStats: React.FC<{ day: ForecastDayDTO; embedded?: boolean }> = ({ day, embedded }) => {
+  const { t, language } = useLanguage();
+  const hasAny = day.sensacionTermica || day.indiceUV != null || (day.aviso && day.aviso.descripcion);
   if (!hasAny) return null;
 
   // `embedded`: rendered inside the "Previsión meteorológica AEMET" card,
   // so it omits its own `.detail-card` wrapper (avoids a card inside a card).
   const body = (
     <div className={`daily-stats-body${embedded ? ' daily-stats-embedded' : ''}`}>
-        {dia.sensacionTermica && (
+        {day.sensacionTermica && (
           <div className="daily-stat-row">
             <span className="daily-stat-label">{t('detalle.sensacionTermica')}</span>
-            <span className="daily-stat-value">{traducirTextoApi(capitalizar(dia.sensacionTermica), idioma)}</span>
+            <span className="daily-stat-value">{translateApiText(capitalize(day.sensacionTermica), language)}</span>
           </div>
         )}
-        {dia.indiceUV != null && (
+        {day.indiceUV != null && (
           <div className="daily-stat-row">
             <span className="daily-stat-label">{t('detalle.indiceUV')}</span>
-            <span className={`daily-stat-value uv-value ${uvColorClass(dia.indiceUV)}`}>
+            <span className={`daily-stat-value uv-value ${uvColorClass(day.indiceUV)}`}>
               <span className="uv-swatch" aria-hidden="true" />
-              {Math.round(dia.indiceUV)}
-              {dia.nivelUV && ` \u2014 ${traducirTextoApi(dia.nivelUV.replace(/^índice ultravioleta\s*/i, ''), idioma)}`}
+              {Math.round(day.indiceUV)}
+              {day.nivelUV && ` \u2014 ${translateApiText(day.nivelUV.replace(/^índice ultravioleta\s*/i, ''), language)}`}
             </span>
           </div>
         )}
-        {dia.aviso && dia.aviso.descripcion && (
+        {day.aviso && day.aviso.descripcion && (
           <div className="daily-stat-row">
             <span className="daily-stat-label">{t('detalle.avisoLitoral')}</span>
-            <span className={`daily-stat-value ${avisoLevelClass(dia.aviso.nivel)}`}>
-              {traducirTextoApi(capitalizar(dia.aviso.descripcion), idioma)}
+            <span className={`daily-stat-value ${avisoLevelClass(day.aviso.nivel)}`}>
+              {translateApiText(capitalize(day.aviso.descripcion), language)}
             </span>
           </div>
         )}

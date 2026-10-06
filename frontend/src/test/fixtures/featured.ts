@@ -171,7 +171,7 @@ export const featuredLangre: FeaturedBeach = {
   motivoBaja: 'lluvia y bandera roja',
 };
 
-export const resumenTodas: FeaturedBeach[] = [
+export const allSummary: FeaturedBeach[] = [
   featuredLaConcha,
   featuredElSardinero,
   featuredLaArnia,
@@ -193,7 +193,7 @@ export const resumenTodas: FeaturedBeach[] = [
  * scores 70 at 0 km (70 adjusted), so `Cercana` presides even though `Lejana`
  * has more points.
  */
-export const proximityCercana: FeaturedBeach = {
+export const proximityNear: FeaturedBeach = {
   ...base,
   nombre: 'Cercana',
   municipio: 'Laredo',
@@ -207,7 +207,7 @@ export const proximityCercana: FeaturedBeach = {
   razonRanking: 'cielo despejado, viento flojo',
 };
 
-export const proximityLejana: FeaturedBeach = {
+export const proximityFar: FeaturedBeach = {
   ...base,
   nombre: 'Lejana',
   municipio: 'Muy Lejos',
@@ -223,16 +223,16 @@ export const proximityLejana: FeaturedBeach = {
 
 export const featuredProximityResponse: FeaturedBeachesResponse = {
   timestamp: Date.parse('2026-07-27T10:00:00.000Z'),
-  playas: [proximityCercana, proximityLejana],
+  playas: [proximityNear, proximityFar],
   revisar: [],
-  resumenTodas: [proximityCercana, proximityLejana],
+  resumenTodas: [proximityNear, proximityFar],
 };
 
 export const featuredResponse: FeaturedBeachesResponse = {
   timestamp: Date.parse('2026-07-27T10:00:00.000Z'),
   playas: [featuredLaConcha, featuredElSardinero, featuredLaArnia],
   revisar: [featuredBerria, featuredLangre],
-  resumenTodas,
+  resumenTodas: allSummary,
   // Scale of each factor, sent once for the whole response.
   maximos: { cielo: 25, temperatura: 25, bandera: 10, viento: 25, oleaje: 10, datos: 5 },
 };

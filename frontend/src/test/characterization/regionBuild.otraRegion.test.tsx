@@ -12,7 +12,7 @@ import { installFetchMock, restoreFetch, route } from '../http/fakeFetch';
 import { beachesResponse } from '../fixtures/beaches';
 import { featuredResponse } from '../fixtures/featured';
 
-const OTRA_REGION = {
+const OTHER_REGION = {
   id: 'asturias',
   name: 'Asturias',
   branding: {
@@ -41,8 +41,8 @@ jest.mock('../../shared/config/region', () => ({
   REGION_API_PATH: '/api/asturias',
 }));
 
-const mockCentroMapa: Array<[number, number]> = [];
-const mockZoomMapa: number[] = [];
+const mockMapCenter: Array<[number, number]> = [];
+const mockMapZoom: number[] = [];
 
 jest.mock('react-leaflet', () => {
   const ReactMock = jest.requireActual<typeof import('react')>('react');
@@ -57,8 +57,8 @@ jest.mock('react-leaflet', () => {
             ref({ flyTo: jest.fn(), closePopup: jest.fn(), invalidateSize: jest.fn() });
           }
         });
-        mockCentroMapa.push(center);
-        mockZoomMapa.push(zoom);
+        mockMapCenter.push(center);
+        mockMapZoom.push(zoom);
         return ReactMock.createElement('div', null, children);
       },
     ),
@@ -68,13 +68,13 @@ jest.mock('react-leaflet', () => {
   };
 });
 
-const DESTACADAS = '/api/asturias/beaches/featured';
-const PLAYAS = /\/api\/asturias\/beaches$/;
+const FEATURED_LIST = '/api/asturias/beaches/featured';
+const BEACHES = /\/api\/asturias\/beaches$/;
 
 function mockApi() {
   return installFetchMock([
-    route(DESTACADAS, { json: featuredResponse }),
-    route(PLAYAS, { json: beachesResponse }),
+    route(FEATURED_LIST, { json: featuredResponse }),
+    route(BEACHES, { json: beachesResponse }),
   ]);
 }
 
@@ -86,8 +86,8 @@ afterEach(() => restoreFetch());
 
 it('el listado pide /api/asturias y titula con Asturias', async () => {
   const fetchMock = mockApi();
-  const PlayasList = (await import('../../pages/PlayasList')).default;
-  renderWithProviders(<PlayasList />, { route: '/playas' });
+  const BeachList = (await import('../../pages/PlayasList')).default;
+  renderWithProviders(<BeachList />, { route: '/playas' });
 
   expect(await screen.findByText('Playas de Asturias')).toBeInTheDocument();
   // Since Phase 4 each page titles itself (SeoHead); the list page's title
@@ -102,21 +102,21 @@ it('el listado pide /api/asturias y titula con Asturias', async () => {
 });
 
 it('el mapa arranca en el centro de Asturias, no en el de Cantabria', async () => {
-  mockCentroMapa.length = 0;
-  mockZoomMapa.length = 0;
+  mockMapCenter.length = 0;
+  mockMapZoom.length = 0;
   mockApi();
-  const MapaPage = (await import('../../pages/MapaPage')).default;
-  renderWithProviders(<MapaPage />, { route: '/mapa' });
+  const MapPage = (await import('../../pages/MapaPage')).default;
+  renderWithProviders(<MapPage />, { route: '/mapa' });
   await screen.findByText(beachesResponse[0].nombre);
 
-  expect(mockCentroMapa[0]).toEqual([OTRA_REGION.map.center.lat, OTRA_REGION.map.center.lon]);
-  expect(mockZoomMapa[0]).toBe(OTRA_REGION.map.zoom);
+  expect(mockMapCenter[0]).toEqual([OTHER_REGION.map.center.lat, OTHER_REGION.map.center.lon]);
+  expect(mockMapZoom[0]).toBe(OTHER_REGION.map.zoom);
 });
 
 it('la app en inglés también lleva la marca de la región', async () => {
   mockApi();
-  const PlayasList = (await import('../../pages/PlayasList')).default;
-  renderWithProviders(<PlayasList />, { route: '/playas', language: 'en' });
+  const BeachList = (await import('../../pages/PlayasList')).default;
+  renderWithProviders(<BeachList />, { route: '/playas', language: 'en' });
 
   // The brand is a proper name from region.json: it does not translate.
   expect(await screen.findByText('Playas de Asturias')).toBeInTheDocument();

@@ -10,28 +10,28 @@
  * in `services/api.ts`.
  */
 
-const CLAVE_FAVORITAS = 'playas:favoritas';
-const VERSION_ACTUAL = 1;
+const FAVORITES_KEY = 'playas:favoritas';
+const CURRENT_VERSION = 1;
 
-interface AlmacenFavoritas {
+interface FavoritesStore {
   version: number;
   beachCodes: string[];
 }
 
 /** Deduplicated, order-preserving copy. */
-function unicos(codigos: readonly string[]): string[] {
-  return Array.from(new Set(codigos));
+function unique(codes: readonly string[]): string[] {
+  return Array.from(new Set(codes));
 }
 
-export function leerFavoritas(): string[] {
+export function readFavorites(): string[] {
   try {
-    const crudo = localStorage.getItem(CLAVE_FAVORITAS);
-    if (!crudo) return [];
-    const parsed: unknown = JSON.parse(crudo);
+    const raw = localStorage.getItem(FAVORITES_KEY);
+    if (!raw) return [];
+    const parsed: unknown = JSON.parse(raw);
     if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return [];
-    const { version, beachCodes } = parsed as Partial<AlmacenFavoritas>;
-    if (version !== VERSION_ACTUAL || !Array.isArray(beachCodes)) return [];
-    return unicos(
+    const { version, beachCodes } = parsed as Partial<FavoritesStore>;
+    if (version !== CURRENT_VERSION || !Array.isArray(beachCodes)) return [];
+    return unique(
       beachCodes.filter((c): c is string => typeof c === 'string' && c !== '')
     );
   } catch {
@@ -39,10 +39,10 @@ export function leerFavoritas(): string[] {
   }
 }
 
-export function guardarFavoritas(codigos: readonly string[]): void {
+export function saveFavorites(codes: readonly string[]): void {
   try {
-    const almacen: AlmacenFavoritas = { version: VERSION_ACTUAL, beachCodes: unicos(codigos) };
-    localStorage.setItem(CLAVE_FAVORITAS, JSON.stringify(almacen));
+    const store: FavoritesStore = { version: CURRENT_VERSION, beachCodes: unique(codes) };
+    localStorage.setItem(FAVORITES_KEY, JSON.stringify(store));
   } catch {
     // no persistence: the favorite lives on in memory for this session
   }

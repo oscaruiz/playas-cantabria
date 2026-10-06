@@ -15,12 +15,12 @@
 import React from 'react';
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { Route } from 'react-router-dom';
-import PlayasList from '../../pages/PlayasList';
+import BeachList from '../../pages/PlayasList';
 import { renderWithProviders } from '../render';
 import { installFetchMock, restoreFetch, route } from '../http/fakeFetch';
 import { beachesResponse } from '../fixtures/beaches';
 import { featuredResponse } from '../fixtures/featured';
-import { RUTA_DESTACADAS as FEATURED, RUTA_PLAYAS as BEACHES } from '../apiRoutes';
+import { FEATURED_PATH as FEATURED, BEACHES_PATH as BEACHES } from '../apiRoutes';
 
 
 function setGeolocation(coords: [number, number] | null) {
@@ -43,7 +43,7 @@ function cardNames(container: HTMLElement): string[] {
 }
 
 async function renderList() {
-  const view = renderWithProviders(<PlayasList />, { route: '/playas' });
+  const view = renderWithProviders(<BeachList />, { route: '/playas' });
   await screen.findByText('La Concha');
   return view;
 }
@@ -245,7 +245,7 @@ describe('PlayasList — sugerencias', () => {
   it('elegir un municipio navega a su página', async () => {
     renderWithProviders(
       <>
-        <PlayasList />
+        <BeachList />
         <Route
           path="/municipios/:municipio"
           render={({ match }) => <div>EN-MUNICIPIO:{match.params.municipio}</div>}
@@ -265,14 +265,14 @@ describe('PlayasList — sugerencias', () => {
 describe('PlayasList — filtro de webcam', () => {
   it('deja solo las playas con webcam activa y se puede quitar', async () => {
     const { container } = await renderList();
-    const boton = screen.getByRole('button', { name: 'Mostrar solo playas con webcam' });
+    const button = screen.getByRole('button', { name: 'Mostrar solo playas con webcam' });
 
-    fireEvent.click(boton);
+    fireEvent.click(button);
     // La Salvé also has a webcam, but 'desactivada': it must stay out.
     expect(cardNames(container)).toEqual(['La Concha']);
-    expect(boton).toHaveAttribute('aria-pressed', 'true');
+    expect(button).toHaveAttribute('aria-pressed', 'true');
 
-    fireEvent.click(boton);
+    fireEvent.click(button);
     expect(cardNames(container)).toHaveLength(7);
   });
 });
@@ -281,8 +281,8 @@ describe('PlayasList — badges de la tarjeta', () => {
   it('marca como vigilada si hay idCruzRoja o puestos de Cruz Roja', async () => {
     const { container } = await renderList();
     const cards = Array.from(container.querySelectorAll('.beach-card'));
-    const byName = (nombre: string) =>
-      cards.find((c) => c.querySelector('.beach-card-name')?.textContent === nombre) as HTMLElement;
+    const byName = (name: string) =>
+      cards.find((c) => c.querySelector('.beach-card-name')?.textContent === name) as HTMLElement;
 
     // Laredo carries idCruzRoja: 310; El Sardinero, 101.
     expect(byName('Laredo').querySelector('.badge-vigilada')).not.toBeNull();
@@ -296,8 +296,8 @@ describe('PlayasList — badges de la tarjeta', () => {
   it('oculta el badge de webcam cuando está desactivada', async () => {
     const { container } = await renderList();
     const cards = Array.from(container.querySelectorAll('.beach-card'));
-    const byName = (nombre: string) =>
-      cards.find((c) => c.querySelector('.beach-card-name')?.textContent === nombre) as HTMLElement;
+    const byName = (name: string) =>
+      cards.find((c) => c.querySelector('.beach-card-name')?.textContent === name) as HTMLElement;
 
     expect(byName('La Concha').querySelector('.badge-webcam')).not.toBeNull();
     // La Salvé has a webcam with status 'desactivada'.
@@ -307,8 +307,8 @@ describe('PlayasList — badges de la tarjeta', () => {
   it('muestra el badge de Bandera Azul solo en playas premiadas', async () => {
     const { container } = await renderList();
     const cards = Array.from(container.querySelectorAll('.beach-card'));
-    const byName = (nombre: string) =>
-      cards.find((c) => c.querySelector('.beach-card-name')?.textContent === nombre) as HTMLElement;
+    const byName = (name: string) =>
+      cards.find((c) => c.querySelector('.beach-card-name')?.textContent === name) as HTMLElement;
 
     // La Concha carries banderaAzul: 2026 in the fixture; La Salvé does not.
     expect(byName('La Concha').querySelector('.badge-bandera-azul')).not.toBeNull();
@@ -318,8 +318,8 @@ describe('PlayasList — badges de la tarjeta', () => {
   it('cada tarjeta dice si la playa va a mejor y por qué', async () => {
     const { container } = await renderList();
     const cards = Array.from(container.querySelectorAll('.beach-card'));
-    const byName = (nombre: string) =>
-      cards.find((c) => c.querySelector('.beach-card-name')?.textContent === nombre) as HTMLElement;
+    const byName = (name: string) =>
+      cards.find((c) => c.querySelector('.beach-card-name')?.textContent === name) as HTMLElement;
 
     const chip = byName('La Concha').querySelector('.trend-badge');
     expect(chip).toHaveTextContent('Está mejorando');

@@ -10,13 +10,13 @@
 import React from 'react';
 import TrendBadge from '../../components/TrendBadge';
 import { renderWithProviders } from '../render';
-import type { Pronostico } from '../../services/api';
+import type { Outlook } from '../../services/api';
 
-const MEJORA: Pronostico = { direccion: 'mejora', delta: 6, causa: 'despeja' };
+const IMPROVES: Outlook = { direccion: 'mejora', delta: 6, causa: 'despeja' };
 
 describe('TrendBadge', () => {
   it('dice la dirección y la causa', () => {
-    const { container } = renderWithProviders(<TrendBadge outlook={MEJORA} />);
+    const { container } = renderWithProviders(<TrendBadge outlook={IMPROVES} />);
     const chip = container.querySelector('.trend-badge');
 
     expect(chip).toHaveTextContent('Está mejorando');
@@ -25,7 +25,7 @@ describe('TrendBadge', () => {
   });
 
   it('traduce la causa al inglés', () => {
-    const { container } = renderWithProviders(<TrendBadge outlook={MEJORA} />, { language: 'en' });
+    const { container } = renderWithProviders(<TrendBadge outlook={IMPROVES} />, { language: 'en' });
 
     expect(container.querySelector('.trend-badge')).toHaveTextContent('Improving');
     expect(container.querySelector('.trend-badge')).toHaveTextContent('clearing up');
@@ -48,11 +48,11 @@ describe('TrendBadge', () => {
   });
 
   it('los puntos solo salen en el detalle', () => {
-    const { container: lista } = renderWithProviders(<TrendBadge outlook={MEJORA} />);
-    const { container: detalle } = renderWithProviders(<TrendBadge outlook={MEJORA} size="lg" />);
+    const { container: list } = renderWithProviders(<TrendBadge outlook={IMPROVES} />);
+    const { container: detail } = renderWithProviders(<TrendBadge outlook={IMPROVES} size="lg" />);
 
-    expect(lista.querySelector('.trend-badge-delta')).toBeNull();
-    expect(detalle.querySelector('.trend-badge-delta')).toHaveTextContent('+6 puntos');
+    expect(list.querySelector('.trend-badge-delta')).toBeNull();
+    expect(detail.querySelector('.trend-badge-delta')).toHaveTextContent('+6 puntos');
   });
 
   it('se calla los puntos cuando contradicen la dirección', () => {
@@ -85,7 +85,7 @@ describe('TrendBadge', () => {
   });
 
   it('lo lee un lector de pantalla como una frase, no como palabras sueltas', () => {
-    const { container } = renderWithProviders(<TrendBadge outlook={MEJORA} />);
+    const { container } = renderWithProviders(<TrendBadge outlook={IMPROVES} />);
 
     expect(container.querySelector('.trend-badge')).toHaveAttribute(
       'aria-label',

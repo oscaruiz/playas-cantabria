@@ -7,11 +7,11 @@
 
 import React from 'react';
 import { fireEvent, screen } from '@testing-library/react';
-import ProximasHoras from '../../pages/playa-detalle/ProximasHoras';
+import NextHours from '../../pages/playa-detalle/ProximasHoras';
 import { renderWithProviders } from '../render';
-import { PrevisionHora, VentanaDia } from '../../services/api';
+import { HourlyForecast, DayWindow } from '../../services/api';
 
-const hora = (isoUtc: string, extra: Partial<PrevisionHora> = {}): PrevisionHora => ({
+const hour = (isoUtc: string, extra: Partial<HourlyForecast> = {}): HourlyForecast => ({
   horaIso: isoUtc,
   nubesPct: 20,
   temperaturaC: 21,
@@ -26,14 +26,14 @@ beforeEach(() => {
 
 afterEach(() => jest.restoreAllMocks());
 
-const HORAS: PrevisionHora[] = [
-  hora('2026-07-27T12:00:00.000Z'),
-  hora('2026-07-27T13:00:00.000Z'),
-  hora('2026-07-27T14:00:00.000Z'),
-  hora('2026-07-27T15:00:00.000Z', { precipitacionMm: 0.6 }),
+const HOURS: HourlyForecast[] = [
+  hour('2026-07-27T12:00:00.000Z'),
+  hour('2026-07-27T13:00:00.000Z'),
+  hour('2026-07-27T14:00:00.000Z'),
+  hour('2026-07-27T15:00:00.000Z', { precipitacionMm: 0.6 }),
 ];
 
-const VENTANA: VentanaDia = {
+const TIME_WINDOW: DayWindow = {
   inicio: '2026-07-27T13:00:00.000Z',
   fin: '2026-07-27T15:00:00.000Z',
   cambio: { desde: '2026-07-27T15:00:00.000Z', causa: 'lluvia_prevista' },
@@ -44,7 +44,7 @@ const VENTANA: VentanaDia = {
 describe('ProximasHoras — la tira que respalda la ventana', () => {
   it('titula el resto del día y resalta exactamente las horas de la ventana', () => {
     const { container } = renderWithProviders(
-      <ProximasHoras hours={HORAS} source="Open-Meteo" timeWindow={VENTANA} />,
+      <NextHours hours={HOURS} source="Open-Meteo" timeWindow={TIME_WINDOW} />,
       { route: '/' },
     );
 
@@ -62,16 +62,16 @@ describe('ProximasHoras — la tira que respalda la ventana', () => {
 
   it('una hora mojada cambia el icono a lluvia y lo dice en su frase accesible', () => {
     const { container } = renderWithProviders(
-      <ProximasHoras hours={HORAS} source="Open-Meteo" timeWindow={VENTANA} />,
+      <NextHours hours={HOURS} source="Open-Meteo" timeWindow={TIME_WINDOW} />,
       { route: '/' },
     );
 
-    const mojada = container.querySelectorAll('.pd-hora')[3];
-    expect(mojada.querySelector('.pd-hora-icono--lluvia')).not.toBeNull();
-    expect(mojada.getAttribute('aria-label')).toContain('lluvia prevista');
+    const wet = container.querySelectorAll('.pd-hora')[3];
+    expect(wet.querySelector('.pd-hora-icono--lluvia')).not.toBeNull();
+    expect(wet.getAttribute('aria-label')).toContain('lluvia prevista');
     // Las horas secas conservan la frase de siempre.
-    const seca = container.querySelectorAll('.pd-hora')[0];
-    expect(seca.getAttribute('aria-label')).toContain('% de nubes');
+    const dry = container.querySelectorAll('.pd-hora')[0];
+    expect(dry.getAttribute('aria-label')).toContain('% de nubes');
   });
 
   it('cuando la tira oculta horas, la flecha lo señala y desplaza al pulsarla', () => {
@@ -85,7 +85,7 @@ describe('ProximasHoras — la tira que respalda la ventana', () => {
     });
 
     renderWithProviders(
-      <ProximasHoras hours={HORAS} source="Open-Meteo" timeWindow={VENTANA} />,
+      <NextHours hours={HOURS} source="Open-Meteo" timeWindow={TIME_WINDOW} />,
       { route: '/' },
     );
 
@@ -101,7 +101,7 @@ describe('ProximasHoras — la tira que respalda la ventana', () => {
 
   it('la ventana dentro de la tira va en modo detallado: nombra su motivo', () => {
     renderWithProviders(
-      <ProximasHoras hours={HORAS} source="Open-Meteo" timeWindow={VENTANA} />,
+      <NextHours hours={HOURS} source="Open-Meteo" timeWindow={TIME_WINDOW} />,
       { route: '/' },
     );
 

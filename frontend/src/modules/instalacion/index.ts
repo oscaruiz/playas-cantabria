@@ -7,6 +7,6 @@
  * `escucharInstalacion()` is wired in index.tsx, before React mounts, because
  * the browser event arrives during page load.
  */
-export { escucharInstalacion } from './infrastructure/promptInstalacion';
-export { useInstalacion } from './application/useInstalacion';
-export { default as BotonInstalar } from './ui/BotonInstalar';
+export { listenForInstall } from './infrastructure/promptInstalacion';
+export { useInstall } from './application/useInstalacion';
+export { default as InstallButton } from './ui/BotonInstalar';

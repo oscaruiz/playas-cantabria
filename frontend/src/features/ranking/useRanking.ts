@@ -1,19 +1,19 @@
 import { useCallback, useEffect, useReducer, useRef, useState, useSyncExternalStore } from 'react';
 import {
   FeaturedBeachesResponse,
-  RUTA_FEATURED,
-  aplicarFeaturedFresco,
+  FEATURED_ROUTE,
+  applyFreshFeatured,
   getFeaturedBeaches,
-  leerRankingEnVigor,
-  suscribirRanking,
+  readCurrentRanking,
+  subscribeRanking,
 } from '../../services/api';
 import {
-  normalizarInstante,
-  EDAD_REVALIDAR_RANKING_MS,
-  UMBRAL_RANKING_VIEJO_MS,
+  normalizeInstant,
+  RANKING_REVALIDATE_AGE_MS,
+  STALE_RANKING_THRESHOLD_MS,
 } from '../provenance/procedencia';
-import { useRefrescoDelServiceWorker } from '../../hooks/useRefrescoDelServiceWorker';
-import { useRevalidarAlVolver } from '../../hooks/useRevalidarAlVolver';
+import { useServiceWorkerRefresh } from '../../hooks/useRefrescoDelServiceWorker';
+import { useRevalidateOnReturn } from '../../hooks/useRevalidarAlVolver';
 
 /**
  * The ranking in force, for every screen that paints a sky.
@@ -36,7 +36,7 @@ import { useRevalidarAlVolver } from '../../hooks/useRevalidarAlVolver';
  * fired the request repaint while the other four kept the sky they had loaded,
  * which is the very split this module exists to prevent.
  */
-export interface RankingEnUso {
+export interface RankingInUse {
   /** The ranking currently in force, or null until the first answer lands. */
   ranking: FeaturedBeachesResponse | null;
   /** When the backend ASSEMBLED it (epoch ms), null if it did not say. */
@@ -67,28 +67,28 @@ export interface RankingEnUso {
  * question — gets its own attempt. What the attempt brings back reaches every
  * screen, so whichever one spends it, all of them are served.
  */
-let reintentadoPara: number | null = null;
+let retriedFor: number | null = null;
 
-export function useRanking(): RankingEnUso {
+export function useRanking(): RankingInUse {
   const ranking = useSyncExternalStore(
-    suscribirRanking,
-    leerRankingEnVigor,
-    leerRankingEnVigor,
+    subscribeRanking,
+    readCurrentRanking,
+    readCurrentRanking,
   );
   const [error, setError] = useState(false);
-  const [reintentando, setReintentando] = useState(false);
+  const [retrying, setRetrying] = useState(false);
 
   // Only guards the two flags above. The ranking needs no such guard — it is
   // shared state and every screen wants it — but a screen the user navigated
   // away from must not be told its own request failed.
-  const montado = useRef(true);
+  const mountedFlag = useRef(true);
   useEffect(() => {
-    montado.current = true;
-    return () => { montado.current = false; };
+    mountedFlag.current = true;
+    return () => { mountedFlag.current = false; };
   }, []);
 
   useEffect(() => {
-    getFeaturedBeaches().catch(() => { if (montado.current) setError(true); });
+    getFeaturedBeaches().catch(() => { if (mountedFlag.current) setError(true); });
   }, []);
 
   // The answer the service worker had given up on, arriving late. What gets
@@ -96,18 +96,18 @@ export function useRanking(): RankingEnUso {
   // request in flight had already delivered a later ranking, this body is the
   // one being discarded. And never a refetch from here — a request writes the
   // cache, and writing the cache is what emits this message.
-  useRefrescoDelServiceWorker(({ url, datos }) => {
-    if (!url.endsWith(RUTA_FEATURED)) return;
-    const fresco = datos as FeaturedBeachesResponse;
+  useServiceWorkerRefresh(({ url, datos: data }) => {
+    if (!url.endsWith(FEATURED_ROUTE)) return;
+    const fresh = data as FeaturedBeachesResponse;
     // A body that is not a ranking would poison the cache for every screen.
-    if (!Array.isArray(fresco.resumenTodas)) return;
-    aplicarFeaturedFresco(fresco);
+    if (!Array.isArray(fresh.resumenTodas)) return;
+    applyFreshFeatured(fresh);
   });
 
   // A page left open for twenty minutes keeps painting what it loaded then.
   // This does not force anything: while the module cache is fresh it answers
   // without asking the backend.
-  useRevalidarAlVolver(
+  useRevalidateOnReturn(
     useCallback(() => {
       getFeaturedBeaches().catch(() => { /* what is painted still stands */ });
     }, []),
@@ -115,41 +115,41 @@ export function useRanking(): RankingEnUso {
 
   // `force`: what is painted came from a stored copy, so the module cache holds
   // that same body and a plain call would hand it back without asking anyone.
-  const reintentar = useCallback(() => {
-    setReintentando(true);
+  const retry = useCallback(() => {
+    setRetrying(true);
     return getFeaturedBeaches({ force: true })
-      .then(() => { if (montado.current) setError(false); })
+      .then(() => { if (mountedFlag.current) setError(false); })
       // Nothing on failure, on purpose: a failed retry after a failed load
       // leaves the error already standing, and after a successful one what is
       // painted still stands, so there is nothing new to say.
       .catch(() => { /* we carry on with what is already painted */ })
-      .finally(() => { if (montado.current) setReintentando(false); });
+      .finally(() => { if (mountedFlag.current) setRetrying(false); });
   }, []);
 
-  const actualizadoMs = ranking ? normalizarInstante(ranking.timestamp) : null;
-  const edadMs = actualizadoMs == null ? null : Date.now() - actualizadoMs;
+  const updatedMs = ranking ? normalizeInstant(ranking.timestamp) : null;
+  const ageMs = updatedMs == null ? null : Date.now() - updatedMs;
 
   // When to ASK AGAIN and when to TELL THE USER are two different questions, and
   // they were one constant. The notice fired at ten minutes, which the backend
   // answers from its stale window all day long: it lit up on ordinary days and
   // no tap could retire it, because the same body was coming back. Asking again
   // at ten minutes is right — that IS when there is something newer to get.
-  const convieneRevalidar = edadMs != null && edadMs > EDAD_REVALIDAR_RANKING_MS;
-  const deVisitaAnterior = edadMs != null && edadMs > UMBRAL_RANKING_VIEJO_MS;
+  const shouldRevalidate = ageMs != null && ageMs > RANKING_REVALIDATE_AGE_MS;
+  const fromPreviousVisit = ageMs != null && ageMs > STALE_RANKING_THRESHOLD_MS;
 
   // Growing old is an event nothing else announces. A ranking that was nine
   // minutes old when the screen opened is due one minute later, and a phone left
   // face-up on the towel renders nothing in between: without this, a screen open
   // and untouched would never refresh at all — there is no polling anywhere.
-  const [, repintar] = useReducer((n: number) => n + 1, 0);
+  const [, repaint] = useReducer((n: number) => n + 1, 0);
   useEffect(() => {
-    if (actualizadoMs == null || convieneRevalidar) return;
+    if (updatedMs == null || shouldRevalidate) return;
     // `actualizadoMs` and not the age as a dependency: the age changes on every
     // render, so the wait would start over each time anything else repainted.
-    const falta = EDAD_REVALIDAR_RANKING_MS - (Date.now() - actualizadoMs);
-    const temporizador = setTimeout(repintar, Math.max(falta, 0) + 1000);
-    return () => clearTimeout(temporizador);
-  }, [actualizadoMs, convieneRevalidar]);
+    const missing = RANKING_REVALIDATE_AGE_MS - (Date.now() - updatedMs);
+    const timer = setTimeout(repaint, Math.max(missing, 0) + 1000);
+    return () => clearTimeout(timer);
+  }, [updatedMs, shouldRevalidate]);
 
   // One automatic refetch per ranking: the response the service worker gave up
   // on may never arrive (backend asleep, bad network, or the same old ranking
@@ -158,18 +158,18 @@ export function useRanking(): RankingEnUso {
   // thresholds were one, raising the notice to something honest would have
   // silently turned this into an hourly refresh.
   useEffect(() => {
-    if (!convieneRevalidar || actualizadoMs === reintentadoPara) return;
-    reintentadoPara = actualizadoMs;
-    void reintentar();
-  }, [convieneRevalidar, actualizadoMs, reintentar]);
+    if (!shouldRevalidate || updatedMs === retriedFor) return;
+    retriedFor = updatedMs;
+    void retry();
+  }, [shouldRevalidate, updatedMs, retry]);
 
   return {
     ranking,
-    updatedMs: actualizadoMs,
-    fromPreviousVisit: deVisitaAnterior,
+    updatedMs,
+    fromPreviousVisit,
     loading: ranking == null && !error,
     error,
-    retrying: reintentando,
-    retry: reintentar,
+    retrying,
+    retry,
   };
 }

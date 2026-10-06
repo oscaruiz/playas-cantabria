@@ -1,17 +1,17 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { IdiomaProvider, useIdioma, detectarIdiomaInicial } from './IdiomaContext';
+import { LanguageProvider, useLanguage, detectInitialLanguage } from './IdiomaContext';
 
-const Sonda: React.FC = () => {
-  const { language: idioma, setLanguage: setIdioma, t, tPlural } = useIdioma();
+const Probe: React.FC = () => {
+  const { language, setLanguage, t, tPlural } = useLanguage();
   return (
     <div>
-      <span data-testid="idioma">{idioma}</span>
+      <span data-testid="idioma">{language}</span>
       <span data-testid="simple">{t('nav.inicio')}</span>
       <span data-testid="interpolado">{t('comun.verDetalleDe', { nombre: 'Somo' })}</span>
       <span data-testid="plural-uno">{tPlural('lista.contador', 1)}</span>
       <span data-testid="plural-varios">{tPlural('lista.contador', 7)}</span>
-      <button onClick={() => setIdioma('en')}>cambiar</button>
+      <button onClick={() => setLanguage('en')}>cambiar</button>
     </div>
   );
 };
@@ -24,9 +24,9 @@ describe('IdiomaContext', () => {
   it('arranca en español si está guardado y traduce con interpolación y plurales', () => {
     localStorage.setItem('app_idioma', 'es');
     render(
-      <IdiomaProvider>
-        <Sonda />
-      </IdiomaProvider>
+      <LanguageProvider>
+        <Probe />
+      </LanguageProvider>
     );
     expect(screen.getByTestId('idioma').textContent).toBe('es');
     expect(screen.getByTestId('simple').textContent).toBe('Inicio');
@@ -38,9 +38,9 @@ describe('IdiomaContext', () => {
   it('cambia a inglés, actualiza document.lang y persiste en localStorage', () => {
     localStorage.setItem('app_idioma', 'es');
     render(
-      <IdiomaProvider>
-        <Sonda />
-      </IdiomaProvider>
+      <LanguageProvider>
+        <Probe />
+      </LanguageProvider>
     );
     fireEvent.click(screen.getByText('cambiar'));
     expect(screen.getByTestId('simple').textContent).toBe('Home');
@@ -53,8 +53,8 @@ describe('IdiomaContext', () => {
   it('sin idioma guardado arranca en español aunque el navegador esté en inglés', () => {
     // jsdom exposes navigator.language = 'en-US'; detection must ignore it so
     // that Googlebot (en-US, no localStorage) indexes the Spanish metadata.
-    expect(detectarIdiomaInicial()).toBe('es');
+    expect(detectInitialLanguage()).toBe('es');
     localStorage.setItem('app_idioma', 'en');
-    expect(detectarIdiomaInicial()).toBe('en');
+    expect(detectInitialLanguage()).toBe('en');
   });
 });

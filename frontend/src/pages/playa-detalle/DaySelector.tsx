@@ -1,5 +1,5 @@
 import React from 'react';
-import { useIdioma } from '../../shared/i18n/IdiomaContext';
+import { useLanguage } from '../../shared/i18n/IdiomaContext';
 import { dayTitle, daySubtitle } from './dates';
 
 /** Editorial tabs with underline: Today / Tomorrow / Day after tomorrow. */
@@ -7,20 +7,20 @@ const DaySelector: React.FC<{
   dates: string[];
   selectedDay: number;
   onSelect: (i: number) => void;
-}> = ({ dates: fechas, selectedDay, onSelect }) => {
-  const { t, language: idioma } = useIdioma();
+}> = ({ dates, selectedDay, onSelect }) => {
+  const { t, language } = useLanguage();
   return (
     <div className="day-selector" role="tablist">
-      {fechas.map((fecha, i) => (
+      {dates.map((date, i) => (
         <button
-          key={fecha}
+          key={date}
           className={`day-tab${i === selectedDay ? ' active' : ''}`}
           onClick={() => onSelect(i)}
           role="tab"
           aria-selected={i === selectedDay}
         >
-          <span className="day-tab-title">{dayTitle(fecha, t, idioma)}</span>
-          <span className="day-tab-date">{daySubtitle(fecha, idioma)}</span>
+          <span className="day-tab-title">{dayTitle(date, t, language)}</span>
+          <span className="day-tab-date">{daySubtitle(date, language)}</span>
         </button>
       ))}
     </div>

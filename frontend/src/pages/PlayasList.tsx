@@ -8,43 +8,43 @@ import {
 } from '@ionic/react';
 import { searchOutline, locateOutline, starOutline, videocamOutline } from 'ionicons/icons';
 import {
-  Playa,
-  getPlayas,
+  Beach,
+  getBeaches,
 } from '../services/api';
 import { useRanking } from '../features/ranking/useRanking';
-import { coincidePlaya, normalizarBusqueda, webcamDisponible } from '../utils/beachHelpers';
+import { matchesBeach, normalizeSearch, webcamAvailable } from '../utils/beachHelpers';
 import { haversineKm } from '../shared/geo/haversine';
 import { useUserLocation } from '../hooks/useUserLocation';
-import { useIdioma } from '../shared/i18n/IdiomaContext';
+import { useLanguage } from '../shared/i18n/IdiomaContext';
 import { useHistory } from 'react-router-dom';
 import BeachCard from '../components/BeachCard';
 import BottomNavBar from '../shared/ui/BottomNavBar';
 import HeaderActions from '../shared/ui/HeaderActions';
-import LogoMarca from '../shared/ui/LogoMarca';
-import { useFavoritas } from '../modules/favorites';
+import BrandLogo from '../shared/ui/LogoMarca';
+import { useFavoriteCodes } from '../modules/favorites';
 import { municipalitiesSummary } from '../shared/seo/landings';
 import SeoHead from '../shared/seo/SeoHead';
 import './PlayasList.css';
 
 /** A search suggestion: a municipality (navigates) or a beach (filters). */
-type Sugerencia =
+type Suggestion =
   | { kind: 'municipio'; municipio: string; ruta: string; total: number }
-  | { kind: 'playa'; beach: Playa };
+  | { kind: 'playa'; beach: Beach };
 
-type OrdenMode = 'az' | 'cerca';
+type SortMode = 'az' | 'cerca';
 
-const PlayasList: React.FC = () => {
-  const [playas, setPlayas] = useState<Playa[] | null>(null);
-  const [filtro, setFiltro] = useState('');
-  const [orden, setOrden] = useState<OrdenMode>('az');
-  const [soloFavoritas, setSoloFavoritas] = useState(false);
-  const [soloConWebcam, setSoloConWebcam] = useState(false);
-  const { favorites: favoritas } = useFavoritas();
+const BeachList: React.FC = () => {
+  const [beaches, setBeaches] = useState<Beach[] | null>(null);
+  const [filter, setFilter] = useState('');
+  const [order, setOrder] = useState<SortMode>('az');
+  const [onlyFavorites, setOnlyFavorites] = useState(false);
+  const [onlyWithWebcam, setOnlyWithWebcam] = useState(false);
+  const { favorites } = useFavoriteCodes();
   // There is no error state: `getPlayas` never rejects, it always falls back to the local
   // JSON. What does need to be conveyed is that the data is not fresh.
-  const [esFallback, setEsFallback] = useState(false);
-  const [datosNoDisponibles, setDatosNoDisponibles] = useState(false);
-  const { t, tPlural } = useIdioma();
+  const [isFallback, setIsFallback] = useState(false);
+  const [dataUnavailable, setDataUnavailable] = useState(false);
+  const { t, tPlural } = useLanguage();
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeIdx, setActiveIdx] = useState(-1);
   const { userLocation } = useUserLocation();
@@ -60,48 +60,48 @@ const PlayasList: React.FC = () => {
   );
 
   useEffect(() => {
-    getPlayas({
-      onFallback: () => setEsFallback(true),
+    getBeaches({
+      onFallback: () => setIsFallback(true),
       onFallbackUnavailable: () => {
-        setEsFallback(false);
-        setDatosNoDisponibles(true);
+        setIsFallback(false);
+        setDataUnavailable(true);
       },
       onBackendData: (data) => {
-        setPlayas(data);
-        setEsFallback(false);
-        setDatosNoDisponibles(false);
+        setBeaches(data);
+        setIsFallback(false);
+        setDataUnavailable(false);
       },
-    }).then(setPlayas);
+    }).then(setBeaches);
   }, []);
 
   // No toggle needed — two separate buttons
 
-  const suggestions = useMemo<Sugerencia[]>(() => {
-    if (!playas || filtro.length < 2) return [];
-    const termino = normalizarBusqueda(filtro);
+  const suggestions = useMemo<Suggestion[]>(() => {
+    if (!beaches || filter.length < 2) return [];
+    const term = normalizeSearch(filter);
     // Municipalities first (they are the broader answer), max 2, then
     // beaches up to the usual 5 total.
-    const municipios = (municipalitiesSummary(playas) as Array<{
+    const municipalities = (municipalitiesSummary(beaches) as Array<{
       municipio: string;
       ruta: string;
       total: number;
     }>)
-      .filter((m) => normalizarBusqueda(m.municipio).includes(termino))
+      .filter((m) => normalizeSearch(m.municipio).includes(term))
       .slice(0, 2)
-      .map((m): Sugerencia => ({ kind: 'municipio', ...m }));
-    const dePlaya = playas
-      .filter((p) => coincidePlaya(p, filtro))
-      .slice(0, 5 - municipios.length)
-      .map((p): Sugerencia => ({ kind: 'playa', beach: p }));
-    return [...municipios, ...dePlaya];
-  }, [playas, filtro]);
+      .map((m): Suggestion => ({ kind: 'municipio', ...m }));
+    const forBeach = beaches
+      .filter((p) => matchesBeach(p, filter))
+      .slice(0, 5 - municipalities.length)
+      .map((p): Suggestion => ({ kind: 'playa', beach: p }));
+    return [...municipalities, ...forBeach];
+  }, [beaches, filter]);
 
-  const selectSuggestion = useCallback((sugerencia: Sugerencia) => {
-    if (sugerencia.kind === 'municipio') {
+  const selectSuggestion = useCallback((suggestion: Suggestion) => {
+    if (suggestion.kind === 'municipio') {
       // A municipality is a destination, not a filter: go to its page.
-      history.push(sugerencia.ruta);
+      history.push(suggestion.ruta);
     } else {
-      setFiltro(sugerencia.beach.nombre);
+      setFilter(suggestion.beach.nombre);
     }
     setShowSuggestions(false);
     setActiveIdx(-1);
@@ -124,22 +124,22 @@ const PlayasList: React.FC = () => {
     }
   }, [showSuggestions, suggestions, activeIdx, selectSuggestion]);
 
-  const filtradas = useMemo(() => {
-    if (!playas) return [];
-    const result = playas.filter(
+  const filtered = useMemo(() => {
+    if (!beaches) return [];
+    const result = beaches.filter(
       (p) =>
-        (!soloFavoritas || favoritas.has(p.codigo)) &&
-        (!soloConWebcam || webcamDisponible(p.webcam)) &&
-        coincidePlaya(p, filtro)
+        (!onlyFavorites || favorites.has(p.codigo)) &&
+        (!onlyWithWebcam || webcamAvailable(p.webcam)) &&
+        matchesBeach(p, filter)
     );
-    if (orden === 'cerca' && userLocation) {
+    if (order === 'cerca' && userLocation) {
       const [uLat, uLon] = userLocation;
       return result.sort((a, b) =>
         haversineKm(uLat, uLon, a.lat, a.lon) - haversineKm(uLat, uLon, b.lat, b.lon)
       );
     }
     return result.sort((a, b) => a.nombre.localeCompare(b.nombre));
-  }, [playas, filtro, orden, userLocation, soloFavoritas, favoritas, soloConWebcam]);
+  }, [beaches, filter, order, userLocation, onlyFavorites, favorites, onlyWithWebcam]);
 
   return (
     <IonPage className="home-page">
@@ -160,7 +160,7 @@ const PlayasList: React.FC = () => {
           onClick={() => window.location.reload()}
           style={{ cursor: 'pointer' }}
         >
-          <LogoMarca />
+          <BrandLogo />
           <div className="marca-texto">
             <h1 className="home-sticky-title">{t('app.titulo')}</h1>
             <p className="home-sticky-subtitle">{t('lista.subtitulo')}</p>
@@ -181,13 +181,13 @@ const PlayasList: React.FC = () => {
             <IonIcon className="search-icon" icon={searchOutline} aria-hidden="true" />
             <input
               type="text"
-              value={filtro}
+              value={filter}
               onChange={(e) => {
-                setFiltro(e.target.value);
+                setFilter(e.target.value);
                 setShowSuggestions(true);
                 setActiveIdx(-1);
               }}
-              onFocus={() => { if (filtro.length >= 2) setShowSuggestions(true); }}
+              onFocus={() => { if (filter.length >= 2) setShowSuggestions(true); }}
               onBlur={() => {
                 blurTimeout.current = setTimeout(() => setShowSuggestions(false), 150);
               }}
@@ -203,11 +203,11 @@ const PlayasList: React.FC = () => {
                 showSuggestions && activeIdx >= 0 ? `sugerencia-${activeIdx}` : undefined
               }
             />
-            {filtro.length > 0 && (
+            {filter.length > 0 && (
               <button
                 className="search-clear-btn"
                 onClick={() => {
-                  setFiltro('');
+                  setFilter('');
                   setShowSuggestions(false);
                   setActiveIdx(-1);
                 }}
@@ -219,39 +219,39 @@ const PlayasList: React.FC = () => {
             )}
             {userLocation && (
               <button
-                className={`sort-button${orden === 'cerca' ? ' sort-button--active' : ''}`}
-                onClick={() => setOrden('cerca')}
+                className={`sort-button${order === 'cerca' ? ' sort-button--active' : ''}`}
+                onClick={() => setOrder('cerca')}
                 title={t('lista.ordenarCercania')}
                 aria-label={t('lista.ordenarCercania')}
-                aria-pressed={orden === 'cerca'}
+                aria-pressed={order === 'cerca'}
               >
                 <IonIcon icon={locateOutline} aria-hidden="true" />
               </button>
             )}
             <button
-              className={`sort-button${orden === 'az' ? ' sort-button--active' : ''}`}
-              onClick={() => setOrden('az')}
+              className={`sort-button${order === 'az' ? ' sort-button--active' : ''}`}
+              onClick={() => setOrder('az')}
               title={t('lista.ordenarAZ')}
               aria-label={t('lista.ordenarAZ')}
-              aria-pressed={orden === 'az'}
+              aria-pressed={order === 'az'}
             >
               AZ
             </button>
             <button
-              className={`sort-button${soloFavoritas ? ' sort-button--active' : ''}`}
-              onClick={() => setSoloFavoritas((v) => !v)}
+              className={`sort-button${onlyFavorites ? ' sort-button--active' : ''}`}
+              onClick={() => setOnlyFavorites((v) => !v)}
               title={t('fav.filtro')}
               aria-label={t('fav.filtro')}
-              aria-pressed={soloFavoritas}
+              aria-pressed={onlyFavorites}
             >
               <IonIcon icon={starOutline} aria-hidden="true" />
             </button>
             <button
-              className={`sort-button${soloConWebcam ? ' sort-button--active' : ''}`}
-              onClick={() => setSoloConWebcam((v) => !v)}
+              className={`sort-button${onlyWithWebcam ? ' sort-button--active' : ''}`}
+              onClick={() => setOnlyWithWebcam((v) => !v)}
               title={t('lista.filtroWebcam')}
               aria-label={t('lista.filtroWebcam')}
-              aria-pressed={soloConWebcam}
+              aria-pressed={onlyWithWebcam}
             >
               <IonIcon icon={videocamOutline} aria-hidden="true" />
             </button>
@@ -290,20 +290,20 @@ const PlayasList: React.FC = () => {
         </div>
 
         {/* Local data (backend unavailable) */}
-        {esFallback && (
+        {isFallback && (
           <div className="home-fallback" role="status">
             <p style={{ margin: 0 }}>{t('lista.datosLocales')}</p>
           </div>
         )}
 
-        {datosNoDisponibles && (
+        {dataUnavailable && (
           <div className="home-fallback" role="alert">
             <p style={{ margin: 0 }}>{t('lista.datosNoDisponibles')}</p>
           </div>
         )}
 
         {/* Loading state */}
-        {!playas && (
+        {!beaches && (
           <div className="home-loading">
             <IonSpinner name="crescent" />
             <span className="home-loading-text">{t('lista.cargando')}</span>
@@ -311,25 +311,25 @@ const PlayasList: React.FC = () => {
         )}
 
         {/* Beach count */}
-        {playas && !datosNoDisponibles && (
+        {beaches && !dataUnavailable && (
           <div className="beach-count">
-            {tPlural('lista.contador', filtradas.length)}
-            {filtro && ` ${t('lista.paraFiltro', { filtro })}`}
+            {tPlural('lista.contador', filtered.length)}
+            {filter && ` ${t('lista.paraFiltro', { filtro: filter })}`}
           </div>
         )}
 
         {/* Beach list — the shared BeachCard, same row as municipality and
             landing pages. */}
-        {playas && filtradas.length > 0 && (
+        {beaches && filtered.length > 0 && (
           <div className="beach-list">
-            {filtradas.map((playa) => (
+            {filtered.map((beach) => (
               <BeachCard
-                key={playa.codigo}
-                beach={playa}
-                weather={weatherMap.get(playa.codigo)}
+                key={beach.codigo}
+                beach={beach}
+                weather={weatherMap.get(beach.codigo)}
                 distKm={
                   userLocation
-                    ? haversineKm(userLocation[0], userLocation[1], playa.lat, playa.lon)
+                    ? haversineKm(userLocation[0], userLocation[1], beach.lat, beach.lon)
                     : null
                 }
               />
@@ -338,15 +338,15 @@ const PlayasList: React.FC = () => {
         )}
 
         {/* Empty state */}
-        {playas && !datosNoDisponibles && filtradas.length === 0 && (
+        {beaches && !dataUnavailable && filtered.length === 0 && (
           <div className="home-empty">
             <p className="home-empty-text">
               {/* Without a search term, an empty favorites view means "you have
                   not saved anything (visible) yet" — tell the user how, instead
                   of a false "no results". */}
-              {soloFavoritas && !filtro
+              {onlyFavorites && !filter
                 ? t('fav.vacio')
-                : t('lista.noEncontradas', { filtro })}
+                : t('lista.noEncontradas', { filtro: filter })}
             </p>
           </div>
         )}
@@ -357,4 +357,4 @@ const PlayasList: React.FC = () => {
   );
 };
 
-export default PlayasList;
+export default BeachList;

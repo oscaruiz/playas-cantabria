@@ -2,8 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { informationCircleOutline, logoGithub, mailOutline, openOutline } from 'ionicons/icons';
 import { IonIcon } from '@ionic/react';
 import { Link } from 'react-router-dom';
-import { useIdioma } from '../i18n/IdiomaContext';
-import SelectorIdioma from './SelectorIdioma';
+import { useLanguage } from '../i18n/IdiomaContext';
+import LanguageSelector from './SelectorIdioma';
 import { GITHUB, EMAIL } from '../config/contacto';
 import './HeaderActions.css';
 
@@ -13,31 +13,31 @@ import './HeaderActions.css';
    drops into the menu. It is decided in JS and not with a media query on
    purpose: rendering it twice and hiding one copy would put two ES/EN pairs in
    the accessibility tree, which is worse than the layout it fixes. */
-const PILDORA_EN_LA_BARRA = '(min-width: 560px)';
+const PILL_IN_BAR = '(min-width: 560px)';
 
-function usePildoraEnLaBarra(): boolean {
-  const [enLaBarra, setEnLaBarra] = useState(
-    () => window.matchMedia?.(PILDORA_EN_LA_BARRA).matches ?? true,
+function usePillInBar(): boolean {
+  const [inBar, setInBar] = useState(
+    () => window.matchMedia?.(PILL_IN_BAR).matches ?? true,
   );
 
   useEffect(() => {
-    const mq = window.matchMedia?.(PILDORA_EN_LA_BARRA);
+    const mq = window.matchMedia?.(PILL_IN_BAR);
     if (!mq?.addEventListener) return undefined;
-    const alCambiar = (event: MediaQueryListEvent) => setEnLaBarra(event.matches);
-    setEnLaBarra(mq.matches);
-    mq.addEventListener('change', alCambiar);
-    return () => mq.removeEventListener('change', alCambiar);
+    const onChange = (event: MediaQueryListEvent) => setInBar(event.matches);
+    setInBar(mq.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
   }, []);
 
-  return enLaBarra;
+  return inBar;
 }
 
 /** Compact project-information menu, placed in the header like common content apps. */
 const HeaderActions: React.FC = () => {
-  const { t } = useIdioma();
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const pildoraEnLaBarra = usePildoraEnLaBarra();
+  const pillInBar = usePillInBar();
 
   useEffect(() => {
     if (!open) return undefined;
@@ -92,15 +92,15 @@ const HeaderActions: React.FC = () => {
           </a>
           {/* El rótulo va decorativo: el propio selector ya se anuncia como un
               grupo llamado "Idioma", y repetirlo lo diría dos veces. */}
-          {!pildoraEnLaBarra && (
+          {!pillInBar && (
             <div className="header-info-idioma" role="none">
               <span aria-hidden="true">{t('selector.idioma')}</span>
-              <SelectorIdioma />
+              <LanguageSelector />
             </div>
           )}
         </div>
       )}
-      {pildoraEnLaBarra && <SelectorIdioma />}
+      {pillInBar && <LanguageSelector />}
     </div>
   );
 };

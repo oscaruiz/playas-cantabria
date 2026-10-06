@@ -1,8 +1,8 @@
 import React, { useId, useState } from 'react';
 import { IonIcon } from '@ionic/react';
 import { informationCircleOutline } from 'ionicons/icons';
-import { useIdioma } from '../../shared/i18n/IdiomaContext';
-import type { ClaveTexto } from '../../shared/i18n/es';
+import { useLanguage } from '../../shared/i18n/IdiomaContext';
+import type { TextKey } from '../../shared/i18n/es';
 import './provenance.css';
 
 /**
@@ -23,16 +23,16 @@ import './provenance.css';
  * OSMF tile policy requires it to be visible WITHOUT interaction, so it stays
  * in Leaflet's own control and never comes through here.
  */
-const InfoDatos: React.FC<{
+const DataInfo: React.FC<{
   /** Visible label. Short and specific: "Aviso", "Fuente". */
-  label: ClaveTexto;
+  label: TextKey;
   /** Accessible name, which must also say WHICH block it belongs to. */
-  aria: ClaveTexto;
+  aria: TextKey;
   children: React.ReactNode;
   className?: string;
-}> = ({ label: etiqueta, aria, children, className }) => {
-  const { t } = useIdioma();
-  const [abierto, setAbierto] = useState(false);
+}> = ({ label, aria, children, className }) => {
+  const { t } = useLanguage();
+  const [isOpen, setIsOpen] = useState(false);
   const id = useId();
 
   return (
@@ -40,15 +40,15 @@ const InfoDatos: React.FC<{
       <button
         type="button"
         className="info-datos-btn"
-        onClick={() => setAbierto((v) => !v)}
-        aria-expanded={abierto}
+        onClick={() => setIsOpen((v) => !v)}
+        aria-expanded={isOpen}
         aria-controls={id}
         aria-label={t(aria)}
       >
         <IonIcon icon={informationCircleOutline} aria-hidden="true" />
-        <span>{t(etiqueta)}</span>
+        <span>{t(label)}</span>
       </button>
-      {abierto && (
+      {isOpen && (
         <div className="info-datos-panel" id={id} role="note">
           {children}
         </div>
@@ -57,4 +57,4 @@ const InfoDatos: React.FC<{
   );
 };
 
-export default InfoDatos;
+export default DataInfo;

@@ -1,18 +1,18 @@
-import { resumenTarjeta } from './domain/resumenTarjeta';
-import { nombreArchivoTarjeta } from './infrastructure/compartirImagen';
+import { cardSummary } from './domain/resumenTarjeta';
+import { cardFileName } from './infrastructure/compartirImagen';
 import { es } from '../../shared/i18n/es';
 import { en } from '../../shared/i18n/en';
-import type { ClaveTexto } from '../../shared/i18n/es';
-import type { Idioma } from '../../shared/i18n/IdiomaContext';
+import type { TextKey } from '../../shared/i18n/es';
+import type { Language } from '../../shared/i18n/IdiomaContext';
 import type { FeaturedBeach } from '../../services/api';
 
 /** `t` without the provider: the card is built from data, not from a tree. */
-const traductor = (idioma: Idioma) => (clave: ClaveTexto) =>
-  (idioma === 'en' ? en : es)[clave] ?? clave;
+const translator = (language: Language) => (key: TextKey) =>
+  (language === 'en' ? en : es)[key] ?? key;
 
-const AHORA = new Date(2026, 7, 5); // 5 August 2026, a Wednesday
+const NOW_ISO = new Date(2026, 7, 5); // 5 August 2026, a Wednesday
 
-const PUNTUADA: FeaturedBeach = {
+const SCORED: FeaturedBeach = {
   nombre: 'La Maruca',
   municipio: 'Santander',
   codigo: '3907501',
@@ -30,19 +30,19 @@ const PUNTUADA: FeaturedBeach = {
   oleaje: 'Débil',
 };
 
-const entrada = (idioma: Idioma, puntuada: FeaturedBeach = PUNTUADA) => ({
+const input = (language: Language, scored: FeaturedBeach = SCORED) => ({
   beach: { nombre: 'La Maruca', municipio: 'Santander' },
-  scored: puntuada,
+  scored,
   brand: 'Playucas.es',
   site: 'playucas.es',
-  now: AHORA,
-  t: traductor(idioma),
-  language: idioma,
+  now: NOW_ISO,
+  t: translator(language),
+  language,
 });
 
 describe('resumen de la tarjeta compartible', () => {
   it('dice lo mismo que la ficha: nota redondeada, resumen y las tres celdas', () => {
-    const r = resumenTarjeta(entrada('es'));
+    const r = cardSummary(input('es'));
 
     expect(r.name).toBe('La Maruca');
     expect(r.context).toBe('Santander · Miércoles 5 de agosto');
@@ -54,7 +54,7 @@ describe('resumen de la tarjeta compartible', () => {
   });
 
   it('traduce al inglés todo lo que se pinta, también lo que viene del backend', () => {
-    const r = resumenTarjeta(entrada('en'));
+    const r = cardSummary(input('en'));
 
     expect(r.context).toBe('Santander · Wednesday, August 5');
     expect(r.cells.map((c) => c.label)).toEqual(['Wind', 'Waves', 'Flag']);
@@ -66,26 +66,26 @@ describe('resumen de la tarjeta compartible', () => {
   // Una celda diciendo "sin bandera ahora" se leía como un fallo. Donde nadie
   // vigila no hay nada que informar, y las dos que quedan ocupan el ancho.
   it('una playa sin vigilancia no trae celda de bandera', () => {
-    const r = resumenTarjeta(entrada('es', { ...PUNTUADA, bandera: null }));
+    const r = cardSummary(input('es', { ...SCORED, bandera: null }));
 
     expect(r.cells).toHaveLength(2);
     expect(r.cells.map((c) => c.label)).toEqual(['Viento', 'Oleaje']);
   });
 
   it('sin viento ni oleaje medidos, lo dice en vez de inventar un valor', () => {
-    const r = resumenTarjeta(entrada('es', { ...PUNTUADA, vientoMs: null, oleaje: null }));
+    const r = cardSummary(input('es', { ...SCORED, vientoMs: null, oleaje: null }));
 
-    const sinDato = 'Sin dato';
-    expect(r.cells[0].value).toBe(sinDato);
-    expect(r.cells[1].value).toBe(sinDato);
+    const noData = 'Sin dato';
+    expect(r.cells[0].value).toBe(noData);
+    expect(r.cells[1].value).toBe(noData);
   });
 
   // El ranking redondea el viento por su cuenta: 2,9 m/s puntúa como "sin
   // viento" mientras la previsión del mismo momento dice "flojo". La tarjeta
   // llegó a enseñar las dos, una en la celda y otra en la línea de arriba.
   it('el viento y el oleaje los manda la previsión, que es la que pinta la ficha', () => {
-    const r = resumenTarjeta({
-      ...entrada('es'),
+    const r = cardSummary({
+      ...input('es'),
       forecast: { wind: 'Flojo', waves: 'Débil' },
     });
 
@@ -94,8 +94,8 @@ describe('resumen de la tarjeta compartible', () => {
   });
 
   it('recorta la tira horaria a cuatro y traduce el cielo a un glifo', () => {
-    const r = resumenTarjeta({
-      ...entrada('es'),
+    const r = cardSummary({
+      ...input('es'),
       hours: [
         { horaIso: '2026-08-05T13:00:00Z', nubesPct: 10, temperaturaC: 21.4, vientoMs: 2.6 },
         { horaIso: '2026-08-05T14:00:00Z', nubesPct: 40, temperaturaC: 22, vientoMs: 3 },
@@ -113,8 +113,8 @@ describe('resumen de la tarjeta compartible', () => {
   });
 
   it('ordena las mareas por hora y le quita a AEMET su asterisco de nota', () => {
-    const r = resumenTarjeta({
-      ...entrada('es'),
+    const r = cardSummary({
+      ...input('es'),
       tides: { pleamar: ['06:12', '18:40'], bajamar: ['00:05', '12:25'] },
       tidePort: '*Puerto de Santander',
     });
@@ -125,7 +125,7 @@ describe('resumen de la tarjeta compartible', () => {
   });
 
   it('sin tira horaria ni mareas, la tarjeta simplemente no las lleva', () => {
-    const r = resumenTarjeta(entrada('es'));
+    const r = cardSummary(input('es'));
 
     expect(r.hours).toEqual([]);
     expect(r.tides).toEqual([]);
@@ -133,7 +133,7 @@ describe('resumen de la tarjeta compartible', () => {
   });
 
   it('sin previsión cae a lo que midió el ranking', () => {
-    const r = resumenTarjeta({ ...entrada('es'), forecast: { wind: null, waves: null } });
+    const r = cardSummary({ ...input('es'), forecast: { wind: null, waves: null } });
 
     expect(r.cells[0].value).toBe('Sin viento');
     expect(r.cells[1].value).toBe('Débil');
@@ -142,7 +142,7 @@ describe('resumen de la tarjeta compartible', () => {
   // El aviso viaja DENTRO de la imagen: una tarjeta reenviada sin él se lee
   // como una promesa sobre el estado del mar, y no lo es.
   it('lleva siempre el aviso, la marca y el sitio', () => {
-    const r = resumenTarjeta(entrada('es'));
+    const r = cardSummary(input('es'));
 
     expect(r.warning).toBe(es['aviso.ranking']);
     expect(r.brand).toBe('Playucas.es');
@@ -152,8 +152,8 @@ describe('resumen de la tarjeta compartible', () => {
 
 describe('nombre del archivo compartido', () => {
   it('es legible en el chat: playa y día, sin tildes ni códigos', () => {
-    expect(nombreArchivoTarjeta('La Maruca', AHORA)).toBe('la-maruca-2026-08-05.png');
-    expect(nombreArchivoTarjeta('Somo / Loredo', AHORA)).toBe('somo-loredo-2026-08-05.png');
-    expect(nombreArchivoTarjeta('Berría', AHORA)).toBe('berria-2026-08-05.png');
+    expect(cardFileName('La Maruca', NOW_ISO)).toBe('la-maruca-2026-08-05.png');
+    expect(cardFileName('Somo / Loredo', NOW_ISO)).toBe('somo-loredo-2026-08-05.png');
+    expect(cardFileName('Berría', NOW_ISO)).toBe('berria-2026-08-05.png');
   });
 });

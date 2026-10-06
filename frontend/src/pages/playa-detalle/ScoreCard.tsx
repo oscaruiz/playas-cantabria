@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
 import { IonIcon } from '@ionic/react';
 import { warningOutline, chevronDownOutline } from 'ionicons/icons';
-import { FeaturedBeach, SubPuntuaciones } from '../../services/api';
-import { esLluviaActiva } from '../../utils/beachHelpers';
+import { FeaturedBeach, SubScores } from '../../services/api';
+import { isRainActive } from '../../utils/beachHelpers';
 import ScoreBadge from '../../components/ScoreBadge';
 import TrendBadge from '../../components/TrendBadge';
-import { useIdioma } from '../../shared/i18n/IdiomaContext';
-import { ClaveTexto } from '../../shared/i18n/es';
+import { useLanguage } from '../../shared/i18n/IdiomaContext';
+import { TextKey } from '../../shared/i18n/es';
 import SafetyNotice from '../../shared/ui/SafetyNotice';
 import {
-  traducirTextoApi,
-  razonLegible,
-  claveNivelVientoMs,
-  sinFragmentoDePronostico,
+  translateApiText,
+  readableReason,
+  windLevelKey,
+  noForecastFragment,
 } from '../../shared/i18n/apiText';
 
 /**
@@ -20,13 +20,13 @@ import {
  * `topeValor`. The forecast cap is graded now (59 imminent → none at 6 h), so
  * the published value wins; 59 is only the floor an old backend enforced.
  */
-const TOPES: Record<'lluvia' | 'lluvia_prevista', { labelKey: ClaveTexto; value: number }> = {
+const CAPS: Record<'lluvia' | 'lluvia_prevista', { labelKey: TextKey; value: number }> = {
   lluvia: { labelKey: 'detalle.scoreInfo.topeLluvia', value: 55 },
   lluvia_prevista: { labelKey: 'detalle.scoreInfo.topeLluviaPrevista', value: 59 },
 };
 
 /** Reachable maximum of each factor when the backend does not send `maximos`. */
-const MAXIMOS_POR_DEFECTO: SubPuntuaciones = {
+const DEFAULT_MAXIMA: SubScores = {
   cielo: 25, temperatura: 25, bandera: 10, viento: 25, oleaje: 10, datos: 5,
 };
 
@@ -40,7 +40,7 @@ const MAXIMOS_POR_DEFECTO: SubPuntuaciones = {
  * summer day, which are the days worth going) and it would be dishonest to
  * list it here. The index is still shown further down the page as data.
  */
-const FACTORES: Array<{ field: keyof SubPuntuaciones; labelKey: ClaveTexto }> = [
+const FACTORS: Array<{ field: keyof SubScores; labelKey: TextKey }> = [
   { field: 'cielo', labelKey: 'detalle.scoreInfo.sol' },
   { field: 'temperatura', labelKey: 'detalle.scoreInfo.temp' },
   { field: 'viento', labelKey: 'detalle.scoreInfo.viento' },
@@ -50,68 +50,68 @@ const FACTORES: Array<{ field: keyof SubPuntuaciones; labelKey: ClaveTexto }> = 
 ];
 
 /** Rules that cap or exclude: they do not score, so they carry no points. */
-const REGLAS: ClaveTexto[] = ['detalle.scoreInfo.lluvia', 'detalle.scoreInfo.peligro'];
+const RULES: TextKey[] = ['detalle.scoreInfo.lluvia', 'detalle.scoreInfo.peligro'];
 
 /** "Concept: description" → the two halves the row paints. */
-function partirTexto(texto: string): { label: string; description: string } {
-  const sep = texto.indexOf(':');
+function splitText(text: string): { label: string; description: string } {
+  const sep = text.indexOf(':');
   return sep >= 0
-    ? { label: texto.slice(0, sep), description: texto.slice(sep + 1).trim() }
-    : { label: texto, description: '' };
+    ? { label: text.slice(0, sep), description: text.slice(sep + 1).trim() }
+    : { label: text, description: '' };
 }
 
 /** Today's score with its reason, and a disclosure explaining how it is computed. */
 const ScoreCard: React.FC<{
   scored: FeaturedBeach;
-  maxima?: SubPuntuaciones | null;
-}> = ({ scored: puntuada, maxima: maximos }) => {
-  const { t, language: idioma } = useIdioma();
+  maxima?: SubScores | null;
+}> = ({ scored, maxima }) => {
+  const { t, language } = useLanguage();
   const [scoreInfoOpen, setScoreInfoOpen] = useState(false);
 
-  const pronostico = puntuada.pronostico ?? null;
-  const desglose = puntuada.subpuntuaciones ?? null;
-  const escala = maximos ?? MAXIMOS_POR_DEFECTO;
-  const tope = puntuada.topeAplicado
-    ? { ...TOPES[puntuada.topeAplicado], valor: puntuada.topeValor ?? TOPES[puntuada.topeAplicado].value }
+  const outlook = scored.pronostico ?? null;
+  const breakdown = scored.subpuntuaciones ?? null;
+  const scale = maxima ?? DEFAULT_MAXIMA;
+  const cap = scored.topeAplicado
+    ? { ...CAPS[scored.topeAplicado], valor: scored.topeValor ?? CAPS[scored.topeAplicado].value }
     : null;
 
-  const razon = pronostico
-    ? sinFragmentoDePronostico(puntuada.razonRanking)
-    : puntuada.razonRanking;
-  const motivo = pronostico && puntuada.motivoBaja
-    ? sinFragmentoDePronostico(puntuada.motivoBaja)
-    : puntuada.motivoBaja;
+  const rationale = outlook
+    ? noForecastFragment(scored.razonRanking)
+    : scored.razonRanking;
+  const reason = outlook && scored.motivoBaja
+    ? noForecastFragment(scored.motivoBaja)
+    : scored.motivoBaja;
 
   /** What this beach shows next to each factor: the datum that explains the points. */
-  const valorDe = (campo: keyof SubPuntuaciones): string => {
-    switch (campo) {
+  const valueFor = (field: keyof SubScores): string => {
+    switch (field) {
       case 'cielo':
         // The live rain signal of THIS scored payload wins over the model's
         // cloud text: "Nubes" here next to the hero's "lloviendo ahora" badge
         // read as a contradiction. The points stay as they are — rain does not
         // score the sky, it caps the total (the rule listed below).
-        if (esLluviaActiva({ cielo: puntuada.descripcionClima, lluvia: puntuada.lluvia ?? null })) {
-          return traducirTextoApi('Lluvia', idioma);
+        if (isRainActive({ cielo: scored.descripcionClima, lluvia: scored.lluvia ?? null })) {
+          return translateApiText('Lluvia', language);
         }
-        return traducirTextoApi(puntuada.descripcionClima, idioma) || t('detalle.scoreInfo.sinDato');
+        return translateApiText(scored.descripcionClima, language) || t('detalle.scoreInfo.sinDato');
       case 'temperatura':
-        return puntuada.temperatura != null
-          ? `${Math.round(puntuada.temperatura)}°`
+        return scored.temperatura != null
+          ? `${Math.round(scored.temperatura)}°`
           : t('detalle.scoreInfo.sinDato');
       case 'bandera':
-        return puntuada.bandera
-          ? traducirTextoApi(puntuada.bandera, idioma)
+        return scored.bandera
+          ? translateApiText(scored.bandera, language)
           : t('detalle.scoreInfo.sinBanderaAhora');
       case 'viento':
-        return puntuada.vientoMs != null
-          ? `${t(claveNivelVientoMs(puntuada.vientoMs))}, ${Math.round(puntuada.vientoMs)} m/s`
+        return scored.vientoMs != null
+          ? `${t(windLevelKey(scored.vientoMs))}, ${Math.round(scored.vientoMs)} m/s`
           : t('detalle.scoreInfo.sinDato');
       case 'oleaje':
-        return puntuada.oleaje
-          ? traducirTextoApi(puntuada.oleaje, idioma)
+        return scored.oleaje
+          ? translateApiText(scored.oleaje, language)
           : t('detalle.scoreInfo.sinDato');
       case 'datos':
-        return desglose && desglose.datos >= escala.datos
+        return breakdown && breakdown.datos >= scale.datos
           ? t('detalle.scoreInfo.datosCompletos')
           : t('detalle.scoreInfo.datosParciales');
       default:
@@ -128,7 +128,7 @@ const ScoreCard: React.FC<{
         aria-expanded={scoreInfoOpen}
         aria-controls="pd-score-info"
       >
-        <ScoreBadge score={puntuada.puntuacion} size="lg" />
+        <ScoreBadge score={scored.puntuacion} size="lg" />
         <div className="pd-score-text">
           <p className="pd-score-label">
             <span>{t('detalle.puntuacion')}</span>
@@ -141,18 +141,18 @@ const ScoreCard: React.FC<{
               />
             </span>
           </p>
-          {razon && (
+          {rationale && (
             <p className="pd-score-reason">
-              {traducirTextoApi(razonLegible(razon), idioma)}
+              {translateApiText(readableReason(rationale), language)}
             </p>
           )}
           {/* Where the day is going, visible without opening anything: it is the
               most actionable line on the screen. */}
-          <TrendBadge outlook={pronostico} size="lg" />
-          {motivo && (
+          <TrendBadge outlook={outlook} size="lg" />
+          {reason && (
             <p className="pd-score-caveat">
               <IonIcon icon={warningOutline} aria-hidden="true" />{' '}
-              {traducirTextoApi(motivo, idioma)}
+              {translateApiText(reason, language)}
             </p>
           )}
         </div>
@@ -168,38 +168,38 @@ const ScoreCard: React.FC<{
           <p className="pd-score-info-intro">{t('detalle.scoreInfo.intro')}</p>
 
           {/* Why THIS beach scored what it scored. */}
-          {desglose && (
+          {breakdown && (
             <>
               <p className="pd-score-info-sub">{t('detalle.scoreInfo.deEstaPlaya')}</p>
               <div className="pd-factores">
-                {FACTORES.map(({ field: campo, labelKey: clave }) => {
-                  const { label: etiqueta, description: descripcion } = partirTexto(t(clave));
-                  const puntos = desglose[campo];
-                  const max = escala[campo];
+                {FACTORS.map(({ field, labelKey: key }) => {
+                  const { label, description } = splitText(t(key));
+                  const points = breakdown[field];
+                  const max = scale[field];
                   return (
-                    <div className="pd-factor" key={campo}>
-                      <span className="pd-factor-nombre">{etiqueta}</span>
-                      <span className="pd-factor-valor">{valorDe(campo)}</span>
+                    <div className="pd-factor" key={field}>
+                      <span className="pd-factor-nombre">{label}</span>
+                      <span className="pd-factor-valor">{valueFor(field)}</span>
                       <span className="pd-factor-puntos">
-                        {t('detalle.scoreInfo.puntos', { n: puntos, max })}
+                        {t('detalle.scoreInfo.puntos', { n: points, max })}
                       </span>
                       <span className="pd-factor-barra" aria-hidden="true">
                         <span
                           className="pd-factor-relleno"
-                          style={{ width: `${Math.max(0, Math.min(100, (puntos / max) * 100))}%` }}
+                          style={{ width: `${Math.max(0, Math.min(100, (points / max) * 100))}%` }}
                         />
                       </span>
-                      <span className="pd-factor-nota">{descripcion}</span>
+                      <span className="pd-factor-nota">{description}</span>
                     </div>
                   );
                 })}
               </div>
               {/* Without this line the numbers look broken: they add up to more
                   than the score because a cap clipped it. */}
-              {tope && (
+              {cap && (
                 <p className="pd-score-tope">
                   <IonIcon icon={warningOutline} aria-hidden="true" />{' '}
-                  {t(tope.labelKey, { n: tope.valor })}
+                  {t(cap.labelKey, { n: cap.valor })}
                 </p>
               )}
             </>
@@ -207,12 +207,12 @@ const ScoreCard: React.FC<{
 
           {/* Rules that cap or exclude: they have no points of their own. */}
           <div className="beach-info-grid">
-            {REGLAS.map((k) => {
-              const { label: etiqueta, description: descripcion } = partirTexto(t(k));
+            {RULES.map((k) => {
+              const { label, description } = splitText(t(k));
               return (
                 <div className="beach-info-row" key={k}>
-                  <span className="beach-info-label">{etiqueta}</span>
-                  <span className="beach-info-value">{descripcion}</span>
+                  <span className="beach-info-label">{label}</span>
+                  <span className="beach-info-value">{description}</span>
                 </div>
               );
             })}

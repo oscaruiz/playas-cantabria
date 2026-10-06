@@ -14,95 +14,95 @@
  *  - "rayos": active rain was false (old fallback only knew 'tormenta'),
  *    now true — storm counts as precipitation, as it already did for emoji.
  */
-import { emojiCielo, palabraCielo, esLluviaActiva } from '../../utils/beachHelpers';
-import { TABLAS_API } from '../i18n/apiText';
+import { skyEmoji, skyWord, isRainActive } from '../../utils/beachHelpers';
+import { API_TABLES } from '../i18n/apiText';
 
-const TORMENTA = '⛈️';
-const NIEVE = '\u{1F328}️';
-const LLUVIA = '\u{1F327}️';
-const NIEBLA = '\u{1F32B}️';
-const LUNA = '\u{1F319}';
-const SOL_NUBE = '\u{1F324}️';
-const SOL = '☀️';
-const NUBE = '☁️';
-const NUBE_SOL = '⛅';
+const STORM = '⛈️';
+const SNOW = '\u{1F328}️';
+const RAIN = '\u{1F327}️';
+const FOG = '\u{1F32B}️';
+const MOON = '\u{1F319}';
+const SUN_CLOUD = '\u{1F324}️';
+const SUN = '☀️';
+const CLOUD = '☁️';
+const CLOUD_SUN = '⛅';
 
-const P_SOL = 'Parcialmente soleado';
-const P_DESP = 'Parcialmente despejado';
+const P_SUN = 'Parcialmente soleado';
+const P_AFTER = 'Parcialmente despejado';
 
 // [phrase, emoji day, emoji night, word day, word night, active rain]
 const GOLDEN: Array<[string, string, string, string | null, string | null, boolean]> = [
-  ['despejado', SOL, LUNA, 'Sol', 'Despejado', false],
-  ['soleado', SOL, LUNA, 'Sol', 'Despejado', false],
+  ['despejado', SUN, MOON, 'Sol', 'Despejado', false],
+  ['soleado', SUN, MOON, 'Sol', 'Despejado', false],
   // Bare "sol" (a razonRanking fragment) matches no sky regex: placeholder + null.
-  ['sol', NUBE_SOL, NUBE_SOL, null, null, false],
-  ['parcialmente soleado', SOL_NUBE, LUNA, P_SOL, P_DESP, false],
-  ['parcialmente despejado', SOL_NUBE, LUNA, P_SOL, P_DESP, false],
-  ['poco nuboso', SOL_NUBE, LUNA, P_SOL, P_DESP, false],
-  ['intervalos nubosos', SOL_NUBE, LUNA, P_SOL, P_DESP, false],
-  ['intervalos nubosos con lluvia escasa', LLUVIA, LLUVIA, 'Lluvia', 'Lluvia', true],
-  ['intervalos nubosos con lluvia', LLUVIA, LLUVIA, 'Lluvia', 'Lluvia', true],
-  ['parcialmente nuboso', SOL_NUBE, LUNA, P_SOL, P_DESP, false],
-  ['nuboso', NUBE_SOL, NUBE_SOL, 'Nublado', 'Nublado', false],
-  ['nublado', NUBE_SOL, NUBE_SOL, 'Nublado', 'Nublado', false],
-  ['muy nuboso', NUBE, NUBE, 'Nublado', 'Nublado', false],
-  ['cubierto', NUBE, NUBE, 'Nublado', 'Nublado', false],
-  ['cubierto con lluvia escasa', LLUVIA, LLUVIA, 'Lluvia', 'Lluvia', true],
-  ['cubierto con lluvia', LLUVIA, LLUVIA, 'Lluvia', 'Lluvia', true],
-  ['cielo nublado', NUBE_SOL, NUBE_SOL, 'Nublado', 'Nublado', false],
-  ['cielo despejado', SOL, LUNA, 'Sol', 'Despejado', false],
-  ['cielo cubierto', NUBE, NUBE, 'Nublado', 'Nublado', false],
-  ['algo de nubes', SOL_NUBE, LUNA, P_SOL, P_DESP, false],
-  ['nubes', NUBE, NUBE, 'Nublado', 'Nublado', false],
-  ['nubes dispersas', SOL_NUBE, LUNA, P_SOL, P_DESP, false],
-  ['cielo claro', SOL, LUNA, 'Sol', 'Despejado', false],
-  ['lluvia', LLUVIA, LLUVIA, 'Lluvia', 'Lluvia', true],
-  ['lluvia ligera', LLUVIA, LLUVIA, 'Lluvia', 'Lluvia', true],
-  ['lluvia escasa', LLUVIA, LLUVIA, 'Lluvia', 'Lluvia', true],
-  ['llovizna', LLUVIA, LLUVIA, 'Lluvia', 'Lluvia', true],
-  ['chubascos', LLUVIA, LLUVIA, 'Lluvia', 'Lluvia', true],
-  ['chubascos tormentosos', TORMENTA, TORMENTA, 'Tormenta', 'Tormenta', true],
-  ['tormenta', TORMENTA, TORMENTA, 'Tormenta', 'Tormenta', true],
-  ['niebla', NIEBLA, NIEBLA, 'Niebla', 'Niebla', false],
-  ['bruma', NIEBLA, NIEBLA, 'Niebla', 'Niebla', false],
-  ['neblina', NIEBLA, NIEBLA, 'Niebla', 'Niebla', false],
-  ['nieve', NIEVE, NIEVE, 'Nieve', 'Nieve', false],
+  ['sol', CLOUD_SUN, CLOUD_SUN, null, null, false],
+  ['parcialmente soleado', SUN_CLOUD, MOON, P_SUN, P_AFTER, false],
+  ['parcialmente despejado', SUN_CLOUD, MOON, P_SUN, P_AFTER, false],
+  ['poco nuboso', SUN_CLOUD, MOON, P_SUN, P_AFTER, false],
+  ['intervalos nubosos', SUN_CLOUD, MOON, P_SUN, P_AFTER, false],
+  ['intervalos nubosos con lluvia escasa', RAIN, RAIN, 'Lluvia', 'Lluvia', true],
+  ['intervalos nubosos con lluvia', RAIN, RAIN, 'Lluvia', 'Lluvia', true],
+  ['parcialmente nuboso', SUN_CLOUD, MOON, P_SUN, P_AFTER, false],
+  ['nuboso', CLOUD_SUN, CLOUD_SUN, 'Nublado', 'Nublado', false],
+  ['nublado', CLOUD_SUN, CLOUD_SUN, 'Nublado', 'Nublado', false],
+  ['muy nuboso', CLOUD, CLOUD, 'Nublado', 'Nublado', false],
+  ['cubierto', CLOUD, CLOUD, 'Nublado', 'Nublado', false],
+  ['cubierto con lluvia escasa', RAIN, RAIN, 'Lluvia', 'Lluvia', true],
+  ['cubierto con lluvia', RAIN, RAIN, 'Lluvia', 'Lluvia', true],
+  ['cielo nublado', CLOUD_SUN, CLOUD_SUN, 'Nublado', 'Nublado', false],
+  ['cielo despejado', SUN, MOON, 'Sol', 'Despejado', false],
+  ['cielo cubierto', CLOUD, CLOUD, 'Nublado', 'Nublado', false],
+  ['algo de nubes', SUN_CLOUD, MOON, P_SUN, P_AFTER, false],
+  ['nubes', CLOUD, CLOUD, 'Nublado', 'Nublado', false],
+  ['nubes dispersas', SUN_CLOUD, MOON, P_SUN, P_AFTER, false],
+  ['cielo claro', SUN, MOON, 'Sol', 'Despejado', false],
+  ['lluvia', RAIN, RAIN, 'Lluvia', 'Lluvia', true],
+  ['lluvia ligera', RAIN, RAIN, 'Lluvia', 'Lluvia', true],
+  ['lluvia escasa', RAIN, RAIN, 'Lluvia', 'Lluvia', true],
+  ['llovizna', RAIN, RAIN, 'Lluvia', 'Lluvia', true],
+  ['chubascos', RAIN, RAIN, 'Lluvia', 'Lluvia', true],
+  ['chubascos tormentosos', STORM, STORM, 'Tormenta', 'Tormenta', true],
+  ['tormenta', STORM, STORM, 'Tormenta', 'Tormenta', true],
+  ['niebla', FOG, FOG, 'Niebla', 'Niebla', false],
+  ['bruma', FOG, FOG, 'Niebla', 'Niebla', false],
+  ['neblina', FOG, FOG, 'Niebla', 'Niebla', false],
+  ['nieve', SNOW, SNOW, 'Nieve', 'Nieve', false],
   // ——— beyond the inventory ———
   // AEMET capitalizes; classification must not care.
-  ['Intervalos nubosos con lluvia escasa', LLUVIA, LLUVIA, 'Lluvia', 'Lluvia', true],
-  ['Cubierto con lluvia', LLUVIA, LLUVIA, 'Lluvia', 'Lluvia', true],
-  ['aguanieve', NIEVE, NIEVE, 'Nieve', 'Nieve', false],
-  ['tormenta eléctrica', TORMENTA, TORMENTA, 'Tormenta', 'Tormenta', true],
+  ['Intervalos nubosos con lluvia escasa', RAIN, RAIN, 'Lluvia', 'Lluvia', true],
+  ['Cubierto con lluvia', RAIN, RAIN, 'Lluvia', 'Lluvia', true],
+  ['aguanieve', SNOW, SNOW, 'Nieve', 'Nieve', false],
+  ['tormenta eléctrica', STORM, STORM, 'Tormenta', 'Tormenta', true],
   // UNIFICATION (new expectation): singular used to miss the emoji rain regex.
-  ['Chubasco', LLUVIA, LLUVIA, 'Lluvia', 'Lluvia', true],
+  ['Chubasco', RAIN, RAIN, 'Lluvia', 'Lluvia', true],
   // UNIFICATION (new expectation): storm now counts as precipitation here too.
-  ['rayos', TORMENTA, TORMENTA, 'Tormenta', 'Tormenta', true],
+  ['rayos', STORM, STORM, 'Tormenta', 'Tormenta', true],
   // Unknown text: day placeholder even at night; word null so callers show the raw text.
-  ['texto que nadie reconoce', NUBE_SOL, NUBE_SOL, null, null, false],
+  ['texto que nadie reconoce', CLOUD_SUN, CLOUD_SUN, null, null, false],
 ];
 
 describe('cielo — golden del trío emoji / palabra / lluvia activa', () => {
-  it.each(GOLDEN)('"%s"', (frase, emojiDia, emojiNoche, palabraDia, palabraNoche, lluvia) => {
-    expect(emojiCielo(frase, false)).toBe(emojiDia);
-    expect(emojiCielo(frase, true)).toBe(emojiNoche);
-    expect(palabraCielo(frase, false)).toBe(palabraDia);
-    expect(palabraCielo(frase, true)).toBe(palabraNoche);
-    expect(esLluviaActiva({ cielo: frase })).toBe(lluvia);
+  it.each(GOLDEN)('"%s"', (phrase, dayEmoji, nightEmoji, dayWord, nightWord, rain) => {
+    expect(skyEmoji(phrase, false)).toBe(dayEmoji);
+    expect(skyEmoji(phrase, true)).toBe(nightEmoji);
+    expect(skyWord(phrase, false)).toBe(dayWord);
+    expect(skyWord(phrase, true)).toBe(nightWord);
+    expect(isRainActive({ cielo: phrase })).toBe(rain);
   });
 
   it('sin texto: luna de noche, placeholder de día, palabra null', () => {
-    expect(emojiCielo(null, false)).toBe(NUBE_SOL);
-    expect(emojiCielo(null, true)).toBe(LUNA);
-    expect(palabraCielo(null)).toBeNull();
-    expect(palabraCielo(undefined)).toBeNull();
-    expect(esLluviaActiva({ cielo: null })).toBe(false);
-    expect(esLluviaActiva(null)).toBe(false);
+    expect(skyEmoji(null, false)).toBe(CLOUD_SUN);
+    expect(skyEmoji(null, true)).toBe(MOON);
+    expect(skyWord(null)).toBeNull();
+    expect(skyWord(undefined)).toBeNull();
+    expect(isRainActive({ cielo: null })).toBe(false);
+    expect(isRainActive(null)).toBe(false);
   });
 
   it('cada frase de MAPA_CIELO tiene fila golden', () => {
-    const enTabla = new Set(GOLDEN.map(([frase]) => frase.toLowerCase()));
-    for (const frase of Object.keys(TABLAS_API.MAPA_CIELO)) {
-      expect(enTabla).toContain(frase);
+    const inTable = new Set(GOLDEN.map(([phrase]) => phrase.toLowerCase()));
+    for (const phrase of Object.keys(API_TABLES.MAPA_CIELO)) {
+      expect(inTable).toContain(phrase);
     }
   });
 });

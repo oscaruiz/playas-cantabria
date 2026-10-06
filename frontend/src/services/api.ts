@@ -1,6 +1,6 @@
 import { buildRegionApiUrl } from '../shared/config/api';
 
-const PLAYAS_FALLBACK_TIMEOUT_MS = 2500;
+const BEACHES_FALLBACK_TIMEOUT_MS = 2500;
 /** The catalog: names, coordinates and services. It does not change during a visit. */
 const CLIENT_CACHE_TTL_MS = 5 * 60 * 1000;
 /**
@@ -12,13 +12,13 @@ const CLIENT_CACHE_TTL_MS = 5 * 60 * 1000;
  */
 const FEATURED_CACHE_TTL_MS = 60 * 1000;
 
-const CLAVE_PLAYAS_GUARDADAS = 'playas:ultimoListado';
+const SAVED_BEACHES_KEY = 'playas:ultimoListado';
 /** After a day, the saved copy stops being better than the build's JSON. */
-const EDAD_MAXIMA_GUARDADAS_MS = 24 * 60 * 60 * 1000;
+const MAX_SAVED_AGE_MS = 24 * 60 * 60 * 1000;
 
-let fallbackPromise: Promise<Playa[]> | null = null;
-let playasRequest: Promise<Playa[]> | null = null;
-let playasCache: { value: Playa[]; expiresAt: number } | null = null;
+let fallbackPromise: Promise<Beach[]> | null = null;
+let beachesRequest: Promise<Beach[]> | null = null;
+let beachesCache: { value: Beach[]; expiresAt: number } | null = null;
 
 /**
  * Saves the last REAL listing from the backend. `data/beaches.json` is a snapshot
@@ -26,11 +26,11 @@ let playasCache: { value: Playa[]; expiresAt: number } | null = null;
  * fallback than that copy. Writing to localStorage can fail (private mode,
  * quota full): it must never break the request.
  */
-function guardarPlayas(data: Playa[]): void {
+function saveBeaches(data: Beach[]): void {
   if (data.length === 0) return;
   try {
     localStorage.setItem(
-      CLAVE_PLAYAS_GUARDADAS,
+      SAVED_BEACHES_KEY,
       JSON.stringify({ guardadoEn: Date.now(), playas: data }),
     );
   } catch {
@@ -38,56 +38,56 @@ function guardarPlayas(data: Playa[]): void {
   }
 }
 
-function leerPlayasGuardadas(): Playa[] | null {
+function readSavedBeaches(): Beach[] | null {
   try {
-    const crudo = localStorage.getItem(CLAVE_PLAYAS_GUARDADAS);
-    if (!crudo) return null;
-    const parsed = JSON.parse(crudo) as { guardadoEn?: number; playas?: unknown };
+    const raw = localStorage.getItem(SAVED_BEACHES_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { guardadoEn?: number; playas?: unknown };
     if (!Array.isArray(parsed.playas) || parsed.playas.length === 0) return null;
     if (typeof parsed.guardadoEn !== 'number') return null;
-    if (Date.now() - parsed.guardadoEn > EDAD_MAXIMA_GUARDADAS_MS) return null;
-    return parsed.playas as Playa[];
+    if (Date.now() - parsed.guardadoEn > MAX_SAVED_AGE_MS) return null;
+    return parsed.playas as Beach[];
   } catch {
     return null;
   }
 }
 
-function loadFallbackPlayas(): Promise<Playa[]> {
-  const guardadas = leerPlayasGuardadas();
-  if (guardadas) return Promise.resolve(guardadas);
+function loadFallbackBeaches(): Promise<Beach[]> {
+  const saved = readSavedBeaches();
+  if (saved) return Promise.resolve(saved);
 
   fallbackPromise ??= import('../data/beaches.json').then(
-    (module) => module.default as Playa[],
+    (module) => module.default as Beach[],
   );
   return fallbackPromise;
 }
 
-function fetchPlayasOnce(): Promise<Playa[]> {
-  if (playasCache && playasCache.expiresAt > Date.now()) {
-    return Promise.resolve(playasCache.value);
+function fetchBeachesOnce(): Promise<Beach[]> {
+  if (beachesCache && beachesCache.expiresAt > Date.now()) {
+    return Promise.resolve(beachesCache.value);
   }
-  if (playasRequest) return playasRequest;
+  if (beachesRequest) return beachesRequest;
 
-  playasRequest = fetch(buildRegionApiUrl('/beaches'))
+  beachesRequest = fetch(buildRegionApiUrl('/beaches'))
     .then((res) => {
       if (!res.ok) throw new Error('Error al obtener playas');
-      return res.json() as Promise<Playa[]>;
+      return res.json() as Promise<Beach[]>;
     })
     .then((data) => {
-      playasCache = { value: data, expiresAt: Date.now() + CLIENT_CACHE_TTL_MS };
-      guardarPlayas(data);
+      beachesCache = { value: data, expiresAt: Date.now() + CLIENT_CACHE_TTL_MS };
+      saveBeaches(data);
       return data;
     })
     .finally(() => {
-      playasRequest = null;
+      beachesRequest = null;
     });
 
-  return playasRequest;
+  return beachesRequest;
 }
 
-type GetPlayasOptions = {
+type GetBeachesOptions = {
   timeoutMs?: number;
-  onBackendData?: (data: Playa[]) => void;
+  onBackendData?: (data: Beach[]) => void;
   /**
    * Called (at most once) when the local data is returned instead of the
    * backend's, so the user can be warned that it is not fresh.
@@ -105,9 +105,9 @@ type GetPlayasOptions = {
   onFallbackUnavailable?: () => void;
 };
 
-export async function getPlayas(options: GetPlayasOptions = {}): Promise<Playa[]> {
+export async function getBeaches(options: GetBeachesOptions = {}): Promise<Beach[]> {
   const {
-    timeoutMs = PLAYAS_FALLBACK_TIMEOUT_MS,
+    timeoutMs = BEACHES_FALLBACK_TIMEOUT_MS,
     onBackendData,
     onFallback,
     onFallbackUnavailable,
@@ -116,9 +116,9 @@ export async function getPlayas(options: GetPlayasOptions = {}): Promise<Playa[]
   let didReturnFallback = false;
   let didReportFallbackUnavailable = false;
 
-  const loadFallbackOrEmpty = async (): Promise<Playa[]> => {
+  const loadFallbackOrEmpty = async (): Promise<Beach[]> => {
     try {
-      return await loadFallbackPlayas();
+      return await loadFallbackBeaches();
     } catch {
       if (!didReportFallbackUnavailable) {
         didReportFallbackUnavailable = true;
@@ -128,7 +128,7 @@ export async function getPlayas(options: GetPlayasOptions = {}): Promise<Playa[]
     }
   };
 
-  const fetchPromise = fetchPlayasOnce()
+  const fetchPromise = fetchBeachesOnce()
     .then((data) => {
       if (didReturnFallback) {
         onBackendData?.(data);
@@ -136,7 +136,7 @@ export async function getPlayas(options: GetPlayasOptions = {}): Promise<Playa[]
       return data;
     });
 
-  const timeoutPromise = new Promise<Playa[]>((resolve) => {
+  const timeoutPromise = new Promise<Beach[]>((resolve) => {
     timeoutId = setTimeout(() => {
       didReturnFallback = true;
       onFallback?.();
@@ -165,7 +165,7 @@ export async function getPlayas(options: GetPlayasOptions = {}): Promise<Playa[]
 // ------------------------------
 // Base models
 // ------------------------------
-export interface PlayaAtributos {
+export interface BeachAttributes {
   [key: string]: boolean | undefined;
   accesoBanista?: boolean;
   accesible?: boolean;
@@ -179,7 +179,7 @@ export interface PlayaAtributos {
   surf?: boolean;
 }
 
-export interface CruzRojaStation {
+export interface RedCrossStation {
   id?: number;
   nombreFuente: string;
 }
@@ -189,14 +189,14 @@ export interface BeachSector {
   longitud?: number;
 }
 
-export interface Playa {
+export interface Beach {
   nombre: string;
   municipio: string;
   codigo: string;
   lat: number;
   lon: number;
   idCruzRoja?: number;
-  cruzRojaStations?: CruzRojaStation[];
+  cruzRojaStations?: RedCrossStation[];
   /**
    * Operator watching the beach ("Cruz Roja"), null if nobody does. Optional
    * because the local fallback catalog and older backends do not carry it —
@@ -205,7 +205,7 @@ export interface Playa {
   fuenteBanderas?: string | null;
   alias?: string[];
   sectores?: BeachSector[];
-  atributos?: PlayaAtributos;
+  atributos?: BeachAttributes;
   longitud?: number;
   anchura?: number;
   tipoPlaya?: string;
@@ -215,7 +215,7 @@ export interface Playa {
   bus?: string;
   hospitalDistancia?: number;
   submarinismo?: boolean;
-  webcam?: WebcamPlaya | null;
+  webcam?: BeachWebcam | null;
   /** Year of the current Blue Flag award (ADEAC); absent/null if none. */
   banderaAzul?: number | null;
 }
@@ -223,7 +223,7 @@ export interface Playa {
 // ------------------------------
 // Cruz Roja data
 // ------------------------------
-export interface DatosCruzRoja {
+export interface RedCrossData {
   bandera?: string;
   coberturaDesde?: string;
   coberturaHasta?: string;
@@ -234,7 +234,7 @@ export interface DatosCruzRoja {
 // ------------------------------
 // AEMET forecast
 // ------------------------------
-export interface PrediccionAEMETDia {
+export interface AemetForecastDay {
   estadoCielo: {
     descripcion1: string;
     descripcion2?: string;
@@ -262,10 +262,10 @@ export interface PrediccionAEMETDia {
   fecha: number;
 }
 
-export interface DatosAEMET {
+export interface AemetData {
   elaborado: string;
   prediccion: {
-    dia: PrediccionAEMETDia[];
+    dia: AemetForecastDay[];
   };
   origen: {
     productor: string;
@@ -283,9 +283,9 @@ export interface DatosAEMET {
  * cloudiness) or filled it with a default (water). The list travels so the UI
  * can stop showing a guess with the same face as an observation.
  */
-export type CampoEstimado = 'sensacion' | 'viento' | 'oleaje' | 'uv' | 'agua';
+export type EstimatedField = 'sensacion' | 'viento' | 'oleaje' | 'uv' | 'agua';
 
-export interface PrediccionDia {
+export interface ForecastDay {
   summary: string;
   temperature: number;
   waterTemperature: number;
@@ -295,14 +295,14 @@ export interface PrediccionDia {
   uvIndex?: number;
   icon: string;
   /** Optional: a backend that predates it simply marks nothing. */
-  estimados?: CampoEstimado[] | null;
+  estimados?: EstimatedField[] | null;
 }
 
-export interface DatosClima {
+export interface WeatherData {
   fuente: 'AEMET' | 'OpenWeatherMap';
   ultimaActualizacion: string;
-  hoy: PrediccionDia;
-  manana: PrediccionDia;
+  hoy: ForecastDay;
+  manana: ForecastDay;
 }
 
 // ------------------------------
@@ -315,7 +315,7 @@ export interface HalfDayDTO {
   oleaje: string | null;
 }
 
-export interface DiaPrediccionDTO {
+export interface ForecastDayDTO {
   fecha: string;
   manana: HalfDayDTO;
   tarde: HalfDayDTO;
@@ -327,11 +327,11 @@ export interface DiaPrediccionDTO {
   aviso: { nivel: number | null; descripcion: string | null } | null;
 }
 
-export interface PrediccionCompletaDTO {
+export interface FullForecastDTO {
   fuente: 'AEMET_XML' | 'AEMET_HTML';
   elaboracion: string | null;
   zonaAvisos: string | null;
-  dias: DiaPrediccionDTO[];
+  dias: ForecastDayDTO[];
   mareas: Array<{ pleamar: string[]; bajamar: string[] }>;
   fuenteMareas: string | null;
 }
@@ -344,25 +344,25 @@ export interface PrediccionCompletaDTO {
  * OpenWeather + AEMET rain gauge + Open-Meteo). Additive field.
  */
 /** FORECAST rain (next ~6h Open-Meteo ∪ AEMET text for the rest of today). */
-export interface LluviaPrevista {
+export interface ExpectedRain {
   /** ISO of the first interval with precipitation; null if the signal is textual only (AEMET). */
   desdeIso: string | null;
   mm: number | null;
   fuentes: string[];
 }
 
-export interface LluviaActual {
+export interface CurrentRain {
   estado: 'lloviendo' | 'sin_lluvia' | 'desconocido';
   mm: number | null;
   /** true = only the AEMET rain gauge triggered the signal (it rained in the last hour). */
   ultimaHora: boolean;
   fuentes: string[];
   timestamp: string;
-  prevista?: LluviaPrevista | null;
+  prevista?: ExpectedRain | null;
 }
 
 /** One hour of the outlook the score is judging (already trimmed by the backend). */
-export interface PrevisionHora {
+export interface HourlyForecast {
   horaIso: string;
   nubesPct: number | null;
   temperaturaC: number | null;
@@ -371,20 +371,20 @@ export interface PrevisionHora {
   precipitacionMm?: number | null;
 }
 
-export interface TiempoActual {
+export interface CurrentConditions {
   cielo: string | null;
   icono: number | null;
   temperatura: number | null;
   precipitacionMm: number | null;
   fuente: string;
   timestamp: string;
-  lluvia?: LluviaActual | null;
+  lluvia?: CurrentRain | null;
   /** Next few hours. Absent when Open-Meteo is down or outside the beach window. */
-  previsionHoras?: PrevisionHora[] | null;
+  previsionHoras?: HourlyForecast[] | null;
   /** Who forecast those hours, as the API credits it. */
   previsionHorasFuente?: string | null;
   /** WHEN to go today. Same shape as the listing's field. */
-  ventanaDia?: VentanaDia | null;
+  ventanaDia?: DayWindow | null;
   /** Who forecast the window's hours, as the API credits it. */
   ventanaDiaFuente?: string | null;
   /**
@@ -405,7 +405,7 @@ export interface TiempoActual {
  * exactly at this beach, at a shared panorama, or at a nearby beach. It is only
  * offered as an external link (not embedded).
  */
-export interface WebcamPlaya {
+export interface BeachWebcam {
   url: string;
   cobertura: 'exacta' | 'compartida' | 'cercana';
   estado?: 'activa' | 'desactivada';
@@ -416,7 +416,7 @@ export interface WebcamPlaya {
  * no AEMET sheet of its own. `mareas` is indexed by day like
  * `PrediccionCompletaDTO['mareas']` — index 0 is today.
  */
-export interface MareaReferencia {
+export interface TideReference {
   playa: string;
   municipio: string;
   distanciaKm: number;
@@ -424,13 +424,13 @@ export interface MareaReferencia {
   fuenteMareas: string | null;
 }
 
-export interface PlayaDetalle {
+export interface BeachDetail {
   nombre: string;
   municipio: string;
   codigo: string;
   lat?: number;
   lon?: number;
-  atributos?: PlayaAtributos;
+  atributos?: BeachAttributes;
   longitud?: number | null;
   anchura?: number | null;
   tipoPlaya?: string | null;
@@ -443,22 +443,22 @@ export interface PlayaDetalle {
   temperaturaActual?: number | null;
 
   // Real-time observation for TODAY (actual sky/temp/rain)
-  tiempoActual?: TiempoActual | null;
+  tiempoActual?: CurrentConditions | null;
 
   // Standardized weather data
-  clima?: DatosClima;
+  clima?: WeatherData;
 
   // Operator watching the beach; null = no lifeguard flag service here.
   fuenteBanderas?: string | null;
 
   // May be absent
-  cruzRoja?: DatosCruzRoja;
+  cruzRoja?: RedCrossData;
 
   // Enriched forecast (3 days, tides, warnings)
-  prediccionCompleta?: PrediccionCompletaDTO;
+  prediccionCompleta?: FullForecastDTO;
 
   // Beach webcam (may be absent). External link only.
-  webcam?: WebcamPlaya | null;
+  webcam?: BeachWebcam | null;
 
   /** Year of the current Blue Flag award (ADEAC); absent/null if none. */
   banderaAzul?: number | null;
@@ -467,7 +467,7 @@ export interface PlayaDetalle {
    * Present only when this beach has no AEMET sheet of its own
    * (`prediccionCompleta` is then null).
    */
-  mareaReferencia?: MareaReferencia | null;
+  mareaReferencia?: TideReference | null;
 
   /**
    * When the backend ASSEMBLED this payload, not when it answered. The details
@@ -485,7 +485,7 @@ export interface PlayaDetalle {
  * worker — and each of those cost a diagnosis from scratch. The cause is not
  * decoration: it is the first thing anyone needs.
  */
-export class ErrorDetalle extends Error {
+export class DetailError extends Error {
   /** `null` = the request never came back (network, CORS, service worker). */
   constructor(readonly status: number | null, readonly url: string) {
     super('No se pudo cargar el detalle de la playa');
@@ -493,8 +493,8 @@ export class ErrorDetalle extends Error {
   }
 }
 
-export async function getDetallePlaya(codigo: string): Promise<PlayaDetalle> {
-  const url = buildRegionApiUrl(`/beaches/${codigo}/details`);
+export async function getBeachDetail(code: string): Promise<BeachDetail> {
+  const url = buildRegionApiUrl(`/beaches/${code}/details`);
 
   let res: Response;
   try {
@@ -502,16 +502,16 @@ export async function getDetallePlaya(codigo: string): Promise<PlayaDetalle> {
   } catch (e) {
     // A rejected fetch has no status: the request never made it back. Network
     // down, CORS, or something intercepting it (a service worker, a proxy).
-    const detalle = e instanceof Error ? e.message : String(e);
+    const detail = e instanceof Error ? e.message : String(e);
     // eslint-disable-next-line no-console
-    console.error(`[detalle] sin respuesta de ${url}: ${detalle}`);
-    throw new ErrorDetalle(null, url);
+    console.error(`[detalle] sin respuesta de ${url}: ${detail}`);
+    throw new DetailError(null, url);
   }
 
   if (!res.ok) {
     // eslint-disable-next-line no-console
     console.error(`[detalle] ${url} respondió ${res.status}`);
-    throw new ErrorDetalle(res.status, url);
+    throw new DetailError(res.status, url);
   }
 
   return res.json();
@@ -539,19 +539,19 @@ export interface FeaturedBeach {
    * Score breakdown and outlook. Optional in the type, not in the API: an
    * installed app talking to an older backend simply shows no breakdown.
    */
-  subpuntuaciones?: SubPuntuaciones | null;
-  pronostico?: Pronostico | null;
+  subpuntuaciones?: SubScores | null;
+  pronostico?: Outlook | null;
   topeAplicado?: 'lluvia' | 'lluvia_prevista' | null;
   /** The cap value behind `topeAplicado`. Older backends do not send it. */
   topeValor?: number | null;
   oleaje?: string | null;
-  ventanaDia?: VentanaDia | null;
+  ventanaDia?: DayWindow | null;
   /**
    * Live rain signal, same aggregated nowcast the detail carries in
    * `tiempoActual.lluvia`. Optional for the usual backward-compatibility
    * reason: without it the icon falls back to the sky description alone.
    */
-  lluvia?: LluviaActual | null;
+  lluvia?: CurrentRain | null;
 }
 
 /**
@@ -561,26 +561,26 @@ export interface FeaturedBeach {
  * "Mejor momento: 11:00–14:00 · a partir de las 17:00 aumenta el viento".
  * Optional for the same backward-compatibility reason as `pronostico`.
  */
-export interface VentanaDia {
+export interface DayWindow {
   inicio: string;
   fin: string;
-  cambio?: { desde: string; causa: CausaPronostico | null } | null;
+  cambio?: { desde: string; causa: OutlookCause | null } | null;
   /**
    * Why this stretch beats the rejected hours. Optional for the usual
    * backward-compatibility reason: without it only the time range is shown.
    */
-  motivo?: MotivoVentana | null;
+  motivo?: WindowReason | null;
   /** Forecast hours the verdict is built on. Optional, same reason. */
   horasConsideradas?: number;
 }
 
-export type MotivoVentana = 'sin_lluvia' | 'despeja' | 'sube_temperatura' | 'amaina_viento';
+export type WindowReason = 'sin_lluvia' | 'despeja' | 'sube_temperatura' | 'amaina_viento';
 
 /**
  * Points scored on each factor, before caps and outlook. There is no UV factor:
  * a high index is a reason to bring sunscreen, not to rate the beach worse.
  */
-export interface SubPuntuaciones {
+export interface SubScores {
   cielo: number;
   temperatura: number;
   bandera: number;
@@ -596,13 +596,13 @@ export interface SubPuntuaciones {
  * Optional because a backend that predates it (or a response still in cache
  * from one) simply does not send it — the chip then shows the direction alone.
  */
-export interface Pronostico {
+export interface Outlook {
   direccion: 'mejora' | 'empeora' | 'estable';
   delta: number;
-  causa?: CausaPronostico | null;
+  causa?: OutlookCause | null;
 }
 
-export type CausaPronostico =
+export type OutlookCause =
   | 'despeja'
   | 'nubla'
   | 'sube_temperatura'
@@ -624,7 +624,7 @@ export interface FeaturedBeachesResponse {
   revisar: FeaturedBeach[];
   resumenTodas: FeaturedBeach[];
   /** Reachable maximum of each factor, so the bars cannot drift from the model. */
-  maximos?: SubPuntuaciones | null;
+  maximos?: SubScores | null;
 }
 
 let featuredRequest: Promise<FeaturedBeachesResponse> | null = null;
@@ -650,7 +650,7 @@ export async function getFeaturedBeaches(
     // Whatever comes back from `guardarFeatured` is what every other screen
     // will read, so it is what this caller gets too: two surfaces painting two
     // different rankings is the bug, whichever of them is the newer one.
-    .then(guardarFeatured)
+    .then(saveFeatured)
     .finally(() => {
       featuredRequest = null;
     });
@@ -659,7 +659,7 @@ export async function getFeaturedBeaches(
 }
 
 /** Path suffix of the ranking endpoint, so the pages don't each spell it out. */
-export const RUTA_FEATURED = '/beaches/featured';
+export const FEATURED_ROUTE = '/beaches/featured';
 
 /**
  * Single writer of `featuredCache`, because there are two of them racing: the
@@ -693,18 +693,18 @@ export const RUTA_FEATURED = '/beaches/featured';
  * in. A backend that predates `servidoEn` sends nothing and ties simply resolve
  * in favour of what is already painted, as they did before.
  */
-function esAnterior(
-  candidato: FeaturedBeachesResponse,
-  actual: FeaturedBeachesResponse,
+function isPrevious(
+  candidate: FeaturedBeachesResponse,
+  current: FeaturedBeachesResponse,
 ): boolean {
-  if (typeof candidato.timestamp !== 'number' || typeof actual.timestamp !== 'number') {
+  if (typeof candidate.timestamp !== 'number' || typeof current.timestamp !== 'number') {
     return false;
   }
-  if (candidato.timestamp !== actual.timestamp) return candidato.timestamp < actual.timestamp;
-  if (typeof candidato.servidoEn !== 'number' || typeof actual.servidoEn !== 'number') {
+  if (candidate.timestamp !== current.timestamp) return candidate.timestamp < current.timestamp;
+  if (typeof candidate.servidoEn !== 'number' || typeof current.servidoEn !== 'number') {
     return false;
   }
-  return candidato.servidoEn < actual.servidoEn;
+  return candidate.servidoEn < current.servidoEn;
 }
 
 /**
@@ -717,34 +717,34 @@ function esAnterior(
  * split this module exists to prevent. There is one value and one list of
  * screens to wake.
  */
-let rankingEnVigor: FeaturedBeachesResponse | null = null;
-const suscriptores = new Set<() => void>();
+let currentRanking: FeaturedBeachesResponse | null = null;
+const subscribers = new Set<() => void>();
 
 /** Subscribe to the ranking in force; returns the unsubscribe. */
-export function suscribirRanking(alCambiar: () => void): () => void {
-  suscriptores.add(alCambiar);
-  return () => { suscriptores.delete(alCambiar); };
+export function subscribeRanking(onChange: () => void): () => void {
+  subscribers.add(onChange);
+  return () => { subscribers.delete(onChange); };
 }
 
 /** The ranking in force, or null before the first answer of the session. */
-export function leerRankingEnVigor(): FeaturedBeachesResponse | null {
-  return rankingEnVigor;
+export function readCurrentRanking(): FeaturedBeachesResponse | null {
+  return currentRanking;
 }
 
-function guardarFeatured(value: FeaturedBeachesResponse): FeaturedBeachesResponse {
+function saveFeatured(value: FeaturedBeachesResponse): FeaturedBeachesResponse {
   // Only a ranking that is still IN FORCE gets a vote. An expired entry is one
   // nobody will be served again — letting it veto meant a plain refetch after
   // the minute was up could be thrown away for losing to something already
   // dead, and the screen kept painting from the discarded body.
-  const vigente = featuredCache && featuredCache.expiresAt > Date.now();
-  const enCache = vigente ? featuredCache?.value : undefined;
-  if (enCache && esAnterior(value, enCache)) return enCache;
+  const inForce = featuredCache && featuredCache.expiresAt > Date.now();
+  const inCache = inForce ? featuredCache?.value : undefined;
+  if (inCache && isPrevious(value, inCache)) return inCache;
   featuredCache = { value, expiresAt: Date.now() + FEATURED_CACHE_TTL_MS };
   // Only a body that actually WINS wakes the screens: re-serving the same
   // value would repaint five pages for nothing.
-  if (rankingEnVigor !== value) {
-    rankingEnVigor = value;
-    suscriptores.forEach((alCambiar) => alCambiar());
+  if (currentRanking !== value) {
+    currentRanking = value;
+    subscribers.forEach((onChange) => onChange());
   }
   return value;
 }
@@ -759,8 +759,8 @@ function guardarFeatured(value: FeaturedBeachesResponse): FeaturedBeachesRespons
  * coming back to the home page re-served it from here, undoing the repaint the
  * message had just produced.
  */
-export function aplicarFeaturedFresco(
+export function applyFreshFeatured(
   value: FeaturedBeachesResponse,
 ): FeaturedBeachesResponse {
-  return guardarFeatured(value);
+  return saveFeatured(value);
 }

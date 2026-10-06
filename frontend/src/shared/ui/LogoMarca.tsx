@@ -10,22 +10,22 @@ import './LogoMarca.css';
  * — the same rule the manifest uses.
  * Decorative: the brand text right next to it already names the app.
  */
-const FUENTES = ['/icon-header.png', '/icon.png', '/favicon.svg'];
+const SOURCES = ['/icon-header.png', '/icon.png', '/favicon.svg'];
 
-const LogoMarca: React.FC = () => (
+const BrandLogo: React.FC = () => (
   <img
     className="marca-logo"
-    src={FUENTES[0]}
+    src={SOURCES[0]}
     alt=""
     aria-hidden="true"
     onError={(event) => {
       const img = event.currentTarget;
-      const actual = FUENTES.findIndex((f) => img.src.endsWith(f));
-      const siguiente = FUENTES[actual + 1];
-      if (siguiente) img.src = siguiente;
+      const current = SOURCES.findIndex((f) => img.src.endsWith(f));
+      const next = SOURCES[current + 1];
+      if (next) img.src = next;
       else img.onerror = null;
     }}
   />
 );
 
-export default LogoMarca;
+export default BrandLogo;

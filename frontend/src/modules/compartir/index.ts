@@ -1,3 +1,3 @@
-export { default as BotonCompartir } from './ui/BotonCompartir';
-export { resumenTarjeta } from './domain/resumenTarjeta';
-export type { ResumenTarjeta } from './domain/resumenTarjeta';
+export { default as ShareButton } from './ui/BotonCompartir';
+export { cardSummary } from './domain/resumenTarjeta';
+export type { CardSummary } from './domain/resumenTarjeta';

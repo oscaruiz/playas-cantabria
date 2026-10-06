@@ -62,13 +62,13 @@ const ATTR_LABELS = {
 /**
  * Same `{placeholder}` syntax as IdiomaContext's interpolar: unknown
  * placeholders are left as-is, never emptied.
- * @param {string} plantilla
+ * @param {string} template
  * @param {Record<string, string | number>} vars
  * @returns {string}
  */
-function fillTemplate(plantilla, vars) {
-  return plantilla.replace(/\{(\w+)\}/g, (original, nombre) =>
-    vars[nombre] != null ? String(vars[nombre]) : original
+function fillTemplate(template, vars) {
+  return template.replace(/\{(\w+)\}/g, (original, name) =>
+    vars[name] != null ? String(vars[name]) : original
   );
 }
 
