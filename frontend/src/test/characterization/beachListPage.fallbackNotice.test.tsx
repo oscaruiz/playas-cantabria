@@ -56,7 +56,7 @@ it('el aviso se traduce', async () => {
     route(BEACHES, { networkError: true }),
   ]);
 
-  renderWithProviders(<PlayasList />, { route: '/playas', idioma: 'en' });
+  renderWithProviders(<PlayasList />, { route: '/playas', language: 'en' });
 
   await screen.findByText(BEACH_COUNT_EN);
   expect(

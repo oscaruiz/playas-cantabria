@@ -26,7 +26,7 @@ import TrendBadge from '../../components/TrendBadge';
 import { REGION } from '../../shared/config/region';
 import { useUserLocation } from '../../hooks/useUserLocation';
 import { useHistory, useLocation } from 'react-router-dom';
-import { rutaPlaya } from '../../shared/seo/beachUrls';
+import { beachPath } from '../../shared/seo/beachUrls';
 
 /**
  * Everything Leaflet, split OUT of the initial bundle: this module is
@@ -87,16 +87,16 @@ function getFallbackIcon(numero: number): DivIcon {
 // ---- Component ----
 
 const MapaLienzo: React.FC<{
-  playas: Playa[];
+  beaches: Playa[];
   weatherMap: Map<string, FeaturedBeach>;
-}> = ({ playas, weatherMap }) => {
+}> = ({ beaches: playas, weatherMap }) => {
   const { userLocation, locationLoading, locationDenied, retryLocation } = useUserLocation();
   const [locateRequested, setLocateRequested] = useState(false);
   const mapRef = useRef<LeafletMap | null>(null);
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
   const history = useHistory();
   const location = useLocation();
-  const { t, idioma } = useIdioma();
+  const { t, language: idioma } = useIdioma();
 
   const userIcon = useMemo(() => new L.DivIcon({
     html: '<div class="user-marker"><span class="user-marker-dot"></span></div>',
@@ -243,7 +243,7 @@ const MapaLienzo: React.FC<{
                           </p>
                         )}
                         {/* Al abrir la playa: hacia dónde va y por qué. */}
-                        <TrendBadge pronostico={weather.pronostico} />
+                        <TrendBadge outlook={weather.pronostico} />
                         {weather.bandera && (
                           <p className="mapa-popup-flag">
                             <span className={`mapa-pennant mapa-pennant--${flagColorClass(weather.bandera)}`} aria-hidden="true" />
@@ -276,7 +276,7 @@ const MapaLienzo: React.FC<{
                   )}
                   <button
                     className="mapa-popup-btn"
-                    onClick={() => history.push(rutaPlaya(playa))}
+                    onClick={() => history.push(beachPath(playa))}
                   >
                     {t('mapa.verDetalles')}
                   </button>

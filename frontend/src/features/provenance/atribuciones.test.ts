@@ -4,16 +4,16 @@ describe('atribucionDeFuente', () => {
   it('credits AEMET whatever transport the API names', () => {
     for (const fuente of ['AEMET', 'AEMET_XML', 'AEMET_HTML']) {
       const atribucion = atribucionDeFuente(fuente);
-      expect(atribucion?.nombre).toBe('AEMET');
+      expect(atribucion?.name).toBe('AEMET');
       expect(atribucion?.url).toBe('https://www.aemet.es');
-      expect(atribucion?.nota).toBe('atribucion.aemet');
+      expect(atribucion?.note).toBe('atribucion.aemet');
     }
   });
 
   it('recognises the source however it is spelled', () => {
-    expect(atribucionDeFuente('Open-Meteo')?.nombre).toBe('Open-Meteo');
-    expect(atribucionDeFuente('OpenMeteo')?.nombre).toBe('Open-Meteo');
-    expect(atribucionDeFuente('Cruz Roja')?.nombre).toBe('Cruz Roja');
+    expect(atribucionDeFuente('Open-Meteo')?.name).toBe('Open-Meteo');
+    expect(atribucionDeFuente('OpenMeteo')?.name).toBe('Open-Meteo');
+    expect(atribucionDeFuente('Cruz Roja')?.name).toBe('Cruz Roja');
   });
 
   it('every credited source carries a link to its own terms', () => {

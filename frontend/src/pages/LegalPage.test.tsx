@@ -6,7 +6,7 @@ import LegalPage from './LegalPage';
 
 describe('legal information pages', () => {
   it('shows the required project, source and contact information', () => {
-    renderWithProviders(<LegalPage tipo="acerca" />);
+    renderWithProviders(<LegalPage kind="acerca" />);
     expect(screen.getByRole('heading', { name: 'Acerca de y condiciones' })).toBeInTheDocument();
     expect(screen.getByText(/proyecto personal, gratuito e independiente/i)).toBeInTheDocument();
     expect(screen.getByText(/La bandera física y las instrucciones/i)).toBeInTheDocument();
@@ -25,7 +25,7 @@ describe('legal information pages', () => {
   });
 
   it('documents actual storage and offers the English version', () => {
-    renderWithProviders(<LegalPage tipo="privacidad" />, { idioma: 'en' });
+    renderWithProviders(<LegalPage kind="privacidad" />, { language: 'en' });
     expect(screen.getByRole('heading', { name: 'Privacy and storage' })).toBeInTheDocument();
     expect(screen.getByText((_, node) => node?.tagName === 'P' && /uses localStorage for favourites/i.test(node.textContent ?? ''))).toBeInTheDocument();
     expect(screen.getByText((_, node) => node?.tagName === 'P' && /No own use of sessionStorage/i.test(node.textContent ?? ''))).toBeInTheDocument();
@@ -47,7 +47,7 @@ describe('LegalPage — volver', () => {
   it('vuelve a la pantalla anterior, no a la portada', () => {
     renderWithProviders(
       <>
-        <LegalPage tipo="acerca" />
+        <LegalPage kind="acerca" />
         <Sonda />
       </>,
       { route: ['/playas/suances/tagle', '/acerca-de'] },
@@ -62,7 +62,7 @@ describe('LegalPage — volver', () => {
     // este caso, "volver" sacaría al visitante del sitio.
     renderWithProviders(
       <>
-        <LegalPage tipo="privacidad" />
+        <LegalPage kind="privacidad" />
         <Sonda />
       </>,
       { route: '/privacidad' },

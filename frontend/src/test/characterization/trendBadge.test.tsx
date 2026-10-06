@@ -16,7 +16,7 @@ const MEJORA: Pronostico = { direccion: 'mejora', delta: 6, causa: 'despeja' };
 
 describe('TrendBadge', () => {
   it('dice la dirección y la causa', () => {
-    const { container } = renderWithProviders(<TrendBadge pronostico={MEJORA} />);
+    const { container } = renderWithProviders(<TrendBadge outlook={MEJORA} />);
     const chip = container.querySelector('.trend-badge');
 
     expect(chip).toHaveTextContent('Está mejorando');
@@ -25,7 +25,7 @@ describe('TrendBadge', () => {
   });
 
   it('traduce la causa al inglés', () => {
-    const { container } = renderWithProviders(<TrendBadge pronostico={MEJORA} />, { idioma: 'en' });
+    const { container } = renderWithProviders(<TrendBadge outlook={MEJORA} />, { language: 'en' });
 
     expect(container.querySelector('.trend-badge')).toHaveTextContent('Improving');
     expect(container.querySelector('.trend-badge')).toHaveTextContent('clearing up');
@@ -33,7 +33,7 @@ describe('TrendBadge', () => {
 
   it('en una lista "sin cambios" no pinta nada: es ruido en cada tarjeta', () => {
     const { container } = renderWithProviders(
-      <TrendBadge pronostico={{ direccion: 'estable', delta: 0, causa: null }} />,
+      <TrendBadge outlook={{ direccion: 'estable', delta: 0, causa: null }} />,
     );
 
     expect(container.querySelector('.trend-badge')).toBeNull();
@@ -41,15 +41,15 @@ describe('TrendBadge', () => {
 
   it('en el detalle sí lo dice: la ausencia de cambio también responde a la pregunta', () => {
     const { container } = renderWithProviders(
-      <TrendBadge pronostico={{ direccion: 'estable', delta: 0, causa: null }} size="lg" />,
+      <TrendBadge outlook={{ direccion: 'estable', delta: 0, causa: null }} size="lg" />,
     );
 
     expect(container.querySelector('.trend-badge')).toHaveTextContent('Sin cambios');
   });
 
   it('los puntos solo salen en el detalle', () => {
-    const { container: lista } = renderWithProviders(<TrendBadge pronostico={MEJORA} />);
-    const { container: detalle } = renderWithProviders(<TrendBadge pronostico={MEJORA} size="lg" />);
+    const { container: lista } = renderWithProviders(<TrendBadge outlook={MEJORA} />);
+    const { container: detalle } = renderWithProviders(<TrendBadge outlook={MEJORA} size="lg" />);
 
     expect(lista.querySelector('.trend-badge-delta')).toBeNull();
     expect(detalle.querySelector('.trend-badge-delta')).toHaveTextContent('+6 puntos');
@@ -61,7 +61,7 @@ describe('TrendBadge', () => {
     // positivo. Enseñar "+4" junto a "Empeora" se leería como un error.
     const { container } = renderWithProviders(
       <TrendBadge
-        pronostico={{ direccion: 'empeora', delta: 4, causa: 'lluvia_prevista' }}
+        outlook={{ direccion: 'empeora', delta: 4, causa: 'lluvia_prevista' }}
         size="lg"
       />,
     );
@@ -71,21 +71,21 @@ describe('TrendBadge', () => {
   });
 
   it('sin pronóstico no hay chip (backend antiguo o fuera de franja)', () => {
-    const { container } = renderWithProviders(<TrendBadge pronostico={null} />);
+    const { container } = renderWithProviders(<TrendBadge outlook={null} />);
 
     expect(container.querySelector('.trend-badge')).toBeNull();
   });
 
   it('un backend que no manda la causa sigue diciendo la dirección', () => {
     const { container } = renderWithProviders(
-      <TrendBadge pronostico={{ direccion: 'empeora', delta: -5 }} />,
+      <TrendBadge outlook={{ direccion: 'empeora', delta: -5 }} />,
     );
 
     expect(container.querySelector('.trend-badge')).toHaveTextContent('Está empeorando');
   });
 
   it('lo lee un lector de pantalla como una frase, no como palabras sueltas', () => {
-    const { container } = renderWithProviders(<TrendBadge pronostico={MEJORA} />);
+    const { container } = renderWithProviders(<TrendBadge outlook={MEJORA} />);
 
     expect(container.querySelector('.trend-badge')).toHaveAttribute(
       'aria-label',

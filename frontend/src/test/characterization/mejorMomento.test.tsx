@@ -55,14 +55,14 @@ describe('MejorMomento — sin datos no se inventa nada', () => {
   });
 
   it('sin ventana no pinta nada', () => {
-    const { container } = renderWithProviders(<MejorMomento ventana={null} />, { route: '/' });
+    const { container } = renderWithProviders(<MejorMomento timeWindow={null} />, { route: '/' });
     expect(container.querySelector('.mejor-momento')).toBeNull();
   });
 
   it('una ventana que llega al final de la franja no avisa de ningún cambio', () => {
     renderWithProviders(
       <MejorMomento
-        ventana={{
+        timeWindow={{
           inicio: '2026-07-27T09:00:00.000Z',
           fin: '2026-07-27T19:00:00.000Z',
           cambio: null,
@@ -81,7 +81,7 @@ describe('MejorMomento — el reloj manda sobre la caché', () => {
     jest.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-07-27T20:00:00.000Z'));
     const { container } = renderWithProviders(
       <MejorMomento
-        ventana={{ inicio: '2026-07-27T09:00:00.000Z', fin: '2026-07-27T12:00:00.000Z', cambio: null }}
+        timeWindow={{ inicio: '2026-07-27T09:00:00.000Z', fin: '2026-07-27T12:00:00.000Z', cambio: null }}
       />,
       { route: '/' },
     );
@@ -93,7 +93,7 @@ describe('MejorMomento — el reloj manda sobre la caché', () => {
     jest.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-07-27T10:30:00.000Z'));
     renderWithProviders(
       <MejorMomento
-        ventana={{ inicio: '2026-07-27T09:00:00.000Z', fin: '2026-07-27T12:00:00.000Z', cambio: null }}
+        timeWindow={{ inicio: '2026-07-27T09:00:00.000Z', fin: '2026-07-27T12:00:00.000Z', cambio: null }}
       />,
       { route: '/' },
     );
@@ -117,14 +117,14 @@ describe('MejorMomento — el porqué, solo en la vista detallada', () => {
   };
 
   it('con `detallada` nombra el motivo del tramo junto al cambio', () => {
-    renderWithProviders(<MejorMomento ventana={ventanaConMotivo} detallada />, { route: '/' });
+    renderWithProviders(<MejorMomento timeWindow={ventanaConMotivo} detailed />, { route: '/' });
 
     expect(screen.getByText('Elegido por ser el tramo sin lluvia previsto')).toBeInTheDocument();
     expect(screen.getByText('A partir de las 15:00 se espera lluvia')).toBeInTheDocument();
   });
 
   it('sin `detallada` (la portada) el motivo no sale: la tarjeta se queda compacta', () => {
-    renderWithProviders(<MejorMomento ventana={ventanaConMotivo} />, { route: '/' });
+    renderWithProviders(<MejorMomento timeWindow={ventanaConMotivo} />, { route: '/' });
 
     expect(screen.queryByText(/Elegido por/)).toBeNull();
   });
@@ -132,8 +132,8 @@ describe('MejorMomento — el porqué, solo en la vista detallada', () => {
   it('sin motivo ni cambio, la calma también se dice', () => {
     renderWithProviders(
       <MejorMomento
-        ventana={{ inicio: '2026-07-27T09:00:00.000Z', fin: '2026-07-27T19:00:00.000Z', cambio: null, motivo: null }}
-        detallada
+        timeWindow={{ inicio: '2026-07-27T09:00:00.000Z', fin: '2026-07-27T19:00:00.000Z', cambio: null, motivo: null }}
+        detailed
       />,
       { route: '/' },
     );

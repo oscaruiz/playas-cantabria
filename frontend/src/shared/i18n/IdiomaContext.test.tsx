@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { IdiomaProvider, useIdioma, detectarIdiomaInicial } from './IdiomaContext';
 
 const Sonda: React.FC = () => {
-  const { idioma, setIdioma, t, tPlural } = useIdioma();
+  const { language: idioma, setLanguage: setIdioma, t, tPlural } = useIdioma();
   return (
     <div>
       <span data-testid="idioma">{idioma}</span>

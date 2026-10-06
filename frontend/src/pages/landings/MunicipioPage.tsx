@@ -5,7 +5,7 @@ import { useParams, useHistory } from 'react-router-dom';
 import { Playa } from '../../services/api';
 import { useIdioma } from '../../shared/i18n/IdiomaContext';
 import SeoHead from '../../shared/seo/SeoHead';
-import { playasDeMunicipioSlug, rutaMunicipio } from '../../shared/seo/landings';
+import { beachesOfMunicipalitySlug, municipalityPath } from '../../shared/seo/landings';
 import BottomNavBar from '../../shared/ui/BottomNavBar';
 import HeaderActions from '../../shared/ui/HeaderActions';
 import BeachCard from '../../components/BeachCard';
@@ -15,14 +15,14 @@ import './landings.css';
 
 /** The beaches of one municipality, each linking to its canonical page. */
 const MunicipioPage: React.FC = () => {
-  const { municipio } = useParams<{ municipio: string }>();
+  const { municipio: municipio } = useParams<{ municipio: string }>();
   const history = useHistory();
   const { t, tPlural } = useIdioma();
-  const { playas, condiciones, instanteCondiciones } = useCatalogo();
+  const { beaches: playas, conditions: condiciones, conditionsInstant: instanteCondiciones } = useCatalogo();
 
   const lista = useMemo(
     () =>
-      (playasDeMunicipioSlug(playas ?? [], municipio) as Playa[]).sort((a, b) =>
+      (beachesOfMunicipalitySlug(playas ?? [], municipio) as Playa[]).sort((a, b) =>
         a.nombre.localeCompare(b.nombre)
       ),
     [playas, municipio]
@@ -33,16 +33,16 @@ const MunicipioPage: React.FC = () => {
     <IonPage className="home-page">
       {nombreMunicipio && (
         <SeoHead
-          titulo={t('seo.tituloMunicipio', { municipio: nombreMunicipio })}
-          descripcion={t('seo.descMunicipio', { municipio: nombreMunicipio })}
-          rutaCanonica={rutaMunicipio(nombreMunicipio)}
+          title={t('seo.tituloMunicipio', { municipio: nombreMunicipio })}
+          description={t('seo.descMunicipio', { municipio: nombreMunicipio })}
+          canonicalPath={municipalityPath(nombreMunicipio)}
         />
       )}
       {playas && !nombreMunicipio && (
         <SeoHead
-          titulo={t('seo.tituloNoEncontrada')}
-          descripcion={t('seo.descNoEncontrada')}
-          rutaCanonica=""
+          title={t('seo.tituloNoEncontrada')}
+          description={t('seo.descNoEncontrada')}
+          canonicalPath=""
           noindex
         />
       )}
@@ -78,13 +78,13 @@ const MunicipioPage: React.FC = () => {
               {condiciones.size > 0 && instanteCondiciones != null && (
                 <>
                   {' · '}
-                  <FreshnessLabel instante={instanteCondiciones} />
+                  <FreshnessLabel instant={instanteCondiciones} />
                 </>
               )}
             </div>
             <div className="beach-list">
               {lista.map((p: Playa) => (
-                <BeachCard key={p.codigo} playa={p} weather={condiciones.get(p.codigo)} />
+                <BeachCard key={p.codigo} beach={p} weather={condiciones.get(p.codigo)} />
               ))}
             </div>
           </>

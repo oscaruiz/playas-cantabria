@@ -11,7 +11,7 @@
  *
  * The slug is DERIVED from the catalog's nombre/municipio. That makes it
  * deterministic for a given catalog, and it makes collisions (two beaches
- * mapping to the same route) a data error: `detectarColisiones` reports
+ * mapping to the same route) a data error: `detectCollisions` reports
  * them and the sitemap generator fails the build, so a collision can never
  * reach production silently. `codigo` remains the permanent identity — the
  * legacy route /playas/:codigo keeps working forever.
@@ -29,7 +29,7 @@
  * @param {string} texto
  * @returns {string} the text without diacritics
  */
-function sinAcentos(texto) {
+function withoutAccents(texto) {
   return texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
 
@@ -41,7 +41,7 @@ function sinAcentos(texto) {
  * @returns {string}
  */
 function slugify(texto) {
-  return sinAcentos(texto.toLowerCase())
+  return withoutAccents(texto.toLowerCase())
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
 }
@@ -51,7 +51,7 @@ function slugify(texto) {
  * @param {{ nombre: string, municipio: string }} playa
  * @returns {string}
  */
-function rutaPlaya(playa) {
+function beachPath(playa) {
   return `/playas/${slugify(playa.municipio)}/${slugify(playa.nombre)}`;
 }
 
@@ -63,7 +63,7 @@ function rutaPlaya(playa) {
  * @param {string} playaSlug
  * @returns {P | undefined}
  */
-function encontrarPorSlugs(playas, municipioSlug, playaSlug) {
+function findBySlugs(playas, municipioSlug, playaSlug) {
   return playas.find(
     (p) => slugify(p.municipio) === municipioSlug && slugify(p.nombre) === playaSlug
   );
@@ -75,10 +75,10 @@ function encontrarPorSlugs(playas, municipioSlug, playaSlug) {
  * @param {Array<{ nombre: string, municipio: string, codigo: string }>} playas
  * @returns {Array<{ ruta: string, codigos: string[] }>}
  */
-function detectarColisiones(playas) {
+function detectCollisions(playas) {
   const porRuta = new Map();
   for (const p of playas) {
-    const ruta = slugify(p.nombre) === '' ? '(slug vacío)' : rutaPlaya(p);
+    const ruta = slugify(p.nombre) === '' ? '(slug vacío)' : beachPath(p);
     const lista = porRuta.get(ruta) ?? [];
     lista.push(p.codigo);
     porRuta.set(ruta, lista);
@@ -92,4 +92,4 @@ function detectarColisiones(playas) {
   return conflictos;
 }
 
-module.exports = { sinAcentos, slugify, rutaPlaya, encontrarPorSlugs, detectarColisiones };
+module.exports = { withoutAccents, slugify, beachPath, findBySlugs, detectCollisions };

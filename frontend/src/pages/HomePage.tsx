@@ -30,7 +30,7 @@ import TrendBadge from '../components/TrendBadge';
 import MejorMomento from '../components/MejorMomento';
 import type { ClaveTexto } from '../shared/i18n/es';
 import SafetyNotice from '../shared/ui/SafetyNotice';
-import { rutaPlaya } from '../shared/seo/beachUrls';
+import { beachPath } from '../shared/seo/beachUrls';
 import SeoHead from '../shared/seo/SeoHead';
 import { useFavoritas } from '../modules/favorites';
 import { BotonInstalar } from '../modules/instalacion';
@@ -73,7 +73,7 @@ const NearestCard: React.FC<{
   beach: FeaturedBeach & { distKm: number };
   onClick: () => void;
 }> = ({ beach, onClick }) => {
-  const { t, idioma } = useIdioma();
+  const { t, language: idioma } = useIdioma();
   return (
     <div
       className="hp-nearest-card"
@@ -96,9 +96,9 @@ const NearestCard: React.FC<{
             {traducirTextoApi(razonSinPronostico(beach, razonLegible(beach.razonRanking)), idioma)}
           </p>
         )}
-        <TrendBadge pronostico={beach.pronostico} />
+        <TrendBadge outlook={beach.pronostico} />
       </div>
-      <ScoreBadge puntuacion={beach.puntuacion} />
+      <ScoreBadge score={beach.puntuacion} />
       <span className="hp-nearest-arrow" aria-hidden="true">&#8250;</span>
     </div>
   );
@@ -108,10 +108,10 @@ const HeroBody: React.FC<{
   avgTemp: number | null;
   totalBeaches: number;
   /** Epoch ms of the featured snapshot; null hides the badge. */
-  actualizadoMs: number | null;
+  updatedMs: number | null;
   /** A refetch is in flight right now — said here, where the age already is. */
-  actualizando: boolean;
-}> = ({ avgTemp, totalBeaches, actualizadoMs, actualizando }) => {
+  updating: boolean;
+}> = ({ avgTemp, totalBeaches, updatedMs: actualizadoMs, updating: actualizando }) => {
   const { t, tPlural } = useIdioma();
   return (
     <div className="hp-hero">
@@ -153,7 +153,7 @@ const HeroBody: React.FC<{
             ) : (
               <span aria-hidden="true">{'\uD83D\uDD52'}</span>
             )}{' '}
-            <FreshnessLabel instante={actualizadoMs} />
+            <FreshnessLabel instant={actualizadoMs} />
             {' · '}
             {horaLocalMadrid(new Date(actualizadoMs).toISOString())}
           </span>
@@ -168,11 +168,11 @@ const HeroBody: React.FC<{
 const HeroBeachCard: React.FC<{
   beach: FeaturedBeach;
   distKm: number | null;
-  priorizadaPorCercania?: boolean;
-  onVerDetalles: () => void;
-  onVerEnMapa: () => void;
-}> = ({ beach, distKm, priorizadaPorCercania, onVerDetalles, onVerEnMapa }) => {
-  const { t, idioma } = useIdioma();
+  prioritizedByProximity?: boolean;
+  onViewDetails: () => void;
+  onViewOnMap: () => void;
+}> = ({ beach, distKm, prioritizedByProximity: priorizadaPorCercania, onViewDetails: onVerDetalles, onViewOnMap: onVerEnMapa }) => {
+  const { t, language: idioma } = useIdioma();
   // `iconoClima` es el icono de OpenWeather ('01d'/'01n'): trae su propia
   // decisión de día o noche, que sigue al ocaso real de esas coordenadas.
   const emoji = rankedSkyEmoji(beach);
@@ -207,11 +207,11 @@ const HeroBeachCard: React.FC<{
       <p className="hp-hero-reason">{traducirTextoApi(razon, idioma)}</p>
 
       {/* CUÁNDO ir, no solo si está bien: la mejor franja del resto del día. */}
-      <MejorMomento ventana={beach.ventanaDia} />
+      <MejorMomento timeWindow={beach.ventanaDia} />
 
       {/* Lo más accionable de la portada: si la mejor playa de hoy va a peor
           dentro de dos horas, hay que decirlo aquí y no en el detalle. */}
-      <TrendBadge pronostico={beach.pronostico} />
+      <TrendBadge outlook={beach.pronostico} />
 
       {priorizadaPorCercania && (
         <p className="hp-hero-caveat hp-hero-caveat--info">
@@ -264,10 +264,10 @@ const HeroBeachCard: React.FC<{
 const AlternativeRow: React.FC<{
   beach: FeaturedBeach;
   distKm: number | null;
-  esMejorPuntuacion?: boolean;
+  isTopScore?: boolean;
   onClick: () => void;
-}> = ({ beach, distKm, esMejorPuntuacion, onClick }) => {
-  const { t, idioma } = useIdioma();
+}> = ({ beach, distKm, isTopScore: esMejorPuntuacion, onClick }) => {
+  const { t, language: idioma } = useIdioma();
   // `iconoClima` es el icono de OpenWeather ('01d'/'01n'): trae su propia
   // decisión de día o noche, que sigue al ocaso real de esas coordenadas.
   const emoji = rankedSkyEmoji(beach);
@@ -314,7 +314,7 @@ const AlternativeRow: React.FC<{
             <span className="hp-alt-dist">{t('comun.aKm', { km: Math.round(distKm) })}</span>
           )}
         </div>
-        <TrendBadge pronostico={beach.pronostico} />
+        <TrendBadge outlook={beach.pronostico} />
       </div>
       <span className="hp-alt-score" aria-label={t('home.puntuacionAria', { n: beach.puntuacion })}>
         <span aria-hidden="true">{beach.puntuacion}</span>
@@ -328,7 +328,7 @@ const CautionCard: React.FC<{
   beach: FeaturedBeach;
   onClick: () => void;
 }> = ({ beach, onClick }) => {
-  const { t, idioma } = useIdioma();
+  const { t, language: idioma } = useIdioma();
   return (
     <div
       className="hp-caution-card"
@@ -351,7 +351,7 @@ const CautionCard: React.FC<{
         </p>
         {/* Aquí importa el sentido contrario: una playa ya floja que además va
             a peor no es lo mismo que una que simplemente está floja. */}
-        <TrendBadge pronostico={beach.pronostico} />
+        <TrendBadge outlook={beach.pronostico} />
       </div>
       <span className="hp-caution-arrow" aria-hidden="true">&#8250;</span>
     </div>
@@ -363,12 +363,12 @@ const CautionCard: React.FC<{
 const HomePage: React.FC = () => {
   const {
     ranking: featured,
-    actualizadoMs,
-    deVisitaAnterior,
-    cargando: featuredLoading,
+    updatedMs: actualizadoMs,
+    fromPreviousVisit: deVisitaAnterior,
+    loading: featuredLoading,
     error: featuredError,
-    reintentando,
-    reintentar,
+    retrying: reintentando,
+    retry: reintentar,
   } = useRanking();
   const [allPlayas, setAllPlayas] = useState<Playa[] | null>(null);
   const { userLocation, locationLoading, locationDenied, locationBlocked, retryLocation } = useUserLocation();
@@ -432,7 +432,7 @@ const HomePage: React.FC = () => {
   // displace "the best beach today", which must remain the honestly ranked
   // one. Conditions are joined from resumenTodas when the ranking loaded;
   // without it the row still shows name and municipality from the catalog.
-  const { favoritas } = useFavoritas();
+  const { favorites: favoritas } = useFavoritas();
   const favoritasEnHome = useMemo(() => {
     if (!allPlayas || favoritas.size === 0) return [];
     const porCodigo = new Map((featured?.resumenTodas ?? []).map((b) => [b.codigo, b]));
@@ -447,9 +447,9 @@ const HomePage: React.FC = () => {
   return (
     <IonPage className="hp-page">
       <SeoHead
-        titulo={t('seo.tituloInicio')}
-        descripcion={t('seo.descInicio')}
-        rutaCanonica="/"
+        title={t('seo.tituloInicio')}
+        description={t('seo.descInicio')}
+        canonicalPath="/"
       />
       {/* Recargar al tocar el encabezado, pero SOLO sobre el título: cuando el
           manejador estaba en el contenedor, el clic en la ⓘ y en el selector
@@ -475,8 +475,8 @@ const HomePage: React.FC = () => {
         <HeroBody
           avgTemp={avgTemp}
           totalBeaches={totalBeaches}
-          actualizadoMs={actualizadoMs}
-          actualizando={reintentando}
+          updatedMs={actualizadoMs}
+          updating={reintentando}
         />
 
         <div className="hp-body">
@@ -511,12 +511,12 @@ const HomePage: React.FC = () => {
                       key={playa.codigo}
                       beach={condiciones}
                       distKm={distanceMap.get(playa.codigo) ?? null}
-                      onClick={() => history.push(rutaPlaya(playa))}
+                      onClick={() => history.push(beachPath(playa))}
                     />
                   ) : (
                     <Link
                       key={playa.codigo}
-                      to={rutaPlaya(playa)}
+                      to={beachPath(playa)}
                       className="hp-alt-row"
                       aria-label={t('comun.verDetalleDe', { nombre: playa.nombre })}
                     >
@@ -574,9 +574,9 @@ const HomePage: React.FC = () => {
                 <HeroBeachCard
                   beach={mejorPlaya}
                   distKm={distanceMap.get(mejorPlaya.codigo) ?? null}
-                  priorizadaPorCercania={codigoMejorPuntuacion != null}
-                  onVerDetalles={() => history.push(rutaPlaya(mejorPlaya))}
-                  onVerEnMapa={() => history.push(`/mapa?lat=${mejorPlaya.lat}&lon=${mejorPlaya.lon}&codigo=${mejorPlaya.codigo}`)}
+                  prioritizedByProximity={codigoMejorPuntuacion != null}
+                  onViewDetails={() => history.push(beachPath(mejorPlaya))}
+                  onViewOnMap={() => history.push(`/mapa?lat=${mejorPlaya.lat}&lon=${mejorPlaya.lon}&codigo=${mejorPlaya.codigo}`)}
                 />
                 {/* Colgado de la recomendación, no en una fila propia del
                     grid: ahí abría una banda vacía de ~70 px (margen de
@@ -584,7 +584,7 @@ const HomePage: React.FC = () => {
                     blanco que la columna izquierda ya deja por ser la corta.
                     Sigue siendo UNO para todo el ranking: alternativas y
                     "revisar antes" salen del mismo cálculo. */}
-                <SafetyNotice tipo="ranking" />
+                <SafetyNotice kind="ranking" />
               </section>
 
               {alternativas.length > 0 && (
@@ -596,8 +596,8 @@ const HomePage: React.FC = () => {
                         key={beach.codigo}
                         beach={beach}
                         distKm={distanceMap.get(beach.codigo) ?? null}
-                        esMejorPuntuacion={beach.codigo === codigoMejorPuntuacion}
-                        onClick={() => history.push(rutaPlaya(beach))}
+                        isTopScore={beach.codigo === codigoMejorPuntuacion}
+                        onClick={() => history.push(beachPath(beach))}
                       />
                     ))}
                   </div>

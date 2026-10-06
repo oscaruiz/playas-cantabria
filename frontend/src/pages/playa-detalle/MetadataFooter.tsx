@@ -17,24 +17,24 @@ import type { CampoEstimado } from '../../services/api';
  * still next to the forecast.
  */
 const MetadataFooter: React.FC<{
-  zonaAvisos: string | null;
-  elaboracion: string | null;
+  warningZone: string | null;
+  issued: string | null;
   /** Source that produced the forecast and the tides, as the API credits it. */
-  fuente?: string | null;
+  source?: string | null;
   /** Source of the current observation shown in the hero, if any. */
-  fuenteObservacion?: string | null;
+  observationSource?: string | null;
   /** Values of the selected day that were derived, not measured or forecast. */
-  estimados?: CampoEstimado[] | null;
-}> = ({ zonaAvisos, elaboracion, fuente, fuenteObservacion, estimados }) => {
+  estimated?: CampoEstimado[] | null;
+}> = ({ warningZone: zonaAvisos, issued: elaboracion, source: fuente, observationSource: fuenteObservacion, estimated: estimados }) => {
   const { t } = useIdioma();
   const hayObservacionDistinta =
     fuenteObservacion != null && fuenteObservacion !== fuente;
   if (!zonaAvisos && !elaboracion && !fuente && !hayObservacionDistinta) return null;
 
   return (
-    <InfoDatos etiqueta="info.fuente" aria="info.aria.prevision" className="forecast-metadata">
-      <AttributionNote fuente={fuente} />
-      {hayObservacionDistinta && <AttributionNote fuente={fuenteObservacion} />}
+    <InfoDatos label="info.fuente" aria="info.aria.prevision" className="forecast-metadata">
+      <AttributionNote source={fuente} />
+      {hayObservacionDistinta && <AttributionNote source={fuenteObservacion} />}
       {(zonaAvisos || elaboracion) && (
         <p className="procedencia-estatica">
           {zonaAvisos && <span>{t('detalle.zonaAvisos', { zona: zonaAvisos })}</span>}
@@ -42,7 +42,7 @@ const MetadataFooter: React.FC<{
           {elaboracion && <span>{elaboracion}</span>}
         </p>
       )}
-      <EstimatedValues campos={estimados} />
+      <EstimatedValues fields={estimados} />
     </InfoDatos>
   );
 };

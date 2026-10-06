@@ -22,14 +22,14 @@ import BottomNavBar from '../shared/ui/BottomNavBar';
 import HeaderActions from '../shared/ui/HeaderActions';
 import LogoMarca from '../shared/ui/LogoMarca';
 import { useFavoritas } from '../modules/favorites';
-import { resumenMunicipios } from '../shared/seo/landings';
+import { municipalitiesSummary } from '../shared/seo/landings';
 import SeoHead from '../shared/seo/SeoHead';
 import './PlayasList.css';
 
 /** A search suggestion: a municipality (navigates) or a beach (filters). */
 type Sugerencia =
-  | { tipo: 'municipio'; municipio: string; ruta: string; total: number }
-  | { tipo: 'playa'; playa: Playa };
+  | { kind: 'municipio'; municipio: string; ruta: string; total: number }
+  | { kind: 'playa'; beach: Playa };
 
 type OrdenMode = 'az' | 'cerca';
 
@@ -39,7 +39,7 @@ const PlayasList: React.FC = () => {
   const [orden, setOrden] = useState<OrdenMode>('az');
   const [soloFavoritas, setSoloFavoritas] = useState(false);
   const [soloConWebcam, setSoloConWebcam] = useState(false);
-  const { favoritas } = useFavoritas();
+  const { favorites: favoritas } = useFavoritas();
   // There is no error state: `getPlayas` never rejects, it always falls back to the local
   // JSON. What does need to be conveyed is that the data is not fresh.
   const [esFallback, setEsFallback] = useState(false);
@@ -81,27 +81,27 @@ const PlayasList: React.FC = () => {
     const termino = normalizarBusqueda(filtro);
     // Municipalities first (they are the broader answer), max 2, then
     // beaches up to the usual 5 total.
-    const municipios = (resumenMunicipios(playas) as Array<{
+    const municipios = (municipalitiesSummary(playas) as Array<{
       municipio: string;
       ruta: string;
       total: number;
     }>)
       .filter((m) => normalizarBusqueda(m.municipio).includes(termino))
       .slice(0, 2)
-      .map((m): Sugerencia => ({ tipo: 'municipio', ...m }));
+      .map((m): Sugerencia => ({ kind: 'municipio', ...m }));
     const dePlaya = playas
       .filter((p) => coincidePlaya(p, filtro))
       .slice(0, 5 - municipios.length)
-      .map((p): Sugerencia => ({ tipo: 'playa', playa: p }));
+      .map((p): Sugerencia => ({ kind: 'playa', beach: p }));
     return [...municipios, ...dePlaya];
   }, [playas, filtro]);
 
   const selectSuggestion = useCallback((sugerencia: Sugerencia) => {
-    if (sugerencia.tipo === 'municipio') {
+    if (sugerencia.kind === 'municipio') {
       // A municipality is a destination, not a filter: go to its page.
       history.push(sugerencia.ruta);
     } else {
-      setFiltro(sugerencia.playa.nombre);
+      setFiltro(sugerencia.beach.nombre);
     }
     setShowSuggestions(false);
     setActiveIdx(-1);
@@ -144,9 +144,9 @@ const PlayasList: React.FC = () => {
   return (
     <IonPage className="home-page">
       <SeoHead
-        titulo={t('seo.tituloLista')}
-        descripcion={t('seo.descLista')}
-        rutaCanonica="/playas"
+        title={t('seo.tituloLista')}
+        description={t('seo.descLista')}
+        canonicalPath="/playas"
       />
       {/* Sticky header */}
       {/* Recargar al tocar el encabezado, pero SOLO sobre el título: cuando el
@@ -260,7 +260,7 @@ const PlayasList: React.FC = () => {
             <ul className="search-suggestions" role="listbox" id="sugerencias-lista">
               {suggestions.map((s, i) => (
                 <li
-                  key={s.tipo === 'municipio' ? `municipio-${s.ruta}` : s.playa.codigo}
+                  key={s.kind === 'municipio' ? `municipio-${s.ruta}` : s.beach.codigo}
                   id={`sugerencia-${i}`}
                   className={`search-suggestion-item${i === activeIdx ? ' search-suggestion-item--active' : ''}`}
                   role="option"
@@ -270,7 +270,7 @@ const PlayasList: React.FC = () => {
                     selectSuggestion(s);
                   }}
                 >
-                  {s.tipo === 'municipio' ? (
+                  {s.kind === 'municipio' ? (
                     <>
                       <span className="suggestion-name">{s.municipio}</span>
                       <span className="suggestion-municipio">
@@ -279,8 +279,8 @@ const PlayasList: React.FC = () => {
                     </>
                   ) : (
                     <>
-                      <span className="suggestion-name">{s.playa.nombre}</span>
-                      <span className="suggestion-municipio">{s.playa.municipio}</span>
+                      <span className="suggestion-name">{s.beach.nombre}</span>
+                      <span className="suggestion-municipio">{s.beach.municipio}</span>
                     </>
                   )}
                 </li>
@@ -325,7 +325,7 @@ const PlayasList: React.FC = () => {
             {filtradas.map((playa) => (
               <BeachCard
                 key={playa.codigo}
-                playa={playa}
+                beach={playa}
                 weather={weatherMap.get(playa.codigo)}
                 distKm={
                   userLocation

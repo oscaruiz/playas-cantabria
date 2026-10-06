@@ -11,10 +11,10 @@ export function hasHalfDayData(h: HalfDayDTO): boolean {
 
 /** Morning / afternoon side by side. */
 const HalfDayDetail: React.FC<{
-  manana: HalfDayDTO;
-  tarde: HalfDayDTO;
-}> = ({ manana, tarde }) => {
-  const { t, idioma } = useIdioma();
+  morning: HalfDayDTO;
+  afternoon: HalfDayDTO;
+}> = ({ morning: manana, afternoon: tarde }) => {
+  const { t, language: idioma } = useIdioma();
   const hasMorning = hasHalfDayData(manana);
 
   const renderBlock = (data: HalfDayDTO, period: 'morning' | 'afternoon') => {

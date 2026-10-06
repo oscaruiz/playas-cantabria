@@ -16,14 +16,14 @@ const TILDES_SUELTAS = new RegExp('[\\u0300-\\u036f]', 'g');
  * shared is the beach; how much of it travels is up to the share sheet.
  */
 export async function compartirPlaya({
-  imagen,
-  nombreArchivo,
-  titulo,
+  image: imagen,
+  fileName: nombreArchivo,
+  title: titulo,
   url,
 }: {
-  imagen: Blob | null;
-  nombreArchivo: string;
-  titulo: string;
+  image: Blob | null;
+  fileName: string;
+  title: string;
   url: string;
 }): Promise<ResultadoCompartir> {
   if (imagen && navigator.share) {

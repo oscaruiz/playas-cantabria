@@ -15,50 +15,50 @@ import { formatearFechaCorta, nombreDia } from '../../../shared/i18n/fechas';
 export type ColorBandera = 'green' | 'yellow' | 'red' | 'black' | 'unknown';
 
 export interface CeldaTarjeta {
-  etiqueta: string;
-  valor: string;
+  label: string;
+  value: string;
   /** Only the flag cell carries a colour swatch. */
-  bandera?: ColorBandera;
+  flag?: ColorBandera;
 }
 
 export interface HoraTarjeta {
-  hora: string;
+  hour: string;
   emoji: string;
-  temperatura: string;
-  viento: string;
+  temperature: string;
+  wind: string;
 }
 
 export interface MareaTarjeta {
-  flecha: string;
-  etiqueta: string;
-  hora: string;
+  arrow: string;
+  label: string;
+  hour: string;
 }
 
 /** Everything the card says, already translated and ready to be painted. */
 export interface ResumenTarjeta {
-  nombre: string;
-  contexto: string;
-  puntuacion: number;
+  name: string;
+  context: string;
+  score: number;
   emoji: string;
-  resumen: string;
-  celdas: CeldaTarjeta[];
-  tituloHoras: string;
-  horas: HoraTarjeta[];
-  tituloMareas: string;
-  mareas: MareaTarjeta[];
+  summary: string;
+  cells: CeldaTarjeta[];
+  hoursTitle: string;
+  hours: HoraTarjeta[];
+  tidesTitle: string;
+  tides: MareaTarjeta[];
   /** Reference port of the tide times. Without it the times mean nothing. */
-  puertoMareas: string | null;
-  aviso: string;
-  marca: string;
-  sitio: string;
+  tidePort: string | null;
+  warning: string;
+  brand: string;
+  site: string;
 }
 
 export interface EntradaTarjeta {
-  playa: { nombre: string; municipio: string };
-  puntuada: FeaturedBeach;
+  beach: { nombre: string; municipio: string };
+  scored: FeaturedBeach;
   /** Region brand and site, injected: the domain does not read configuration. */
-  marca: string;
-  sitio: string;
+  brand: string;
+  site: string;
   /**
    * Today's wind and waves as the forecast panel paints them (raw Spanish from
    * the API). This is the PREFERRED source, not a fallback: it is the reading
@@ -69,13 +69,13 @@ export interface EntradaTarjeta {
    * moment is forecast as "light", and the card was printing BOTH, one in the
    * cell and one in the summary line right above it.
    */
-  prevision?: { viento?: string | null; oleaje?: string | null };
-  horas?: PrevisionHora[] | null;
-  mareas?: { pleamar: string[]; bajamar: string[] } | null;
-  puertoMareas?: string | null;
-  ahora: Date;
+  forecast?: { wind?: string | null; waves?: string | null };
+  hours?: PrevisionHora[] | null;
+  tides?: { pleamar: string[]; bajamar: string[] } | null;
+  tidePort?: string | null;
+  now: Date;
   t: TraducirFn;
-  idioma: Idioma;
+  language: Idioma;
 }
 
 /** Cloud cover → sky glyph. Same three states as `iconoDeNubes` on the page. */
@@ -99,17 +99,17 @@ function minutosDelDia(hora: string): number {
  * against the app.
  */
 export function resumenTarjeta({
-  playa,
-  puntuada,
-  marca,
-  sitio,
-  prevision,
-  horas,
-  mareas,
-  puertoMareas,
-  ahora,
+  beach: playa,
+  scored: puntuada,
+  brand: marca,
+  site: sitio,
+  forecast: prevision,
+  hours: horas,
+  tides: mareas,
+  tidePort: puertoMareas,
+  now: ahora,
   t,
-  idioma,
+  language: idioma,
 }: EntradaTarjeta): ResumenTarjeta {
   // Same trim as the score card: with an outlook, the reason drops the
   // fragment that repeats it, or the card would say it twice.
@@ -124,16 +124,16 @@ export function resumenTarjeta({
 
   const celdas: CeldaTarjeta[] = [
     {
-      etiqueta: t('detalle.viento'),
-      valor:
-        deLaApi(prevision?.viento) ??
+      label: t('detalle.viento'),
+      value:
+        deLaApi(prevision?.wind) ??
         (puntuada.vientoMs != null
           ? capitalizar(t(claveNivelVientoMs(puntuada.vientoMs)))
           : sinDato),
     },
     {
-      etiqueta: t('detalle.oleaje'),
-      valor: deLaApi(prevision?.oleaje) ?? deLaApi(puntuada.oleaje) ?? sinDato,
+      label: t('detalle.oleaje'),
+      value: deLaApi(prevision?.waves) ?? deLaApi(puntuada.oleaje) ?? sinDato,
     },
   ];
 
@@ -142,51 +142,51 @@ export function resumenTarjeta({
   // the width. Printed only when a flag is actually flying.
   if (puntuada.bandera) {
     celdas.push({
-      etiqueta: t('detalle.bandera'),
-      valor: capitalizar(traducirTextoApi(puntuada.bandera, idioma)),
-      bandera: flagColorClass(puntuada.bandera) as ColorBandera,
+      label: t('detalle.bandera'),
+      value: capitalizar(traducirTextoApi(puntuada.bandera, idioma)),
+      flag: flagColorClass(puntuada.bandera) as ColorBandera,
     });
   }
 
   return {
-    nombre: playa.nombre,
-    contexto: `${playa.municipio} · ${formatearFechaCorta(
+    name: playa.nombre,
+    context: `${playa.municipio} · ${formatearFechaCorta(
       capitalizar(nombreDia(ahora.getDay(), idioma)),
       ahora.getDate(),
       ahora.getMonth(),
       idioma,
     )}`,
-    puntuacion: Math.round(puntuada.puntuacion),
+    score: Math.round(puntuada.puntuacion),
     emoji: emojiCielo(puntuada.descripcionClima, esNocheEn(puntuada)),
-    resumen: capitalizar(traducirTextoApi(razonLegible(razon), idioma)),
-    celdas,
-    tituloHoras: t('detalle.pronostico.titulo'),
+    summary: capitalizar(traducirTextoApi(razonLegible(razon), idioma)),
+    cells: celdas,
+    hoursTitle: t('detalle.pronostico.titulo'),
     // Four, like the section it comes from: the strip answers "and if I go
     // later?", and a longer tail turns it into a forecast nobody asked for.
-    horas: (horas ?? []).slice(0, 4).map((h) => ({
-      hora: horaLocalMadrid(h.horaIso) ?? '--:--',
+    hours: (horas ?? []).slice(0, 4).map((h) => ({
+      hour: horaLocalMadrid(h.horaIso) ?? '--:--',
       emoji: emojiDeNubes(h.nubesPct),
-      temperatura: h.temperaturaC != null ? `${Math.round(h.temperaturaC)}°` : '--',
-      viento: h.vientoMs != null ? `${Math.round(h.vientoMs)} m/s` : '--',
+      temperature: h.temperaturaC != null ? `${Math.round(h.temperaturaC)}°` : '--',
+      wind: h.vientoMs != null ? `${Math.round(h.vientoMs)} m/s` : '--',
     })),
-    tituloMareas: t('detalle.mareas'),
-    mareas: [
+    tidesTitle: t('detalle.mareas'),
+    tides: [
       ...(mareas?.pleamar ?? []).map((hora) => ({
-        flecha: '↑',
-        etiqueta: t('marea.pleamar'),
-        hora,
+        arrow: '↑',
+        label: t('marea.pleamar'),
+        hour: hora,
       })),
       ...(mareas?.bajamar ?? []).map((hora) => ({
-        flecha: '↓',
-        etiqueta: t('marea.bajamar'),
-        hora,
+        arrow: '↓',
+        label: t('marea.bajamar'),
+        hour: hora,
       })),
-    ].sort((a, b) => minutosDelDia(a.hora) - minutosDelDia(b.hora)),
+    ].sort((a, b) => minutosDelDia(a.hour) - minutosDelDia(b.hour)),
     // AEMET annotates the port with a leading asterisk; it is a footnote mark
     // in their table and means nothing here.
-    puertoMareas: puertoMareas ? puertoMareas.replace(/^\*/, '') : null,
-    aviso: t('aviso.ranking'),
-    marca,
-    sitio,
+    tidePort: puertoMareas ? puertoMareas.replace(/^\*/, '') : null,
+    warning: t('aviso.ranking'),
+    brand: marca,
+    site: sitio,
   };
 }

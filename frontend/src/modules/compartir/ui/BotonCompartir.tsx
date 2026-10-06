@@ -21,15 +21,15 @@ type Estado = 'listo' | 'generando' | 'copiado';
  * this behaves exactly as it did before the card existed.
  */
 const BotonCompartir: React.FC<{
-  playa: { nombre: string; municipio: string };
-  puntuada: FeaturedBeach | null;
+  beach: { nombre: string; municipio: string };
+  scored: FeaturedBeach | null;
   url: string;
-  prevision?: { viento?: string | null; oleaje?: string | null };
-  horas?: PrevisionHora[] | null;
-  mareas?: { pleamar: string[]; bajamar: string[] } | null;
-  puertoMareas?: string | null;
-}> = ({ playa, puntuada, url, prevision, horas, mareas, puertoMareas }) => {
-  const { t, idioma } = useIdioma();
+  forecast?: { wind?: string | null; waves?: string | null };
+  hours?: PrevisionHora[] | null;
+  tides?: { pleamar: string[]; bajamar: string[] } | null;
+  tidePort?: string | null;
+}> = ({ beach: playa, scored: puntuada, url, forecast: prevision, hours: horas, tides: mareas, tidePort: puertoMareas }) => {
+  const { t, language: idioma } = useIdioma();
   const [estado, setEstado] = useState<Estado>('listo');
 
   const alPulsar = async () => {
@@ -43,17 +43,17 @@ const BotonCompartir: React.FC<{
       try {
         imagen = await tarjetaComoPng(
           resumenTarjeta({
-            playa,
-            puntuada,
-            marca: REGION.branding.appName,
-            sitio: new URL(url).host,
-            prevision,
-            horas,
-            mareas,
-            puertoMareas,
-            ahora,
+            beach: playa,
+            scored: puntuada,
+            brand: REGION.branding.appName,
+            site: new URL(url).host,
+            forecast: prevision,
+            hours: horas,
+            tides: mareas,
+            tidePort: puertoMareas,
+            now: ahora,
             t,
-            idioma,
+            language: idioma,
           }),
         );
       } catch {
@@ -64,9 +64,9 @@ const BotonCompartir: React.FC<{
 
     try {
       const resultado = await compartirPlaya({
-        imagen,
-        nombreArchivo: nombreArchivoTarjeta(playa.nombre, ahora),
-        titulo,
+        image: imagen,
+        fileName: nombreArchivoTarjeta(playa.nombre, ahora),
+        title: titulo,
         url,
       });
       // Only the clipboard needs saying: the share sheet showed itself, and a

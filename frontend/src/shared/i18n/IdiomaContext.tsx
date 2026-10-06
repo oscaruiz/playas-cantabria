@@ -15,8 +15,8 @@ type Vars = Record<string, string | number>;
 export type TraducirFn = (clave: ClaveTexto, vars?: Vars) => string;
 
 interface IdiomaContextValue {
-  idioma: Idioma;
-  setIdioma: (idioma: Idioma) => void;
+  language: Idioma;
+  setLanguage: (idioma: Idioma) => void;
   /** Translates a key, with {variables} interpolation. */
   t: TraducirFn;
   /** Resolves the plural form (`_one`/`_other`) according to count. */
@@ -88,7 +88,7 @@ export const IdiomaProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   );
 
   return (
-    <IdiomaContext.Provider value={{ idioma, setIdioma, t, tPlural }}>
+    <IdiomaContext.Provider value={{ language: idioma, setLanguage: setIdioma, t, tPlural }}>
       {children}
     </IdiomaContext.Provider>
   );

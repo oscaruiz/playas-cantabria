@@ -19,8 +19,8 @@ function uvColorClass(uv: number): string {
 }
 
 /** Thermal sensation, UV badge and coastal warning for the selected day. */
-const DailyStats: React.FC<{ dia: DiaPrediccionDTO; embedded?: boolean }> = ({ dia, embedded }) => {
-  const { t, idioma } = useIdioma();
+const DailyStats: React.FC<{ day: DiaPrediccionDTO; embedded?: boolean }> = ({ day: dia, embedded }) => {
+  const { t, language: idioma } = useIdioma();
   const hasAny = dia.sensacionTermica || dia.indiceUV != null || (dia.aviso && dia.aviso.descripcion);
   if (!hasAny) return null;
 

@@ -47,7 +47,7 @@ afterEach(() => {
 
 describe('i18n — texto propio de la app', () => {
   it('traduce el listado al cambiar de idioma', async () => {
-    renderWithProviders(<PlayasList />, { route: '/playas', idioma: 'en' });
+    renderWithProviders(<PlayasList />, { route: '/playas', language: 'en' });
     await screen.findByText('La Concha');
 
     expect(screen.getByText('7 beaches')).toBeInTheDocument();
@@ -66,7 +66,7 @@ describe('i18n — contenido que viene del backend', () => {
     const { container } = renderWithProviders(<PlayaDetallePage />, {
       route: '/playas/3908503',
       path: '/playas/:codigo',
-      idioma: 'en',
+      language: 'en',
     });
     await screen.findByText('Swimming conditions (per Red Cross)');
 
@@ -87,7 +87,7 @@ describe('i18n — contenido que viene del backend', () => {
     const { container } = renderWithProviders(<PlayaDetallePage />, {
       route: '/playas/3908503',
       path: '/playas/:codigo',
-      idioma: 'en',
+      language: 'en',
     });
     await screen.findByText('Swimming conditions (per Red Cross)');
 
@@ -102,7 +102,7 @@ describe('i18n — contenido que viene del backend', () => {
     const { container } = renderWithProviders(<PlayaDetallePage />, {
       route: '/playas/3908503',
       path: '/playas/:codigo',
-      idioma: 'en',
+      language: 'en',
     });
     await screen.findByText('Swimming conditions (per Red Cross)');
 

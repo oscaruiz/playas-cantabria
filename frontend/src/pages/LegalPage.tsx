@@ -56,8 +56,8 @@ const PrivacidadEs: React.FC = () => (
   </>
 );
 
-const LegalPage: React.FC<{ tipo: 'acerca' | 'privacidad' }> = ({ tipo }) => {
-  const { idioma, t } = useIdioma();
+const LegalPage: React.FC<{ kind: 'acerca' | 'privacidad' }> = ({ kind: tipo }) => {
+  const { language: idioma, t } = useIdioma();
   const history = useHistory();
   const acerca = tipo === 'acerca';
   // Title and description come from the SAME templates the prerender bakes
@@ -72,7 +72,7 @@ const LegalPage: React.FC<{ tipo: 'acerca' | 'privacidad' }> = ({ tipo }) => {
 
   return (
     <IonPage className="legal-page">
-      <SeoHead titulo={titulo} descripcion={descripcion} rutaCanonica={acerca ? '/acerca-de' : '/privacidad'} />
+      <SeoHead title={titulo} description={descripcion} canonicalPath={acerca ? '/acerca-de' : '/privacidad'} />
       <header className="legal-header">
         <div className="legal-header-izq">
           {/* Estas páginas se abren desde el menú ⓘ de cualquier pantalla, así
@@ -97,7 +97,7 @@ const LegalPage: React.FC<{ tipo: 'acerca' | 'privacidad' }> = ({ tipo }) => {
       <IonContent>
         <main className="legal-main">
           <h1>{encabezado}</h1>
-          {idioma === 'es' ? (acerca ? <AcercaEs /> : <PrivacidadEs />) : <EnglishContent tipo={tipo} />}
+          {idioma === 'es' ? (acerca ? <AcercaEs /> : <PrivacidadEs />) : <EnglishContent kind={tipo} />}
         </main>
       </IonContent>
       <IonFooter className="ion-no-border"><BottomNavBar /></IonFooter>
@@ -105,7 +105,7 @@ const LegalPage: React.FC<{ tipo: 'acerca' | 'privacidad' }> = ({ tipo }) => {
   );
 };
 
-const EnglishContent: React.FC<{ tipo: 'acerca' | 'privacidad' }> = ({ tipo }) => tipo === 'acerca' ? (
+const EnglishContent: React.FC<{ kind: 'acerca' | 'privacidad' }> = ({ kind: tipo }) => tipo === 'acerca' ? (
   <>
     <section><h2>About the project</h2><p>{MARCA} is a personal, free and independent project. It brings together weather, forecasts, tides, UV radiation, beach features, flags and lifeguard information. Rankings, scores and recommendations are generated automatically and all information is indicative. The <a href={GITHUB} target="_blank" rel="noopener noreferrer">source code is public on GitHub</a>.</p></section>
     <section><h2>Independence</h2><p>This is not an official service and is not affiliated with, sponsored, managed or endorsed by the Government of Cantabria, AEMET, the Spanish Red Cross, local councils, OpenWeather, Open-Meteo or OpenStreetMap. They are named only to identify information sources.</p></section>

@@ -1,4 +1,4 @@
-import { slugify, rutaPlaya, encontrarPorSlugs, detectarColisiones } from './beachUrls';
+import { slugify, beachPath, findBySlugs, detectCollisions } from './beachUrls';
 import { beachesResponse } from '../../test/fixtures/beaches';
 import catalogoReal from '../../data/beaches.json';
 
@@ -28,43 +28,43 @@ describe('slugify', () => {
   });
 });
 
-describe('rutaPlaya', () => {
+describe('beachPath', () => {
   it('compone /playas/<municipio>/<nombre> con ambos slugs', () => {
-    expect(rutaPlaya({ nombre: 'La Concha', municipio: 'Suances' })).toBe(
+    expect(beachPath({ nombre: 'La Concha', municipio: 'Suances' })).toBe(
       '/playas/suances/la-concha'
     );
-    expect(rutaPlaya({ nombre: 'La Arnía', municipio: 'Piélagos' })).toBe(
+    expect(beachPath({ nombre: 'La Arnía', municipio: 'Piélagos' })).toBe(
       '/playas/pielagos/la-arnia'
     );
   });
 });
 
-describe('encontrarPorSlugs', () => {
+describe('findBySlugs', () => {
   it('cada playa del fixture se reencuentra por su propia ruta', () => {
     for (const playa of beachesResponse) {
-      const ruta = rutaPlaya(playa);
+      const ruta = beachPath(playa);
       const [, , municipioSlug, playaSlug] = ruta.split('/');
-      expect(encontrarPorSlugs(beachesResponse, municipioSlug, playaSlug)?.codigo).toBe(
+      expect(findBySlugs(beachesResponse, municipioSlug, playaSlug)?.codigo).toBe(
         playa.codigo
       );
     }
   });
 
   it('devuelve undefined para slugs desconocidos', () => {
-    expect(encontrarPorSlugs(beachesResponse, 'suances', 'no-existe')).toBeUndefined();
-    expect(encontrarPorSlugs(beachesResponse, 'nadie', 'la-concha')).toBeUndefined();
+    expect(findBySlugs(beachesResponse, 'suances', 'no-existe')).toBeUndefined();
+    expect(findBySlugs(beachesResponse, 'nadie', 'la-concha')).toBeUndefined();
   });
 });
 
-describe('detectarColisiones', () => {
+describe('detectCollisions', () => {
   it('el catálogo real de la región construida no tiene colisiones', () => {
     // If this fails, two beaches map to the same canonical URL (or a name
     // slugs to nothing): fix the catalog, do not weaken the check.
-    expect(detectarColisiones(catalogoReal)).toEqual([]);
+    expect(detectCollisions(catalogoReal)).toEqual([]);
   });
 
   it('dos playas homónimas del mismo municipio se detectan', () => {
-    const colision = detectarColisiones([
+    const colision = detectCollisions([
       { nombre: 'La Arena', municipio: 'Arnuero', codigo: '1' },
       { nombre: 'La aréna', municipio: 'Arnuero', codigo: '2' },
     ]);
@@ -72,7 +72,7 @@ describe('detectarColisiones', () => {
   });
 
   it('un nombre que sluggea a vacío también es conflicto', () => {
-    expect(detectarColisiones([{ nombre: '···', municipio: 'X', codigo: '9' }])).toEqual([
+    expect(detectCollisions([{ nombre: '···', municipio: 'X', codigo: '9' }])).toEqual([
       { ruta: '(slug vacío)', codigos: ['9'] },
     ]);
   });

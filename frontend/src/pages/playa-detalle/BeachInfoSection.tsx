@@ -2,15 +2,15 @@ import React from 'react';
 import { IonIcon } from '@ionic/react';
 import { Link } from 'react-router-dom';
 import { PlayaDetalle as PlayaDetalleData } from '../../services/api';
-import { rutaMunicipio } from '../../shared/seo/landings';
+import { municipalityPath } from '../../shared/seo/landings';
 import { getActiveAttrs } from '../../utils/beachHelpers';
 import { useIdioma } from '../../shared/i18n/IdiomaContext';
 import { ClaveTexto } from '../../shared/i18n/es';
 import { traducirTextoApi } from '../../shared/i18n/apiText';
 
 /** Static editorial data: dimensions, sand, access, parking, bus, hospital. */
-export const BeachInfoSection: React.FC<{ datos: PlayaDetalleData }> = ({ datos }) => {
-  const { t, idioma } = useIdioma();
+export const BeachInfoSection: React.FC<{ data: PlayaDetalleData }> = ({ data: datos }) => {
+  const { t, language: idioma } = useIdioma();
   const hasAny = datos.longitud || datos.anchura || datos.tipoPlaya || datos.arena
     || (datos.acceso && datos.acceso.length > 0) || datos.parkingDescripcion || datos.bus || datos.hospitalDistancia != null;
   if (!hasAny) return null;
@@ -25,7 +25,7 @@ export const BeachInfoSection: React.FC<{ datos: PlayaDetalleData }> = ({ datos 
           <span className="beach-info-label">{t('detalle.municipio')}</span>
           <Link
             className="beach-info-value ld-enlace-municipio"
-            to={rutaMunicipio(datos.municipio)}
+            to={municipalityPath(datos.municipio)}
             aria-label={t('municipio.verPlayas', { municipio: datos.municipio })}
           >
             {datos.municipio} &#8250;
@@ -85,7 +85,7 @@ export const BeachInfoSection: React.FC<{ datos: PlayaDetalleData }> = ({ datos 
 };
 
 /** Services and features, as icon chips. */
-export const BeachAttributesSection: React.FC<{ atributos: PlayaDetalleData['atributos'] }> = ({ atributos }) => {
+export const BeachAttributesSection: React.FC<{ attributes: PlayaDetalleData['atributos'] }> = ({ attributes: atributos }) => {
   const { t } = useIdioma();
   const attrs = getActiveAttrs(atributos);
   if (attrs.length === 0) return null;

@@ -25,12 +25,12 @@ import './provenance.css';
  */
 const InfoDatos: React.FC<{
   /** Visible label. Short and specific: "Aviso", "Fuente". */
-  etiqueta: ClaveTexto;
+  label: ClaveTexto;
   /** Accessible name, which must also say WHICH block it belongs to. */
   aria: ClaveTexto;
   children: React.ReactNode;
   className?: string;
-}> = ({ etiqueta, aria, children, className }) => {
+}> = ({ label: etiqueta, aria, children, className }) => {
   const { t } = useIdioma();
   const [abierto, setAbierto] = useState(false);
   const id = useId();

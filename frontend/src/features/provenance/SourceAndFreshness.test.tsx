@@ -14,7 +14,7 @@ const hace7Min = () => Date.now() - 7 * 60000;
 describe('FreshnessLabel', () => {
   it('shows the translated relative time inside a <time> with the absolute instant', () => {
     const ms = hace7Min();
-    const { container } = renderWithProviders(<FreshnessLabel instante={ms} />);
+    const { container } = renderWithProviders(<FreshnessLabel instant={ms} />);
     const time = container.querySelector('time');
     if (!time) throw new Error('FreshnessLabel no renderizó un <time>');
     expect(time).toHaveTextContent('actualizado hace 7 min');
@@ -24,21 +24,21 @@ describe('FreshnessLabel', () => {
   });
 
   it('remains translated in English', () => {
-    renderWithProviders(<FreshnessLabel instante={hace7Min()} />, { idioma: 'en' });
+    renderWithProviders(<FreshnessLabel instant={hace7Min()} />, { language: 'en' });
     expect(screen.getByText('updated 7 min ago')).toBeInTheDocument();
   });
 
   it('capitalizes on request without touching the <time> semantics', () => {
-    renderWithProviders(<FreshnessLabel instante={hace7Min()} capitalizado />);
+    renderWithProviders(<FreshnessLabel instant={hace7Min()} capitalized />);
     expect(screen.getByText('Actualizado hace 7 min')).toBeInTheDocument();
   });
 
   it('renders NOTHING for a missing or unparseable instant', () => {
     const { container } = renderWithProviders(
       <>
-        <FreshnessLabel instante={null} />
-        <FreshnessLabel instante={undefined} />
-        <FreshnessLabel instante="basura" />
+        <FreshnessLabel instant={null} />
+        <FreshnessLabel instant={undefined} />
+        <FreshnessLabel instant="basura" />
       </>
     );
     expect(container.querySelector('time')).toBeNull();
@@ -50,7 +50,7 @@ describe('SourceAndFreshness', () => {
   it('shows source alone when there is no timestamp — no misleading time text', () => {
     const { container } = renderWithProviders(
       <SourceAndFreshness
-        procedencia={{ tipo: 'prevision', fuente: 'Open-Meteo', instanteMs: null }}
+        provenance={{ kind: 'prevision', source: 'Open-Meteo', instantMs: null }}
       />
     );
     expect(container.querySelector('.procedencia-linea')).toHaveTextContent(
@@ -62,7 +62,7 @@ describe('SourceAndFreshness', () => {
   it('credits the source with a link to its own terms', () => {
     const { container } = renderWithProviders(
       <SourceAndFreshness
-        procedencia={{ tipo: 'prevision', fuente: 'Open-Meteo', instanteMs: null }}
+        provenance={{ kind: 'prevision', source: 'Open-Meteo', instantMs: null }}
       />
     );
     const enlace = container.querySelector('a.procedencia-enlace');
@@ -73,7 +73,7 @@ describe('SourceAndFreshness', () => {
   it('names an unknown source without inventing a link for it', () => {
     const { container } = renderWithProviders(
       <SourceAndFreshness
-        procedencia={{ tipo: 'prevision', fuente: 'Meteovecino', instanteMs: null }}
+        provenance={{ kind: 'prevision', source: 'Meteovecino', instantMs: null }}
       />
     );
     expect(container.querySelector('.procedencia-linea')).toHaveTextContent(
@@ -85,8 +85,8 @@ describe('SourceAndFreshness', () => {
   it('joins source and freshness for a live observation', () => {
     const { container } = renderWithProviders(
       <SourceAndFreshness
-        procedencia={{ tipo: 'directo', fuente: 'OpenWeather', instanteMs: hace7Min() }}
-        claveFuente="datos.enDirectoFuente"
+        provenance={{ kind: 'directo', source: 'OpenWeather', instantMs: hace7Min() }}
+        sourceKey="datos.enDirectoFuente"
       />
     );
     expect(container.querySelector('.procedencia-linea')).toHaveTextContent(
@@ -98,9 +98,9 @@ describe('SourceAndFreshness', () => {
   it('renders nothing when there is neither source nor instant', () => {
     const { container } = renderWithProviders(
       <>
-        <SourceAndFreshness procedencia={null} />
+        <SourceAndFreshness provenance={null} />
         <SourceAndFreshness
-          procedencia={{ tipo: 'directo', fuente: null, instanteMs: null }}
+          provenance={{ kind: 'directo', source: null, instantMs: null }}
         />
       </>
     );
@@ -131,7 +131,7 @@ describe('ForecastHero wiring', () => {
 
   it('the live headline credits its observer and capture time', () => {
     const { container } = renderWithProviders(
-      <ForecastHero dia={DIA} tiempoActual={AHORA} />
+      <ForecastHero day={DIA} currentConditions={AHORA} />
     );
     expect(container.querySelector('.procedencia-linea')).toHaveTextContent(
       'Observación en directo de OpenWeather'
@@ -141,7 +141,7 @@ describe('ForecastHero wiring', () => {
 
   it('keeps the freshness visible and the licence wording out of the way', () => {
     const { container } = renderWithProviders(
-      <ForecastHero dia={DIA} tiempoActual={AHORA} />
+      <ForecastHero day={DIA} currentConditions={AHORA} />
     );
     // La frescura no es letra pequeña: es el dato. La nota de licencia del
     // observador viaja con el resto bajo la ⓘ que cierra la columna.
@@ -152,7 +152,7 @@ describe('ForecastHero wiring', () => {
   });
 
   it('without an observation there is no provenance line at all', () => {
-    const { container } = renderWithProviders(<ForecastHero dia={DIA} />);
+    const { container } = renderWithProviders(<ForecastHero day={DIA} />);
     expect(container.querySelector('.procedencia-linea')).toBeNull();
   });
 });

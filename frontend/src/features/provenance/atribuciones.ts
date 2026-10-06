@@ -15,7 +15,7 @@ import type { ClaveTexto } from '../../shared/i18n/es';
 
 export interface Atribucion {
   /** Public name of the producer, exactly as it must be credited. */
-  nombre: string;
+  name: string;
   /** The producer's own page: the link the terms require. */
   url: string;
   /**
@@ -23,39 +23,39 @@ export interface Atribucion {
    * `{fuente}` slot where the linked name goes. Null when crediting the name
    * with its link is all the source asks for.
    */
-  nota: ClaveTexto | null;
+  note: ClaveTexto | null;
 }
 
 const ATRIBUCIONES: Record<string, Atribucion> = {
   AEMET: {
-    nombre: 'AEMET',
+    name: 'AEMET',
     url: 'https://www.aemet.es',
-    nota: 'atribucion.aemet',
+    note: 'atribucion.aemet',
   },
   // Free plan (`api.openweathermap.org/data/2.5/weather` and `/forecast`):
   // the data is CC BY-SA 4.0, so the credit must name OpenWeather and link to it.
   OPENWEATHER: {
-    nombre: 'OpenWeather',
+    name: 'OpenWeather',
     url: 'https://openweathermap.org',
-    nota: 'atribucion.openweather',
+    note: 'atribucion.openweather',
   },
   OPENMETEO: {
-    nombre: 'Open-Meteo',
+    name: 'Open-Meteo',
     url: 'https://open-meteo.com',
-    nota: 'atribucion.openmeteo',
+    note: 'atribucion.openmeteo',
   },
   // The public beach list of the same console the backend reads. The console's
   // root (`/appjv/consPlayas`) 404s when opened directly, so the credit points
   // at `listaPlayas.do`: a dead link credits nobody.
   CRUZROJA: {
-    nombre: 'Cruz Roja',
+    name: 'Cruz Roja',
     url: 'https://www.cruzroja.es/appjv/consPlayas/listaPlayas.do',
-    nota: 'atribucion.banderas',
+    note: 'atribucion.banderas',
   },
   OPENSTREETMAP: {
-    nombre: 'OpenStreetMap',
+    name: 'OpenStreetMap',
     url: 'https://www.openstreetmap.org/copyright',
-    nota: null,
+    note: null,
   },
 };
 
@@ -79,7 +79,7 @@ export function atribucionDeFuente(
 
 /** The name a source must be credited by; the raw string if it is unknown. */
 export function nombrePublicoFuente(fuente: string): string {
-  return atribucionDeFuente(fuente)?.nombre ?? fuente;
+  return atribucionDeFuente(fuente)?.name ?? fuente;
 }
 
 /**

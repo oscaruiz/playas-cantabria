@@ -1,10 +1,10 @@
 import {
   LANDINGS,
-  landingsNoVacias,
-  municipiosDe,
-  rutaMunicipio,
-  resumenMunicipios,
-  playasDeMunicipioSlug,
+  nonEmptyLandings,
+  municipalitiesOf,
+  municipalityPath,
+  municipalitiesSummary,
+  beachesOfMunicipalitySlug,
 } from './landings';
 import { beachesResponse } from '../../test/fixtures/beaches';
 import catalogoReal from '../../data/beaches.json';
@@ -57,11 +57,11 @@ describe('selectores de landings (solo datos estáticos del catálogo)', () => {
 
 describe('categorías vacías nunca se publican', () => {
   it('con un catálogo vacío no hay landings', () => {
-    expect(landingsNoVacias([])).toEqual([]);
+    expect(nonEmptyLandings([])).toEqual([]);
   });
 
   it('en el catálogo real de la región construida las cuatro tienen playas', () => {
-    expect(landingsNoVacias(catalogoReal).map((l: { id: string }) => l.id)).toEqual([
+    expect(nonEmptyLandings(catalogoReal).map((l: { id: string }) => l.id)).toEqual([
       'playas-con-webcam',
       'playas-accesibles',
       'playas-con-socorrista',
@@ -72,7 +72,7 @@ describe('categorías vacías nunca se publican', () => {
 
 describe('municipios', () => {
   it('únicos y ordenados', () => {
-    expect(municipiosDe(beachesResponse)).toEqual([
+    expect(municipalitiesOf(beachesResponse)).toEqual([
       'Laredo',
       'Piélagos',
       'Ribamontán al Mar',
@@ -82,11 +82,11 @@ describe('municipios', () => {
   });
 
   it('la ruta usa el mismo slugify que las playas', () => {
-    expect(rutaMunicipio('Ribamontán al Mar')).toBe('/municipios/ribamontan-al-mar');
+    expect(municipalityPath('Ribamontán al Mar')).toBe('/municipios/ribamontan-al-mar');
   });
 
   it('el resumen del índice trae ruta y número de playas por municipio', () => {
-    const resumen = resumenMunicipios(beachesResponse);
+    const resumen = municipalitiesSummary(beachesResponse);
     expect(resumen).toContainEqual({
       municipio: 'Santander',
       ruta: '/municipios/santander',
@@ -98,16 +98,16 @@ describe('municipios', () => {
       total: 1,
     });
     expect(resumen.map((m: { municipio: string }) => m.municipio)).toEqual(
-      municipiosDe(beachesResponse)
+      municipalitiesOf(beachesResponse)
     );
   });
 
   it('el slug reencuentra sus playas; uno desconocido, ninguna', () => {
-    const deSantander = playasDeMunicipioSlug(beachesResponse, 'santander');
+    const deSantander = beachesOfMunicipalitySlug(beachesResponse, 'santander');
     expect(deSantander.map((p: { nombre: string }) => p.nombre).sort()).toEqual([
       'El Sardinero',
       'La Maruca',
     ]);
-    expect(playasDeMunicipioSlug(beachesResponse, 'no-existe')).toEqual([]);
+    expect(beachesOfMunicipalitySlug(beachesResponse, 'no-existe')).toEqual([]);
   });
 });

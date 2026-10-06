@@ -33,7 +33,7 @@ const FRESCA = {
   datos: { timestamp: 1 },
 };
 
-const Sonda: React.FC<{ alLlegar: (f: RespuestaFresca) => void }> = ({ alLlegar }) => {
+const Sonda: React.FC<{ onArrive: (f: RespuestaFresca) => void }> = ({ onArrive: alLlegar }) => {
   useRefrescoDelServiceWorker(alLlegar);
   return null;
 };
@@ -41,7 +41,7 @@ const Sonda: React.FC<{ alLlegar: (f: RespuestaFresca) => void }> = ({ alLlegar 
 describe('useRefrescoDelServiceWorker', () => {
   it('entrega url y datos de la respuesta que llegó tarde', () => {
     const alLlegar = jest.fn();
-    render(<Sonda alLlegar={alLlegar} />);
+    render(<Sonda onArrive={alLlegar} />);
 
     emitir(FRESCA);
 
@@ -51,7 +51,7 @@ describe('useRefrescoDelServiceWorker', () => {
 
   it('ignora otros mensajes y los que vienen incompletos', () => {
     const alLlegar = jest.fn();
-    render(<Sonda alLlegar={alLlegar} />);
+    render(<Sonda onArrive={alLlegar} />);
 
     emitir({ type: 'SKIP_WAITING' });
     emitir(undefined);
@@ -65,8 +65,8 @@ describe('useRefrescoDelServiceWorker', () => {
   it('llama a la ÚLTIMA función recibida, sin resuscribirse en cada render', () => {
     const vieja = jest.fn();
     const nueva = jest.fn();
-    const { rerender } = render(<Sonda alLlegar={vieja} />);
-    rerender(<Sonda alLlegar={nueva} />);
+    const { rerender } = render(<Sonda onArrive={vieja} />);
+    rerender(<Sonda onArrive={nueva} />);
 
     emitir(FRESCA);
 
@@ -76,7 +76,7 @@ describe('useRefrescoDelServiceWorker', () => {
 
   it('deja de escuchar al desmontar', () => {
     const alLlegar = jest.fn();
-    const { unmount } = render(<Sonda alLlegar={alLlegar} />);
+    const { unmount } = render(<Sonda onArrive={alLlegar} />);
     unmount();
 
     emitir(FRESCA);

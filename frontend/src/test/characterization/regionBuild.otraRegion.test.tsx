@@ -116,7 +116,7 @@ it('el mapa arranca en el centro de Asturias, no en el de Cantabria', async () =
 it('la app en inglés también lleva la marca de la región', async () => {
   mockApi();
   const PlayasList = (await import('../../pages/PlayasList')).default;
-  renderWithProviders(<PlayasList />, { route: '/playas', idioma: 'en' });
+  renderWithProviders(<PlayasList />, { route: '/playas', language: 'en' });
 
   // The brand is a proper name from region.json: it does not translate.
   expect(await screen.findByText('Playas de Asturias')).toBeInTheDocument();

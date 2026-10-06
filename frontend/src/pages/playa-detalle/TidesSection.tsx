@@ -10,7 +10,7 @@ function parseTimeMinutes(t: string): number {
 function getTideStatus(
   entries: Array<{ time: string; type: 'pleamar' | 'bajamar'; minutes: number }>,
   isToday: boolean,
-): { clave: ClaveTexto; className: string } | null {
+): { labelKey: ClaveTexto; className: string } | null {
   if (!isToday || entries.length === 0) return null;
 
   const now = new Date();
@@ -22,9 +22,9 @@ function getTideStatus(
       // We are before this event → the tide is heading toward it
       const next = entries[i];
       if (next.type === 'pleamar') {
-        return { clave: 'marea.subiendo', className: 'tide-status-rising' };
+        return { labelKey: 'marea.subiendo', className: 'tide-status-rising' };
       } else {
-        return { clave: 'marea.bajando', className: 'tide-status-falling' };
+        return { labelKey: 'marea.bajando', className: 'tide-status-falling' };
       }
     }
   }
@@ -32,24 +32,24 @@ function getTideStatus(
   // After the day's last event: if the last one was `pleamar` → falling, and vice versa
   const last = entries[entries.length - 1];
   if (last.type === 'pleamar') {
-    return { clave: 'marea.bajando', className: 'tide-status-falling' };
+    return { labelKey: 'marea.bajando', className: 'tide-status-falling' };
   }
-  return { clave: 'marea.subiendo', className: 'tide-status-rising' };
+  return { labelKey: 'marea.subiendo', className: 'tide-status-rising' };
 }
 
 /** Tides for the selected day only, sorted by time. */
 const TidesSection: React.FC<{
-  marea: { pleamar: string[]; bajamar: string[] };
+  tide: { pleamar: string[]; bajamar: string[] };
   /** Reference port the times belong to (AEMET's own annotation). */
-  fuenteMareas: string | null;
+  tideSource: string | null;
   isToday: boolean;
   /**
    * Present when these are NOT this beach's own tides: it has no AEMET
    * sheet, so the nearest beach's table is shown instead. Tide tables are
    * always relative to a reference point anyway — this just says which one.
    */
-  referencia?: { playa: string; distanciaKm: number };
-}> = ({ marea, fuenteMareas, isToday, referencia }) => {
+  reference?: { playa: string; distanciaKm: number };
+}> = ({ tide: marea, tideSource: fuenteMareas, isToday, reference: referencia }) => {
   const { t } = useIdioma();
   if (marea.pleamar.length === 0 && marea.bajamar.length === 0) return null;
 
@@ -74,7 +74,7 @@ const TidesSection: React.FC<{
       )}
       {status && (
         <div className={`tide-status ${status.className}`}>
-          {status.className === 'tide-status-rising' ? '\u2197' : '\u2198'} {t(status.clave)}
+          {status.className === 'tide-status-rising' ? '\u2197' : '\u2198'} {t(status.labelKey)}
         </div>
       )}
       <div className="tides-list">

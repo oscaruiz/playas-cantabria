@@ -10,9 +10,9 @@ describe('SeoHead', () => {
   it('fija título, descripción, canónica y etiquetas sociales', () => {
     render(
       <SeoHead
-        titulo="La Concha: bandera, tiempo y mareas hoy"
-        descripcion="Estado de la playa de La Concha."
-        rutaCanonica="/playas/suances/la-concha"
+        title="La Concha: bandera, tiempo y mareas hoy"
+        description="Estado de la playa de La Concha."
+        canonicalPath="/playas/suances/la-concha"
       />
     );
 
@@ -33,10 +33,10 @@ describe('SeoHead', () => {
 
   it('navegar a otra página sobrescribe las etiquetas: no se acumulan', () => {
     render(
-      <SeoHead titulo="Página A" descripcion="Descripción A" rutaCanonica="/a" />
+      <SeoHead title="Página A" description="Descripción A" canonicalPath="/a" />
     );
     render(
-      <SeoHead titulo="Página B" descripcion="Descripción B" rutaCanonica="/b" />
+      <SeoHead title="Página B" description="Descripción B" canonicalPath="/b" />
     );
 
     expect(document.title).toBe('Página B');
@@ -49,8 +49,8 @@ describe('SeoHead', () => {
   });
 
   it('noindex marca robots y elimina la canónica y og:url heredadas', () => {
-    render(<SeoHead titulo="Página A" descripcion="a" rutaCanonica="/a" />);
-    render(<SeoHead titulo="No encontrada" descripcion="x" rutaCanonica="" noindex />);
+    render(<SeoHead title="Página A" description="a" canonicalPath="/a" />);
+    render(<SeoHead title="No encontrada" description="x" canonicalPath="" noindex />);
 
     expect(meta('meta[name="robots"]')).toBe('noindex');
     expect(document.head.querySelector('link[rel="canonical"]')).toBeNull();
@@ -58,8 +58,8 @@ describe('SeoHead', () => {
   });
 
   it('volver a una página normal retira el robots y restaura la canónica', () => {
-    render(<SeoHead titulo="No encontrada" descripcion="x" rutaCanonica="" noindex />);
-    render(<SeoHead titulo="Página B" descripcion="b" rutaCanonica="/b" />);
+    render(<SeoHead title="No encontrada" description="x" canonicalPath="" noindex />);
+    render(<SeoHead title="Página B" description="b" canonicalPath="/b" />);
 
     expect(document.head.querySelector('meta[name="robots"]')).toBeNull();
     expect(
@@ -69,9 +69,9 @@ describe('SeoHead', () => {
 
   it('reacciona a un cambio de props (idioma, otra playa)', () => {
     const { rerender } = render(
-      <SeoHead titulo="Antes" descripcion="d" rutaCanonica="/x" />
+      <SeoHead title="Antes" description="d" canonicalPath="/x" />
     );
-    rerender(<SeoHead titulo="Después" descripcion="d" rutaCanonica="/x" />);
+    rerender(<SeoHead title="Después" description="d" canonicalPath="/x" />);
     expect(document.title).toBe('Después');
   });
 });

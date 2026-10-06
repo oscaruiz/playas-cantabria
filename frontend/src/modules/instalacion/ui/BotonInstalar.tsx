@@ -16,7 +16,7 @@ import './instalacion.css';
  */
 const BotonInstalar: React.FC<{ className?: string }> = ({ className }) => {
   const { t } = useIdioma();
-  const { oferta, instalar, abrir } = useInstalacion();
+  const { offer: oferta, install: instalar, open: abrir } = useInstalacion();
   const [ayudaVisible, setAyudaVisible] = useState(false);
 
   if (!oferta) return null;

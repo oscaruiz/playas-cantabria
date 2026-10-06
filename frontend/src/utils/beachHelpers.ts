@@ -15,7 +15,7 @@ import {
   bodyOutline,
 } from 'ionicons/icons';
 import type { ClaveTexto } from '../shared/i18n/es';
-import { sinAcentos } from '../shared/seo/beachUrls';
+import { withoutAccents } from '../shared/seo/beachUrls';
 import { fechaMadrid, minutosMadrid } from '../shared/format/tiempo';
 import { classifySky, hasPrecipitation, skyEmoji } from '../shared/cielo/sky';
 
@@ -28,7 +28,7 @@ export function normalizarBusqueda(texto: string): string {
   // Shares the accent-stripper with the URL module: the previous inline
   // `\p{M}` regex cost ~4 kB of bundle once Babel expanded it (see
   // seo/beachUrls.js).
-  return sinAcentos(texto.toLowerCase());
+  return withoutAccents(texto.toLowerCase());
 }
 
 /**

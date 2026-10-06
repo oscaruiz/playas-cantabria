@@ -35,9 +35,9 @@ const MOTIVO: Record<MotivoVentana, ClaveTexto> = {
  * window closes. The home card stays compact and does not pass it.
  */
 const MejorMomento: React.FC<{
-  ventana?: VentanaDia | null;
-  detallada?: boolean;
-}> = ({ ventana, detallada = false }) => {
+  timeWindow?: VentanaDia | null;
+  detailed?: boolean;
+}> = ({ timeWindow: ventana, detailed: detallada = false }) => {
   const { t } = useIdioma();
   if (!ventana) return null;
 

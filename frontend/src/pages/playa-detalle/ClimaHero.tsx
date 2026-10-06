@@ -60,10 +60,10 @@ function climaDiaAPrediccion(d: PrediccionDia, fecha: string, esHoy: boolean): D
  * this source does not provide.
  */
 const ClimaHero: React.FC<{
-  clima: NonNullable<PlayaDetalleData['clima']>;
-  temperaturaActual?: number | null;
-  tiempoActual?: PlayaDetalleData['tiempoActual'];
-}> = ({ clima, temperaturaActual, tiempoActual }) => {
+  weather: NonNullable<PlayaDetalleData['clima']>;
+  currentTemperature?: number | null;
+  currentConditions?: PlayaDetalleData['tiempoActual'];
+}> = ({ weather: clima, currentTemperature: temperaturaActual, currentConditions: tiempoActual }) => {
   const [diaSel, setDiaSel] = useState(0);
 
   const hoy = new Date();
@@ -84,26 +84,26 @@ const ClimaHero: React.FC<{
   return (
     <>
       {dias.length > 1 && (
-        <DaySelector fechas={dias.map((d) => d.fecha)} selectedDay={sel} onSelect={setDiaSel} />
+        <DaySelector dates={dias.map((d) => d.fecha)} selectedDay={sel} onSelect={setDiaSel} />
       )}
       <div className="detail-card prevision-panel">
         <ForecastHero
-          dia={dia}
-          climaActual={actual.esHoy ? temperaturaActual : undefined}
-          tiempoActual={actual.esHoy ? tiempoActual : undefined}
+          day={dia}
+          currentWeather={actual.esHoy ? temperaturaActual : undefined}
+          currentConditions={actual.esHoy ? tiempoActual : undefined}
         />
-        <DailyStats dia={dia} embedded />
+        <DailyStats day={dia} embedded />
         {/* Ésta es la ficha SIN hoja de AEMET: la que más valores rellena el
             backend por su cuenta, y donde más falta hace poder mirar de dónde
             sale cada cosa. Todo bajo la misma ⓘ que el resto de bloques. */}
-        <InfoDatos etiqueta="info.fuente" aria="info.aria.prevision">
-          <AttributionNote fuente={clima.fuente} />
+        <InfoDatos label="info.fuente" aria="info.aria.prevision">
+          <AttributionNote source={clima.fuente} />
           {/* El observador solo se acredita aparte cuando NO es el mismo que
               firma la previsión: repetirlo sería decir dos veces lo mismo. */}
           {actual.esHoy && !mismaFuente(clima.fuente, tiempoActual?.fuente) && (
-            <AttributionNote fuente={tiempoActual?.fuente} />
+            <AttributionNote source={tiempoActual?.fuente} />
           )}
-          <EstimatedValues campos={actual.clima.estimados} />
+          <EstimatedValues fields={actual.clima.estimados} />
         </InfoDatos>
       </div>
     </>

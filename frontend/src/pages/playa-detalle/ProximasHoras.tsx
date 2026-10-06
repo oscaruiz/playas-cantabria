@@ -39,11 +39,11 @@ function iconoDeNubes(pct: number | null): string {
  * the beach window, or with both hourly sources down.
  */
 const ProximasHoras: React.FC<{
-  horas?: PrevisionHora[] | null;
-  fuente?: string | null;
-  ventana?: VentanaDia | null;
-}> = ({ horas, fuente, ventana }) => {
-  const { t, idioma } = useIdioma();
+  hours?: PrevisionHora[] | null;
+  source?: string | null;
+  timeWindow?: VentanaDia | null;
+}> = ({ hours: horas, source: fuente, timeWindow: ventana }) => {
+  const { t, language: idioma } = useIdioma();
   const hayHoras = (horas?.length ?? 0) > 0;
   // The strip is always TODAY's remaining hours: with the day selector right
   // above, the title must say which day it belongs to (Madrid's day — the
@@ -189,7 +189,7 @@ const ProximasHoras: React.FC<{
       )}
       </div>
       )}
-      <MejorMomento ventana={ventana} detallada />
+      <MejorMomento timeWindow={ventana} detailed />
       {/* Quién lo pronostica, y qué hacemos con ello: estas mismas horas
           alimentan la puntuación, así que la licencia obliga a decir que los
           datos van adaptados. Esa nota ya acredita y enlaza la fuente, de modo
@@ -197,11 +197,11 @@ const ProximasHoras: React.FC<{
           sería decir dos veces lo mismo. The API sends no emission time for
           the outlook, so none is shown either way. */}
       {hayHoras && (
-        <InfoDatos etiqueta="info.fuente" aria="info.aria.horas" className="proximas-horas-fuente">
-          {atribucionDeFuente(fuente)?.nota ? (
-            <AttributionNote fuente={fuente} />
+        <InfoDatos label="info.fuente" aria="info.aria.horas" className="proximas-horas-fuente">
+          {atribucionDeFuente(fuente)?.note ? (
+            <AttributionNote source={fuente} />
           ) : (
-            <SourceAndFreshness procedencia={procedenciaPrevisionHoras(fuente)} />
+            <SourceAndFreshness provenance={procedenciaPrevisionHoras(fuente)} />
           )}
         </InfoDatos>
       )}

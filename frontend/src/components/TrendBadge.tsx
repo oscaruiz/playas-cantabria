@@ -6,10 +6,10 @@ import { useIdioma } from '../shared/i18n/IdiomaContext';
 import { ClaveTexto } from '../shared/i18n/es';
 import './TrendBadge.css';
 
-const DIRECCION: Record<Pronostico['direccion'], { clave: ClaveTexto; icono: string }> = {
-  mejora: { clave: 'detalle.pronostico.mejora', icono: trendingUpOutline },
-  empeora: { clave: 'detalle.pronostico.empeora', icono: trendingDownOutline },
-  estable: { clave: 'detalle.pronostico.estable', icono: removeOutline },
+const DIRECCION: Record<Pronostico['direccion'], { labelKey: ClaveTexto; icon: string }> = {
+  mejora: { labelKey: 'detalle.pronostico.mejora', icon: trendingUpOutline },
+  empeora: { labelKey: 'detalle.pronostico.empeora', icon: trendingDownOutline },
+  estable: { labelKey: 'detalle.pronostico.estable', icon: removeOutline },
 };
 
 const CAUSA: Record<CausaPronostico, ClaveTexto> = {
@@ -23,7 +23,7 @@ const CAUSA: Record<CausaPronostico, ClaveTexto> = {
 };
 
 interface TrendBadgeProps {
-  pronostico?: Pronostico | null;
+  outlook?: Pronostico | null;
   /** 'sm' for lists, cards and the map popup; 'lg' for the detail header. */
   size?: 'sm' | 'lg';
 }
@@ -36,7 +36,7 @@ interface TrendBadgeProps {
  * to explain it. The cause is what makes it actionable: "Mejora" on its own does
  * not tell anyone whether to wait, "Mejora · se despeja" does.
  */
-const TrendBadge: React.FC<TrendBadgeProps> = ({ pronostico, size = 'sm' }) => {
+const TrendBadge: React.FC<TrendBadgeProps> = ({ outlook: pronostico, size = 'sm' }) => {
   const { t } = useIdioma();
   if (!pronostico) return null;
 
@@ -65,14 +65,14 @@ const TrendBadge: React.FC<TrendBadgeProps> = ({ pronostico, size = 'sm' }) => {
       aria-label={
         textoCausa
           ? t('detalle.pronostico.aria', {
-              direccion: t(DIRECCION[direccion].clave),
+              direccion: t(DIRECCION[direccion].labelKey),
               causa: textoCausa,
             })
-          : t('detalle.pronostico.ariaSinCausa', { direccion: t(DIRECCION[direccion].clave) })
+          : t('detalle.pronostico.ariaSinCausa', { direccion: t(DIRECCION[direccion].labelKey) })
       }
     >
-      <IonIcon icon={DIRECCION[direccion].icono} aria-hidden="true" />{' '}
-      <span aria-hidden="true">{t(DIRECCION[direccion].clave)}</span>
+      <IonIcon icon={DIRECCION[direccion].icon} aria-hidden="true" />{' '}
+      <span aria-hidden="true">{t(DIRECCION[direccion].labelKey)}</span>
       {textoCausa && (
         <>
           <span className="trend-badge-sep" aria-hidden="true">·</span>

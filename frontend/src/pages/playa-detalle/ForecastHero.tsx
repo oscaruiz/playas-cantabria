@@ -89,11 +89,11 @@ const WavesIndicator: React.FC<{ label: string }> = ({ label }) => {
 
 /** Big icon + temperature + rain badges for the selected day. */
 const ForecastHero: React.FC<{
-  dia: DiaPrediccionDTO;
-  climaActual?: number | null;
-  tiempoActual?: PlayaDetalleData['tiempoActual'];
-}> = ({ dia, climaActual, tiempoActual: recibido }) => {
-  const { t, idioma } = useIdioma();
+  day: DiaPrediccionDTO;
+  currentWeather?: number | null;
+  currentConditions?: PlayaDetalleData['tiempoActual'];
+}> = ({ day: dia, currentWeather: climaActual, currentConditions: recibido }) => {
+  const { t, language: idioma } = useIdioma();
   // An observation older than the limit is NOT "now": it is dropped here, at
   // the single point where it enters the headline, so no downstream line
   // (sky, temperature, rain badges, freshness) can keep presenting it as
@@ -177,12 +177,12 @@ const ForecastHero: React.FC<{
            pasando por observación sin que nadie pueda notarlo. */
         <p className="procedencia-linea procedencia-caducada">
           {t('datos.noDisponible')}{' '}
-          <FreshnessLabel instante={recibido?.timestamp} />
+          <FreshnessLabel instant={recibido?.timestamp} />
         </p>
       ) : (
         <SourceAndFreshness
-          procedencia={procedenciaObservacion(tiempoActual)}
-          claveFuente="datos.enDirectoFuente"
+          provenance={procedenciaObservacion(tiempoActual)}
+          sourceKey="datos.enDirectoFuente"
         />
       )}
       {/* La nota de licencia del observador ya no se pinta aquí: viaja con el

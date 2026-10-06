@@ -12,7 +12,7 @@ function tramo(p: number): Tramo {
 }
 
 interface ScoreBadgeProps {
-  puntuacion: number;
+  score: number;
   /** 'sm' for lists/cards, 'lg' for the detail header. */
   size?: 'sm' | 'lg';
   className?: string;
@@ -22,7 +22,7 @@ interface ScoreBadgeProps {
  * Compact badge with a beach's score (0-100), colored by band.
  * Single source of the score: the backend ranking (featured endpoint).
  */
-const ScoreBadge: React.FC<ScoreBadgeProps> = ({ puntuacion, size = 'sm', className }) => {
+const ScoreBadge: React.FC<ScoreBadgeProps> = ({ score: puntuacion, size = 'sm', className }) => {
   const { t } = useIdioma();
   const p = Math.round(puntuacion);
   return (

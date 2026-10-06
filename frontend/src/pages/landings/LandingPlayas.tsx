@@ -26,7 +26,7 @@ export type LandingId =
  */
 const LandingPlayas: React.FC<{ id: LandingId }> = ({ id }) => {
   const { t, tPlural } = useIdioma();
-  const { playas, condiciones, instanteCondiciones } = useCatalogo();
+  const { beaches: playas, conditions: condiciones, conditionsInstant: instanteCondiciones } = useCatalogo();
   const filtro = LANDINGS.find((l: { id: string }) => l.id === id)?.filtro as
     | ((p: unknown) => boolean)
     | undefined;
@@ -42,9 +42,9 @@ const LandingPlayas: React.FC<{ id: LandingId }> = ({ id }) => {
   return (
     <IonPage className="home-page">
       <SeoHead
-        titulo={t(`landing.${id}.titulo` as ClaveTexto)}
-        descripcion={t(`landing.${id}.intro` as ClaveTexto)}
-        rutaCanonica={`/${id}`}
+        title={t(`landing.${id}.titulo` as ClaveTexto)}
+        description={t(`landing.${id}.intro` as ClaveTexto)}
+        canonicalPath={`/${id}`}
       />
       <div className="home-sticky-header">
         <div className="home-sticky-marca">
@@ -70,13 +70,13 @@ const LandingPlayas: React.FC<{ id: LandingId }> = ({ id }) => {
               {condiciones.size > 0 && instanteCondiciones != null && (
                 <>
                   {' · '}
-                  <FreshnessLabel instante={instanteCondiciones} />
+                  <FreshnessLabel instant={instanteCondiciones} />
                 </>
               )}
             </div>
             <div className="beach-list">
               {lista.map((p) => (
-                <BeachCard key={p.codigo} playa={p} weather={condiciones.get(p.codigo)} />
+                <BeachCard key={p.codigo} beach={p} weather={condiciones.get(p.codigo)} />
               ))}
             </div>
           </>

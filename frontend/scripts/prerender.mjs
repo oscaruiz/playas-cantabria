@@ -29,14 +29,14 @@ import { origenPublico } from './lib/site-origin.mjs';
 const require = createRequire(import.meta.url);
 const frontend = join(dirname(fileURLToPath(import.meta.url)), '..');
 
-const { rutaPlaya, detectarColisiones } = require('../src/shared/seo/beachUrls.js');
-const { PLANTILLAS_SEO, ETIQUETAS_ATTR, rellenar } = require('../src/shared/seo/metadata.js');
+const { beachPath, detectCollisions } = require('../src/shared/seo/beachUrls.js');
+const { SEO_TEMPLATES, ATTR_LABELS, fillTemplate } = require('../src/shared/seo/metadata.js');
 const {
-  landingsNoVacias,
-  municipiosDe,
-  rutaMunicipio,
-  resumenMunicipios,
-  playasDeMunicipioSlug,
+  nonEmptyLandings,
+  municipalitiesOf,
+  municipalityPath,
+  municipalitiesSummary,
+  beachesOfMunicipalitySlug,
 } = require('../src/shared/seo/landings.js');
 
 const rutaBuild = process.argv[2] ? resolve(process.cwd(), process.argv[2]) : join(frontend, 'build');
@@ -49,7 +49,7 @@ if (!existsSync(plantillaHtml)) {
 const playas = JSON.parse(readFileSync(join(frontend, 'src', 'data', 'beaches.json'), 'utf8'));
 const region = JSON.parse(readFileSync(join(frontend, 'src', 'data', 'region.json'), 'utf8'));
 
-const colisiones = detectarColisiones(playas);
+const colisiones = detectCollisions(playas);
 if (colisiones.length > 0) {
   console.error('[prerender] Rutas canónicas en conflicto en el catálogo:');
   for (const c of colisiones) console.error(`  ${c.ruta} ← ${c.codigos.join(', ')}`);
@@ -105,9 +105,9 @@ function hechosPlaya(p) {
 
 function serviciosPlaya(p) {
   const activos = Object.entries(p.atributos ?? {})
-    .filter(([clave, valor]) => valor === true && ETIQUETAS_ATTR[clave])
-    .map(([clave]) => ETIQUETAS_ATTR[clave]);
-  if (p.submarinismo) activos.push(ETIQUETAS_ATTR.submarinismo);
+    .filter(([clave, valor]) => valor === true && ATTR_LABELS[clave])
+    .map(([clave]) => ATTR_LABELS[clave]);
+  if (p.submarinismo) activos.push(ATTR_LABELS.submarinismo);
   return activos.length > 0
     ? `<p><strong>Servicios:</strong> ${escaparHtml(activos.join(' · '))}</p>`
     : '';
@@ -120,7 +120,7 @@ const NAV = `<nav><a href="/">Inicio</a> · <a href="/playas">Todas las playas</
 
 function enlacesPlayas(lista) {
   return lista
-    .map((p) => `<li><a href="${rutaPlaya(p)}">${escaparHtml(p.nombre)} (${escaparHtml(p.municipio)})</a></li>`)
+    .map((p) => `<li><a href="${beachPath(p)}">${escaparHtml(p.nombre)} (${escaparHtml(p.municipio)})</a></li>`)
     .join('\n        ');
 }
 
@@ -219,33 +219,33 @@ let generadas = 0;
 try {
   escribirRuta(
     '/',
-    rellenar(PLANTILLAS_SEO.tituloInicio, vars),
-    rellenar(PLANTILLAS_SEO.descInicio, vars),
+    fillTemplate(SEO_TEMPLATES.tituloInicio, vars),
+    fillTemplate(SEO_TEMPLATES.descInicio, vars),
     contenidoInicio()
   );
   generadas += 1;
 
   escribirRuta(
     '/playas',
-    rellenar(PLANTILLAS_SEO.tituloLista, vars),
-    rellenar(PLANTILLAS_SEO.descLista, vars),
+    fillTemplate(SEO_TEMPLATES.tituloLista, vars),
+    fillTemplate(SEO_TEMPLATES.descLista, vars),
     contenidoListado()
   );
   generadas += 1;
 
   escribirRuta(
     '/mapa',
-    rellenar(PLANTILLAS_SEO.tituloMapa, vars),
-    rellenar(PLANTILLAS_SEO.descMapa, vars),
+    fillTemplate(SEO_TEMPLATES.tituloMapa, vars),
+    fillTemplate(SEO_TEMPLATES.descMapa, vars),
     contenidoMapa()
   );
   generadas += 1;
 
   for (const p of playas) {
     escribirRuta(
-      rutaPlaya(p),
-      rellenar(PLANTILLAS_SEO.tituloDetalle, { ...vars, nombre: p.nombre }),
-      rellenar(PLANTILLAS_SEO.descDetalle, { ...vars, nombre: p.nombre, municipio: p.municipio }),
+      beachPath(p),
+      fillTemplate(SEO_TEMPLATES.tituloDetalle, { ...vars, nombre: p.nombre }),
+      fillTemplate(SEO_TEMPLATES.descDetalle, { ...vars, nombre: p.nombre, municipio: p.municipio }),
       contenidoPlaya(p)
     );
     generadas += 1;
@@ -261,8 +261,8 @@ try {
     ['/acerca-de', 'tituloAcerca', 'descAcerca'],
     ['/privacidad', 'tituloPrivacidad', 'descPrivacidad'],
   ]) {
-    const titulo = rellenar(PLANTILLAS_SEO[tituloKey], vars);
-    const descripcion = rellenar(PLANTILLAS_SEO[descKey], vars);
+    const titulo = fillTemplate(SEO_TEMPLATES[tituloKey], vars);
+    const descripcion = fillTemplate(SEO_TEMPLATES[descKey], vars);
     escribirRuta(
       ruta,
       titulo,
@@ -279,12 +279,12 @@ try {
   // Municipalities index: the global access point to the 18 pages below.
   escribirRuta(
     '/municipios',
-    rellenar(PLANTILLAS_SEO.tituloMunicipios, vars),
-    rellenar(PLANTILLAS_SEO.descMunicipios, vars),
+    fillTemplate(SEO_TEMPLATES.tituloMunicipios, vars),
+    fillTemplate(SEO_TEMPLATES.descMunicipios, vars),
     bloqueContenido(
       `<h1>Municipios con playa en ${escaparHtml(region.name)}</h1>
       <ul>
-        ${resumenMunicipios(playas)
+        ${municipalitiesSummary(playas)
           .map((m) => `<li><a href="${m.ruta}">${escaparHtml(m.municipio)}</a> (${m.total})</li>`)
           .join('\n        ')}
       </ul>`
@@ -293,13 +293,13 @@ try {
   generadas += 1;
 
   // Phase 6: municipality pages — one per municipality in the catalog.
-  for (const municipio of municipiosDe(playas)) {
-    const ruta = rutaMunicipio(municipio);
-    const propias = playasDeMunicipioSlug(playas, ruta.split('/')[2]);
+  for (const municipio of municipalitiesOf(playas)) {
+    const ruta = municipalityPath(municipio);
+    const propias = beachesOfMunicipalitySlug(playas, ruta.split('/')[2]);
     escribirRuta(
       ruta,
-      rellenar(PLANTILLAS_SEO.tituloMunicipio, { ...vars, municipio }),
-      rellenar(PLANTILLAS_SEO.descMunicipio, { ...vars, municipio }),
+      fillTemplate(SEO_TEMPLATES.tituloMunicipio, { ...vars, municipio }),
+      fillTemplate(SEO_TEMPLATES.descMunicipio, { ...vars, municipio }),
       bloqueContenido(
         `<h1>Playas de ${escaparHtml(municipio)}</h1>
       <p>${escaparHtml(municipio)} · ${escaparHtml(region.name)}</p>
@@ -313,9 +313,9 @@ try {
   }
 
   // Phase 6: curated landings — empty categories are never published.
-  for (const landing of landingsNoVacias(playas)) {
-    const titulo = rellenar(landing.textos.titulo, vars);
-    const intro = rellenar(landing.textos.intro, vars);
+  for (const landing of nonEmptyLandings(playas)) {
+    const titulo = fillTemplate(landing.textos.titulo, vars);
+    const intro = fillTemplate(landing.textos.intro, vars);
     const propias = playas.filter(landing.filtro);
     escribirRuta(
       `/${landing.id}`,
@@ -339,7 +339,7 @@ try {
 // The count must be exact: a silently skipped beach is a missing page.
 // 4 fixed (home, list, map, municipalities index) + 2 legal.
 const esperadas =
-  6 + playas.length + municipiosDe(playas).length + landingsNoVacias(playas).length;
+  6 + playas.length + municipalitiesOf(playas).length + nonEmptyLandings(playas).length;
 if (generadas !== esperadas) {
   console.error(`[prerender] generadas ${generadas} rutas, esperadas ${esperadas}.`);
   process.exit(1);

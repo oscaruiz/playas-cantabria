@@ -21,8 +21,8 @@ import {
 import ScoreBadge from './ScoreBadge';
 import TrendBadge from './TrendBadge';
 import { FavoriteButton } from '../modules/favorites';
-import { rutaPlaya } from '../shared/seo/beachUrls';
-import { rutaMunicipio } from '../shared/seo/landings';
+import { beachPath } from '../shared/seo/beachUrls';
+import { municipalityPath } from '../shared/seo/landings';
 
 /**
  * One beach row — THE beach row: extracted from PlayasList so the
@@ -38,11 +38,11 @@ import { rutaMunicipio } from '../shared/seo/landings';
  * interactive-inside-interactive never happens.
  */
 const BeachCard: React.FC<{
-  playa: Playa;
+  beach: Playa;
   weather?: FeaturedBeach;
   distKm?: number | null;
-}> = ({ playa, weather, distKm = null }) => {
-  const { t, idioma } = useIdioma();
+}> = ({ beach: playa, weather, distKm = null }) => {
+  const { t, language: idioma } = useIdioma();
   const skyEmoji = weather ? rankedSkyEmoji(weather) : null;
 
   return (
@@ -56,7 +56,7 @@ const BeachCard: React.FC<{
       <div className="beach-card-info">
         <p className="beach-card-name">
           <Link
-            to={rutaPlaya(playa)}
+            to={beachPath(playa)}
             className="beach-card-enlace"
             aria-label={t('comun.verDetalleDe', { nombre: `${playa.nombre}, ${playa.municipio}` })}
           >
@@ -65,7 +65,7 @@ const BeachCard: React.FC<{
         </p>
         <p className="beach-card-municipio">
           <Link
-            to={rutaMunicipio(playa.municipio)}
+            to={municipalityPath(playa.municipio)}
             className="ld-enlace-municipio"
             aria-label={t('municipio.verPlayas', { municipio: playa.municipio })}
           >
@@ -104,9 +104,9 @@ const BeachCard: React.FC<{
             )}
           </p>
         )}
-        <TrendBadge pronostico={weather?.pronostico} />
+        <TrendBadge outlook={weather?.pronostico} />
       </div>
-      {weather && <ScoreBadge puntuacion={weather.puntuacion} />}
+      {weather && <ScoreBadge score={weather.puntuacion} />}
       {(() => {
         const vigilada = vigilanciaDisponible(playa);
         // Named by the beach's own operator: a region without
@@ -144,7 +144,7 @@ const BeachCard: React.FC<{
           </div>
         ) : null;
       })()}
-      <FavoriteButton codigo={playa.codigo} nombre={playa.nombre} className="beach-card-fav" />
+      <FavoriteButton code={playa.codigo} name={playa.nombre} className="beach-card-fav" />
       <span className="beach-card-arrow" aria-hidden="true">&#8250;</span>
     </div>
   );

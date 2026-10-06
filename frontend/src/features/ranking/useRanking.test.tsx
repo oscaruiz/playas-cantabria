@@ -56,7 +56,7 @@ function entregarDesdeElSW(datos: unknown, url = URL_FEATURED) {
 }
 
 const Sonda: React.FC = () => {
-  const { ranking: enVigor, deVisitaAnterior, cargando, error } = useRanking();
+  const { ranking: enVigor, fromPreviousVisit: deVisitaAnterior, loading: cargando, error } = useRanking();
   if (cargando) return <p>cargando</p>;
   return (
     <div>

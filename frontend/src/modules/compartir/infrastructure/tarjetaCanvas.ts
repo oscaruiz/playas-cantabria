@@ -189,9 +189,9 @@ export async function tarjetaComoPng(resumen: ResumenTarjeta): Promise<Blob> {
   const rx = PX + BADGE_W + 44;
   const rw = PW - BADGE_W - 44;
   ctx.font = `600 38px ${SANS}`;
-  const lineasResumen = partirEnLineas(ctx, resumen.resumen, rw, 3);
+  const lineasResumen = partirEnLineas(ctx, resumen.summary, rw, 3);
   ctx.font = `400 27px ${SANS}`;
-  const lineasAviso = partirEnLineas(ctx, resumen.aviso, PW, 4);
+  const lineasAviso = partirEnLineas(ctx, resumen.warning, PW, 4);
 
   const yBadge = CY + 226;
   const finBloque = Math.max(
@@ -203,10 +203,10 @@ export async function tarjetaComoPng(resumen: ResumenTarjeta): Promise<Blob> {
   // shorter card instead of a gap where the section would have been.
   const yCeldas = finBloque + 70;
   const yHoras = yCeldas + ALTO_CELDAS;
-  const yMareas = yHoras + (resumen.horas.length ? ALTO_HORAS : 0);
+  const yMareas = yHoras + (resumen.hours.length ? ALTO_HORAS : 0);
   const yAvisoSep =
     yMareas +
-    (resumen.mareas.length ? ALTO_MAREAS + (resumen.puertoMareas ? ALTO_PUERTO : 0) : 0);
+    (resumen.tides.length ? ALTO_MAREAS + (resumen.tidePort ? ALTO_PUERTO : 0) : 0);
   const yAviso = yAvisoSep + 56;
   const finTarjeta = yAviso + (lineasAviso.length - 1) * ALTO_LINEA_AVISO + 52;
   const alturaTarjeta = finTarjeta - CY;
@@ -233,15 +233,15 @@ export async function tarjetaComoPng(resumen: ResumenTarjeta): Promise<Blob> {
 
   // --- Beach and when ---
   ctx.fillStyle = TINTA;
-  ctx.font = `700 ${tamanoQueCabe(ctx, resumen.nombre, PW, (s) => `700 ${s}px ${SERIF}`, 68, 40)}px ${SERIF}`;
-  ctx.fillText(resumen.nombre, PX, CY + 130, PW);
+  ctx.font = `700 ${tamanoQueCabe(ctx, resumen.name, PW, (s) => `700 ${s}px ${SERIF}`, 68, 40)}px ${SERIF}`;
+  ctx.fillText(resumen.name, PX, CY + 130, PW);
 
   ctx.fillStyle = TINTA_SUAVE;
   ctx.font = `400 30px ${SANS}`;
-  ctx.fillText(resumen.contexto, PX, CY + 180, PW);
+  ctx.fillText(resumen.context, PX, CY + 180, PW);
 
   // --- Score, and what the day looks like ---
-  const color = colorPuntuacion(resumen.puntuacion);
+  const color = colorPuntuacion(resumen.score);
   ctx.fillStyle = `${color}1f`;
   rectRedondo(ctx, PX, yBadge, BADGE_W, BADGE_H, 40);
   ctx.fill();
@@ -253,7 +253,7 @@ export async function tarjetaComoPng(resumen: ResumenTarjeta): Promise<Blob> {
   ctx.fillStyle = color;
   ctx.textAlign = 'center';
   ctx.font = `700 92px ${SERIF}`;
-  ctx.fillText(String(resumen.puntuacion), PX + BADGE_W / 2, yBadge + 100);
+  ctx.fillText(String(resumen.score), PX + BADGE_W / 2, yBadge + 100);
   ctx.font = `600 30px ${SANS}`;
   ctx.fillText('/100', PX + BADGE_W / 2, yBadge + 142);
   ctx.textAlign = 'left';
@@ -283,18 +283,18 @@ export async function tarjetaComoPng(resumen: ResumenTarjeta): Promise<Blob> {
 
   // --- Wind, waves and (only when one is flying) the flag ---
   hairline(yCeldas);
-  const anchoCelda = PW / resumen.celdas.length;
-  resumen.celdas.forEach((celda, i) => {
+  const anchoCelda = PW / resumen.cells.length;
+  resumen.cells.forEach((celda, i) => {
     const x = PX + i * anchoCelda;
     // Not `rotulo`: that one is for block headings, which always start at the
     // card's left padding. These sit at the head of their own column.
     ctx.fillStyle = TINTA_SUAVE;
     ctx.font = `600 24px ${SANS}`;
-    ctx.fillText(celda.etiqueta.toUpperCase(), x, yCeldas + 56);
+    ctx.fillText(celda.label.toUpperCase(), x, yCeldas + 56);
 
     let vx = x;
-    if (celda.bandera) {
-      ctx.fillStyle = COLOR_BANDERA[celda.bandera];
+    if (celda.flag) {
+      ctx.fillStyle = COLOR_BANDERA[celda.flag];
       ctx.beginPath();
       ctx.arc(x + 11, yCeldas + 92, 11, 0, Math.PI * 2);
       ctx.fill();
@@ -302,49 +302,49 @@ export async function tarjetaComoPng(resumen: ResumenTarjeta): Promise<Blob> {
     }
     ctx.fillStyle = TINTA;
     const disponible = anchoCelda - (vx - x) - 20;
-    ctx.font = `600 ${tamanoQueCabe(ctx, celda.valor, disponible, (s) => `600 ${s}px ${SANS}`, 34, 20)}px ${SANS}`;
-    ctx.fillText(celda.valor, vx, yCeldas + 102, disponible);
+    ctx.font = `600 ${tamanoQueCabe(ctx, celda.value, disponible, (s) => `600 ${s}px ${SANS}`, 34, 20)}px ${SANS}`;
+    ctx.fillText(celda.value, vx, yCeldas + 102, disponible);
   });
 
   // --- The next few hours: "and if I go later?" ---
-  if (resumen.horas.length) {
+  if (resumen.hours.length) {
     hairline(yHoras);
-    rotulo(resumen.tituloHoras, yHoras + 52);
-    const anchoHora = PW / resumen.horas.length;
-    resumen.horas.forEach((hora, i) => {
+    rotulo(resumen.hoursTitle, yHoras + 52);
+    const anchoHora = PW / resumen.hours.length;
+    resumen.hours.forEach((hora, i) => {
       const x = PX + i * anchoHora;
       ctx.fillStyle = TINTA_SUAVE;
       ctx.font = `600 26px ${SANS}`;
-      ctx.fillText(hora.hora, x, yHoras + 100);
+      ctx.fillText(hora.hour, x, yHoras + 100);
       ctx.font = `32px ${EMOJI}`;
       ctx.fillText(hora.emoji, x, yHoras + 146);
       ctx.fillStyle = TINTA;
       ctx.font = `700 34px ${SERIF}`;
-      ctx.fillText(hora.temperatura, x, yHoras + 192);
+      ctx.fillText(hora.temperature, x, yHoras + 192);
       ctx.fillStyle = TINTA_SUAVE;
       ctx.font = `400 22px ${SANS}`;
-      ctx.fillText(hora.viento, x, yHoras + 224);
+      ctx.fillText(hora.wind, x, yHoras + 224);
     });
   }
 
   // --- Tides ---
-  if (resumen.mareas.length) {
+  if (resumen.tides.length) {
     hairline(yMareas);
-    rotulo(resumen.tituloMareas, yMareas + 52);
-    const anchoMarea = PW / resumen.mareas.length;
-    resumen.mareas.forEach((marea, i) => {
+    rotulo(resumen.tidesTitle, yMareas + 52);
+    const anchoMarea = PW / resumen.tides.length;
+    resumen.tides.forEach((marea, i) => {
       const x = PX + i * anchoMarea;
       ctx.fillStyle = TINTA;
       ctx.font = `600 32px ${SANS}`;
-      ctx.fillText(`${marea.flecha} ${marea.hora}`, x, yMareas + 104, anchoMarea - 16);
+      ctx.fillText(`${marea.arrow} ${marea.hour}`, x, yMareas + 104, anchoMarea - 16);
       ctx.fillStyle = TINTA_SUAVE;
       ctx.font = `400 23px ${SANS}`;
-      ctx.fillText(marea.etiqueta, x, yMareas + 140, anchoMarea - 16);
+      ctx.fillText(marea.label, x, yMareas + 140, anchoMarea - 16);
     });
-    if (resumen.puertoMareas) {
+    if (resumen.tidePort) {
       ctx.fillStyle = TINTA_SUAVE;
       ctx.font = `400 22px ${SANS}`;
-      ctx.fillText(resumen.puertoMareas, PX, yMareas + 178, PW);
+      ctx.fillText(resumen.tidePort, PX, yMareas + 178, PW);
     }
   }
 
@@ -360,10 +360,10 @@ export async function tarjetaComoPng(resumen: ResumenTarjeta): Promise<Blob> {
   ctx.fillStyle = '#ffffff';
   ctx.textAlign = 'center';
   ctx.font = `400 46px ${MARCA}`;
-  ctx.fillText(resumen.marca, ANCHO / 2, finTarjeta + 86, PW);
+  ctx.fillText(resumen.brand, ANCHO / 2, finTarjeta + 86, PW);
   ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
   ctx.font = `400 28px ${SANS}`;
-  ctx.fillText(resumen.sitio, ANCHO / 2, finTarjeta + 134, PW);
+  ctx.fillText(resumen.site, ANCHO / 2, finTarjeta + 134, PW);
 
   return aBlob(canvas);
 }

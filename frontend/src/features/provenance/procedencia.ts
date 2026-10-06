@@ -19,11 +19,11 @@ import type { Idioma } from '../../shared/i18n/IdiomaContext';
 export type TipoDato = 'directo' | 'prevision' | 'estatico' | 'sinDatos';
 
 export interface Procedencia {
-  tipo: TipoDato;
+  kind: TipoDato;
   /** Public name of the producer, exactly as the API credits it. */
-  fuente: string | null;
+  source: string | null;
   /** Instant the value was produced/captured, or null if the API sent none. */
-  instanteMs: number | null;
+  instantMs: number | null;
 }
 
 /**
@@ -131,7 +131,7 @@ export function procedenciaObservacion(
   const fuente = tiempoActual.fuente || null;
   const instanteMs = normalizarInstante(tiempoActual.timestamp);
   if (!fuente && instanteMs == null) return null;
-  return { tipo: 'directo', fuente, instanteMs };
+  return { kind: 'directo', source: fuente, instantMs: instanteMs };
 }
 
 /**
@@ -142,5 +142,5 @@ export function procedenciaPrevisionHoras(
   fuente: string | null | undefined
 ): Procedencia | null {
   if (!fuente) return null;
-  return { tipo: 'prevision', fuente, instanteMs: null };
+  return { kind: 'prevision', source: fuente, instantMs: null };
 }

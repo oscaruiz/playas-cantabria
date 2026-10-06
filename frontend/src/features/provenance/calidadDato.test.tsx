@@ -42,7 +42,7 @@ describe('observacionVigente', () => {
 describe('ForecastHero — observación caducada', () => {
   it('uses the reading while it is recent', () => {
     const { container } = renderWithProviders(
-      <ForecastHero dia={DIA} climaActual={28} tiempoActual={observacion(10 * 60_000)} />
+      <ForecastHero day={DIA} currentWeather={28} currentConditions={observacion(10 * 60_000)} />
     );
     expect(container.querySelector('.forecast-hero-temp')).toHaveTextContent('28');
     expect(screen.getByText('Sol')).toBeInTheDocument();
@@ -51,7 +51,7 @@ describe('ForecastHero — observación caducada', () => {
   it('withdraws it once it is too old: neither its sky nor its temperature is shown as now', () => {
     const vieja = observacion(MAX_EDAD_OBSERVACION_MS + 60_000);
     const { container } = renderWithProviders(
-      <ForecastHero dia={DIA} climaActual={28} tiempoActual={vieja} />
+      <ForecastHero day={DIA} currentWeather={28} currentConditions={vieja} />
     );
     // Falls back to the forecast: 21°, "Nuboso" — not the 28° "Despejado"
     // that was observed hours ago.
@@ -67,7 +67,7 @@ describe('ForecastHero — observación caducada', () => {
 describe('EstimatedValues', () => {
   it('names the derived values so they do not read as measurements', () => {
     const { container } = renderWithProviders(
-      <EstimatedValues campos={['sensacion', 'oleaje', 'agua']} />
+      <EstimatedValues fields={['sensacion', 'oleaje', 'agua']} />
     );
     expect(container.firstChild).toHaveTextContent(
       'Valores estimados a partir de otros datos: sensación térmica, oleaje, temperatura del agua.'
@@ -77,9 +77,9 @@ describe('EstimatedValues', () => {
   it('says nothing when nothing was estimated', () => {
     const { container } = renderWithProviders(
       <>
-        <EstimatedValues campos={[]} />
-        <EstimatedValues campos={null} />
-        <EstimatedValues campos={undefined} />
+        <EstimatedValues fields={[]} />
+        <EstimatedValues fields={null} />
+        <EstimatedValues fields={undefined} />
       </>
     );
     expect(container.firstChild).toBeNull();
@@ -89,7 +89,7 @@ describe('EstimatedValues', () => {
 describe('ComputedAt', () => {
   it('gives the absolute date and time the backend built the payload', () => {
     const hace2min = new Date(Date.now() - 2 * 60_000).toISOString();
-    const { container } = renderWithProviders(<ComputedAt generadoEn={hace2min} />);
+    const { container } = renderWithProviders(<ComputedAt generatedAt={hace2min} />);
     expect(container.firstChild).toHaveTextContent('Datos calculados el');
     expect(container.querySelector('time')).not.toBeNull();
     expect(container.firstChild).not.toHaveTextContent('caché');
@@ -97,12 +97,12 @@ describe('ComputedAt', () => {
 
   it('marks the answer as cached once it is older than a recomputation would be', () => {
     const hace40min = new Date(Date.now() - 40 * 60_000).toISOString();
-    const { container } = renderWithProviders(<ComputedAt generadoEn={hace40min} />);
+    const { container } = renderWithProviders(<ComputedAt generatedAt={hace40min} />);
     expect(container.firstChild).toHaveTextContent('servidos desde caché');
   });
 
   it('renders nothing against a backend that does not send it', () => {
-    const { container } = renderWithProviders(<ComputedAt generadoEn={null} />);
+    const { container } = renderWithProviders(<ComputedAt generatedAt={null} />);
     expect(container.firstChild).toBeNull();
   });
 });

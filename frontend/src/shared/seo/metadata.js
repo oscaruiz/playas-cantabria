@@ -14,7 +14,7 @@
 /* eslint-env node, commonjs */
 'use strict';
 
-const PLANTILLAS_SEO = {
+const SEO_TEMPLATES = {
   tituloInicio: '{marca}: la mejor playa para hoy',
   descInicio:
     'Compara las playas de {region} ahora mismo: puntuación, bandera, tiempo y previsión para elegir playa hoy.',
@@ -45,7 +45,7 @@ const PLANTILLAS_SEO = {
  * `atributos.*`. Shared by `i18n/es.ts` (the `attr.*` keys) and the
  * prerender script ("Servicios: Duchas · Parking …").
  */
-const ETIQUETAS_ATTR = {
+const ATTR_LABELS = {
   duchas: 'Duchas',
   aseos: 'Aseos',
   parking: 'Parking',
@@ -66,10 +66,10 @@ const ETIQUETAS_ATTR = {
  * @param {Record<string, string | number>} vars
  * @returns {string}
  */
-function rellenar(plantilla, vars) {
+function fillTemplate(plantilla, vars) {
   return plantilla.replace(/\{(\w+)\}/g, (original, nombre) =>
     vars[nombre] != null ? String(vars[nombre]) : original
   );
 }
 
-module.exports = { PLANTILLAS_SEO, ETIQUETAS_ATTR, rellenar };
+module.exports = { SEO_TEMPLATES, ATTR_LABELS, fillTemplate };

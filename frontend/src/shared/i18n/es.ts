@@ -7,7 +7,7 @@
  * with the second argument of t(). Keys with the _one/_other suffix
  * are plural forms and are resolved with tPlural().
  */
-import { PLANTILLAS_SEO, ETIQUETAS_ATTR } from '../seo/metadata';
+import { SEO_TEMPLATES, ATTR_LABELS } from '../seo/metadata';
 import { LANDINGS } from '../seo/landings';
 
 const TEXTOS_LANDINGS = Object.fromEntries(LANDINGS.map((l) => [l.id, l.textos]));
@@ -267,22 +267,22 @@ export const es = {
   // ---- SEO (document head per route) ----
   // The Spanish templates live in seo/metadata.js, shared with the
   // prerender script so the baked HTML and the client can never drift.
-  'seo.tituloInicio': PLANTILLAS_SEO.tituloInicio,
-  'seo.descInicio': PLANTILLAS_SEO.descInicio,
-  'seo.tituloLista': PLANTILLAS_SEO.tituloLista,
-  'seo.descLista': PLANTILLAS_SEO.descLista,
-  'seo.tituloAcerca': PLANTILLAS_SEO.tituloAcerca,
-  'seo.descAcerca': PLANTILLAS_SEO.descAcerca,
-  'seo.tituloPrivacidad': PLANTILLAS_SEO.tituloPrivacidad,
-  'seo.descPrivacidad': PLANTILLAS_SEO.descPrivacidad,
-  'seo.tituloMapa': PLANTILLAS_SEO.tituloMapa,
-  'seo.descMapa': PLANTILLAS_SEO.descMapa,
-  'seo.tituloDetalle': PLANTILLAS_SEO.tituloDetalle,
-  'seo.descDetalle': PLANTILLAS_SEO.descDetalle,
-  'seo.tituloMunicipio': PLANTILLAS_SEO.tituloMunicipio,
-  'seo.descMunicipio': PLANTILLAS_SEO.descMunicipio,
-  'seo.tituloMunicipios': PLANTILLAS_SEO.tituloMunicipios,
-  'seo.descMunicipios': PLANTILLAS_SEO.descMunicipios,
+  'seo.tituloInicio': SEO_TEMPLATES.tituloInicio,
+  'seo.descInicio': SEO_TEMPLATES.descInicio,
+  'seo.tituloLista': SEO_TEMPLATES.tituloLista,
+  'seo.descLista': SEO_TEMPLATES.descLista,
+  'seo.tituloAcerca': SEO_TEMPLATES.tituloAcerca,
+  'seo.descAcerca': SEO_TEMPLATES.descAcerca,
+  'seo.tituloPrivacidad': SEO_TEMPLATES.tituloPrivacidad,
+  'seo.descPrivacidad': SEO_TEMPLATES.descPrivacidad,
+  'seo.tituloMapa': SEO_TEMPLATES.tituloMapa,
+  'seo.descMapa': SEO_TEMPLATES.descMapa,
+  'seo.tituloDetalle': SEO_TEMPLATES.tituloDetalle,
+  'seo.descDetalle': SEO_TEMPLATES.descDetalle,
+  'seo.tituloMunicipio': SEO_TEMPLATES.tituloMunicipio,
+  'seo.descMunicipio': SEO_TEMPLATES.descMunicipio,
+  'seo.tituloMunicipios': SEO_TEMPLATES.tituloMunicipios,
+  'seo.descMunicipios': SEO_TEMPLATES.descMunicipios,
   'municipios.titulo': 'Municipios con playa',
   'municipios.intro': 'Los municipios de {region} con playa en el catálogo. Cada uno lleva a sus playas y su estado.',
   'municipio.verPlayas': 'Ver todas las playas de {municipio}',
@@ -388,17 +388,17 @@ export const es = {
 
   // ---- Beach attributes (keys aligned with ATTR_CONFIG; labels shared
   // with the prerender script via seo/metadata.js) ----
-  'attr.duchas': ETIQUETAS_ATTR.duchas,
-  'attr.aseos': ETIQUETAS_ATTR.aseos,
-  'attr.parking': ETIQUETAS_ATTR.parking,
-  'attr.accesible': ETIQUETAS_ATTR.accesible,
-  'attr.chiringuito': ETIQUETAS_ATTR.chiringuito,
-  'attr.surf': ETIQUETAS_ATTR.surf,
-  'attr.mascotas': ETIQUETAS_ATTR.mascotas,
-  'attr.socorrismo': ETIQUETAS_ATTR.socorrismo,
-  'attr.nudista': ETIQUETAS_ATTR.nudista,
-  'attr.accesoBanista': ETIQUETAS_ATTR.accesoBanista,
-  'attr.submarinismo': ETIQUETAS_ATTR.submarinismo,
+  'attr.duchas': ATTR_LABELS.duchas,
+  'attr.aseos': ATTR_LABELS.aseos,
+  'attr.parking': ATTR_LABELS.parking,
+  'attr.accesible': ATTR_LABELS.accesible,
+  'attr.chiringuito': ATTR_LABELS.chiringuito,
+  'attr.surf': ATTR_LABELS.surf,
+  'attr.mascotas': ATTR_LABELS.mascotas,
+  'attr.socorrismo': ATTR_LABELS.socorrismo,
+  'attr.nudista': ATTR_LABELS.nudista,
+  'attr.accesoBanista': ATTR_LABELS.accesoBanista,
+  'attr.submarinismo': ATTR_LABELS.submarinismo,
 } as const;
 
 export type ClaveTexto = keyof typeof es;

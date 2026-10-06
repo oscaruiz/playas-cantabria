@@ -14,11 +14,11 @@ function cruzRojaField(value: string | undefined, t: TraducirFn): string {
 
 /** Collapsible card with the lifeguard flag, coverage dates and schedule. */
 const CruzRojaCard: React.FC<{
-  cruzRoja?: PlayaDetalleData['cruzRoja'];
+  redCross?: PlayaDetalleData['cruzRoja'];
   /** Beach whose operator names the card; absent = the legacy Cruz Roja one. */
-  playa?: Pick<PlayaDetalleData, 'fuenteBanderas'>;
-}> = ({ cruzRoja, playa }) => {
-  const { t, idioma } = useIdioma();
+  beach?: Pick<PlayaDetalleData, 'fuenteBanderas'>;
+}> = ({ redCross: cruzRoja, beach: playa }) => {
+  const { t, language: idioma } = useIdioma();
   const operador = operadorVigilancia(playa);
   const estado = estadoBandera(cruzRoja);
   const hasData = estado === 'color';
@@ -97,15 +97,15 @@ const CruzRojaCard: React.FC<{
           </div>
           {normalizarInstante(cruzRoja?.ultimaActualizacion) != null && (
             <p className="cruzroja-actualizado">
-              <FreshnessLabel instante={cruzRoja?.ultimaActualizacion} capitalizado />
+              <FreshnessLabel instant={cruzRoja?.ultimaActualizacion} capitalized />
             </p>
           )}
           {/* Quién publica esto, enlazado a su propio servicio. Va aquí y no
               solo en el banner porque esta tarjeta se pinta también cuando no
               hay bandera vigente: la cobertura y el horario siguen siendo
               suyos y hay que acreditarlos igual. */}
-          <InfoDatos etiqueta="info.fuente" aria="info.aria.vigilancia">
-            <AttributionNote fuente={operador} />
+          <InfoDatos label="info.fuente" aria="info.aria.vigilancia">
+            <AttributionNote source={operador} />
           </InfoDatos>
         </div>
       )}

@@ -34,11 +34,11 @@ function textoRegistrada(iso: string, t: TraducirFn, idioma: Idioma): string {
 }
 
 const FlagBanner: React.FC<{
-  cruzRoja?: PlayaDetalleData['cruzRoja'];
+  redCross?: PlayaDetalleData['cruzRoja'];
   /** Beach whose operator names the banner; absent = the legacy Cruz Roja one. */
-  playa?: Pick<PlayaDetalleData, 'fuenteBanderas'>;
-}> = ({ cruzRoja, playa }) => {
-  const { t, idioma } = useIdioma();
+  beach?: Pick<PlayaDetalleData, 'fuenteBanderas'>;
+}> = ({ redCross: cruzRoja, beach: playa }) => {
+  const { t, language: idioma } = useIdioma();
   const operador = operadorVigilancia(playa);
   const estado = estadoBandera(cruzRoja);
   // 'sinDatos' (within hours but no capture yet, transient): we show no banner.
@@ -81,7 +81,7 @@ const FlagBanner: React.FC<{
         {ultima && <div className="flag-horario">{textoRegistrada(ultima.registradaIso, t, idioma)}</div>}
         {capturaBanderaMs != null && (
           <div className="flag-horario">
-            <FreshnessLabel instante={capturaBanderaMs} capitalizado />
+            <FreshnessLabel instant={capturaBanderaMs} capitalized />
           </div>
         )}
       </div>
@@ -89,7 +89,7 @@ const FlagBanner: React.FC<{
           vive en la tarjeta de vigilancia, que se pinta siempre que hay
           operador —también cuando este banner no— así que allí cubre todos
           los casos y aquí solo sería un duplicado. */}
-      <SafetyNotice tipo="banderas" sobreOscuro />
+      <SafetyNotice kind="banderas" onDark />
     </div>
   );
 };

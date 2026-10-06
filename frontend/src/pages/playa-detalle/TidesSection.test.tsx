@@ -8,7 +8,7 @@ const MAREA = { pleamar: ['09:34', '21:57'], bajamar: ['03:25', '15:45'] };
 const renderSection = (referencia?: { playa: string; distanciaKm: number }) =>
   render(
     <IdiomaProvider>
-      <TidesSection marea={MAREA} fuenteMareas={null} isToday={false} referencia={referencia} />
+      <TidesSection tide={MAREA} tideSource={null} isToday={false} reference={referencia} />
     </IdiomaProvider>
   );
 

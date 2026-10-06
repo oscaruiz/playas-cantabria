@@ -31,36 +31,36 @@ const PUNTUADA: FeaturedBeach = {
 };
 
 const entrada = (idioma: Idioma, puntuada: FeaturedBeach = PUNTUADA) => ({
-  playa: { nombre: 'La Maruca', municipio: 'Santander' },
-  puntuada,
-  marca: 'Playucas.es',
-  sitio: 'playucas.es',
-  ahora: AHORA,
+  beach: { nombre: 'La Maruca', municipio: 'Santander' },
+  scored: puntuada,
+  brand: 'Playucas.es',
+  site: 'playucas.es',
+  now: AHORA,
   t: traductor(idioma),
-  idioma,
+  language: idioma,
 });
 
 describe('resumen de la tarjeta compartible', () => {
   it('dice lo mismo que la ficha: nota redondeada, resumen y las tres celdas', () => {
     const r = resumenTarjeta(entrada('es'));
 
-    expect(r.nombre).toBe('La Maruca');
-    expect(r.contexto).toBe('Santander · Miércoles 5 de agosto');
+    expect(r.name).toBe('La Maruca');
+    expect(r.context).toBe('Santander · Miércoles 5 de agosto');
     // 66.4 se redondea: la imagen no puede enseñar decimales que la ficha no enseña.
-    expect(r.puntuacion).toBe(66);
-    expect(r.resumen).toBe('Nublado, 20º, sin viento');
-    expect(r.celdas.map((c) => c.valor)).toEqual(['Sin viento', 'Débil', 'Verde']);
-    expect(r.celdas[2].bandera).toBe('green');
+    expect(r.score).toBe(66);
+    expect(r.summary).toBe('Nublado, 20º, sin viento');
+    expect(r.cells.map((c) => c.value)).toEqual(['Sin viento', 'Débil', 'Verde']);
+    expect(r.cells[2].flag).toBe('green');
   });
 
   it('traduce al inglés todo lo que se pinta, también lo que viene del backend', () => {
     const r = resumenTarjeta(entrada('en'));
 
-    expect(r.contexto).toBe('Santander · Wednesday, August 5');
-    expect(r.celdas.map((c) => c.etiqueta)).toEqual(['Wind', 'Waves', 'Flag']);
-    expect(r.celdas[1].valor).toBe('Light');
-    expect(r.celdas[2].valor).toBe('Green');
-    expect(r.aviso).toBe(en['aviso.ranking']);
+    expect(r.context).toBe('Santander · Wednesday, August 5');
+    expect(r.cells.map((c) => c.label)).toEqual(['Wind', 'Waves', 'Flag']);
+    expect(r.cells[1].value).toBe('Light');
+    expect(r.cells[2].value).toBe('Green');
+    expect(r.warning).toBe(en['aviso.ranking']);
   });
 
   // Una celda diciendo "sin bandera ahora" se leía como un fallo. Donde nadie
@@ -68,16 +68,16 @@ describe('resumen de la tarjeta compartible', () => {
   it('una playa sin vigilancia no trae celda de bandera', () => {
     const r = resumenTarjeta(entrada('es', { ...PUNTUADA, bandera: null }));
 
-    expect(r.celdas).toHaveLength(2);
-    expect(r.celdas.map((c) => c.etiqueta)).toEqual(['Viento', 'Oleaje']);
+    expect(r.cells).toHaveLength(2);
+    expect(r.cells.map((c) => c.label)).toEqual(['Viento', 'Oleaje']);
   });
 
   it('sin viento ni oleaje medidos, lo dice en vez de inventar un valor', () => {
     const r = resumenTarjeta(entrada('es', { ...PUNTUADA, vientoMs: null, oleaje: null }));
 
     const sinDato = 'Sin dato';
-    expect(r.celdas[0].valor).toBe(sinDato);
-    expect(r.celdas[1].valor).toBe(sinDato);
+    expect(r.cells[0].value).toBe(sinDato);
+    expect(r.cells[1].value).toBe(sinDato);
   });
 
   // El ranking redondea el viento por su cuenta: 2,9 m/s puntúa como "sin
@@ -86,17 +86,17 @@ describe('resumen de la tarjeta compartible', () => {
   it('el viento y el oleaje los manda la previsión, que es la que pinta la ficha', () => {
     const r = resumenTarjeta({
       ...entrada('es'),
-      prevision: { viento: 'Flojo', oleaje: 'Débil' },
+      forecast: { wind: 'Flojo', waves: 'Débil' },
     });
 
-    expect(r.celdas[0].valor).toBe('Flojo');
-    expect(r.celdas[1].valor).toBe('Débil');
+    expect(r.cells[0].value).toBe('Flojo');
+    expect(r.cells[1].value).toBe('Débil');
   });
 
   it('recorta la tira horaria a cuatro y traduce el cielo a un glifo', () => {
     const r = resumenTarjeta({
       ...entrada('es'),
-      horas: [
+      hours: [
         { horaIso: '2026-08-05T13:00:00Z', nubesPct: 10, temperaturaC: 21.4, vientoMs: 2.6 },
         { horaIso: '2026-08-05T14:00:00Z', nubesPct: 40, temperaturaC: 22, vientoMs: 3 },
         { horaIso: '2026-08-05T15:00:00Z', nubesPct: 90, temperaturaC: 22, vientoMs: 3 },
@@ -105,38 +105,38 @@ describe('resumen de la tarjeta compartible', () => {
       ],
     });
 
-    expect(r.horas).toHaveLength(4);
-    expect(r.horas.map((h) => h.emoji)).toEqual(['☀️', '⛅', '☁️', '⛅']);
-    expect(r.horas[0]).toMatchObject({ hora: '15:00', temperatura: '21°', viento: '3 m/s' });
+    expect(r.hours).toHaveLength(4);
+    expect(r.hours.map((h) => h.emoji)).toEqual(['☀️', '⛅', '☁️', '⛅']);
+    expect(r.hours[0]).toMatchObject({ hour: '15:00', temperature: '21°', wind: '3 m/s' });
     // Lo que falta se dice, no se rellena.
-    expect(r.horas[3]).toMatchObject({ temperatura: '--', viento: '--' });
+    expect(r.hours[3]).toMatchObject({ temperature: '--', wind: '--' });
   });
 
   it('ordena las mareas por hora y le quita a AEMET su asterisco de nota', () => {
     const r = resumenTarjeta({
       ...entrada('es'),
-      mareas: { pleamar: ['06:12', '18:40'], bajamar: ['00:05', '12:25'] },
-      puertoMareas: '*Puerto de Santander',
+      tides: { pleamar: ['06:12', '18:40'], bajamar: ['00:05', '12:25'] },
+      tidePort: '*Puerto de Santander',
     });
 
-    expect(r.mareas.map((m) => m.hora)).toEqual(['00:05', '06:12', '12:25', '18:40']);
-    expect(r.mareas.map((m) => m.flecha)).toEqual(['↓', '↑', '↓', '↑']);
-    expect(r.puertoMareas).toBe('Puerto de Santander');
+    expect(r.tides.map((m) => m.hour)).toEqual(['00:05', '06:12', '12:25', '18:40']);
+    expect(r.tides.map((m) => m.arrow)).toEqual(['↓', '↑', '↓', '↑']);
+    expect(r.tidePort).toBe('Puerto de Santander');
   });
 
   it('sin tira horaria ni mareas, la tarjeta simplemente no las lleva', () => {
     const r = resumenTarjeta(entrada('es'));
 
-    expect(r.horas).toEqual([]);
-    expect(r.mareas).toEqual([]);
-    expect(r.puertoMareas).toBeNull();
+    expect(r.hours).toEqual([]);
+    expect(r.tides).toEqual([]);
+    expect(r.tidePort).toBeNull();
   });
 
   it('sin previsión cae a lo que midió el ranking', () => {
-    const r = resumenTarjeta({ ...entrada('es'), prevision: { viento: null, oleaje: null } });
+    const r = resumenTarjeta({ ...entrada('es'), forecast: { wind: null, waves: null } });
 
-    expect(r.celdas[0].valor).toBe('Sin viento');
-    expect(r.celdas[1].valor).toBe('Débil');
+    expect(r.cells[0].value).toBe('Sin viento');
+    expect(r.cells[1].value).toBe('Débil');
   });
 
   // El aviso viaja DENTRO de la imagen: una tarjeta reenviada sin él se lee
@@ -144,9 +144,9 @@ describe('resumen de la tarjeta compartible', () => {
   it('lleva siempre el aviso, la marca y el sitio', () => {
     const r = resumenTarjeta(entrada('es'));
 
-    expect(r.aviso).toBe(es['aviso.ranking']);
-    expect(r.marca).toBe('Playucas.es');
-    expect(r.sitio).toBe('playucas.es');
+    expect(r.warning).toBe(es['aviso.ranking']);
+    expect(r.brand).toBe('Playucas.es');
+    expect(r.site).toBe('playucas.es');
   });
 });
 

@@ -46,10 +46,10 @@ export function recargarFavoritas(): void {
 }
 
 export function useFavoritas(): {
-  favoritas: ReadonlySet<string>;
-  esFavorita: (codigo: string) => boolean;
-  toggleFavorita: (codigo: string) => void;
+  favorites: ReadonlySet<string>;
+  isFavorite: (codigo: string) => boolean;
+  toggleFavorite: (codigo: string) => void;
 } {
   const favoritas = useSyncExternalStore(suscribir, actual);
-  return { favoritas, esFavorita: (codigo) => favoritas.has(codigo), toggleFavorita };
+  return { favorites: favoritas, isFavorite: (codigo) => favoritas.has(codigo), toggleFavorite: toggleFavorita };
 }

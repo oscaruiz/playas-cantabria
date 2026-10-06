@@ -11,13 +11,13 @@ import './favorites.css';
  * favorite must never open the beach.
  */
 const FavoriteButton: React.FC<{
-  codigo: string;
+  code: string;
   /** Beach name, only for the accessible label. */
-  nombre: string;
+  name: string;
   className?: string;
-}> = ({ codigo, nombre, className }) => {
+}> = ({ code: codigo, name: nombre, className }) => {
   const { t } = useIdioma();
-  const { esFavorita, toggleFavorita } = useFavoritas();
+  const { isFavorite: esFavorita, toggleFavorite: toggleFavorita } = useFavoritas();
   const activa = esFavorita(codigo);
   const etiqueta = t(activa ? 'fav.quitar' : 'fav.marcar', { nombre });
 

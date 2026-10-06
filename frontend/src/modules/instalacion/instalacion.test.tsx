@@ -50,20 +50,20 @@ function fijarAppsInstaladas(apps: unknown[] | null): void {
 
 describe('queOfrecer', () => {
   it('no ofrece nada dentro de la app ya instalada, ni con evento ni en iOS', () => {
-    expect(queOfrecer({ hayEvento: true, esIOS: true, enModoApp: true, instalada: true })).toBeNull();
+    expect(queOfrecer({ hasEvent: true, isIOS: true, inAppMode: true, installed: true })).toBeNull();
   });
 
   it('prefiere el evento del navegador a las instrucciones manuales', () => {
-    expect(queOfrecer({ hayEvento: true, esIOS: true, enModoApp: false, instalada: false })).toBe('prompt');
+    expect(queOfrecer({ hasEvent: true, isIOS: true, inAppMode: false, installed: false })).toBe('prompt');
   });
 
   it('cae a las instrucciones solo en iOS, y a nada en el resto', () => {
-    expect(queOfrecer({ hayEvento: false, esIOS: true, enModoApp: false, instalada: false })).toBe('ios');
-    expect(queOfrecer({ hayEvento: false, esIOS: false, enModoApp: false, instalada: false })).toBeNull();
+    expect(queOfrecer({ hasEvent: false, isIOS: true, inAppMode: false, installed: false })).toBe('ios');
+    expect(queOfrecer({ hasEvent: false, isIOS: false, inAppMode: false, installed: false })).toBeNull();
   });
 
   it('ofrece abrir cuando el navegador acaba de confirmar la instalación', () => {
-    expect(queOfrecer({ hayEvento: false, esIOS: false, enModoApp: false, instalada: true })).toBe('open');
+    expect(queOfrecer({ hasEvent: false, isIOS: false, inAppMode: false, installed: true })).toBe('open');
   });
 });
 

@@ -12,7 +12,7 @@ function ponerVisibilidad(estado: DocumentVisibilityState) {
   });
 }
 
-const Sonda: React.FC<{ alVolver: () => void }> = ({ alVolver }) => {
+const Sonda: React.FC<{ onReturn: () => void }> = ({ onReturn: alVolver }) => {
   useRevalidarAlVolver(alVolver);
   return null;
 };
@@ -22,7 +22,7 @@ afterEach(() => ponerVisibilidad('visible'));
 describe('useRevalidarAlVolver', () => {
   it('revalida al volver a la pestaña, no al dejarla', () => {
     const revalidar = jest.fn();
-    render(<Sonda alVolver={revalidar} />);
+    render(<Sonda onReturn={revalidar} />);
 
     ponerVisibilidad('hidden');
     expect(revalidar).not.toHaveBeenCalled();
@@ -34,8 +34,8 @@ describe('useRevalidarAlVolver', () => {
   it('llama a la ÚLTIMA función recibida, sin resuscribirse en cada render', () => {
     const vieja = jest.fn();
     const nueva = jest.fn();
-    const { rerender } = render(<Sonda alVolver={vieja} />);
-    rerender(<Sonda alVolver={nueva} />);
+    const { rerender } = render(<Sonda onReturn={vieja} />);
+    rerender(<Sonda onReturn={nueva} />);
 
     ponerVisibilidad('visible');
 
@@ -45,7 +45,7 @@ describe('useRevalidarAlVolver', () => {
 
   it('deja de escuchar al desmontar', () => {
     const revalidar = jest.fn();
-    const { unmount } = render(<Sonda alVolver={revalidar} />);
+    const { unmount } = render(<Sonda onReturn={revalidar} />);
     unmount();
 
     ponerVisibilidad('visible');

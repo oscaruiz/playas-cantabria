@@ -52,8 +52,8 @@ const App: React.FC = () => (
           <Route path="/mapa" component={MapaPage} exact />
           <Route exact path="/municipios" component={MunicipiosIndex} />
           <Route exact path="/municipios/:municipio" component={MunicipioPage} />
-          <Route exact path="/acerca-de" render={() => <LegalPage tipo="acerca" />} />
-          <Route exact path="/privacidad" render={() => <LegalPage tipo="privacidad" />} />
+          <Route exact path="/acerca-de" render={() => <LegalPage kind="acerca" />} />
+          <Route exact path="/privacidad" render={() => <LegalPage kind="privacidad" />} />
           {LANDINGS.map((l: { id: string }) => (
             <Route
               key={l.id}

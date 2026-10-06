@@ -17,9 +17,9 @@ const NoEncontrada: React.FC = () => {
   return (
     <IonPage className="home-page">
       <SeoHead
-        titulo={t('seo.tituloNoEncontrada')}
-        descripcion={t('seo.descNoEncontrada')}
-        rutaCanonica=""
+        title={t('seo.tituloNoEncontrada')}
+        description={t('seo.descNoEncontrada')}
+        canonicalPath=""
         noindex
       />
       <div className="home-sticky-header">

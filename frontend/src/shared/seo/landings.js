@@ -19,7 +19,7 @@
 'use strict';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires -- CJS on purpose (see header)
-const { slugify, rutaPlaya } = require('./beachUrls');
+const { slugify, beachPath } = require('./beachUrls');
 
 /** Webcam exists and is not editorially disabled (mirror of webcamDisponible). */
 function conWebcam(p) {
@@ -90,16 +90,16 @@ const LANDINGS = [
 ];
 
 /** Landings with at least one beach: empty categories are never published. */
-function landingsNoVacias(playas) {
+function nonEmptyLandings(playas) {
   return LANDINGS.filter((l) => playas.some(l.filtro));
 }
 
 /** Unique municipality names, alphabetical. */
-function municipiosDe(playas) {
+function municipalitiesOf(playas) {
   return Array.from(new Set(playas.map((p) => p.municipio))).sort((a, b) => a.localeCompare(b));
 }
 
-function rutaMunicipio(municipio) {
+function municipalityPath(municipio) {
   return `/municipios/${slugify(municipio)}`;
 }
 
@@ -108,25 +108,25 @@ function rutaMunicipio(municipio) {
  * /municipios index (app page and prerendered file) is built from THIS,
  * so both always agree.
  */
-function resumenMunicipios(playas) {
-  return municipiosDe(playas).map((municipio) => ({
+function municipalitiesSummary(playas) {
+  return municipalitiesOf(playas).map((municipio) => ({
     municipio,
-    ruta: rutaMunicipio(municipio),
+    ruta: municipalityPath(municipio),
     total: playas.filter((p) => p.municipio === municipio).length,
   }));
 }
 
 /** Beaches of the municipality a slug points at (empty array if unknown). */
-function playasDeMunicipioSlug(playas, municipioSlug) {
+function beachesOfMunicipalitySlug(playas, municipioSlug) {
   return playas.filter((p) => slugify(p.municipio) === municipioSlug);
 }
 
 module.exports = {
   LANDINGS,
-  landingsNoVacias,
-  municipiosDe,
-  rutaMunicipio,
-  resumenMunicipios,
-  playasDeMunicipioSlug,
-  rutaPlaya,
+  nonEmptyLandings,
+  municipalitiesOf,
+  municipalityPath,
+  municipalitiesSummary,
+  beachesOfMunicipalitySlug,
+  beachPath,
 };

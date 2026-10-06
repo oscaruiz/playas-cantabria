@@ -40,21 +40,21 @@ export interface RankingEnUso {
   /** The ranking currently in force, or null until the first answer lands. */
   ranking: FeaturedBeachesResponse | null;
   /** When the backend ASSEMBLED it (epoch ms), null if it did not say. */
-  actualizadoMs: number | null;
+  updatedMs: number | null;
   /**
    * The painted ranking is a stored copy: older than anything `/featured` can
    * still be serving, so it came from the service worker or the snapshot.
    * Nothing the user does retires it — only a real answer does.
    */
-  deVisitaAnterior: boolean;
+  fromPreviousVisit: boolean;
   /** No answer yet, of any kind. */
-  cargando: boolean;
+  loading: boolean;
   /** The request failed and there is nothing to paint. */
   error: boolean;
   /** A retry is in flight. */
-  reintentando: boolean;
+  retrying: boolean;
   /** Ask the backend again, ignoring every cached copy. */
-  reintentar: () => void;
+  retry: () => void;
 }
 
 /**
@@ -165,11 +165,11 @@ export function useRanking(): RankingEnUso {
 
   return {
     ranking,
-    actualizadoMs,
-    deVisitaAnterior,
-    cargando: ranking == null && !error,
+    updatedMs: actualizadoMs,
+    fromPreviousVisit: deVisitaAnterior,
+    loading: ranking == null && !error,
     error,
-    reintentando,
-    reintentar,
+    retrying: reintentando,
+    retry: reintentar,
   };
 }

@@ -4,9 +4,9 @@ import { informationCircleOutline } from 'ionicons/icons';
 import { useIdioma } from '../i18n/IdiomaContext';
 import './SafetyNotice.css';
 
-const SafetyNotice: React.FC<{ tipo: 'banderas' | 'ranking'; sobreOscuro?: boolean }> = ({
-  tipo,
-  sobreOscuro = false,
+const SafetyNotice: React.FC<{ kind: 'banderas' | 'ranking'; onDark?: boolean }> = ({
+  kind: tipo,
+  onDark: sobreOscuro = false,
 }) => {
   const { t } = useIdioma();
   return (

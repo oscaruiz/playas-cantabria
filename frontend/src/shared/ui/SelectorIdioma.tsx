@@ -9,7 +9,7 @@ const IDIOMAS: Idioma[] = ['es', 'en'];
  * the sticky headers reload the page on click.
  */
 const SelectorIdioma: React.FC = () => {
-  const { idioma, setIdioma, t } = useIdioma();
+  const { language: idioma, setLanguage: setIdioma, t } = useIdioma();
 
   return (
     <div

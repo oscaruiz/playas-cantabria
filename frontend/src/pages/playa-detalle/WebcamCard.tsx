@@ -28,7 +28,7 @@ export const WebcamCard: React.FC<{ webcam?: PlayaDetalleData['webcam'] }> = ({ 
       </a>
       {/* The link is editorial data; whether the camera is broadcasting is
           not something this app knows — so it says exactly that. */}
-      <DataStatus clave="datos.webcamExterna" />
+      <DataStatus labelKey="datos.webcamExterna" />
     </section>
   );
 };

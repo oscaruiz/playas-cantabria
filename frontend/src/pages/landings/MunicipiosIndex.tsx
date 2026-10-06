@@ -3,7 +3,7 @@ import { IonPage, IonContent, IonFooter, IonSpinner } from '@ionic/react';
 import { Link } from 'react-router-dom';
 import { useIdioma } from '../../shared/i18n/IdiomaContext';
 import SeoHead from '../../shared/seo/SeoHead';
-import { resumenMunicipios } from '../../shared/seo/landings';
+import { municipalitiesSummary } from '../../shared/seo/landings';
 import BottomNavBar from '../../shared/ui/BottomNavBar';
 import HeaderActions from '../../shared/ui/HeaderActions';
 import { useCatalogo } from './useCatalogo';
@@ -18,19 +18,19 @@ interface FilaMunicipio {
 /** Index of every municipality with beaches, each linking to its page. */
 const MunicipiosIndex: React.FC = () => {
   const { t, tPlural } = useIdioma();
-  const { playas } = useCatalogo();
+  const { beaches: playas } = useCatalogo();
 
   const municipios = useMemo(
-    () => resumenMunicipios(playas ?? []) as FilaMunicipio[],
+    () => municipalitiesSummary(playas ?? []) as FilaMunicipio[],
     [playas]
   );
 
   return (
     <IonPage className="home-page">
       <SeoHead
-        titulo={t('seo.tituloMunicipios')}
-        descripcion={t('seo.descMunicipios')}
-        rutaCanonica="/municipios"
+        title={t('seo.tituloMunicipios')}
+        description={t('seo.descMunicipios')}
+        canonicalPath="/municipios"
       />
       <div className="home-sticky-header">
         <div className="home-sticky-marca">

@@ -44,7 +44,7 @@ const VENTANA: VentanaDia = {
 describe('ProximasHoras — la tira que respalda la ventana', () => {
   it('titula el resto del día y resalta exactamente las horas de la ventana', () => {
     const { container } = renderWithProviders(
-      <ProximasHoras horas={HORAS} fuente="Open-Meteo" ventana={VENTANA} />,
+      <ProximasHoras hours={HORAS} source="Open-Meteo" timeWindow={VENTANA} />,
       { route: '/' },
     );
 
@@ -62,7 +62,7 @@ describe('ProximasHoras — la tira que respalda la ventana', () => {
 
   it('una hora mojada cambia el icono a lluvia y lo dice en su frase accesible', () => {
     const { container } = renderWithProviders(
-      <ProximasHoras horas={HORAS} fuente="Open-Meteo" ventana={VENTANA} />,
+      <ProximasHoras hours={HORAS} source="Open-Meteo" timeWindow={VENTANA} />,
       { route: '/' },
     );
 
@@ -85,7 +85,7 @@ describe('ProximasHoras — la tira que respalda la ventana', () => {
     });
 
     renderWithProviders(
-      <ProximasHoras horas={HORAS} fuente="Open-Meteo" ventana={VENTANA} />,
+      <ProximasHoras hours={HORAS} source="Open-Meteo" timeWindow={VENTANA} />,
       { route: '/' },
     );
 
@@ -101,7 +101,7 @@ describe('ProximasHoras — la tira que respalda la ventana', () => {
 
   it('la ventana dentro de la tira va en modo detallado: nombra su motivo', () => {
     renderWithProviders(
-      <ProximasHoras horas={HORAS} fuente="Open-Meteo" ventana={VENTANA} />,
+      <ProximasHoras hours={HORAS} source="Open-Meteo" timeWindow={VENTANA} />,
       { route: '/' },
     );
 

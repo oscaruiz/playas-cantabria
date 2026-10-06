@@ -8,15 +8,15 @@ import { useRanking } from '../../features/ranking/useRanking';
  * enrichment and their failure only means plainer rows.
  */
 export function useCatalogo(): {
-  playas: Playa[] | null;
-  condiciones: Map<string, FeaturedBeach>;
+  beaches: Playa[] | null;
+  conditions: Map<string, FeaturedBeach>;
   /** Snapshot instant of the conditions (epoch ms), or null while unknown. */
-  instanteCondiciones: number | null;
+  conditionsInstant: number | null;
 } {
   const [playas, setPlayas] = useState<Playa[] | null>(null);
   // The landing says HOW current "current" is, so it takes the instant from
   // the same module that decides which ranking is in force.
-  const { ranking, actualizadoMs: instanteCondiciones } = useRanking();
+  const { ranking, updatedMs: instanteCondiciones } = useRanking();
   const condiciones = useMemo(
     () => new Map((ranking?.resumenTodas ?? []).map((b) => [b.codigo, b])),
     [ranking],
@@ -30,5 +30,5 @@ export function useCatalogo(): {
     return () => { activo = false; };
   }, []);
 
-  return { playas, condiciones, instanteCondiciones };
+  return { beaches: playas, conditions: condiciones, conditionsInstant: instanteCondiciones };
 }

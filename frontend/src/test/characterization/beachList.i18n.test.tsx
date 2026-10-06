@@ -63,7 +63,7 @@ describe('PlayasList — distancia de la tarjeta', () => {
   it('en inglés usa la misma clave que el resto de la app', async () => {
     const { container } = renderWithProviders(<PlayasList />, {
       route: '/playas',
-      idioma: 'en',
+      language: 'en',
     });
     await screen.findByText('La Concha');
 
@@ -88,7 +88,7 @@ describe('PlayasList — tooltips de atributos', () => {
   it('en inglés', async () => {
     const { container } = renderWithProviders(<PlayasList />, {
       route: '/playas',
-      idioma: 'en',
+      language: 'en',
     });
     await screen.findByText('La Concha');
 

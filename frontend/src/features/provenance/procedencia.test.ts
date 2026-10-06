@@ -68,15 +68,15 @@ const OBSERVACION: TiempoActual = {
 describe('procedenciaObservacion', () => {
   it('credits the provider and the capture instant', () => {
     expect(procedenciaObservacion(OBSERVACION)).toEqual({
-      tipo: 'directo',
-      fuente: 'OpenWeather',
-      instanteMs: Date.UTC(2026, 7, 2, 10, 0, 0),
+      kind: 'directo',
+      source: 'OpenWeather',
+      instantMs: Date.UTC(2026, 7, 2, 10, 0, 0),
     });
   });
 
   it('keeps the source with a broken timestamp instead of inventing one', () => {
     const sinFecha = procedenciaObservacion({ ...OBSERVACION, timestamp: 'basura' });
-    expect(sinFecha).toEqual({ tipo: 'directo', fuente: 'OpenWeather', instanteMs: null });
+    expect(sinFecha).toEqual({ kind: 'directo', source: 'OpenWeather', instantMs: null });
   });
 
   it('returns null with no observation or with nothing to credit', () => {
@@ -91,9 +91,9 @@ describe('procedenciaObservacion', () => {
 describe('procedenciaPrevisionHoras', () => {
   it('is a forecast with a source and, honestly, no emission time', () => {
     expect(procedenciaPrevisionHoras('Open-Meteo')).toEqual({
-      tipo: 'prevision',
-      fuente: 'Open-Meteo',
-      instanteMs: null,
+      kind: 'prevision',
+      source: 'Open-Meteo',
+      instantMs: null,
     });
   });
 

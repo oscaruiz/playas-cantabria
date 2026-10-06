@@ -13,7 +13,7 @@ beforeEach(() => {
 
 describe('FavoriteButton', () => {
   it('marca y desmarca, persistiendo en localStorage', () => {
-    renderWithProviders(<FavoriteButton codigo="3908503" nombre="La Concha" />);
+    renderWithProviders(<FavoriteButton code="3908503" name="La Concha" />);
 
     const btn = screen.getByRole('button', { name: 'Guardar La Concha en favoritas' });
     expect(btn).toHaveAttribute('aria-pressed', 'false');
@@ -33,12 +33,12 @@ describe('FavoriteButton', () => {
   });
 
   it('la marca sobrevive a un remontaje que relee el almacenamiento', () => {
-    const primera = renderWithProviders(<FavoriteButton codigo="X" nombre="X" />);
+    const primera = renderWithProviders(<FavoriteButton code="X" name="X" />);
     fireEvent.click(screen.getByRole('button'));
     primera.unmount();
 
     recargarFavoritas(); // fresh session: memory dropped, storage read again
-    renderWithProviders(<FavoriteButton codigo="X" nombre="X" />);
+    renderWithProviders(<FavoriteButton code="X" name="X" />);
     expect(screen.getByRole('button')).toHaveAttribute('aria-pressed', 'true');
   });
 
@@ -46,7 +46,7 @@ describe('FavoriteButton', () => {
     localStorage.setItem(CLAVE, '{corrupto');
     recargarFavoritas();
 
-    renderWithProviders(<FavoriteButton codigo="X" nombre="X" />);
+    renderWithProviders(<FavoriteButton code="X" name="X" />);
     const btn = screen.getByRole('button');
     expect(btn).toHaveAttribute('aria-pressed', 'false');
 
@@ -59,7 +59,7 @@ describe('FavoriteButton', () => {
     const fila = jest.fn();
     renderWithProviders(
       <div role="link" tabIndex={0} onClick={fila} onKeyDown={fila}>
-        <FavoriteButton codigo="X" nombre="X" />
+        <FavoriteButton code="X" name="X" />
       </div>
     );
 
@@ -71,7 +71,7 @@ describe('FavoriteButton', () => {
   });
 
   it('la etiqueta accesible está traducida', () => {
-    renderWithProviders(<FavoriteButton codigo="X" nombre="Langre" />, { idioma: 'en' });
+    renderWithProviders(<FavoriteButton code="X" name="Langre" />, { language: 'en' });
     expect(
       screen.getByRole('button', { name: 'Save Langre to favorites' })
     ).toBeInTheDocument();

@@ -62,10 +62,10 @@ function enModoApp(): boolean {
  */
 export function ofertaActual(): Oferta {
   return queOfrecer({
-    hayEvento: evento !== null,
-    esIOS: esIOS(),
-    enModoApp: enModoApp(),
-    instalada,
+    hasEvent: evento !== null,
+    isIOS: esIOS(),
+    inAppMode: enModoApp(),
+    installed: instalada,
   });
 }
 

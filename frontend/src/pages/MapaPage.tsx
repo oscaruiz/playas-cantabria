@@ -48,9 +48,9 @@ const MapaPage: React.FC = () => {
   return (
     <IonPage className="mapa-page">
       <SeoHead
-        titulo={t('seo.tituloMapa')}
-        descripcion={t('seo.descMapa')}
-        rutaCanonica="/mapa"
+        title={t('seo.tituloMapa')}
+        description={t('seo.descMapa')}
+        canonicalPath="/mapa"
       />
       {/* Recargar al tocar el encabezado, pero SOLO sobre el título: cuando el
           manejador estaba en el contenedor, el clic en la ⓘ y en el selector
@@ -80,7 +80,7 @@ const MapaPage: React.FC = () => {
             </div>
           }
         >
-          <MapaLienzo playas={playas} weatherMap={weatherMap} />
+          <MapaLienzo beaches={playas} weatherMap={weatherMap} />
         </Suspense>
       </IonContent>
       <IonFooter className="ion-no-border"><BottomNavBar /></IonFooter>

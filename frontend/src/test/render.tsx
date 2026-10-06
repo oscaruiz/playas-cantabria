@@ -13,7 +13,7 @@ interface RenderOptions {
   /** Route pattern, needed when the page reads `useParams` (e.g. `/playas/:codigo`). */
   path?: string;
   /** Initial language. It is written to localStorage BEFORE mounting the provider. */
-  idioma?: Idioma;
+  language?: Idioma;
 }
 
 /**
@@ -26,7 +26,7 @@ interface RenderOptions {
  */
 export function renderWithProviders(
   ui: React.ReactElement,
-  { route = '/', path, idioma = 'es' }: RenderOptions = {},
+  { route = '/', path, language: idioma = 'es' }: RenderOptions = {},
 ): RenderResult {
   localStorage.setItem('app_idioma', idioma);
 

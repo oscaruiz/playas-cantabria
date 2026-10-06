@@ -36,17 +36,17 @@ function metaPorNombre(atributo: 'name' | 'property', valor: string): HTMLMetaEl
 }
 
 const SeoHead: React.FC<{
-  titulo: string;
-  descripcion: string;
+  title: string;
+  description: string;
   /** Canonical PATH of this page (e.g. `/playas/suances/la-concha`). */
-  rutaCanonica: string;
+  canonicalPath: string;
   /**
    * Not-found/error pages: emits robots=noindex and REMOVES the canonical
    * and og:url instead of inheriting the previous view's — an unknown slug
    * must never keep declaring another beach's URL as its own.
    */
   noindex?: boolean;
-}> = ({ titulo, descripcion, rutaCanonica, noindex }) => {
+}> = ({ title: titulo, description: descripcion, canonicalPath: rutaCanonica, noindex }) => {
   useEffect(() => {
     const urlAbsoluta = urlCanonica(rutaCanonica);
 

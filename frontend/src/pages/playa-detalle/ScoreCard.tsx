@@ -20,9 +20,9 @@ import {
  * `topeValor`. The forecast cap is graded now (59 imminent → none at 6 h), so
  * the published value wins; 59 is only the floor an old backend enforced.
  */
-const TOPES: Record<'lluvia' | 'lluvia_prevista', { clave: ClaveTexto; valor: number }> = {
-  lluvia: { clave: 'detalle.scoreInfo.topeLluvia', valor: 55 },
-  lluvia_prevista: { clave: 'detalle.scoreInfo.topeLluviaPrevista', valor: 59 },
+const TOPES: Record<'lluvia' | 'lluvia_prevista', { labelKey: ClaveTexto; value: number }> = {
+  lluvia: { labelKey: 'detalle.scoreInfo.topeLluvia', value: 55 },
+  lluvia_prevista: { labelKey: 'detalle.scoreInfo.topeLluviaPrevista', value: 59 },
 };
 
 /** Reachable maximum of each factor when the backend does not send `maximos`. */
@@ -40,39 +40,39 @@ const MAXIMOS_POR_DEFECTO: SubPuntuaciones = {
  * summer day, which are the days worth going) and it would be dishonest to
  * list it here. The index is still shown further down the page as data.
  */
-const FACTORES: Array<{ campo: keyof SubPuntuaciones; clave: ClaveTexto }> = [
-  { campo: 'cielo', clave: 'detalle.scoreInfo.sol' },
-  { campo: 'temperatura', clave: 'detalle.scoreInfo.temp' },
-  { campo: 'viento', clave: 'detalle.scoreInfo.viento' },
-  { campo: 'bandera', clave: 'detalle.scoreInfo.bandera' },
-  { campo: 'oleaje', clave: 'detalle.scoreInfo.oleaje' },
-  { campo: 'datos', clave: 'detalle.scoreInfo.datos' },
+const FACTORES: Array<{ field: keyof SubPuntuaciones; labelKey: ClaveTexto }> = [
+  { field: 'cielo', labelKey: 'detalle.scoreInfo.sol' },
+  { field: 'temperatura', labelKey: 'detalle.scoreInfo.temp' },
+  { field: 'viento', labelKey: 'detalle.scoreInfo.viento' },
+  { field: 'bandera', labelKey: 'detalle.scoreInfo.bandera' },
+  { field: 'oleaje', labelKey: 'detalle.scoreInfo.oleaje' },
+  { field: 'datos', labelKey: 'detalle.scoreInfo.datos' },
 ];
 
 /** Rules that cap or exclude: they do not score, so they carry no points. */
 const REGLAS: ClaveTexto[] = ['detalle.scoreInfo.lluvia', 'detalle.scoreInfo.peligro'];
 
 /** "Concept: description" → the two halves the row paints. */
-function partirTexto(texto: string): { etiqueta: string; descripcion: string } {
+function partirTexto(texto: string): { label: string; description: string } {
   const sep = texto.indexOf(':');
   return sep >= 0
-    ? { etiqueta: texto.slice(0, sep), descripcion: texto.slice(sep + 1).trim() }
-    : { etiqueta: texto, descripcion: '' };
+    ? { label: texto.slice(0, sep), description: texto.slice(sep + 1).trim() }
+    : { label: texto, description: '' };
 }
 
 /** Today's score with its reason, and a disclosure explaining how it is computed. */
 const ScoreCard: React.FC<{
-  puntuada: FeaturedBeach;
-  maximos?: SubPuntuaciones | null;
-}> = ({ puntuada, maximos }) => {
-  const { t, idioma } = useIdioma();
+  scored: FeaturedBeach;
+  maxima?: SubPuntuaciones | null;
+}> = ({ scored: puntuada, maxima: maximos }) => {
+  const { t, language: idioma } = useIdioma();
   const [scoreInfoOpen, setScoreInfoOpen] = useState(false);
 
   const pronostico = puntuada.pronostico ?? null;
   const desglose = puntuada.subpuntuaciones ?? null;
   const escala = maximos ?? MAXIMOS_POR_DEFECTO;
   const tope = puntuada.topeAplicado
-    ? { ...TOPES[puntuada.topeAplicado], valor: puntuada.topeValor ?? TOPES[puntuada.topeAplicado].valor }
+    ? { ...TOPES[puntuada.topeAplicado], valor: puntuada.topeValor ?? TOPES[puntuada.topeAplicado].value }
     : null;
 
   const razon = pronostico
@@ -128,7 +128,7 @@ const ScoreCard: React.FC<{
         aria-expanded={scoreInfoOpen}
         aria-controls="pd-score-info"
       >
-        <ScoreBadge puntuacion={puntuada.puntuacion} size="lg" />
+        <ScoreBadge score={puntuada.puntuacion} size="lg" />
         <div className="pd-score-text">
           <p className="pd-score-label">
             <span>{t('detalle.puntuacion')}</span>
@@ -148,7 +148,7 @@ const ScoreCard: React.FC<{
           )}
           {/* Where the day is going, visible without opening anything: it is the
               most actionable line on the screen. */}
-          <TrendBadge pronostico={pronostico} size="lg" />
+          <TrendBadge outlook={pronostico} size="lg" />
           {motivo && (
             <p className="pd-score-caveat">
               <IonIcon icon={warningOutline} aria-hidden="true" />{' '}
@@ -158,7 +158,7 @@ const ScoreCard: React.FC<{
         </div>
       </button>
 
-      <SafetyNotice tipo="ranking" sobreOscuro />
+      <SafetyNotice kind="ranking" onDark />
 
       {scoreInfoOpen && (
         <div id="pd-score-info" className="pd-score-info">
@@ -172,8 +172,8 @@ const ScoreCard: React.FC<{
             <>
               <p className="pd-score-info-sub">{t('detalle.scoreInfo.deEstaPlaya')}</p>
               <div className="pd-factores">
-                {FACTORES.map(({ campo, clave }) => {
-                  const { etiqueta, descripcion } = partirTexto(t(clave));
+                {FACTORES.map(({ field: campo, labelKey: clave }) => {
+                  const { label: etiqueta, description: descripcion } = partirTexto(t(clave));
                   const puntos = desglose[campo];
                   const max = escala[campo];
                   return (
@@ -199,7 +199,7 @@ const ScoreCard: React.FC<{
               {tope && (
                 <p className="pd-score-tope">
                   <IonIcon icon={warningOutline} aria-hidden="true" />{' '}
-                  {t(tope.clave, { n: tope.valor })}
+                  {t(tope.labelKey, { n: tope.valor })}
                 </p>
               )}
             </>
@@ -208,7 +208,7 @@ const ScoreCard: React.FC<{
           {/* Rules that cap or exclude: they have no points of their own. */}
           <div className="beach-info-grid">
             {REGLAS.map((k) => {
-              const { etiqueta, descripcion } = partirTexto(t(k));
+              const { label: etiqueta, description: descripcion } = partirTexto(t(k));
               return (
                 <div className="beach-info-row" key={k}>
                   <span className="beach-info-label">{etiqueta}</span>

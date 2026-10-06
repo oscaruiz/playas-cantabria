@@ -25,8 +25,8 @@ const require = createRequire(import.meta.url);
 const raiz = dirname(fileURLToPath(import.meta.url));
 const frontend = join(raiz, '..');
 
-const { rutaPlaya, detectarColisiones } = require('../src/shared/seo/beachUrls.js');
-const { landingsNoVacias, municipiosDe, rutaMunicipio } = require('../src/shared/seo/landings.js');
+const { beachPath, detectCollisions } = require('../src/shared/seo/beachUrls.js');
+const { nonEmptyLandings, municipalitiesOf, municipalityPath } = require('../src/shared/seo/landings.js');
 
 const rutaBuild = join(frontend, 'build');
 if (!existsSync(join(rutaBuild, 'index.html'))) {
@@ -37,7 +37,7 @@ if (!existsSync(join(rutaBuild, 'index.html'))) {
 const playas = JSON.parse(readFileSync(join(frontend, 'src', 'data', 'beaches.json'), 'utf8'));
 const region = JSON.parse(readFileSync(join(frontend, 'src', 'data', 'region.json'), 'utf8'));
 
-const colisiones = detectarColisiones(playas);
+const colisiones = detectCollisions(playas);
 if (colisiones.length > 0) {
   console.error('[sitemap] El catálogo produce rutas canónicas en conflicto:');
   for (const c of colisiones) {
@@ -65,9 +65,9 @@ const rutas = [
   '/municipios',
   '/acerca-de',
   '/privacidad',
-  ...playas.map((p) => rutaPlaya(p)),
-  ...municipiosDe(playas).map((m) => rutaMunicipio(m)),
-  ...landingsNoVacias(playas).map((l) => `/${l.id}`),
+  ...playas.map((p) => beachPath(p)),
+  ...municipalitiesOf(playas).map((m) => municipalityPath(m)),
+  ...nonEmptyLandings(playas).map((l) => `/${l.id}`),
 ];
 const hoy = new Date().toISOString().slice(0, 10);
 
