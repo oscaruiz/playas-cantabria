@@ -17,6 +17,7 @@
  */
 import fs from 'fs';
 import { ttlFactor, loadConfig } from '../infrastructure/config/config';
+import { RATE_PER_MINUTE } from '../infrastructure/http/limiter';
 import { regionRegistry } from '../regions';
 import type { RegionConfig } from '../regions';
 
@@ -112,9 +113,11 @@ export function peakOpenWeatherPerMinute(regions: Pick<RegionUsage, 'beaches'>[]
   // After a cold start (or when a batch of coordinate keys expires together),
   // every beach in the featured fan-out can refresh its current observation
   // inside the same minute. Forecast calls are detail-driven rather than part
-  // of that all-beach fan-out. The host limiter bounds concurrency, not requests per minute,
-  // so using the average `beaches / TTL` would approve unsafe cold-start bursts.
-  return beaches;
+  // of that all-beach fan-out. Using the average `beaches / TTL` would approve
+  // unsafe cold-start bursts. The host limiter caps the rate per minute, so
+  // beyond that cap a bigger burst no longer breaches the quota: it just takes
+  // longer to warm (ceil(beaches / cap) minutes, served stale meanwhile).
+  return Math.min(beaches, RATE_PER_MINUTE['api.openweathermap.org']);
 }
 
 function main(): void {

@@ -24,6 +24,20 @@ const LIMITES: Record<string, number> = {
   'www.cruzroja.es': 3,
 };
 
+/**
+ * Requests per rolling minute, per host. Concurrency alone does not bound the
+ * rate: a cold `/featured` fan-out at 4 in flight still sends one observation
+ * per beach within the same minute, and the regions together already have more
+ * beaches than OpenWeather's 60/min.
+ * ponytail: per process. The CI snapshot builder shares the key from another
+ * process, hence the margin under 60; a shared counter (Upstash) if that bites.
+ */
+export const RATE_PER_MINUTE: Record<string, number> = {
+  'api.openweathermap.org': 50,
+};
+
+const MINUTE_MS = 60_000;
+
 /** Default cooldown if the 429 carries no Retry-After. */
 const ENFRIAMIENTO_POR_DEFECTO_MS = 60_000;
 const ENFRIAMIENTO_MAXIMO_MS = 600_000;
@@ -32,11 +46,30 @@ export class HostLimiter {
   private activos = new Map<string, number>();
   private colas = new Map<string, Array<() => void>>();
   private enfriadoHasta = new Map<string, number>();
+  private sent = new Map<string, number[]>();
 
   constructor(
     private readonly limites: Record<string, number> = LIMITES,
     private readonly now: () => number = () => Date.now(),
+    private readonly ratePerMinute: Record<string, number> = RATE_PER_MINUTE,
   ) {}
+
+  /** Waits until sending one more request keeps the host under its per-minute cap. */
+  private async waitForRate(host: string): Promise<void> {
+    const cap = this.ratePerMinute[host];
+    if (cap == null) return;
+    for (;;) {
+      const now = this.now();
+      const recent = (this.sent.get(host) ?? []).filter((t) => t > now - MINUTE_MS);
+      if (recent.length < cap) {
+        recent.push(now);
+        this.sent.set(host, recent);
+        return;
+      }
+      this.sent.set(host, recent);
+      await new Promise((r) => setTimeout(r, recent[0] + MINUTE_MS - now));
+    }
+  }
 
   private limite(host: string): number {
     return this.limites[host] ?? Number.POSITIVE_INFINITY;
@@ -66,20 +99,22 @@ export class HostLimiter {
 
   async adquirir(host: string): Promise<void> {
     const limite = this.limite(host);
-    if (!Number.isFinite(limite)) return;
-
-    const enUso = this.activos.get(host) ?? 0;
-    if (enUso < limite) {
-      this.activos.set(host, enUso + 1);
-      return;
+    if (Number.isFinite(limite)) {
+      const enUso = this.activos.get(host) ?? 0;
+      if (enUso < limite) {
+        this.activos.set(host, enUso + 1);
+      } else {
+        await new Promise<void>((resolve) => {
+          const cola = this.colas.get(host) ?? [];
+          cola.push(resolve);
+          this.colas.set(host, cola);
+        });
+        this.activos.set(host, (this.activos.get(host) ?? 0) + 1);
+      }
     }
-
-    await new Promise<void>((resolve) => {
-      const cola = this.colas.get(host) ?? [];
-      cola.push(resolve);
-      this.colas.set(host, cola);
-    });
-    this.activos.set(host, (this.activos.get(host) ?? 0) + 1);
+    // After the slot, not before: the timestamp must be the send time, or
+    // requests queued for a slot would be counted early and then leave in a burst.
+    await this.waitForRate(host);
   }
 
   liberar(host: string): void {

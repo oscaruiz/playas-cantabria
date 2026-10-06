@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { HostLimiter } from '../infrastructure/http/limiter';
 
 describe('HostLimiter — techo de concurrencia por proveedor', () => {
@@ -56,6 +56,28 @@ describe('HostLimiter — techo de concurrencia por proveedor', () => {
     limiter.registrar429('opendata.aemet.es', '86400');
 
     expect(limiter.enfriamientoRestanteMs('opendata.aemet.es')).toBe(600_000);
+  });
+
+  it('caps requests per rolling minute and lets the next one out when the oldest ages out', async () => {
+    vi.useFakeTimers();
+    try {
+      const host = 'api.openweathermap.org';
+      const limiter = new HostLimiter({}, () => Date.now(), { [host]: 3 });
+      let sent = 0;
+      const send = () => limiter.adquirir(host).then(() => sent++);
+
+      void Promise.all([send(), send(), send(), send(), send()]);
+      await vi.advanceTimersByTimeAsync(0);
+      expect(sent).toBe(3);
+
+      await vi.advanceTimersByTimeAsync(59_999);
+      expect(sent).toBe(3);
+
+      await vi.advanceTimersByTimeAsync(1);
+      expect(sent).toBe(5);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('libera el turno al siguiente en cola sin perder huecos', async () => {
