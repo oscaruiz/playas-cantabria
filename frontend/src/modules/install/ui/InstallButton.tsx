@@ -28,19 +28,19 @@ const InstallButton: React.FC<{ className?: string }> = ({ className }) => {
     <>
       <button
         type="button"
-        className={`instalar-chip${className ? ` ${className}` : ''}`}
+        className={`install-chip${className ? ` ${className}` : ''}`}
         onClick={() => (isIOS ? setHelpVisible((v) => !v) : isOpenAction ? open() : install())}
         aria-expanded={isIOS ? helpVisible : undefined}
-        aria-controls={isIOS ? 'instalar-ayuda' : undefined}
+        aria-controls={isIOS ? 'install-help' : undefined}
       >
         <IonIcon icon={isIOS ? shareOutline : isOpenAction ? openOutline : downloadOutline} aria-hidden="true" />
         {t(isOpenAction ? 'instalar.abrir' : 'instalar.chip')}
       </button>
 
       {isIOS && helpVisible && (
-        <div className="instalar-ayuda" id="instalar-ayuda">
-          <p className="instalar-ayuda__titulo">{t('instalar.iosTitulo')}</p>
-          <ol className="instalar-ayuda__pasos">
+        <div className="install-help" id="install-help">
+          <p className="install-help__title">{t('instalar.iosTitulo')}</p>
+          <ol className="install-help__steps">
             <li>{t('instalar.iosPaso1')}</li>
             <li>{t('instalar.iosPaso2')}</li>
           </ol>

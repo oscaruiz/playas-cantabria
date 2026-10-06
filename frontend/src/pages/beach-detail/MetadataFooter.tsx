@@ -36,7 +36,7 @@ const MetadataFooter: React.FC<{
       <AttributionNote source={source} />
       {hasDistinctObservation && <AttributionNote source={observationSource} />}
       {(warningZone || issued) && (
-        <p className="procedencia-estatica">
+        <p className="provenance-static">
           {warningZone && <span>{t('detalle.zonaAvisos', { zona: warningZone })}</span>}
           {warningZone && issued && <span> &middot; </span>}
           {issued && <span>{issued}</span>}

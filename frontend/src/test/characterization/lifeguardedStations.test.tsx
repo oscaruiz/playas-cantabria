@@ -51,7 +51,7 @@ function badgeFor(container: HTMLElement, name: string): Element | null {
     (c) => c.querySelector('.beach-card-name')?.textContent === name,
   ) as HTMLElement | undefined;
   if (!card) throw new Error(`No hay tarjeta para ${name}`);
-  return card.querySelector('.badge-vigilada');
+  return card.querySelector('.badge-lifeguarded');
 }
 
 beforeEach(() => {

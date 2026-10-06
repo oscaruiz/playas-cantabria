@@ -159,7 +159,7 @@ describe('PlayasList — sugerencias', () => {
       'La Concha',
     ]);
     // The municipality row says what it is and how many beaches it has.
-    expect(options[0].querySelector('.suggestion-municipio')?.textContent).toContain(
+    expect(options[0].querySelector('.suggestion-municipality')?.textContent).toContain(
       'Municipio',
     );
   });
@@ -176,8 +176,8 @@ describe('PlayasList — sugerencias', () => {
     fireEvent.keyDown(input, { key: 'ArrowDown' });
     expect(screen.getAllByRole('option')[0]).toHaveAttribute('aria-selected', 'true');
     // The combobox tells assistive tech WHICH option is active.
-    expect(input).toHaveAttribute('aria-activedescendant', 'sugerencia-0');
-    expect(screen.getAllByRole('option')[0]).toHaveAttribute('id', 'sugerencia-0');
+    expect(input).toHaveAttribute('aria-activedescendant', 'suggestion-0');
+    expect(screen.getAllByRole('option')[0]).toHaveAttribute('id', 'suggestion-0');
 
     for (let i = 0; i < 4; i += 1) fireEvent.keyDown(input, { key: 'ArrowDown' });
     expect(screen.getAllByRole('option')[4]).toHaveAttribute('aria-selected', 'true');
@@ -285,12 +285,12 @@ describe('PlayasList — badges de la tarjeta', () => {
       cards.find((c) => c.querySelector('.beach-card-name')?.textContent === name) as HTMLElement;
 
     // Laredo carries idCruzRoja: 310; El Sardinero, 101.
-    expect(byName('Laredo').querySelector('.badge-vigilada')).not.toBeNull();
-    expect(byName('El Sardinero').querySelector('.badge-vigilada')).not.toBeNull();
+    expect(byName('Laredo').querySelector('.badge-lifeguarded')).not.toBeNull();
+    expect(byName('El Sardinero').querySelector('.badge-lifeguarded')).not.toBeNull();
     // La Concha has two posts: watched no matter how the idCruzRoja comes in.
-    expect(byName('La Concha').querySelector('.badge-vigilada')).not.toBeNull();
+    expect(byName('La Concha').querySelector('.badge-lifeguarded')).not.toBeNull();
     // La Arnía has neither id nor posts: it is the real negative case.
-    expect(byName('La Arnía').querySelector('.badge-vigilada')).toBeNull();
+    expect(byName('La Arnía').querySelector('.badge-lifeguarded')).toBeNull();
   });
 
   it('oculta el badge de webcam cuando está desactivada', async () => {
@@ -311,8 +311,8 @@ describe('PlayasList — badges de la tarjeta', () => {
       cards.find((c) => c.querySelector('.beach-card-name')?.textContent === name) as HTMLElement;
 
     // La Concha carries banderaAzul: 2026 in the fixture; La Salvé does not.
-    expect(byName('La Concha').querySelector('.badge-bandera-azul')).not.toBeNull();
-    expect(byName('La Salvé').querySelector('.badge-bandera-azul')).toBeNull();
+    expect(byName('La Concha').querySelector('.badge-flag-blue')).not.toBeNull();
+    expect(byName('La Salvé').querySelector('.badge-flag-blue')).toBeNull();
   });
 
   it('cada tarjeta dice si la playa va a mejor y por qué', async () => {

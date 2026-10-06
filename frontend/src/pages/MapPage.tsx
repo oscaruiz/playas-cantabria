@@ -46,7 +46,7 @@ const MapPage: React.FC = () => {
   }, []);
 
   return (
-    <IonPage className="mapa-page">
+    <IonPage className="map-page">
       <SeoHead
         title={t('seo.tituloMapa')}
         description={t('seo.descMapa')}
@@ -57,25 +57,25 @@ const MapPage: React.FC = () => {
           de idioma burbujeaba hasta aquí y recargaba la página en vez de
           abrir el menú. `.header-actions` va en absoluto, así que envolver el
           texto no mueve nada. */}
-      <div className="mapa-sticky-header">
+      <div className="map-sticky-header">
         <div
-          className="mapa-sticky-marca marca-con-logo"
+          className="map-sticky-brand brand-with-logo"
           onClick={() => window.location.reload()}
           style={{ cursor: 'pointer' }}
         >
           <BrandLogo />
-          <div className="marca-texto">
-            <h1 className="mapa-sticky-title">{t('app.titulo')}</h1>
-            <p className="mapa-sticky-subtitle">{t('mapa.subtitulo')}</p>
+          <div className="brand-text">
+            <h1 className="map-sticky-title">{t('app.titulo')}</h1>
+            <p className="map-sticky-subtitle">{t('mapa.subtitulo')}</p>
           </div>
         </div>
         <HeaderActions />
       </div>
 
-      <IonContent className="mapa-content">
+      <IonContent className="map-content">
         <Suspense
           fallback={
-            <div className="mapa-cargando">
+            <div className="map-loading">
               <IonSpinner name="crescent" />
             </div>
           }

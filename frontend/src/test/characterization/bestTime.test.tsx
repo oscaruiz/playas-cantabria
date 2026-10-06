@@ -56,7 +56,7 @@ describe('MejorMomento — sin datos no se inventa nada', () => {
 
   it('sin ventana no pinta nada', () => {
     const { container } = renderWithProviders(<BestTime timeWindow={null} />, { route: '/' });
-    expect(container.querySelector('.mejor-momento')).toBeNull();
+    expect(container.querySelector('.best-time')).toBeNull();
   });
 
   it('una ventana que llega al final de la franja no avisa de ningún cambio', () => {
@@ -86,7 +86,7 @@ describe('MejorMomento — el reloj manda sobre la caché', () => {
       { route: '/' },
     );
 
-    expect(container.querySelector('.mejor-momento')).toBeNull();
+    expect(container.querySelector('.best-time')).toBeNull();
   });
 
   it('una ventana empezada dice lo que queda, no un inicio en el pasado', () => {

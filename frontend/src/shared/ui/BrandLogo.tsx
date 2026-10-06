@@ -14,7 +14,7 @@ const SOURCES = ['/icon-header.png', '/icon.png', '/favicon.svg'];
 
 const BrandLogo: React.FC = () => (
   <img
-    className="marca-logo"
+    className="brand-logo"
     src={SOURCES[0]}
     alt=""
     aria-hidden="true"

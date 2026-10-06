@@ -16,16 +16,16 @@
 
 /* Tramos de color */
 .score-badge--alta {
-  --score-color: var(--playa-flag-green);
-  --score-bg: color-mix(in srgb, var(--playa-flag-green) 12%, transparent);
+  --score-color: var(--beach-flag-green);
+  --score-bg: color-mix(in srgb, var(--beach-flag-green) 12%, transparent);
 }
 .score-badge--media {
-  --score-color: var(--playa-flag-yellow);
-  --score-bg: color-mix(in srgb, var(--playa-flag-yellow) 14%, transparent);
+  --score-color: var(--beach-flag-yellow);
+  --score-bg: color-mix(in srgb, var(--beach-flag-yellow) 14%, transparent);
 }
 .score-badge--baja {
-  --score-color: var(--playa-flag-red);
-  --score-bg: color-mix(in srgb, var(--playa-flag-red) 12%, transparent);
+  --score-color: var(--beach-flag-red);
+  --score-bg: color-mix(in srgb, var(--beach-flag-red) 12%, transparent);
 }
 
 /* Tamaño pequeño (tarjetas de lista / cerca de ti) */

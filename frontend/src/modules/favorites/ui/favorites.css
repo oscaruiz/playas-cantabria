@@ -7,12 +7,12 @@
   align-items: center;
   font-size: 1.2rem;
   line-height: 1;
-  color: var(--playa-text-muted);
+  color: var(--beach-text-muted);
   cursor: pointer;
 }
 
 /* Sandy gold, the theme's secondary: saved = warm, not alarming. */
-.fav-btn--activa {
+.fav-btn--active {
   color: var(--ion-color-secondary);
 }
 
@@ -33,6 +33,6 @@
   color: #ffffff;
 }
 
-.pd-sticky-header .fav-btn--activa {
+.pd-sticky-header .fav-btn--active {
   color: var(--ion-color-secondary);
 }

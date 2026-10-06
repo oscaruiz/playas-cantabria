@@ -24,7 +24,7 @@ export const BeachInfoSection: React.FC<{ data: BeachDetail }> = ({ data }) => {
         <div className="beach-info-row">
           <span className="beach-info-label">{t('detalle.municipio')}</span>
           <Link
-            className="beach-info-value ld-enlace-municipio"
+            className="beach-info-value ld-link-municipality"
             to={municipalityPath(data.municipio)}
             aria-label={t('municipio.verPlayas', { municipio: data.municipio })}
           >

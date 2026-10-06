@@ -62,14 +62,14 @@ const BestTime: React.FC<{
   const unchanged = detailed && !reason && !change ? t('ventana.sinCambios') : null;
 
   return (
-    <div className="mejor-momento">
-      <p className="mejor-momento-franja">
-        <span className="mejor-momento-punto" aria-hidden="true" />
+    <div className="best-time">
+      <p className="best-time-band">
+        <span className="best-time-point" aria-hidden="true" />
         {started ? t('ventana.hastaFin', { fin: end }) : t('ventana.mejor', { inicio: start, fin: end })}
       </p>
-      {reason && <p className="mejor-momento-motivo">{reason}</p>}
-      {change && <p className="mejor-momento-cambio">{change}</p>}
-      {unchanged && <p className="mejor-momento-cambio">{unchanged}</p>}
+      {reason && <p className="best-time-reason">{reason}</p>}
+      {change && <p className="best-time-change">{change}</p>}
+      {unchanged && <p className="best-time-change">{unchanged}</p>}
     </div>
   );
 };

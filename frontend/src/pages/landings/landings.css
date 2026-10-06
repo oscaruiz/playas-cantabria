@@ -5,12 +5,12 @@
   position: relative;
 }
 
-.beach-card-enlace {
+.beach-card-link {
   color: inherit;
   text-decoration: none;
 }
 
-.beach-card-enlace::after {
+.beach-card-link::after {
   content: '';
   position: absolute;
   top: 0;
@@ -19,27 +19,27 @@
   left: 0;
 }
 
-.beach-card-enlace:focus-visible::after {
+.beach-card-link:focus-visible::after {
   outline: 2px solid var(--ion-color-primary);
   outline-offset: -2px;
   border-radius: 10px;
 }
 
-.beach-card .ld-enlace-municipio,
+.beach-card .ld-link-municipality,
 .beach-card .fav-btn {
   position: relative;
   z-index: 1;
 }
 
 /* Rows that are links keep their card look. */
-a.ld-fila,
+a.ld-row,
 a.hp-alt-row {
   color: inherit;
   text-decoration: none;
 }
 
 /* Suspense fallback while the Leaflet chunk downloads. */
-.mapa-cargando {
+.map-loading {
   height: 100%;
   display: flex;
   align-items: center;
@@ -48,25 +48,25 @@ a.hp-alt-row {
 
 /* "Other beaches of the municipality" link at the end of the detail info
    column: the same outlined pill as the rest of the app, centered. */
-.pd-otras-playas {
+.pd-others-beaches {
   text-align: center;
   margin: 4px 0 8px;
 }
 
 /* Header with a back control: same white chevron as the detail page. */
-.ld-header-volver {
+.ld-header-back {
   display: flex;
   align-items: center;
   gap: 4px;
 }
 
-.ld-header-volver .ld-header-textos {
+.ld-header-back .ld-header-texts {
   flex: 1;
   min-width: 0;
 }
 
 /* The page headline, in the same serif voice as the detail titles. */
-.ld-titular {
+.ld-headline {
   font-family: 'Fraunces', Georgia, serif;
   font-weight: 600;
   font-size: 1.55rem;
@@ -82,12 +82,12 @@ a.hp-alt-row {
   padding: 0 20px;
   max-width: 640px;
   font-size: 0.85rem;
-  color: var(--playa-text-muted);
+  color: var(--beach-text-muted);
   line-height: 1.5;
 }
 
 /* Municipality-index rows (the only list here that is not beaches). */
-.ld-lista {
+.ld-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -96,42 +96,42 @@ a.hp-alt-row {
   margin: 0 auto;
 }
 
-.ld-fila {
+.ld-row {
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 12px 14px;
   border-radius: 18px;
-  background: var(--playa-card-bg, #ffffff);
+  background: var(--beach-card-bg, #ffffff);
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
   cursor: pointer;
 }
 
-.ld-fila-nombre {
+.ld-row-name {
   flex: 1;
   min-width: 0;
 }
 
-.ld-fila-titulo {
+.ld-row-title {
   margin: 0;
   font-weight: 600;
 }
 
-.ld-fila-municipio {
+.ld-row-municipality {
   margin: 0;
   font-size: 0.78rem;
-  color: var(--playa-text-muted);
+  color: var(--beach-text-muted);
 }
 
-.ld-fila-flecha {
-  color: var(--playa-text-muted);
+.ld-row-arrow {
+  color: var(--beach-text-muted);
   font-size: 1.3rem;
 }
 
 /* Inline municipality link inside beach cards and the detail info grid.
    Lives here (loaded with the always-bundled landing pages) so the EOL-noisy
    page stylesheets stay untouched. */
-.ld-enlace-municipio {
+.ld-link-municipality {
   background: none;
   border: none;
   padding: 0;
@@ -144,7 +144,7 @@ a.hp-alt-row {
   text-underline-offset: 2px;
 }
 
-.ld-enlace {
+.ld-link {
   display: inline-block;
   margin-top: 12px;
   background: none;

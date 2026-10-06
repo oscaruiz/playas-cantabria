@@ -33,7 +33,7 @@ const MunicipalitiesIndex: React.FC = () => {
         canonicalPath="/municipios"
       />
       <div className="home-sticky-header">
-        <div className="home-sticky-marca">
+        <div className="home-sticky-brand">
           <h1 className="home-sticky-title">{t('municipios.titulo')}</h1>
           <p className="home-sticky-subtitle">{t('app.titulo')}</p>
         </div>
@@ -48,19 +48,19 @@ const MunicipalitiesIndex: React.FC = () => {
           </div>
         )}
         {beaches && (
-          <div className="ld-lista">
+          <div className="ld-list">
             {municipalities.map((m) => (
               <Link
                 key={m.ruta}
                 to={m.ruta}
-                className="ld-fila"
+                className="ld-row"
                 aria-label={t('municipio.verPlayas', { municipio: m.municipio })}
               >
-                <div className="ld-fila-nombre">
-                  <p className="ld-fila-titulo">{m.municipio}</p>
-                  <p className="ld-fila-municipio">{tPlural('lista.contador', m.total)}</p>
+                <div className="ld-row-name">
+                  <p className="ld-row-title">{m.municipio}</p>
+                  <p className="ld-row-municipality">{tPlural('lista.contador', m.total)}</p>
                 </div>
-                <span className="ld-fila-flecha" aria-hidden="true">&#8250;</span>
+                <span className="ld-row-arrow" aria-hidden="true">&#8250;</span>
               </Link>
             ))}
           </div>

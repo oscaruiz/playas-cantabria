@@ -40,7 +40,7 @@ const RedCrossCard: React.FC<{
         role={expandable ? 'button' : undefined}
         tabIndex={expandable ? 0 : undefined}
         aria-expanded={expandable ? expanded : undefined}
-        aria-controls={expandable ? 'cruzroja-content' : undefined}
+        aria-controls={expandable ? 'redcross-content' : undefined}
         aria-label={expandable ? `${expanded ? t('detalle.contraer') : t('detalle.expandir')} ${operatorName}` : undefined}
         aria-disabled={!expandable ? true : undefined}
         onKeyDown={expandable ? (e) => {
@@ -64,7 +64,7 @@ const RedCrossCard: React.FC<{
       </div>
 
       {expanded && (
-        <div className="card-body card-body-enter" id="cruzroja-content">
+        <div className="card-body card-body-enter" id="redcross-content">
           <div className="info-rows">
             <div className="info-row">
               <span className="info-row-label">{t('cruzroja.banderaActual')}</span>
@@ -96,7 +96,7 @@ const RedCrossCard: React.FC<{
             </div>
           </div>
           {normalizeInstant(redCross?.ultimaActualizacion) != null && (
-            <p className="cruzroja-actualizado">
+            <p className="redcross-updated">
               <FreshnessLabel instant={redCross?.ultimaActualizacion} capitalized />
             </p>
           )}

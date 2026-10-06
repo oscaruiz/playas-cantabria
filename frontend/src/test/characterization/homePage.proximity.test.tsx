@@ -46,16 +46,16 @@ it('avisa cuando preside una playa cercana con menos puntos que otra mostrada', 
   await screen.findByText('La mejor para ti hoy');
 
   // Cercana: 70 - 0 = 70 adjusted. Lejana: 90 - 25 (cap) = 65 adjusted.
-  expect(container.querySelector('#hp-hero-nombre')).toHaveTextContent('Cercana');
+  expect(container.querySelector('#hp-hero-name')).toHaveTextContent('Cercana');
   expect(container.querySelector('.hp-hero-score-num')).toHaveTextContent('70');
 
   // The two signals appear at the same time.
   expect(screen.getByText(/Priorizada por cercanía/)).toBeInTheDocument();
-  const chip = container.querySelector('.hp-alt-chip-mejor');
+  const chip = container.querySelector('.hp-alt-chip-best');
   expect(chip).toHaveTextContent('Mejor puntuación');
 
   // And the chip is in the Lejana row, not in another one.
   const farRow = container.querySelector('.hp-alt-row') as HTMLElement;
   expect(farRow).toHaveTextContent('Lejana');
-  expect(farRow.querySelector('.hp-alt-chip-mejor')).not.toBeNull();
+  expect(farRow.querySelector('.hp-alt-chip-best')).not.toBeNull();
 });

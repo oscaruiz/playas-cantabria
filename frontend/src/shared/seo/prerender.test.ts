@@ -70,8 +70,8 @@ describe('scripts/prerender.mjs', () => {
 
     // The rule is in the head, so the block never gets painted while the
     // bundle loads: that flash of unstyled links read as a broken page.
-    expect(start).toContain('html.con-js .prerender{display:none}');
-    expect(start.indexOf('con-js')).toBeLessThan(start.indexOf('class="prerender"'));
+    expect(start).toContain('html.with-js .prerender{display:none}');
+    expect(start.indexOf('with-js')).toBeLessThan(start.indexOf('class="prerender"'));
     // Hidden for the user, still there for whoever parses the HTML.
     expect(start).toContain('<h1>Playucas.es</h1>');
   });

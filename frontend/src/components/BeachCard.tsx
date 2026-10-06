@@ -57,16 +57,16 @@ const BeachCard: React.FC<{
         <p className="beach-card-name">
           <Link
             to={beachPath(beach)}
-            className="beach-card-enlace"
+            className="beach-card-link"
             aria-label={t('comun.verDetalleDe', { nombre: `${beach.nombre}, ${beach.municipio}` })}
           >
             {beach.nombre}
           </Link>
         </p>
-        <p className="beach-card-municipio">
+        <p className="beach-card-municipality">
           <Link
             to={municipalityPath(beach.municipio)}
-            className="ld-enlace-municipio"
+            className="ld-link-municipality"
             aria-label={t('municipio.verPlayas', { municipio: beach.municipio })}
           >
             {beach.municipio}
@@ -117,16 +117,16 @@ const BeachCard: React.FC<{
           <div className="beach-card-badges">
             {lifeguarded && operator && (
               <span
-                className="badge-vigilada"
+                className="badge-lifeguarded"
                 aria-label={t('lista.vigiladaAria', {
                   operador: translateOperator(operator, language),
                 })}
               >
-                <span className="badge-vigilada-dot" aria-hidden="true" />
+                <span className="badge-lifeguarded-dot" aria-hidden="true" />
                 {/* The label is what the CSS drops on a narrow screen; the dot
                     and the aria-label above stay, so nothing is lost to
                     assistive tech. */}
-                <span className="badge-vigilada-texto">
+                <span className="badge-lifeguarded-text">
                   {translateOperator(operator, language)}
                 </span>
               </span>
@@ -137,7 +137,7 @@ const BeachCard: React.FC<{
               </span>
             )}
             {beach.banderaAzul != null && (
-              <span className="badge-bandera-azul" aria-label={t('lista.banderaAzulAria')}>
+              <span className="badge-flag-blue" aria-label={t('lista.banderaAzulAria')}>
                 <IonIcon icon={flag} aria-hidden="true" />
               </span>
             )}

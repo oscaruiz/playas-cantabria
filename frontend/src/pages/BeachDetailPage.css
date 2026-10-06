@@ -5,8 +5,8 @@
    ============================================= */
 
 /* --- Page --- */
-.playa-detalle-page ion-content {
-  --background: var(--playa-sand);
+.beach-detail-page ion-content {
+  --background: var(--beach-sand);
   --padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
 }
 
@@ -17,7 +17,7 @@
   left: 0;
   right: 0;
   z-index: 100;
-  background-image: var(--playa-chart-lines), var(--playa-header-grad);
+  background-image: var(--beach-chart-lines), var(--beach-header-grad);
   background-size: 320px 96px, auto;
   padding: 12px 20px 12px 8px;
   padding-top: calc(env(safe-area-inset-top, 0px) + 12px);
@@ -121,32 +121,32 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding-top: calc(env(safe-area-inset-top, 0px) + var(--playa-header-h) + 3rem);
+  padding-top: calc(env(safe-area-inset-top, 0px) + var(--beach-header-h) + 3rem);
   gap: 12px;
-  color: var(--playa-ocean);
+  color: var(--beach-ocean);
 }
 
 .loading-text {
   font-size: 0.85rem;
-  color: var(--playa-text-muted);
+  color: var(--beach-text-muted);
 }
 
 .error-container {
-  margin: calc(env(safe-area-inset-top, 0px) + var(--playa-header-h) + 24px) auto 0;
+  margin: calc(env(safe-area-inset-top, 0px) + var(--beach-header-h) + 24px) auto 0;
   max-width: 640px;
   padding: 1.25rem 16px 1.25rem 14px;
-  border-left: 3px solid var(--playa-flag-red);
-  color: var(--playa-text);
+  border-left: 3px solid var(--beach-flag-red);
+  color: var(--beach-text);
   font-size: 0.9rem;
 }
 
 /* --- Hero band (bajo el header fijo) --- */
 .hero-section {
-  background-image: var(--playa-chart-lines), var(--playa-header-grad);
+  background-image: var(--beach-chart-lines), var(--beach-header-grad);
   background-size: 320px 96px, auto;
   color: #ffffff;
   padding: 14px 20px 20px;
-  padding-top: calc(env(safe-area-inset-top, 0px) + var(--playa-header-h) + 14px);
+  padding-top: calc(env(safe-area-inset-top, 0px) + var(--beach-header-h) + 14px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.16);
 }
 
@@ -171,8 +171,8 @@
   align-items: center;
   gap: 14px;
   padding: 12px 14px;
-  background: var(--playa-card-bg);
-  border: 1px solid var(--playa-border);
+  background: var(--beach-card-bg);
+  border: 1px solid var(--beach-border);
   border-radius: 14px;
 }
 
@@ -212,7 +212,7 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-weight: 700;
-  color: var(--playa-text-muted);
+  color: var(--beach-text-muted);
   margin: 0;
 }
 
@@ -241,10 +241,10 @@
 .pd-score-info {
   margin-top: 8px;
   padding: 14px 16px;
-  background: var(--playa-card-bg);
-  border: 1px solid var(--playa-border);
+  background: var(--beach-card-bg);
+  border: 1px solid var(--beach-border);
   border-radius: 14px;
-  color: var(--playa-text);
+  color: var(--beach-text);
 }
 
 .pd-score-info-intro {
@@ -256,16 +256,16 @@
 /* Las filas usan el mismo patrón etiqueta/valor de "Información de la playa"
    (.beach-info-grid / .beach-info-row) para verse idénticas al resto del detalle. */
 
-.pd-score-info-cierre {
+.pd-score-info-closing {
   font-size: 0.8rem;
   font-style: italic;
-  color: var(--playa-text-muted);
+  color: var(--beach-text-muted);
   margin: 12px 0 0;
 }
 
 .pd-score-reason {
   font-size: 0.95rem;
-  color: var(--playa-text);
+  color: var(--beach-text);
   margin: 3px 0 0;
   line-height: 1.4;
 }
@@ -275,7 +275,7 @@
   align-items: center;
   gap: 5px;
   font-size: 0.82rem;
-  color: var(--playa-flag-red);
+  color: var(--beach-flag-red);
   margin: 6px 0 0;
   line-height: 1.35;
 }
@@ -286,7 +286,7 @@
   gap: 6px;
   background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.45);
-  border-radius: var(--playa-radius-s);
+  border-radius: var(--beach-radius-s);
   color: #ffffff;
   font-size: 0.8rem;
   font-weight: 500;
@@ -327,9 +327,9 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: var(--playa-ocean);
-  border: 1px solid var(--playa-ocean);
-  border-radius: var(--playa-radius-s);
+  background: var(--beach-ocean);
+  border: 1px solid var(--beach-ocean);
+  border-radius: var(--beach-radius-s);
   color: #ffffff;
   font-size: 0.85rem;
   font-weight: 600;
@@ -361,7 +361,7 @@
   align-items: center;
   gap: 14px;
   border: 1px solid rgba(255, 255, 255, 0.35);
-  border-radius: var(--playa-radius-s);
+  border-radius: var(--beach-radius-s);
   padding: 12px 14px;
 }
 
@@ -386,15 +386,15 @@
 }
 
 .flag-pennant.green::after {
-  background: var(--playa-flag-green);
+  background: var(--beach-flag-green);
 }
 
 .flag-pennant.yellow::after {
-  background: var(--playa-flag-yellow);
+  background: var(--beach-flag-yellow);
 }
 
 .flag-pennant.red::after {
-  background: var(--playa-flag-red);
+  background: var(--beach-flag-red);
 }
 
 .flag-pennant.black::after {
@@ -403,7 +403,7 @@
 
 /* Última bandera registrada (fuera de horario): su color real, pero atenuado
    para que no se confunda con una bandera ondeando ahora. */
-.flag-pennant.atenuada::after {
+.flag-pennant.dimmed::after {
   opacity: 0.6;
 }
 
@@ -425,7 +425,7 @@
   margin-top: 2px;
 }
 
-.flag-horario {
+.flag-schedule {
   font-size: 0.75rem;
   opacity: 0.8;
   margin-top: 2px;
@@ -442,18 +442,18 @@
 /* --- Paneles planos: cada sección es una región delimitada --- */
 .detail-card,
 .tides-section,
-.proximas-horas-section,
+.next-hours-section,
 .detail-section,
 .detail-disclosure,
 .daily-stats-card {
-  background: var(--playa-foam);
-  border: 1px solid var(--playa-border);
-  border-radius: var(--playa-card-radius);
+  background: var(--beach-foam);
+  border: 1px solid var(--beach-border);
+  border-radius: var(--beach-card-radius);
   margin-bottom: 16px;
 }
 
 .tides-section,
-.proximas-horas-section,
+.next-hours-section,
 .detail-section,
 .detail-disclosure,
 .daily-stats-card {
@@ -463,7 +463,7 @@
 /* --- Day selector (tabs con subrayado) --- */
 .day-selector {
   display: flex;
-  border-bottom: 1px solid var(--playa-border);
+  border-bottom: 1px solid var(--beach-border);
   margin-bottom: 16px;
 }
 
@@ -481,7 +481,7 @@
   flex-direction: column;
   align-items: center;
   gap: 1px;
-  color: var(--playa-text-muted);
+  color: var(--beach-text-muted);
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -496,8 +496,8 @@
 }
 
 .day-tab.active {
-  color: var(--playa-text);
-  border-bottom-color: var(--playa-ocean);
+  color: var(--beach-text);
+  border-bottom-color: var(--beach-ocean);
 }
 
 .day-tab.active .day-tab-title {
@@ -506,13 +506,13 @@
 
 @media (hover: hover) {
   .day-tab:not(.active):hover {
-    color: var(--playa-text);
-    background: var(--playa-ocean-light);
+    color: var(--beach-text);
+    background: var(--beach-ocean-light);
   }
 }
 
 /* --- Panel de previsión (única card) --- */
-.prevision-panel {
+.forecast-panel {
   padding: 18px 20px;
 }
 
@@ -544,7 +544,7 @@
   font-family: 'Fraunces', Georgia, serif;
   font-size: 2.1rem;
   font-weight: 600;
-  color: var(--playa-text);
+  color: var(--beach-text);
   line-height: 1.1;
   margin-top: 2px;
   font-variant-numeric: tabular-nums;
@@ -552,42 +552,42 @@
 
 .forecast-hero-max {
   font-size: 0.75rem;
-  color: var(--playa-text-muted);
+  color: var(--beach-text-muted);
   margin-top: 2px;
   font-variant-numeric: tabular-nums;
 }
 
 .forecast-hero-sky {
   font-size: 0.85rem;
-  color: var(--playa-text);
+  color: var(--beach-text);
   margin-top: 4px;
 }
 
 /* Badge "Lloviendo ahora" (señal multi-fuente). Colores del theme →
    se adapta solo a dark mode. */
-.forecast-hero-lluvia {
+.forecast-hero-rain {
   display: inline-block;
   margin-top: 6px;
   padding: 3px 10px;
   border-radius: 999px;
   font-size: 0.75rem;
   font-weight: 600;
-  background: var(--playa-ocean-light);
-  color: var(--playa-ocean);
+  background: var(--beach-ocean-light);
+  color: var(--beach-ocean);
   border: 1px solid currentColor;
   font-variant-numeric: tabular-nums;
 }
 
 /* Variante "lluvia prevista" (aún no llueve): más suave, borde discontinuo. */
-.forecast-hero-lluvia-prevista {
+.forecast-hero-rain-expected {
   background: transparent;
   border-style: dashed;
   font-weight: 500;
 }
 
-.forecast-hero-agua {
+.forecast-hero-water {
   font-size: 0.75rem;
-  color: var(--playa-text-muted);
+  color: var(--beach-text-muted);
   margin-top: 2px;
   font-variant-numeric: tabular-nums;
 }
@@ -604,7 +604,7 @@
   flex-direction: column;
   align-items: center;
   gap: 3px;
-  color: var(--playa-ocean);
+  color: var(--beach-ocean);
   max-width: 90px;
   text-align: center;
 }
@@ -639,7 +639,7 @@
   flex-direction: column;
   align-items: center;
   gap: 3px;
-  color: var(--playa-ocean);
+  color: var(--beach-ocean);
   max-width: 90px;
   text-align: center;
 }
@@ -652,13 +652,13 @@
   font-size: 0.62rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--playa-text-muted);
+  color: var(--beach-text-muted);
   margin-top: 2px;
 }
 
 .forecast-indicator-label {
   font-size: 0.72rem;
-  color: var(--playa-text);
+  color: var(--beach-text);
   line-height: 1.25;
 }
 
@@ -667,7 +667,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   padding: 14px 0;
-  border-bottom: 1px solid var(--playa-border);
+  border-bottom: 1px solid var(--beach-border);
 }
 
 .halfday-detail.single {
@@ -684,7 +684,7 @@
 }
 
 .halfday-detail:not(.single) .halfday-block + .halfday-block {
-  border-left: 1px solid var(--playa-border);
+  border-left: 1px solid var(--beach-border);
 }
 
 .halfday-block-label {
@@ -696,11 +696,11 @@
 }
 
 .halfday-block.morning .halfday-block-label {
-  color: var(--playa-buoy);
+  color: var(--beach-buoy);
 }
 
 .halfday-block.afternoon .halfday-block-label {
-  color: var(--playa-ocean);
+  color: var(--beach-ocean);
 }
 
 .halfday-block-rows {
@@ -714,7 +714,7 @@
   align-items: baseline;
   gap: 6px;
   font-size: 0.78rem;
-  color: var(--playa-text);
+  color: var(--beach-text);
   line-height: 1.3;
 }
 
@@ -726,7 +726,7 @@
 .halfday-row-label {
   flex-shrink: 0;
   font-size: 0.68rem;
-  color: var(--playa-text-muted);
+  color: var(--beach-text-muted);
   min-width: 44px;
 }
 
@@ -749,17 +749,17 @@
 }
 
 .daily-stat-row + .daily-stat-row {
-  border-top: 1px solid var(--playa-border);
+  border-top: 1px solid var(--beach-border);
 }
 
 .daily-stat-label {
-  color: var(--playa-text-muted);
+  color: var(--beach-text-muted);
   flex-shrink: 0;
 }
 
 .daily-stat-value {
   margin-left: auto;
-  color: var(--playa-text);
+  color: var(--beach-text);
   font-weight: 500;
   text-align: right;
   display: inline-flex;
@@ -776,16 +776,16 @@
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15);
 }
 
-.uv-value.uv-low .uv-swatch { background: var(--playa-flag-green); }
-.uv-value.uv-moderate .uv-swatch { background: var(--playa-flag-yellow); }
-.uv-value.uv-high .uv-swatch { background: var(--playa-buoy); }
-.uv-value.uv-very-high .uv-swatch { background: var(--playa-flag-red); }
+.uv-value.uv-low .uv-swatch { background: var(--beach-flag-green); }
+.uv-value.uv-moderate .uv-swatch { background: var(--beach-flag-yellow); }
+.uv-value.uv-high .uv-swatch { background: var(--beach-buoy); }
+.uv-value.uv-very-high .uv-swatch { background: var(--beach-flag-red); }
 
 /* Aviso litoral: color de texto por nivel */
-.daily-stat-value.aviso-red { color: var(--playa-flag-red); }
-.daily-stat-value.aviso-orange,
-.daily-stat-value.aviso-yellow { color: var(--playa-buoy); }
-.daily-stat-value.aviso-green { color: var(--playa-flag-green); }
+.daily-stat-value.warning-red { color: var(--beach-flag-red); }
+.daily-stat-value.warning-orange,
+.daily-stat-value.warning-yellow { color: var(--beach-buoy); }
+.daily-stat-value.warning-green { color: var(--beach-flag-green); }
 
 /* --- Mareas --- */
 .tide-status {
@@ -795,11 +795,11 @@
 }
 
 .tide-status-rising {
-  color: var(--playa-ocean);
+  color: var(--beach-ocean);
 }
 
 .tide-status-falling {
-  color: var(--playa-buoy);
+  color: var(--beach-buoy);
 }
 
 .tide-entry {
@@ -807,7 +807,7 @@
   align-items: center;
   gap: 10px;
   padding: 9px 0;
-  border-bottom: 1px solid var(--playa-border);
+  border-bottom: 1px solid var(--beach-border);
   font-size: 0.85rem;
 }
 
@@ -824,28 +824,28 @@
 }
 
 .tide-arrow.up {
-  color: var(--playa-ocean);
+  color: var(--beach-ocean);
 }
 
 .tide-arrow.down {
-  color: var(--playa-buoy);
+  color: var(--beach-buoy);
 }
 
 .tide-label {
-  color: var(--playa-text);
+  color: var(--beach-text);
 }
 
 .tide-time-value {
   margin-left: auto;
   font-weight: 600;
-  color: var(--playa-text);
+  color: var(--beach-text);
   font-variant-numeric: tabular-nums;
 }
 
 .tides-source,
-.proximas-horas-fuente {
+.next-hours-source {
   font-size: 0.68rem;
-  color: var(--playa-text-muted);
+  color: var(--beach-text-muted);
   margin-top: 8px;
 }
 
@@ -868,25 +868,25 @@
 @media (hover: hover) {
   .card-header:not(.card-header-disabled):hover .card-header-title,
   .card-header:not(.card-header-disabled):hover .card-header-chevron {
-    color: var(--playa-ocean);
+    color: var(--beach-ocean);
   }
 }
 
 .card-header-title {
   font-size: 0.92rem;
   font-weight: 600;
-  color: var(--playa-text);
+  color: var(--beach-text);
 }
 
 .card-header-subtitle {
   font-size: 0.75rem;
   font-weight: 400;
-  color: var(--playa-text-muted);
+  color: var(--beach-text-muted);
 }
 
 .card-header-chevron {
   margin-left: auto;
-  color: var(--playa-text-muted);
+  color: var(--beach-text-muted);
   transition: transform 0.2s ease;
   flex-shrink: 0;
 }
@@ -900,10 +900,10 @@
 }
 
 /* "Actualizado hace X" al pie de la tarjeta Cruz Roja */
-.cruzroja-actualizado {
+.redcross-updated {
   margin: 8px 0 0;
   font-size: 0.75rem;
-  color: var(--playa-text-muted);
+  color: var(--beach-text-muted);
   font-variant-numeric: tabular-nums;
 }
 
@@ -940,12 +940,12 @@
 
 .info-row + .info-row,
 .weather-row + .weather-row {
-  border-top: 1px solid var(--playa-border);
+  border-top: 1px solid var(--beach-border);
 }
 
 .info-row-label,
 .weather-row-label {
-  color: var(--playa-text-muted);
+  color: var(--beach-text-muted);
   flex-shrink: 0;
   display: inline-flex;
   align-items: baseline;
@@ -960,14 +960,14 @@
 .weather-row-value {
   margin-left: auto;
   text-align: right;
-  color: var(--playa-text);
+  color: var(--beach-text);
   font-weight: 500;
   max-width: 60%;
   font-variant-numeric: tabular-nums;
 }
 
 .info-row-value.muted {
-  color: var(--playa-text-muted);
+  color: var(--beach-text-muted);
   font-weight: 400;
 }
 
@@ -982,7 +982,7 @@
   align-items: baseline;
   gap: 10px;
   padding: 9px 0;
-  border-bottom: 1px solid var(--playa-border);
+  border-bottom: 1px solid var(--beach-border);
   font-size: 0.82rem;
 }
 
@@ -992,14 +992,14 @@
 }
 
 .beach-info-label {
-  color: var(--playa-text-muted);
+  color: var(--beach-text-muted);
   flex-shrink: 0;
 }
 
 .beach-info-value {
   margin-left: auto;
   text-align: right;
-  color: var(--playa-text);
+  color: var(--beach-text);
   font-weight: 500;
   max-width: 62%;
   font-variant-numeric: tabular-nums;
@@ -1017,9 +1017,9 @@
   align-items: center;
   gap: 9px;
   padding: 8px 0;
-  border-top: 1px solid var(--playa-border);
+  border-top: 1px solid var(--beach-border);
   font-size: 0.82rem;
-  color: var(--playa-text);
+  color: var(--beach-text);
 }
 
 /* La primera fila del grid de 2 columnas no lleva línea superior */
@@ -1029,7 +1029,7 @@
 
 .attr-item ion-icon {
   font-size: 1.05rem;
-  color: var(--playa-ocean);
+  color: var(--beach-ocean);
   flex-shrink: 0;
 }
 
@@ -1040,19 +1040,19 @@
 
 .source-label {
   font-size: 0.68rem;
-  color: var(--playa-text-muted);
+  color: var(--beach-text-muted);
   margin: 0;
 }
 
 /* El aviso encabeza la explicación de la nota: es lo primero que se lee al
    abrir "cómo se calcula", no una nota al pie. */
-.pd-score-aviso {
+.pd-score-warning {
   margin: 0 0 10px;
   padding-bottom: 8px;
-  border-bottom: 1px solid var(--playa-border, rgba(0, 0, 0, 0.08));
+  border-bottom: 1px solid var(--beach-border, rgba(0, 0, 0, 0.08));
   font-size: 0.74rem;
   line-height: 1.45;
-  color: var(--playa-text-muted);
+  color: var(--beach-text-muted);
 }
 
 /* --- Responsive --- */
@@ -1075,7 +1075,7 @@
     padding-right: max(20px, calc((100% - 1080px) / 2 + 20px));
   }
 
-  .pd-sticky-header .selector-idioma {
+  .pd-sticky-header .selector-language {
     right: max(16px, calc((100% - 1080px) / 2 + 16px));
   }
 }
@@ -1116,7 +1116,7 @@
   font-weight: 700;
   letter-spacing: 0.02em;
   text-transform: uppercase;
-  color: var(--playa-text-muted);
+  color: var(--beach-text-muted);
   margin: 14px 0 6px;
 }
 
@@ -1128,77 +1128,77 @@
   grid-template-columns: 1fr auto;
   gap: 2px 10px;
   padding: 9px 0;
-  border-bottom: 1px solid var(--playa-border);
+  border-bottom: 1px solid var(--beach-border);
   font-size: 0.82rem;
 }
 
 .pd-factor:last-child { border-bottom: none; }
 
-.pd-factor-nombre { color: var(--playa-text-muted); }
+.pd-factor-name { color: var(--beach-text-muted); }
 
-.pd-factor-valor {
+.pd-factor-value {
   grid-row: 2;
   grid-column: 1;
   font-weight: 600;
-  color: var(--playa-text);
+  color: var(--beach-text);
 }
 
-.pd-factor-puntos {
+.pd-factor-points {
   grid-row: 1 / span 2;
   grid-column: 2;
   align-self: center;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  color: var(--playa-text);
+  color: var(--beach-text);
 }
 
-.pd-factor-barra {
+.pd-factor-bar {
   grid-row: 3;
   grid-column: 1 / -1;
   height: 4px;
   margin-top: 5px;
   border-radius: 999px;
-  background: var(--playa-border);
+  background: var(--beach-border);
   overflow: hidden;
 }
 
-.pd-factor-relleno {
+.pd-factor-fill {
   display: block;
   height: 100%;
   border-radius: 999px;
-  background: var(--playa-ocean);
+  background: var(--beach-ocean);
 }
 
-.pd-factor-nota {
+.pd-factor-note {
   grid-row: 4;
   grid-column: 1 / -1;
   margin-top: 4px;
   font-size: 0.74rem;
   line-height: 1.35;
-  color: var(--playa-text-muted);
+  color: var(--beach-text-muted);
 }
 
 /* Por qué los factores no suman la nota. */
-.pd-score-tope {
+.pd-score-cap {
   display: flex;
   align-items: center;
   gap: 5px;
   margin: 10px 0 0;
   font-size: 0.78rem;
   line-height: 1.35;
-  color: var(--playa-flag-red);
+  color: var(--beach-flag-red);
 }
 
 /* Tira horaria: una fila por hora, scroll horizontal si no cabe. */
 /* The rail's frame: the edge fades live here, OVER the scroller, so they
    never move with the content. Painted only on the side that still hides
    hours — a fade over the true end would claim more content than there is. */
-.pd-horas-marco {
+.pd-hours-frame {
   position: relative;
 }
 
-.pd-horas-marco::before,
-.pd-horas-marco::after {
+.pd-hours-frame::before,
+.pd-hours-frame::after {
   content: '';
   position: absolute;
   top: 0;
@@ -1209,25 +1209,25 @@
   transition: opacity 0.15s ease;
 }
 
-.pd-horas-marco::before {
+.pd-hours-frame::before {
   left: 0;
-  background: linear-gradient(to right, var(--playa-foam), transparent);
+  background: linear-gradient(to right, var(--beach-foam), transparent);
 }
 
-.pd-horas-marco::after {
+.pd-hours-frame::after {
   right: 0;
-  background: linear-gradient(to left, var(--playa-foam), transparent);
+  background: linear-gradient(to left, var(--beach-foam), transparent);
 }
 
-.pd-horas-marco--antes::before,
-.pd-horas-marco--despues::after {
+.pd-hours-frame--before::before,
+.pd-hours-frame--after::after {
   opacity: 1;
 }
 
 /* The explicit "this moves" signal, riding on its side's fade: a chevron
    that is also a button (scrolls most of a screenful). Only rendered while
    its side still hides hours, so it can never point at nothing. */
-.pd-horas-flecha {
+.pd-hours-arrow {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
@@ -1238,28 +1238,28 @@
   width: 28px;
   height: 28px;
   padding: 0;
-  border: 1px solid var(--playa-border);
+  border: 1px solid var(--beach-border);
   border-radius: 50%;
-  background: var(--playa-foam);
+  background: var(--beach-foam);
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
-  color: var(--playa-ocean);
+  color: var(--beach-ocean);
   font-size: 1rem;
   cursor: pointer;
 }
 
-.pd-horas-flecha--antes {
+.pd-hours-arrow--before {
   left: 2px;
 }
 
-.pd-horas-flecha--despues {
+.pd-hours-arrow--after {
   right: 2px;
 }
 
-.pd-horas-flecha:active {
+.pd-hours-arrow:active {
   transform: translateY(-50%) scale(0.92);
 }
 
-.pd-horas {
+.pd-hours {
   display: flex;
   gap: 6px;
   margin: 0;
@@ -1276,22 +1276,22 @@
 /* On touch screens the peek + fades carry the affordance; the scrollbar strip
    would only eat height. Pointer devices keep the thin bar as a third signal. */
 @media (pointer: coarse) {
-  .pd-horas {
+  .pd-hours {
     scrollbar-width: none;
     padding-bottom: 0;
   }
-  .pd-horas::-webkit-scrollbar {
+  .pd-hours::-webkit-scrollbar {
     display: none;
   }
 }
 
 /* The day window inside this card: the conclusion under the hours that back
    it, with a little air before the source credit. */
-.proximas-horas-section .mejor-momento {
+.next-hours-section .best-time {
   margin: 12px 2px 2px;
 }
 
-.pd-hora {
+.pd-hour {
   /* Fixed basis, never stretched: with `flex: 1` the hours filled the row
      edge to edge and the strip cut off CLEAN at the card border — nothing
      signalled that more hours were hiding. A fixed width makes the overflow
@@ -1303,46 +1303,46 @@
   align-items: center;
   gap: 2px;
   padding: 8px 4px;
-  border: 1px solid var(--playa-border);
-  border-radius: var(--playa-radius-s);
+  border: 1px solid var(--beach-border);
+  border-radius: var(--beach-radius-s);
   font-size: 0.76rem;
-  color: var(--playa-text-muted);
+  color: var(--beach-text-muted);
 }
 
-.pd-hora-reloj {
+.pd-hour-clock {
   font-weight: 700;
-  color: var(--playa-text);
+  color: var(--beach-text);
   font-variant-numeric: tabular-nums;
 }
 
-.pd-hora-icono {
+.pd-hour-icon {
   font-size: 1.05rem;
-  color: var(--playa-ocean);
+  color: var(--beach-ocean);
 }
 
 /* The hours inside the recommended window: the strip's visual answer to
    "why this stretch" — the tinted run IS the window drawn over its evidence. */
-.pd-hora--mejor {
+.pd-hour--best {
   border-color: var(--ion-color-success, #2dd36f);
   background: rgba(45, 211, 111, 0.1);
 }
 
 /* A wet hour is what the window dodges: the drop reads as a warning, not as
    one more decorative sky icon. */
-.pd-hora-icono--lluvia {
+.pd-hour-icon--rain {
   color: var(--ion-color-primary, #0a7ea4);
 }
 
-.pd-hora-temp {
+.pd-hour-temp {
   font-weight: 600;
-  color: var(--playa-text);
+  color: var(--beach-text);
 }
 
 /* Causa del fallo de carga: secundaria, pero es lo primero que hace falta. */
-.error-causa {
+.error-cause {
   margin: 4px 0 0;
   font-size: 0.75rem;
-  color: var(--playa-text-muted);
+  color: var(--beach-text-muted);
   font-variant-numeric: tabular-nums;
 }
 
@@ -1377,20 +1377,20 @@
   font-size: 0.85rem;
 }
 
-.blue-flag-frase {
+.blue-flag-phrase {
   margin: 0 0 4px;
   font-weight: 600;
 }
 
-.blue-flag-mas {
+.blue-flag-more {
   margin: 0;
   font-size: 0.85rem;
 }
 
 /* Reference tide notice — this beach has no AEMET sheet of its own */
-.tides-referencia-aviso {
+.tides-reference-warning {
   font-size: 0.78rem;
   font-style: italic;
-  color: var(--playa-text-muted);
+  color: var(--beach-text-muted);
   margin: -2px 0 10px;
 }

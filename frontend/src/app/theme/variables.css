@@ -86,30 +86,30 @@ html, body {
   /* Playa design tokens (shared across all pages)
      Carta náutica: papel de carta, tinta azul-negra, atlántico
      profundo plano y un acento cálido "óxido de boya". */
-  --playa-sand: #f3f1ea;
-  --playa-ocean: #0a7ea4;
-  --playa-ocean-light: #e8f4f8;
-  --playa-deep: #065a75;
-  --playa-ocean-dark: var(--playa-deep);
-  --playa-buoy: #b4531f;
+  --beach-sand: #f3f1ea;
+  --beach-ocean: #0a7ea4;
+  --beach-ocean-light: #e8f4f8;
+  --beach-deep: #065a75;
+  --beach-ocean-dark: var(--beach-deep);
+  --beach-buoy: #b4531f;
   /* Degradado de cabecera (azul océano original) */
-  --playa-header-grad: linear-gradient(135deg, #0a7ea4 0%, #065a75 100%);
-  --playa-foam: #fdfcf9;
-  --playa-text: #1b2a32;
-  --playa-text-muted: #51606c;
-  --playa-border: #ddd8cc;
-  --playa-rule: #b8b1a1;
-  --playa-card-bg: var(--playa-foam);
-  --playa-card-radius: 10px;
-  --playa-radius-s: 6px;
-  --playa-flag-green: #15803d;
-  --playa-flag-yellow: #eab308;
-  --playa-flag-red: #c2362f;
-  --playa-focus: var(--playa-ocean);
-  --playa-header-h: 84px;
+  --beach-header-grad: linear-gradient(135deg, #0a7ea4 0%, #065a75 100%);
+  --beach-foam: #fdfcf9;
+  --beach-text: #1b2a32;
+  --beach-text-muted: #51606c;
+  --beach-border: #ddd8cc;
+  --beach-rule: #b8b1a1;
+  --beach-card-bg: var(--beach-foam);
+  --beach-card-radius: 10px;
+  --beach-radius-s: 6px;
+  --beach-flag-green: #15803d;
+  --beach-flag-yellow: #eab308;
+  --beach-flag-red: #c2362f;
+  --beach-focus: var(--beach-ocean);
+  --beach-header-h: 84px;
 
   /* Curvas batimétricas para las cabeceras (blanco al 7%) */
-  --playa-chart-lines: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='96' viewBox='0 0 320 96'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='0.07' stroke-width='1'%3E%3Cpath d='M0 22 C60 10 120 36 180 24 240 12 290 32 320 20'/%3E%3Cpath d='M0 48 C70 34 130 60 200 48 260 38 300 56 320 46'/%3E%3Cpath d='M0 74 C60 62 140 86 210 72 270 62 300 80 320 70'/%3E%3C/g%3E%3C/svg%3E");
+  --beach-chart-lines: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='96' viewBox='0 0 320 96'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='0.07' stroke-width='1'%3E%3Cpath d='M0 22 C60 10 120 36 180 24 240 12 290 32 320 20'/%3E%3Cpath d='M0 48 C70 34 130 60 200 48 260 38 300 56 320 46'/%3E%3Cpath d='M0 74 C60 62 140 86 210 72 270 62 300 80 320 70'/%3E%3C/g%3E%3C/svg%3E");
 }
 
 @media (prefers-color-scheme: dark) {
@@ -180,22 +180,22 @@ html, body {
     --ion-background-color: #0e171d;
 
     /* Playa dark mode overrides (noche atlántica) */
-    --playa-sand: #0e171d;
-    --playa-ocean: #38bdf8;
-    --playa-ocean-light: #1b3742;
-    --playa-deep: #0c4a6e;
-    --playa-ocean-dark: var(--playa-deep);
-    --playa-buoy: #e08a54;
-    --playa-header-grad: linear-gradient(135deg, #0c4a6e 0%, #0e171d 100%);
-    --playa-foam: #17232b;
-    --playa-text: #e8e3d9;
-    --playa-text-muted: #9aa6ad;
-    --playa-border: #2a3942;
-    --playa-rule: #3d4d56;
-    --playa-card-bg: var(--playa-foam);
-    --playa-flag-green: #34c26b;
-    --playa-flag-red: #e4584e;
-    --playa-focus: var(--playa-ocean);
+    --beach-sand: #0e171d;
+    --beach-ocean: #38bdf8;
+    --beach-ocean-light: #1b3742;
+    --beach-deep: #0c4a6e;
+    --beach-ocean-dark: var(--beach-deep);
+    --beach-buoy: #e08a54;
+    --beach-header-grad: linear-gradient(135deg, #0c4a6e 0%, #0e171d 100%);
+    --beach-foam: #17232b;
+    --beach-text: #e8e3d9;
+    --beach-text-muted: #9aa6ad;
+    --beach-border: #2a3942;
+    --beach-rule: #3d4d56;
+    --beach-card-bg: var(--beach-foam);
+    --beach-flag-green: #34c26b;
+    --beach-flag-red: #e4584e;
+    --beach-focus: var(--beach-ocean);
   }
 
   /* iOS Dark Theme */
@@ -282,7 +282,7 @@ ion-page.ion-page {
 /* --- Focus visible global (cubre role=link/button con tabIndex) --- */
 :where(a, button, input, select, textarea,
        [role='button'], [role='link'], [tabindex]:not([tabindex='-1'])):focus-visible {
-  outline: 2px solid var(--playa-focus);
+  outline: 2px solid var(--beach-focus);
   outline-offset: 2px;
 }
 
@@ -290,7 +290,7 @@ ion-page.ion-page {
 .hp-sticky-header :focus-visible,
 .home-sticky-header :focus-visible,
 .pd-sticky-header :focus-visible,
-.mapa-sticky-header :focus-visible,
+.map-sticky-header :focus-visible,
 .hero-section :focus-visible,
 .hp-hero :focus-visible {
   outline-color: #ffffff;
@@ -316,7 +316,7 @@ ion-page.ion-page {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: var(--playa-text);
+  color: var(--beach-text);
 }
 
 /* Tick de acento: ancla visual de cada sección */
@@ -325,7 +325,7 @@ ion-page.ion-page {
   width: 4px;
   height: 15px;
   border-radius: 2px;
-  background: var(--playa-ocean);
+  background: var(--beach-ocean);
   flex-shrink: 0;
 }
 
@@ -333,7 +333,7 @@ ion-page.ion-page {
   content: '';
   flex: 1;
   height: 1px;
-  background: var(--playa-border);
+  background: var(--beach-border);
 }
 
 /* --- Contenido prerenderizado (scripts/prerender.mjs) ---
@@ -345,19 +345,19 @@ ion-page.ion-page {
    lo que faltaba era que alguien la vistiera. No es decoración: es el primer
    pintado real de la página. */
 .prerender {
-  color: var(--playa-text);
+  color: var(--beach-text);
 }
 
 .prerender nav {
   font-size: 0.82rem;
-  color: var(--playa-text-muted);
+  color: var(--beach-text-muted);
   padding-bottom: 14px;
   margin-bottom: 18px;
-  border-bottom: 1px solid var(--playa-border);
+  border-bottom: 1px solid var(--beach-border);
 }
 
 .prerender a {
-  color: var(--playa-ocean);
+  color: var(--beach-ocean);
   text-decoration: none;
 }
 
@@ -370,7 +370,7 @@ ion-page.ion-page {
 }
 
 .prerender p {
-  color: var(--playa-text-muted);
+  color: var(--beach-text-muted);
   font-size: 0.9rem;
   margin: 0 0 14px;
 }
@@ -383,16 +383,16 @@ ion-page.ion-page {
 
 .prerender li {
   padding: 11px 0;
-  border-bottom: 1px solid var(--playa-border);
+  border-bottom: 1px solid var(--beach-border);
   font-size: 0.95rem;
 }
 
 .prerender li strong {
-  color: var(--playa-text);
+  color: var(--beach-text);
   font-weight: 600;
 }
 
 .prerender em {
-  color: var(--playa-text-muted);
+  color: var(--beach-text-muted);
   font-size: 0.85rem;
 }

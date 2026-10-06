@@ -46,7 +46,7 @@ const MunicipalityPage: React.FC = () => {
           noindex
         />
       )}
-      <div className="home-sticky-header ld-header-volver">
+      <div className="home-sticky-header ld-header-back">
         <button
           className="pd-back-btn"
           onClick={() => history.goBack()}
@@ -54,7 +54,7 @@ const MunicipalityPage: React.FC = () => {
         >
           <IonIcon icon={chevronBackOutline} aria-hidden="true" />
         </button>
-        <div className="ld-header-textos">
+        <div className="ld-header-texts">
           <p className="home-sticky-title">{municipalityName ?? t('app.titulo')}</p>
           <p className="home-sticky-subtitle">{t('app.titulo')}</p>
         </div>
@@ -69,7 +69,7 @@ const MunicipalityPage: React.FC = () => {
         )}
         {beaches && municipalityName && (
           <>
-            <h1 className="ld-titular">
+            <h1 className="ld-headline">
               {t('municipio.titulo', { municipio: municipalityName })}
             </h1>
             <p className="ld-intro">{t('municipio.intro', { municipio: municipalityName })}</p>
@@ -92,7 +92,7 @@ const MunicipalityPage: React.FC = () => {
         {beaches && !municipalityName && (
           <div className="home-empty">
             <p className="home-empty-text">{t('municipio.desconocido')}</p>
-            <button className="ld-enlace" onClick={() => history.push('/playas')}>
+            <button className="ld-link" onClick={() => history.push('/playas')}>
               {t('nav.playas')}
             </button>
           </div>

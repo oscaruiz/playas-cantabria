@@ -1,11 +1,11 @@
 /* --- Sticky header (coherente con el resto de páginas) --- */
-.mapa-sticky-header {
+.map-sticky-header {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   z-index: 100;
-  background-image: var(--playa-chart-lines), var(--playa-header-grad);
+  background-image: var(--beach-chart-lines), var(--beach-header-grad);
   background-size: 320px 96px, auto;
   padding: 16px 20px 14px;
   padding-top: calc(env(safe-area-inset-top, 0px) + 16px);
@@ -17,12 +17,12 @@
 
 /* Igual que en la portada y el listado: la marca se queda con lo que dejan las
    acciones, y el `min-width: 0` le deja encoger en vez de empujarlas fuera. */
-.mapa-sticky-marca {
+.map-sticky-brand {
   flex: 1;
   min-width: 0;
 }
 
-.mapa-sticky-title {
+.map-sticky-title {
   font-family: 'Pacifico', cursive;
   font-weight: 400;
   font-size: 1.6rem;
@@ -36,7 +36,7 @@
   text-overflow: ellipsis;
 }
 
-.mapa-sticky-subtitle {
+.map-sticky-subtitle {
   font-size: 0.8rem;
   opacity: 0.8;
   margin: 0;
@@ -49,13 +49,13 @@
 
 /* Same title size as the other pages on phones — see PlayasList.css. */
 @media (max-width: 480px) {
-  .mapa-sticky-subtitle { font-size: clamp(0.6rem, 3vw - 0.05rem, 0.72rem); }
+  .map-sticky-subtitle { font-size: clamp(0.6rem, 3vw - 0.05rem, 0.72rem); }
 }
 
 /* Alinea el título/selector con el contenedor de las demás páginas
    (el mapa en sí sigue a sangre completa) */
 @media (min-width: 720px) {
-  .mapa-sticky-header {
+  .map-sticky-header {
     padding-left: max(20px, calc((100% - 1080px) / 2 + 20px));
     padding-right: max(20px, calc((100% - 1080px) / 2 + 20px));
   }
@@ -65,17 +65,17 @@
 }
 
 /* --- Content --- */
-.mapa-content {
+.map-content {
   --padding-top: 0;
   --padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
   height: 100%;
 }
 
-#mapa-container {
+#map-container {
   height: 100%;
   width: 100%;
   position: relative;
-  padding-top: calc(env(safe-area-inset-top, 0px) + var(--playa-header-h));
+  padding-top: calc(env(safe-area-inset-top, 0px) + var(--beach-header-h));
 }
 
 .leaflet-map {
@@ -91,7 +91,7 @@
    The #id raises specificity above leaflet.css's `.leaflet-container`,
    which loads AFTER this file (it ships in the lazy MapaLienzo chunk) and
    would win the cascade on order alone. */
-#mapa-container .leaflet-map {
+#map-container .leaflet-map {
   background: #aad3df;
 }
 
@@ -102,71 +102,71 @@
   line-height: 1.4;
 }
 
-.mapa-popup {
+.map-popup {
   min-width: 180px;
 }
 
-.mapa-popup-title {
+.map-popup-title {
   margin: 0 0 6px;
   font-family: 'Fraunces', Georgia, serif;
   font-weight: 600;
   font-size: 16px;
 }
 
-.mapa-popup-row {
+.map-popup-row {
   margin: 0 0 4px;
 }
 
-.mapa-popup-muted {
+.map-popup-muted {
   color: #6b7280;
   font-size: 12px;
 }
 
-.mapa-popup-status {
+.map-popup-status {
   margin: 0 0 4px;
   font-size: 12px;
   padding-left: 10px;
   border-left: 3px solid currentColor;
 }
 
-.mapa-popup-status--good {
-  color: var(--playa-flag-green);
+.map-popup-status--good {
+  color: var(--beach-flag-green);
 }
 
-.mapa-popup-status--medium {
-  color: var(--playa-buoy);
+.map-popup-status--medium {
+  color: var(--beach-buoy);
 }
 
-.mapa-popup-status--bad {
-  color: var(--playa-flag-red);
+.map-popup-status--bad {
+  color: var(--beach-flag-red);
 }
 
-.mapa-popup-flag {
+.map-popup-flag {
   margin: 0 0 4px;
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
-.mapa-popup-flag-label {
+.map-popup-flag-label {
   font-weight: 600;
   font-size: 13px;
 }
 
-.mapa-popup-webcam {
+.map-popup-webcam {
   display: flex;
   align-items: center;
   gap: 6px;
-  color: var(--playa-ocean);
+  color: var(--beach-ocean);
   font-weight: 600;
   font-size: 13px;
 }
 
-.mapa-popup-webcam ion-icon {
+.map-popup-webcam ion-icon {
   font-size: 15px;
 }
 
-.mapa-popup-btn {
+.map-popup-btn {
   margin-top: 6px;
   padding: 7px 10px;
   background-color: var(--ion-color-primary);
@@ -181,12 +181,12 @@
   transition: background-color 0.15s ease;
 }
 
-.mapa-popup-btn:active {
+.map-popup-btn:active {
   opacity: 0.8;
 }
 
 @media (hover: hover) {
-  .mapa-popup-btn:hover {
+  .map-popup-btn:hover {
     background-color: var(--ion-color-primary-shade);
   }
 }
@@ -195,18 +195,18 @@
 @media (prefers-color-scheme: dark) {
   .leaflet-popup-content-wrapper,
   .leaflet-popup-tip {
-    background: var(--playa-foam);
-    color: var(--playa-text);
+    background: var(--beach-foam);
+    color: var(--beach-text);
   }
 
-  .mapa-popup-muted {
-    color: var(--playa-text-muted);
+  .map-popup-muted {
+    color: var(--beach-text-muted);
   }
 }
 
 /* --- Banderín Cruz Roja (mástil + gallardete; compartido por
        marcador, popup y leyenda) --- */
-.mapa-pennant {
+.map-pennant {
   position: relative;
   display: inline-block;
   width: 14px;
@@ -214,7 +214,7 @@
   flex-shrink: 0;
 }
 
-.mapa-pennant::before {
+.map-pennant::before {
   content: '';
   position: absolute;
   left: 0;
@@ -222,10 +222,10 @@
   width: 2px;
   height: 16px;
   border-radius: 1px;
-  background: var(--mapa-pennant-mast, var(--playa-text-muted));
+  background: var(--map-pennant-mast, var(--beach-text-muted));
 }
 
-.mapa-pennant::after {
+.map-pennant::after {
   content: '';
   position: absolute;
   left: 2px;
@@ -235,19 +235,19 @@
   clip-path: polygon(0 0, 100% 0, 80% 50%, 100% 100%, 0 100%);
 }
 
-.mapa-pennant--green::after {
-  background: var(--playa-flag-green);
+.map-pennant--green::after {
+  background: var(--beach-flag-green);
 }
 
-.mapa-pennant--yellow::after {
-  background: var(--playa-flag-yellow);
+.map-pennant--yellow::after {
+  background: var(--beach-flag-yellow);
 }
 
-.mapa-pennant--red::after {
-  background: var(--playa-flag-red);
+.map-pennant--red::after {
+  background: var(--beach-flag-red);
 }
 
-.mapa-pennant--black::after {
+.map-pennant--black::after {
   background: #111827;
 }
 
@@ -269,16 +269,16 @@
 }
 
 .beach-marker--good {
-  background: var(--playa-flag-green);
+  background: var(--beach-flag-green);
 }
 
 .beach-marker--medium {
-  background: var(--playa-flag-yellow);
+  background: var(--beach-flag-yellow);
   color: #1b2a32; /* tinta sobre amarillo: blanco no contrasta */
 }
 
 .beach-marker--bad {
-  background: var(--playa-flag-red);
+  background: var(--beach-flag-red);
 }
 
 .beach-marker--highlight {
@@ -322,7 +322,7 @@
   position: absolute;
   top: -14px;
   left: 3px;
-  --mapa-pennant-mast: #ffffff;
+  --map-pennant-mast: #ffffff;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
 }
 
@@ -345,7 +345,7 @@
 
 /* --- Marcador fallback y de usuario (sin azul Ionic) --- */
 .fallback-marker {
-  background-color: var(--playa-deep);
+  background-color: var(--beach-deep);
   color: #ffffff;
   font-weight: 700;
   font-family: 'Poppins', sans-serif;
@@ -373,7 +373,7 @@
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: var(--playa-deep);
+  background: var(--beach-deep);
   border: 2px solid #ffffff;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
 }
@@ -400,7 +400,7 @@
 
 /* --- Leyenda (overlay sobre el mapa) --- */
 /* Botón "localizarme" (estilo Google Maps): esquina inferior derecha */
-.mapa-locate-btn {
+.map-locate-btn {
   position: absolute;
   right: 12px;
   bottom: calc(env(safe-area-inset-bottom, 0px) + 68px);
@@ -409,8 +409,8 @@
   height: 44px;
   padding: 0;
   border-radius: 50%;
-  border: 1px solid var(--playa-border);
-  background: var(--playa-foam);
+  border: 1px solid var(--beach-border);
+  background: var(--beach-foam);
   color: var(--ion-color-primary);
   display: flex;
   align-items: center;
@@ -419,63 +419,63 @@
   box-shadow: 0 2px 8px rgba(18, 36, 44, 0.22);
   -webkit-tap-highlight-color: transparent;
 }
-.mapa-locate-btn ion-icon {
+.map-locate-btn ion-icon {
   font-size: 1.35rem;
 }
-.mapa-locate-btn ion-spinner {
+.map-locate-btn ion-spinner {
   width: 20px;
   height: 20px;
 }
-.mapa-locate-btn:active {
+.map-locate-btn:active {
   transform: scale(0.94);
 }
 @media (hover: hover) {
-  .mapa-locate-btn:hover {
-    background: var(--playa-ocean-light);
+  .map-locate-btn:hover {
+    background: var(--beach-ocean-light);
   }
 }
-.mapa-locate-btn--denied {
-  color: var(--playa-text-muted);
+.map-locate-btn--denied {
+  color: var(--beach-text-muted);
 }
 
-.mapa-leyenda {
+.map-legend {
   position: absolute;
   left: 12px;
   bottom: calc(env(safe-area-inset-bottom, 0px) + 68px);
   z-index: 500;
-  background: var(--playa-foam);
-  border: 1px solid var(--playa-border);
-  border-radius: var(--playa-radius-s);
+  background: var(--beach-foam);
+  border: 1px solid var(--beach-border);
+  border-radius: var(--beach-radius-s);
   padding: 8px 12px;
   display: flex;
   flex-direction: column;
   gap: 5px;
   font-size: 0.68rem;
-  color: var(--playa-text);
+  color: var(--beach-text);
 }
 
-.mapa-leyenda-item {
+.map-legend-item {
   display: inline-flex;
   align-items: center;
   gap: 7px;
 }
 
-.mapa-leyenda-dot {
+.map-legend-dot {
   width: 9px;
   height: 9px;
   border-radius: 50%;
   flex-shrink: 0;
 }
 
-.mapa-leyenda-dot--good {
-  background: var(--playa-flag-green);
+.map-legend-dot--good {
+  background: var(--beach-flag-green);
 }
 
-.mapa-leyenda-dot--medium {
-  background: var(--playa-flag-yellow);
+.map-legend-dot--medium {
+  background: var(--beach-flag-yellow);
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.25);
 }
 
-.mapa-leyenda-dot--bad {
-  background: var(--playa-flag-red);
+.map-legend-dot--bad {
+  background: var(--beach-flag-red);
 }

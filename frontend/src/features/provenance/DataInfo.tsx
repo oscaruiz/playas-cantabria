@@ -36,10 +36,10 @@ const DataInfo: React.FC<{
   const id = useId();
 
   return (
-    <div className={`info-datos ${className ?? ''}`.trim()}>
+    <div className={`info-data ${className ?? ''}`.trim()}>
       <button
         type="button"
-        className="info-datos-btn"
+        className="info-data-btn"
         onClick={() => setIsOpen((v) => !v)}
         aria-expanded={isOpen}
         aria-controls={id}
@@ -49,7 +49,7 @@ const DataInfo: React.FC<{
         <span>{t(label)}</span>
       </button>
       {isOpen && (
-        <div className="info-datos-panel" id={id} role="note">
+        <div className="info-data-panel" id={id} role="note">
           {children}
         </div>
       )}

@@ -23,9 +23,9 @@ const NotFound: React.FC = () => {
         noindex
       />
       <div className="home-sticky-header">
-        <div className="home-sticky-marca marca-con-logo">
+        <div className="home-sticky-brand brand-with-logo">
           <BrandLogo />
-          <div className="marca-texto">
+          <div className="brand-text">
             <p className="home-sticky-title">{t('app.titulo')}</p>
           </div>
         </div>
@@ -35,7 +35,7 @@ const NotFound: React.FC = () => {
         <div className="home-hero"><div className="home-hero-spacer" /></div>
         <div className="home-empty">
           <p className="home-empty-text">{t('noEncontrada.texto')}</p>
-          <Link className="ld-enlace" to="/playas">{t('nav.playas')}</Link>
+          <Link className="ld-link" to="/playas">{t('nav.playas')}</Link>
         </div>
       </IonContent>
       <IonFooter className="ion-no-border"><BottomNavBar /></IonFooter>

@@ -47,7 +47,7 @@ const BeachLanding: React.FC<{ id: LandingId }> = ({ id }) => {
         canonicalPath={`/${id}`}
       />
       <div className="home-sticky-header">
-        <div className="home-sticky-marca">
+        <div className="home-sticky-brand">
           <h1 className="home-sticky-title">{t(`landing.${id}.titulo` as TextKey)}</h1>
           <p className="home-sticky-subtitle">{t('app.titulo')}</p>
         </div>

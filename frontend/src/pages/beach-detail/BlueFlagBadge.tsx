@@ -22,8 +22,8 @@ export const BlueFlagBadge: React.FC<{ year?: number | null }> = ({ year }) => {
           aria-label={t('banderaAzul.distintivo', { year })}
         />
         <div>
-          <p className="blue-flag-frase">{t('banderaAzul.frase', { year })}</p>
-          <p className="blue-flag-mas">
+          <p className="blue-flag-phrase">{t('banderaAzul.frase', { year })}</p>
+          <p className="blue-flag-more">
             {t('banderaAzul.masInfo')}{' '}
             <a
               className="blue-flag-link"

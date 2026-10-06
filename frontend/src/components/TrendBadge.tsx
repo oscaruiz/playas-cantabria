@@ -76,7 +76,7 @@ const TrendBadge: React.FC<TrendBadgeProps> = ({ outlook, size = 'sm' }) => {
       {causeText && (
         <>
           <span className="trend-badge-sep" aria-hidden="true">·</span>
-          <span className="trend-badge-causa" aria-hidden="true">{causeText}</span>
+          <span className="trend-badge-cause" aria-hidden="true">{causeText}</span>
         </>
       )}
       {size === 'lg' && (

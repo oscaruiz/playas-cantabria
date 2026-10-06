@@ -5,10 +5,10 @@ import { useLanguage } from '../../../../../../Dev/playas-cantabria/frontend/src
 import { translateApiText } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/apiText';
 
 function avisoLevelClass(level: number | null): string {
-  if (level === 1) return 'aviso-red';
-  if (level === 2) return 'aviso-orange';
-  if (level === 3) return 'aviso-yellow';
-  return 'aviso-green';
+  if (level === 1) return 'warning-red';
+  if (level === 2) return 'warning-orange';
+  if (level === 3) return 'warning-yellow';
+  return 'warning-green';
 }
 
 function uvColorClass(uv: number): string {

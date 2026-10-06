@@ -1,4 +1,4 @@
-.marca-logo {
+.brand-logo {
   /* 52px is the ceiling: the 84px header affords 54px of content height
      (16px top + 14px bottom padding), and the sun at the icon's centre is
      unreadable below ~48px. */
@@ -12,13 +12,13 @@
 /* Row layout for a marca container that carries the logo. The text keeps its
    own box (`min-width: 0`) so the title's ellipsis still works when the brand
    is longer than the space the ⓘ leaves. */
-.marca-con-logo {
+.brand-with-logo {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.marca-con-logo .marca-texto {
+.brand-with-logo .brand-text {
   flex: 1;
   min-width: 0;
 }
@@ -26,7 +26,7 @@
 /* On phones the header row is tight: the logo cedes a few pixels so the
    subtitle can keep its full text (it also drops to 0.72rem, per page). */
 @media (max-width: 480px) {
-  .marca-logo {
+  .brand-logo {
     width: 44px;
     height: 44px;
     border-radius: 10px;

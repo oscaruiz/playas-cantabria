@@ -14,7 +14,7 @@
   gap: 8px;
 }
 
-.header-actions .selector-idioma {
+.header-actions .selector-language {
   position: static;
 }
 
@@ -45,15 +45,15 @@
   display: flex;
   flex-direction: column;
   padding: 6px;
-  border: 1px solid var(--playa-border);
+  border: 1px solid var(--beach-border);
   border-radius: 9px;
-  background: var(--playa-card-bg);
+  background: var(--beach-card-bg);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
 }
 
 .header-info-menu a {
   padding: 10px 11px;
-  color: var(--playa-text);
+  color: var(--beach-text);
   font-size: 0.8rem;
   line-height: 1.25;
   text-decoration: none;
@@ -62,18 +62,18 @@
 
 /* Los enlaces que salen de la app: icono a la izquierda, flecha de salida
    pegada al borde derecho para que se lea igual en todas las filas. */
-.header-info-externo {
+.header-info-external {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.header-info-externo ion-icon {
+.header-info-external ion-icon {
   flex: none;
   font-size: 1rem;
 }
 
-.header-info-externo span {
+.header-info-external span {
   flex: 1;
   min-width: 0;
   overflow: hidden;
@@ -81,40 +81,40 @@
   white-space: nowrap;
 }
 
-.header-info-salida {
+.header-info-exit {
   opacity: 0.55;
   font-size: 0.85rem !important;
 }
 
-.header-info-menu a:hover, .header-info-menu a:focus-visible { background: var(--playa-ocean-light); color: var(--playa-ocean); }
+.header-info-menu a:hover, .header-info-menu a:focus-visible { background: var(--beach-ocean-light); color: var(--beach-ocean); }
 
 /* El selector cuando cae dentro del menú: la píldora está pintada para ir
    sobre la cabecera azul (bordes y texto blancos), y aquí el fondo es papel. */
-.header-info-idioma {
+.header-info-language {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
   margin-top: 4px;
   padding: 10px 11px 4px;
-  border-top: 1px solid var(--playa-border);
+  border-top: 1px solid var(--beach-border);
 }
 
-.header-info-idioma > span {
-  color: var(--playa-text-muted);
+.header-info-language > span {
+  color: var(--beach-text-muted);
   font-size: 0.8rem;
 }
 
-.header-info-idioma .selector-idioma {
-  border-color: var(--playa-border);
+.header-info-language .selector-language {
+  border-color: var(--beach-border);
 }
 
-.header-info-idioma .selector-idioma-btn {
-  color: var(--playa-text-muted);
+.header-info-language .selector-language-btn {
+  color: var(--beach-text-muted);
 }
 
-.header-info-idioma .selector-idioma-btn.active {
-  background: var(--playa-ocean);
+.header-info-language .selector-language-btn.active {
+  background: var(--beach-ocean);
   color: #ffffff;
 }
 

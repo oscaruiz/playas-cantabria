@@ -24,7 +24,7 @@ const FavoriteButton: React.FC<{
   return (
     <button
       type="button"
-      className={`fav-btn${active ? ' fav-btn--activa' : ''}${className ? ` ${className}` : ''}`}
+      className={`fav-btn${active ? ' fav-btn--active' : ''}${className ? ` ${className}` : ''}`}
       aria-pressed={active}
       aria-label={label}
       title={label}

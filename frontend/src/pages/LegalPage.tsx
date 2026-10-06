@@ -74,7 +74,7 @@ const LegalPage: React.FC<{ kind: 'acerca' | 'privacidad' }> = ({ kind }) => {
     <IonPage className="legal-page">
       <SeoHead title={title} description={description} canonicalPath={about ? '/acerca-de' : '/privacidad'} />
       <header className="legal-header">
-        <div className="legal-header-izq">
+        <div className="legal-header-left">
           {/* Estas páginas se abren desde el menú ⓘ de cualquier pantalla, así
               que volver a la portada no es volver: hay que devolver a la ficha
               o al listado desde donde se entró. Si se ha llegado por un enlace

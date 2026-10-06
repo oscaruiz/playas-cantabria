@@ -180,17 +180,17 @@ const HeroBeachCard: React.FC<{
   const rationale = noForecastReason(beach, readableReason(beach.razonRanking));
 
   return (
-    <article className="hp-hero-card" aria-labelledby="hp-hero-nombre">
+    <article className="hp-hero-card" aria-labelledby="hp-hero-name">
       <div className="hp-hero-top">
-        <div className="hp-hero-clima">
+        <div className="hp-hero-weather">
           <span className="hp-hero-emoji" aria-hidden="true">{emoji}</span>
           {beach.temperatura != null && (
             <span className="hp-hero-temp">{Math.round(beach.temperatura)}{'°'}</span>
           )}
         </div>
         <div className="hp-hero-heading">
-          <p id="hp-hero-nombre" className="hp-hero-name">{beach.nombre}</p>
-          <p className="hp-hero-municipio">{beach.municipio}</p>
+          <p id="hp-hero-name" className="hp-hero-name">{beach.nombre}</p>
+          <p className="hp-hero-municipality">{beach.municipio}</p>
         </div>
         <div className="hp-hero-score" aria-label={t('home.puntuacionAria', { n: beach.puntuacion })}>
           <span className="hp-hero-score-num" aria-hidden="true">{beach.puntuacion}</span>
@@ -199,7 +199,7 @@ const HeroBeachCard: React.FC<{
       </div>
 
       {ratingPhraseKey(beach.puntuacion) && (
-        <p className="hp-hero-frase">
+        <p className="hp-hero-phrase">
           {t(ratingPhraseKey(beach.puntuacion) as TextKey, { nombre: beach.nombre })}
         </p>
       )}
@@ -299,10 +299,10 @@ const AlternativeRow: React.FC<{
       </div>
       <div className="hp-alt-body">
         <p className="hp-alt-name">{beach.nombre}</p>
-        <p className="hp-alt-municipio">{beach.municipio}</p>
+        <p className="hp-alt-municipality">{beach.municipio}</p>
         <div className="hp-alt-meta">
           {isTopScore && (
-            <span className="hp-alt-chip-mejor">
+            <span className="hp-alt-chip-best">
               <span aria-hidden="true">{'⭐'}</span> {t('home.mejorPuntuacion')}
             </span>
           )}
@@ -458,12 +458,12 @@ const HomePage: React.FC = () => {
           texto no mueve nada. */}
       <div className="hp-sticky-header">
         <div
-          className="hp-sticky-marca marca-con-logo"
+          className="hp-sticky-brand brand-with-logo"
           onClick={() => window.location.reload()}
           style={{ cursor: 'pointer' }}
         >
           <BrandLogo />
-          <div className="marca-texto">
+          <div className="brand-text">
             <h1 className="hp-sticky-title">{t('app.titulo')}</h1>
             <p className="hp-sticky-subtitle">{t('home.subtitulo')}</p>
           </div>
@@ -491,7 +491,7 @@ const HomePage: React.FC = () => {
               retire this is a real answer, and the app already asks for one on
               its own. */}
           {fromPreviousVisit && (
-            <p className="hp-aviso-cache" role="status">
+            <p className="hp-warning-cache" role="status">
               {t('home.datosDeCache')}
               {' · '}
               {formatTimeAgo(updatedMs as number, t)}
@@ -502,7 +502,7 @@ const HomePage: React.FC = () => {
               (they still show if it fails), but not of its timing: painted
               alone above the spinner they looked like the whole page. */}
           {!featuredLoading && favoritesOnHome.length > 0 && (
-            <section className="hp-section hp-section--favoritas">
+            <section className="hp-section hp-section--favorites">
               <h2 className="section-kicker">{t('home.favoritas')}</h2>
               <div className="hp-alt-list">
                 {favoritesOnHome.map(({ playa: beach, condiciones: conditions }) =>
@@ -522,7 +522,7 @@ const HomePage: React.FC = () => {
                     >
                       <div className="hp-alt-body">
                         <p className="hp-alt-name">{beach.nombre}</p>
-                        <p className="hp-alt-municipio">{beach.municipio}</p>
+                        <p className="hp-alt-municipality">{beach.municipio}</p>
                       </div>
                     </Link>
                   )

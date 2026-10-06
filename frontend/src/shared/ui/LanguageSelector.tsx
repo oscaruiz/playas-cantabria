@@ -13,7 +13,7 @@ const LanguageSelector: React.FC = () => {
 
   return (
     <div
-      className="selector-idioma"
+      className="selector-language"
       onClick={(e) => e.stopPropagation()}
       role="group"
       aria-label={t('selector.idioma')}
@@ -21,7 +21,7 @@ const LanguageSelector: React.FC = () => {
       {LANGUAGES.map((i) => (
         <button
           key={i}
-          className={`selector-idioma-btn${language === i ? ' active' : ''}`}
+          className={`selector-language-btn${language === i ? ' active' : ''}`}
           onClick={() => setLanguage(i)}
           aria-pressed={language === i}
         >

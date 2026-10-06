@@ -129,7 +129,7 @@ describe('PlayaDetalle — previsión AEMET', () => {
     expect(container.querySelector('.forecast-hero-temp')).toHaveTextContent('21°');
     // The "Máx." line only shows up if the observed one does not exceed the maximum.
     expect(container.querySelector('.forecast-hero-max')).toHaveTextContent('Máx. 26°');
-    expect(container.querySelector('.forecast-hero-agua')).toHaveTextContent('Agua 19°C');
+    expect(container.querySelector('.forecast-hero-water')).toHaveTextContent('Agua 19°C');
   });
 
   it('oculta el bloque de mañana cuando no hay datos de mañana', async () => {
@@ -155,7 +155,7 @@ describe('PlayaDetalle — previsión AEMET', () => {
     expect(uv).toHaveClass('uv-very-high');
 
     // aviso.nivel 3 → yellow
-    expect(container.querySelector('.aviso-yellow')).toHaveTextContent(
+    expect(container.querySelector('.warning-yellow')).toHaveTextContent(
       'Aviso amarillo por oleaje',
     );
   });
@@ -193,8 +193,8 @@ describe('PlayaDetalle — previsión AEMET', () => {
     const meta = container.querySelector('.detail-col--forecast .forecast-metadata');
     // Cerrada por defecto: el panel no existe hasta que se pide.
     expect(meta).not.toHaveTextContent('Agencia Estatal de Meteorología');
-    expect(meta?.querySelector('.info-datos-panel')).toBeNull();
-    expect(meta?.querySelector('.info-datos-btn')).toHaveAttribute('aria-expanded', 'false');
+    expect(meta?.querySelector('.info-data-panel')).toBeNull();
+    expect(meta?.querySelector('.info-data-btn')).toHaveAttribute('aria-expanded', 'false');
   });
 
   it('al abrir esa ⓘ salen la atribución de AEMET, su hora y la zona de avisos', async () => {
@@ -205,14 +205,14 @@ describe('PlayaDetalle — previsión AEMET', () => {
 
     // Dentro de la columna de la previsión, no en un pie perdido al final.
     const panel = container.querySelector(
-      '.detail-col--forecast .forecast-metadata .info-datos-panel',
+      '.detail-col--forecast .forecast-metadata .info-data-panel',
     );
     expect(panel).toHaveTextContent(
       'Información elaborada utilizando, entre otras, la obtenida de la Agencia Estatal de Meteorología.',
     );
     expect(panel).toHaveTextContent('Zona de avisos: Litoral de Cantabria');
     expect(panel).toHaveTextContent('Elaborado el 27-07-2026 a las 10:00');
-    expect(panel?.querySelector('a.procedencia-enlace')).toHaveAttribute(
+    expect(panel?.querySelector('a.provenance-link')).toHaveAttribute(
       'href',
       'https://www.aemet.es',
     );
@@ -240,7 +240,7 @@ describe('PlayaDetalle — previsión AEMET', () => {
     expect(container.querySelector('.pd-score-block > .safety-notice')).toHaveTextContent(
       'No garantiza la seguridad ni las condiciones reales de la playa.',
     );
-    expect(container.querySelectorAll('.pd-score-block .info-datos-btn')).toHaveLength(0);
+    expect(container.querySelectorAll('.pd-score-block .info-data-btn')).toHaveLength(0);
   });
 
   it('la ficha se declara independiente, bajo la ⓘ del pie', async () => {
@@ -249,7 +249,7 @@ describe('PlayaDetalle — previsión AEMET', () => {
 
     fireEvent.click(openInfo('Sobre los datos de esta ficha'));
 
-    const panel = container.querySelector('.pd-info-ficha .info-datos-panel');
+    const panel = container.querySelector('.pd-info-ficha .info-data-panel');
     expect(panel).toHaveTextContent(
       'Playucas.es es un proyecto independiente: ninguna de estas fuentes lo respalda ni colabora con él.',
     );
@@ -310,11 +310,11 @@ describe('PlayaDetalle — badges de lluvia', () => {
     const { container } = renderDetail();
     await screen.findByText('Hoy');
 
-    expect(container.querySelector('.forecast-hero-lluvia')).toHaveTextContent(
+    expect(container.querySelector('.forecast-hero-rain')).toHaveTextContent(
       'Lloviendo ahora · 1.3 mm',
     );
     // Never two badges: the forecast keeps quiet while it is raining.
-    expect(container.querySelector('.forecast-hero-lluvia-prevista')).toBeNull();
+    expect(container.querySelector('.forecast-hero-rain-expected')).toBeNull();
     // And the emoji switches to rain even if the sky says "despejado".
     expect(container.querySelector('.forecast-hero-icon-emoji')).toHaveTextContent('🌧️');
   });
@@ -335,7 +335,7 @@ describe('PlayaDetalle — badges de lluvia', () => {
     await screen.findByText('Hoy');
 
     // 16:00Z = 18:00 in Madrid.
-    expect(container.querySelector('.forecast-hero-lluvia-prevista')).toHaveTextContent(
+    expect(container.querySelector('.forecast-hero-rain-expected')).toHaveTextContent(
       'Lluvia prevista hacia las 18:00',
     );
   });
@@ -355,7 +355,7 @@ describe('PlayaDetalle — badges de lluvia', () => {
     const { container } = renderDetail();
     await screen.findByText('Hoy');
 
-    expect(container.querySelector('.forecast-hero-lluvia')).toHaveTextContent(
+    expect(container.querySelector('.forecast-hero-rain')).toHaveTextContent(
       'Lluvia en la última hora',
     );
   });
@@ -397,7 +397,7 @@ describe('PlayaDetalle — playas sin ficha AEMET', () => {
     // del propio panel: no hay una etiqueta de página que lo repita al pie.
     fireEvent.click(openInfo('Fuente de la previsión'));
 
-    const notes = Array.from(container.querySelectorAll('.procedencia-atribucion')).map(
+    const notes = Array.from(container.querySelectorAll('.provenance-attribution')).map(
       (n) => n.textContent ?? '',
     );
     expect(notes.some((n) => n.includes('Agencia Estatal de Meteorología'))).toBe(true);
@@ -418,7 +418,7 @@ describe('PlayaDetalle — bandera de Cruz Roja', () => {
 
     const pennant = container.querySelector('.flag-pennant');
     expect(pennant).toHaveClass('green');
-    expect(pennant).not.toHaveClass('atenuada');
+    expect(pennant).not.toHaveClass('dimmed');
     expect(container.querySelector('.flag-value')).toHaveTextContent('Bandera Verde');
     expect(container.querySelector('.flag-info')).toHaveTextContent('Vigilancia: 11:00 - 20:00');
   });
@@ -433,7 +433,7 @@ describe('PlayaDetalle — bandera de Cruz Roja', () => {
 
     const pennant = container.querySelector('.flag-pennant');
     expect(pennant).toHaveClass('green');
-    expect(pennant).toHaveClass('atenuada');
+    expect(pennant).toHaveClass('dimmed');
     expect(container.querySelector('.flag-value')).toHaveTextContent(
       'Última bandera registrada: Verde',
     );
@@ -532,10 +532,10 @@ describe('PlayaDetalle — puntuación', () => {
     const factors = container.querySelectorAll('.pd-score-info .pd-factor');
     expect(factors).toHaveLength(6);
     expect(container.querySelector('.pd-score-info')).not.toHaveTextContent('UV');
-    expect(factors[0].querySelector('.pd-factor-nombre')).toHaveTextContent('Sol y cielo');
-    expect(factors[0].querySelector('.pd-factor-puntos')).toHaveTextContent('25/25');
+    expect(factors[0].querySelector('.pd-factor-name')).toHaveTextContent('Sol y cielo');
+    expect(factors[0].querySelector('.pd-factor-points')).toHaveTextContent('25/25');
     // La explicación genérica no se pierde: baja a texto secundario de la fila.
-    expect(factors[0].querySelector('.pd-factor-nota')).toHaveTextContent(
+    expect(factors[0].querySelector('.pd-factor-note')).toHaveTextContent(
       'cuanto más despejado, mejor.',
     );
 
@@ -550,7 +550,7 @@ describe('PlayaDetalle — puntuación', () => {
     await screen.findByText('Puntuación de hoy');
     fireEvent.click(screen.getByText('Cómo se calcula'));
 
-    const values = Array.from(container.querySelectorAll('.pd-factor-valor')).map(
+    const values = Array.from(container.querySelectorAll('.pd-factor-value')).map(
       (n) => n.textContent,
     );
 
@@ -566,7 +566,7 @@ describe('PlayaDetalle — puntuación', () => {
     await screen.findByText('Puntuación de hoy');
     fireEvent.click(screen.getByText('Cómo se calcula'));
 
-    const points = container.querySelectorAll('.pd-factor-puntos');
+    const points = container.querySelectorAll('.pd-factor-points');
     expect(points[1]).toHaveTextContent('22/25');
   });
 
@@ -575,12 +575,12 @@ describe('PlayaDetalle — puntuación', () => {
     await screen.findByText('Puntuación de hoy');
     fireEvent.click(screen.getByText('Cómo se calcula'));
 
-    const sum = Array.from(container.querySelectorAll('.pd-factor-puntos'))
+    const sum = Array.from(container.querySelectorAll('.pd-factor-points'))
       .map((n) => Number((n.textContent ?? '').split('/')[0]))
       .reduce((a, b) => a + b, 0);
 
     expect(sum).toBe(93);
-    expect(container.querySelector('.pd-score-tope')).toBeNull();
+    expect(container.querySelector('.pd-score-cap')).toBeNull();
   });
 
   it('anuncia hacia dónde va el día sin desplegar nada, y sin repetirlo en la razón', async () => {
@@ -601,16 +601,16 @@ describe('PlayaDetalle — puntuación', () => {
     await screen.findByText('Puntuación de hoy');
 
     // Sin tocar "Cómo se calcula": vive en su propia sección de la página.
-    const hours = container.querySelectorAll('.proximas-horas-section .pd-hora');
+    const hours = container.querySelectorAll('.next-hours-section .pd-hour');
     expect(hours).toHaveLength(3);
-    expect(hours[0].querySelector('.pd-hora-temp')).toHaveTextContent('21°');
-    expect(hours[2].querySelector('.pd-hora-temp')).toHaveTextContent('23°');
+    expect(hours[0].querySelector('.pd-hour-temp')).toHaveTextContent('21°');
+    expect(hours[2].querySelector('.pd-hour-temp')).toHaveTextContent('23°');
 
     // El orden en el DOM: primero las próximas horas, después las mareas.
     const sections = Array.from(
-      container.querySelectorAll('.proximas-horas-section, .tides-section'),
+      container.querySelectorAll('.next-hours-section, .tides-section'),
     ).map((n) => n.className);
-    expect(sections).toEqual(['proximas-horas-section', 'tides-section']);
+    expect(sections).toEqual(['next-hours-section', 'tides-section']);
   });
 
   it('acredita quién pronostica esas horas, con lo que dice el API', async () => {
@@ -621,12 +621,12 @@ describe('PlayaDetalle — puntuación', () => {
     // ya enlaza a Open-Meteo, así que no se repite el crédito genérico encima.
     fireEvent.click(openInfo('Fuente de las próximas horas'));
 
-    const source = container.querySelector('.proximas-horas-fuente .info-datos-panel');
+    const source = container.querySelector('.next-hours-source .info-data-panel');
     expect(source).toHaveTextContent(
       'Datos meteorológicos de Open-Meteo, adaptados por Playucas.es: se transforman para calcular la puntuación.',
     );
     expect(source?.querySelector('a')).toHaveAttribute('href', 'https://open-meteo.com');
-    expect(container.querySelectorAll('.proximas-horas-fuente')).toHaveLength(1);
+    expect(container.querySelectorAll('.next-hours-source')).toHaveLength(1);
   });
 
   it('el desplegable de la puntuación ya no repite la tira', async () => {
@@ -634,7 +634,7 @@ describe('PlayaDetalle — puntuación', () => {
     await screen.findByText('Puntuación de hoy');
     fireEvent.click(screen.getByText('Cómo se calcula'));
 
-    expect(container.querySelectorAll('.pd-score-info .pd-hora')).toHaveLength(0);
+    expect(container.querySelectorAll('.pd-score-info .pd-hour')).toHaveLength(0);
   });
 
   it('sin desglose (backend antiguo) el panel sigue abriendo con sus reglas', async () => {
@@ -745,7 +745,7 @@ describe('PlayaDetalle — estados', () => {
     const { container } = renderDetail();
 
     await screen.findByText('No se pudo cargar el detalle de la playa');
-    expect(container.querySelector('.error-causa')).toHaveTextContent('HTTP 429');
+    expect(container.querySelector('.error-cause')).toHaveTextContent('HTTP 429');
   });
 
   it('dice la causa: sin respuesta cuando la petición ni vuelve', async () => {
@@ -755,7 +755,7 @@ describe('PlayaDetalle — estados', () => {
     const { container } = renderDetail();
 
     await screen.findByText('No se pudo cargar el detalle de la playa');
-    expect(container.querySelector('.error-causa')).toHaveTextContent('Sin respuesta del servidor');
+    expect(container.querySelector('.error-cause')).toHaveTextContent('Sin respuesta del servidor');
   });
 
   it('un fallo pasajero no deja el aviso clavado si el reintento trae los datos', async () => {
@@ -829,7 +829,7 @@ describe('PlayaDetalle — tope publicado', () => {
     await waitFor(() => expect(container.querySelector('.score-badge-num')).toHaveTextContent('75'));
     fireEvent.click(screen.getByText('Cómo se calcula'));
 
-    expect(container.querySelector('.pd-score-tope')).toHaveTextContent(
+    expect(container.querySelector('.pd-score-cap')).toHaveTextContent(
       'Se espera lluvia: la nota se limita a 75',
     );
   });

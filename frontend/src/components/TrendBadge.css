@@ -12,14 +12,14 @@
   margin: 0;
 }
 
-.trend-badge--mejora { color: var(--playa-flag-green); }
-.trend-badge--empeora { color: var(--playa-flag-red); }
-.trend-badge--estable { color: var(--playa-text-muted); }
+.trend-badge--mejora { color: var(--beach-flag-green); }
+.trend-badge--empeora { color: var(--beach-flag-red); }
+.trend-badge--estable { color: var(--beach-text-muted); }
 
 .trend-badge-sep,
 .trend-badge-hint,
 .trend-badge-delta {
-  color: var(--playa-text-muted);
+  color: var(--beach-text-muted);
   font-weight: 500;
 }
 
@@ -32,7 +32,7 @@
 
 /* The cause is the useful half, so it survives a narrow card: the direction
    word wraps first and the whole line never pushes the score badge out. */
-.trend-badge--sm .trend-badge-causa {
+.trend-badge--sm .trend-badge-cause {
   font-weight: 500;
 }
 

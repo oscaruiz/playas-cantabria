@@ -65,7 +65,7 @@ const TidesSection: React.FC<{
     <section className="tides-section">
       <h3 className="section-kicker">{t('detalle.mareas')}</h3>
       {reference && (
-        <p className="tides-referencia-aviso">
+        <p className="tides-reference-warning">
           {t('marea.referenciaAviso', {
             playa: reference.playa,
             km: Math.round(reference.distanciaKm * 10) / 10,

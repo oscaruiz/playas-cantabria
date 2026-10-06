@@ -178,18 +178,18 @@ const ScoreCard: React.FC<{
                   const max = scale[field];
                   return (
                     <div className="pd-factor" key={field}>
-                      <span className="pd-factor-nombre">{label}</span>
-                      <span className="pd-factor-valor">{valueFor(field)}</span>
-                      <span className="pd-factor-puntos">
+                      <span className="pd-factor-name">{label}</span>
+                      <span className="pd-factor-value">{valueFor(field)}</span>
+                      <span className="pd-factor-points">
                         {t('detalle.scoreInfo.puntos', { n: points, max })}
                       </span>
-                      <span className="pd-factor-barra" aria-hidden="true">
+                      <span className="pd-factor-bar" aria-hidden="true">
                         <span
-                          className="pd-factor-relleno"
+                          className="pd-factor-fill"
                           style={{ width: `${Math.max(0, Math.min(100, (points / max) * 100))}%` }}
                         />
                       </span>
-                      <span className="pd-factor-nota">{description}</span>
+                      <span className="pd-factor-note">{description}</span>
                     </div>
                   );
                 })}
@@ -197,7 +197,7 @@ const ScoreCard: React.FC<{
               {/* Without this line the numbers look broken: they add up to more
                   than the score because a cap clipped it. */}
               {cap && (
-                <p className="pd-score-tope">
+                <p className="pd-score-cap">
                   <IonIcon icon={warningOutline} aria-hidden="true" />{' '}
                   {t(cap.labelKey, { n: cap.valor })}
                 </p>
@@ -218,7 +218,7 @@ const ScoreCard: React.FC<{
             })}
           </div>
 
-          <p className="pd-score-info-cierre">{t('detalle.scoreInfo.cierre')}</p>
+          <p className="pd-score-info-closing">{t('detalle.scoreInfo.cierre')}</p>
         </div>
       )}
     </div>

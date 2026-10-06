@@ -76,7 +76,7 @@ describe('HomePage — sin ubicación', () => {
     const { container } = await renderHome();
 
     expect(screen.getByText('La mejor playa para hoy')).toBeInTheDocument();
-    expect(container.querySelector('#hp-hero-nombre')).toHaveTextContent('La Concha');
+    expect(container.querySelector('#hp-hero-name')).toHaveTextContent('La Concha');
     expect(container.querySelector('.hp-hero-score-num')).toHaveTextContent('93');
   });
 
@@ -133,7 +133,7 @@ describe('HomePage — sin ubicación', () => {
     const { container } = await renderHome();
 
     expect(screen.queryByText(/Priorizada por cercanía/)).not.toBeInTheDocument();
-    expect(container.querySelector('.hp-alt-chip-mejor')).toBeNull();
+    expect(container.querySelector('.hp-alt-chip-best')).toBeNull();
   });
 
   it('lista las playas a revisar', async () => {
@@ -190,7 +190,7 @@ describe('HomePage — con ubicación', () => {
   it('la penalización por distancia no cambia quién preside en este fixture', async () => {
     const { container } = await renderHome();
     // La Concha: 82 - 0.4*49.5 = 62.2; El Sardinero: 71 - 0.4*28.8 = 59.5.
-    expect(container.querySelector('#hp-hero-nombre')).toHaveTextContent('La Concha');
+    expect(container.querySelector('#hp-hero-name')).toHaveTextContent('La Concha');
   });
 });
 

@@ -1,8 +1,8 @@
-.mejor-momento {
+.best-time {
   margin: 6px 0 0;
 }
 
-.mejor-momento-franja {
+.best-time-band {
   display: flex;
   align-items: center;
   gap: 7px;
@@ -13,7 +13,7 @@
 
 /* The green dot of the mock ("🟢 Mejor momento"), drawn instead of an emoji so
    it keeps the app's own green in both themes. */
-.mejor-momento-punto {
+.best-time-point {
   width: 9px;
   height: 9px;
   border-radius: 50%;
@@ -21,7 +21,7 @@
   background: var(--ion-color-success, #2dd36f);
 }
 
-.mejor-momento-cambio {
+.best-time-change {
   margin: 2px 0 0 16px;
   font-size: 0.82rem;
   opacity: 0.8;
@@ -29,7 +29,7 @@
 
 /* WHY this stretch won (detail only): same indent as the change line, a bit
    more present because it is the answer the card exists to give. */
-.mejor-momento-motivo {
+.best-time-reason {
   margin: 2px 0 0 16px;
   font-size: 0.82rem;
   opacity: 0.9;

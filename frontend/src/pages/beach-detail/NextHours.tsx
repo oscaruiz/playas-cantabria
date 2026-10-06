@@ -115,14 +115,14 @@ const NextHours: React.FC<{
   };
 
   return (
-    <section className="proximas-horas-section">
+    <section className="next-hours-section">
       <h3 className="section-kicker">{title}</h3>
       {hasHours && (
       <div
-        className={`pd-horas-marco${moreBefore ? ' pd-horas-marco--antes' : ''}${moreAfter ? ' pd-horas-marco--despues' : ''}`}
+        className={`pd-hours-frame${moreBefore ? ' pd-hours-frame--before' : ''}${moreAfter ? ' pd-hours-frame--after' : ''}`}
       >
       <ul
-        className="pd-horas"
+        className="pd-hours"
         ref={scrollRef}
         onScroll={measureScroll}
         // A scrollable region must be reachable and named for the keyboard:
@@ -137,7 +137,7 @@ const NextHours: React.FC<{
           /* Una frase por hora para quien no ve la tira: la nubosidad solo la
              cuenta el icono, y el icono es decorativo. */
           <li
-            className={`pd-hora${inWindow(i) ? ' pd-hora--mejor' : ''}`}
+            className={`pd-hour${inWindow(i) ? ' pd-hour--best' : ''}`}
             key={h.horaIso}
             aria-label={t(wet ? 'detalle.pronostico.ariaHoraLluvia' : 'detalle.pronostico.ariaHora', {
               hora: madridLocalHour(h.horaIso) ?? '--:--',
@@ -146,21 +146,21 @@ const NextHours: React.FC<{
               viento: h.vientoMs != null ? Math.round(h.vientoMs) : '--',
             })}
           >
-            <span className="pd-hora-reloj" aria-hidden="true">
+            <span className="pd-hour-clock" aria-hidden="true">
               {madridLocalHour(h.horaIso) ?? '--:--'}
             </span>
             {/* Rain replaces the cloud icon outright: a wet hour is what the
                 window dodges, and a cloud there would hide the one fact that
                 explains the recommendation. */}
             <IonIcon
-              className={`pd-hora-icono${wet ? ' pd-hora-icono--lluvia' : ''}`}
+              className={`pd-hour-icon${wet ? ' pd-hour-icon--rain' : ''}`}
               icon={wet ? rainyOutline : iconoDeNubes(h.nubesPct)}
               aria-hidden="true"
             />
-            <span className="pd-hora-temp" aria-hidden="true">
+            <span className="pd-hour-temp" aria-hidden="true">
               {h.temperaturaC != null ? `${Math.round(h.temperaturaC)}°` : '--'}
             </span>
-            <span className="pd-hora-viento" aria-hidden="true">
+            <span className="pd-hour-wind" aria-hidden="true">
               {h.vientoMs != null ? `${Math.round(h.vientoMs)} m/s` : '--'}
             </span>
           </li>
@@ -170,7 +170,7 @@ const NextHours: React.FC<{
       {moreBefore && (
         <button
           type="button"
-          className="pd-horas-flecha pd-horas-flecha--antes"
+          className="pd-hours-arrow pd-hours-arrow--before"
           aria-label={t('detalle.pronostico.horasAnteriores')}
           onClick={() => scroll(-1)}
         >
@@ -180,7 +180,7 @@ const NextHours: React.FC<{
       {moreAfter && (
         <button
           type="button"
-          className="pd-horas-flecha pd-horas-flecha--despues"
+          className="pd-hours-arrow pd-hours-arrow--after"
           aria-label={t('detalle.pronostico.horasSiguientes')}
           onClick={() => scroll(1)}
         >
@@ -197,7 +197,7 @@ const NextHours: React.FC<{
           sería decir dos veces lo mismo. The API sends no emission time for
           the outlook, so none is shown either way. */}
       {hasHours && (
-        <DataInfo label="info.fuente" aria="info.aria.horas" className="proximas-horas-fuente">
+        <DataInfo label="info.fuente" aria="info.aria.horas" className="next-hours-source">
           {sourceAttribution(source)?.note ? (
             <AttributionNote source={source} />
           ) : (

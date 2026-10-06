@@ -6,7 +6,7 @@
 
 /* --- Page --- */
 .hp-page ion-content {
-  --background: var(--playa-sand);
+  --background: var(--beach-sand);
   --padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
 }
 
@@ -17,7 +17,7 @@
   left: 0;
   right: 0;
   z-index: 100;
-  background-image: var(--playa-chart-lines), var(--playa-header-grad);
+  background-image: var(--beach-chart-lines), var(--beach-header-grad);
   background-size: 320px 96px, auto;
   padding: 16px 20px 14px;
   padding-top: calc(env(safe-area-inset-top, 0px) + 16px);
@@ -28,7 +28,7 @@
 
 /* La marca se queda con lo que dejan las acciones, y ni un pixel más: sin el
    `min-width: 0` el texto no deja encoger a su caja y empuja la ⓘ fuera. */
-.hp-sticky-marca {
+.hp-sticky-brand {
   flex: 1;
   min-width: 0;
 }
@@ -70,7 +70,7 @@
   .hp-sticky-subtitle { font-size: clamp(0.6rem, 3vw - 0.05rem, 0.72rem); }
 }
 
-/* La cabecera mide 84px fijos (`--playa-header-h`) y el contenido de todas las
+/* La cabecera mide 84px fijos (`--beach-header-h`) y el contenido de todas las
    páginas se descuelga de ese número, así que el título no puede pasar de una
    línea. Pacifico es ancha, pero "Playucas.es" pide ~190px a 1.6rem y en un
    móvil de 360px quedan unos 280 con la ⓘ ya sin etiqueta: cabe sin ceder
@@ -81,11 +81,11 @@
 
 /* --- Hero band (scrollable, below sticky header) --- */
 .hp-hero {
-  background-image: var(--playa-chart-lines), var(--playa-header-grad);
+  background-image: var(--beach-chart-lines), var(--beach-header-grad);
   background-size: 320px 96px, auto;
   color: #ffffff;
   padding: 10px 20px 16px;
-  padding-top: calc(env(safe-area-inset-top, 0px) + var(--playa-header-h) + 10px);
+  padding-top: calc(env(safe-area-inset-top, 0px) + var(--beach-header-h) + 10px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.16);
 }
 
@@ -119,7 +119,7 @@
 /* Notice for a ranking older than the backend's own stale window. Discreet on
    purpose: it informs, it does not alarm, and it is not tappable — there is
    nothing a tap could do that the app is not already doing. */
-.hp-aviso-cache {
+.hp-warning-cache {
   margin: 0 0 16px;
   padding: 8px 12px;
   border-radius: 8px;
@@ -151,10 +151,10 @@
 
 /* --- Hero card: la mejor playa para hoy --- */
 .hp-hero-card {
-  background: var(--playa-foam);
-  border: 1px solid var(--playa-border);
-  border-top: 2px solid var(--playa-ocean);
-  border-radius: var(--playa-card-radius);
+  background: var(--beach-foam);
+  border: 1px solid var(--beach-border);
+  border-top: 2px solid var(--beach-ocean);
+  border-radius: var(--beach-card-radius);
   padding: 18px 20px;
 }
 
@@ -164,7 +164,7 @@
   gap: 14px;
 }
 
-.hp-hero-clima {
+.hp-hero-weather {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -180,7 +180,7 @@
 .hp-hero-temp {
   font-size: 0.95rem;
   font-weight: 700;
-  color: var(--playa-text);
+  color: var(--beach-text);
   margin-top: 2px;
   font-variant-numeric: tabular-nums;
 }
@@ -194,14 +194,14 @@
   font-family: 'Fraunces', Georgia, serif;
   font-size: 1.5rem;
   font-weight: 600;
-  color: var(--playa-text);
+  color: var(--beach-text);
   margin: 0;
   line-height: 1.2;
 }
 
-.hp-hero-municipio {
+.hp-hero-municipality {
   font-size: 0.85rem;
-  color: var(--playa-text-muted);
+  color: var(--beach-text-muted);
   margin: 3px 0 0;
 }
 
@@ -224,27 +224,27 @@
 .hp-hero-score-max {
   font-size: 0.72rem;
   font-weight: 600;
-  color: var(--playa-text-muted);
+  color: var(--beach-text-muted);
   margin-top: 3px;
 }
 
 /* The verdict as a sentence ("Somo está muy bien hoy"), above the reason. */
-.hp-hero-frase {
+.hp-hero-phrase {
   font-size: 1.02rem;
   font-weight: 600;
-  color: var(--playa-text);
+  color: var(--beach-text);
   margin: 14px 0 0;
 }
 
 .hp-hero-reason {
   font-size: 0.95rem;
   line-height: 1.45;
-  color: var(--playa-text);
+  color: var(--beach-text);
   margin: 14px 0 0;
 }
 
 /* With the phrase above, the reason is support text: tighter to it. */
-.hp-hero-frase + .hp-hero-reason {
+.hp-hero-phrase + .hp-hero-reason {
   margin-top: 4px;
 }
 
@@ -253,7 +253,7 @@
   align-items: center;
   gap: 5px;
   font-size: 0.78rem;
-  color: var(--playa-text-muted);
+  color: var(--beach-text-muted);
   margin: 6px 0 0;
 }
 
@@ -264,7 +264,7 @@
 
 /* Nota informativa (priorizada por cercanía) — mismo layout, tono océano */
 .hp-hero-caveat--info {
-  color: var(--playa-ocean);
+  color: var(--beach-ocean);
 }
 
 .hp-hero-meta {
@@ -272,7 +272,7 @@
   flex-wrap: wrap;
   align-items: center;
   font-size: 0.78rem;
-  color: var(--playa-text-muted);
+  color: var(--beach-text-muted);
   margin-top: 10px;
 }
 
@@ -335,7 +335,7 @@
   }
 
   .hp-hero-btn--secondary:hover {
-    background: var(--playa-ocean-light);
+    background: var(--beach-ocean-light);
   }
 }
 
@@ -348,16 +348,16 @@
 }
 
 .hp-flag-green {
-  background: var(--playa-flag-green);
+  background: var(--beach-flag-green);
 }
 
 .hp-flag-yellow {
-  background: var(--playa-flag-yellow);
+  background: var(--beach-flag-yellow);
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.25);
 }
 
 .hp-flag-red {
-  background: var(--playa-flag-red);
+  background: var(--beach-flag-red);
 }
 
 .hp-flag-black {
@@ -366,12 +366,12 @@
 
 /* --- Alternative rows (lista abierta con hairlines) --- */
 .hp-alt-list {
-  border-top: 1px solid var(--playa-border);
+  border-top: 1px solid var(--beach-border);
 }
 
 .hp-alt-row {
   padding: 13px 4px;
-  border-bottom: 1px solid var(--playa-border);
+  border-bottom: 1px solid var(--beach-border);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   display: flex;
@@ -385,7 +385,7 @@
 
 @media (hover: hover) {
   .hp-alt-row:hover {
-    background: var(--playa-ocean-light);
+    background: var(--beach-ocean-light);
   }
 }
 
@@ -404,7 +404,7 @@
 .hp-alt-temp {
   font-size: 0.8rem;
   font-weight: 700;
-  color: var(--playa-text);
+  color: var(--beach-text);
   margin-top: 2px;
   font-variant-numeric: tabular-nums;
 }
@@ -417,7 +417,7 @@
 .hp-alt-name {
   font-size: 0.9rem;
   font-weight: 600;
-  color: var(--playa-text);
+  color: var(--beach-text);
   margin: 0;
   line-height: 1.3;
   white-space: nowrap;
@@ -425,9 +425,9 @@
   text-overflow: ellipsis;
 }
 
-.hp-alt-municipio {
+.hp-alt-municipality {
   font-size: 0.75rem;
-  color: var(--playa-text-muted);
+  color: var(--beach-text-muted);
   margin: 2px 0 0;
 }
 
@@ -440,21 +440,21 @@
 
 .hp-alt-reason {
   font-size: 0.7rem;
-  color: var(--playa-text-muted);
+  color: var(--beach-text-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 /* Chip "mejor puntuación" en la alternativa con mayor puntuación cruda */
-.hp-alt-chip-mejor {
+.hp-alt-chip-best {
   display: inline-flex;
   align-items: center;
   gap: 3px;
   font-size: 0.62rem;
   font-weight: 600;
-  color: var(--playa-ocean);
-  background: var(--playa-ocean-light);
+  color: var(--beach-ocean);
+  background: var(--beach-ocean-light);
   border-radius: 10px;
   padding: 1px 7px;
   white-space: nowrap;
@@ -481,7 +481,7 @@
 }
 
 .hp-alt-arrow {
-  color: var(--playa-text-muted);
+  color: var(--beach-text-muted);
   font-size: 1.1rem;
   flex-shrink: 0;
   opacity: 0.5;
@@ -492,9 +492,9 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  background: var(--playa-foam);
-  border: 1px solid var(--playa-border);
-  border-radius: var(--playa-radius-s);
+  background: var(--beach-foam);
+  border: 1px solid var(--beach-border);
+  border-radius: var(--beach-radius-s);
   padding: 13px 14px;
   margin-bottom: 20px;
   cursor: pointer;
@@ -515,7 +515,7 @@
 
 .hp-location-icon {
   font-size: 1.3rem;
-  color: var(--playa-ocean);
+  color: var(--beach-ocean);
   flex-shrink: 0;
 }
 
@@ -527,19 +527,19 @@
 .hp-location-title {
   font-size: 0.9rem;
   font-weight: 600;
-  color: var(--playa-text);
+  color: var(--beach-text);
   margin: 0;
 }
 
 .hp-location-sub {
   font-size: 0.75rem;
-  color: var(--playa-ocean);
+  color: var(--beach-ocean);
   margin: 2px 0 0;
 }
 
 /* --- Nearest rows (lista abierta) --- */
 .hp-nearest-list {
-  border-top: 1px solid var(--playa-border);
+  border-top: 1px solid var(--beach-border);
 }
 
 .hp-nearest-card {
@@ -547,7 +547,7 @@
   align-items: center;
   gap: 12px;
   padding: 12px 4px;
-  border-bottom: 1px solid var(--playa-border);
+  border-bottom: 1px solid var(--beach-border);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
@@ -558,7 +558,7 @@
 
 @media (hover: hover) {
   .hp-nearest-card:hover {
-    background: var(--playa-ocean-light);
+    background: var(--beach-ocean-light);
   }
 }
 
@@ -570,20 +570,20 @@
 .hp-nearest-name {
   font-size: 0.9rem;
   font-weight: 600;
-  color: var(--playa-text);
+  color: var(--beach-text);
   margin: 0;
 }
 
 .hp-nearest-sub {
   font-size: 0.75rem;
-  color: var(--playa-text-muted);
+  color: var(--beach-text-muted);
   margin: 2px 0 0;
   font-variant-numeric: tabular-nums;
 }
 
 .hp-nearest-reason {
   font-size: 0.75rem;
-  color: var(--playa-text-muted);
+  color: var(--beach-text-muted);
   margin: 3px 0 0;
   line-height: 1.35;
   display: -webkit-box;
@@ -593,7 +593,7 @@
 }
 
 .hp-nearest-arrow {
-  color: var(--playa-text-muted);
+  color: var(--beach-text-muted);
   font-size: 1.1rem;
   opacity: 0.5;
   flex-shrink: 0;
@@ -613,14 +613,14 @@
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: var(--playa-text-muted);
+  background: var(--beach-text-muted);
   animation: hp-skel-pulse 1.2s ease-in-out infinite;
   flex-shrink: 0;
 }
 
 .hp-skel-line {
   border-radius: 3px;
-  background: var(--playa-text-muted);
+  background: var(--beach-text-muted);
   animation: hp-skel-pulse 1.2s ease-in-out infinite;
 }
 
@@ -638,7 +638,7 @@
 
 /* --- Caution rows (lista abierta con margen de aviso) --- */
 .hp-caution-list {
-  border-top: 1px solid var(--playa-border);
+  border-top: 1px solid var(--beach-border);
 }
 
 .hp-caution-card {
@@ -646,8 +646,8 @@
   align-items: center;
   gap: 12px;
   padding: 12px 4px 12px 12px;
-  border-bottom: 1px solid var(--playa-border);
-  border-left: 3px solid var(--playa-buoy);
+  border-bottom: 1px solid var(--beach-border);
+  border-left: 3px solid var(--beach-buoy);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
@@ -658,7 +658,7 @@
 
 @media (hover: hover) {
   .hp-caution-card:hover {
-    background: var(--playa-ocean-light);
+    background: var(--beach-ocean-light);
   }
 }
 
@@ -670,13 +670,13 @@
 .hp-caution-name {
   font-size: 0.9rem;
   font-weight: 600;
-  color: var(--playa-text);
+  color: var(--beach-text);
   margin: 0;
 }
 
 .hp-caution-sub {
   font-size: 0.75rem;
-  color: var(--playa-text-muted);
+  color: var(--beach-text-muted);
   margin: 2px 0 0;
   white-space: nowrap;
   overflow: hidden;
@@ -684,7 +684,7 @@
 }
 
 .hp-caution-arrow {
-  color: var(--playa-text-muted);
+  color: var(--beach-text-muted);
   font-size: 1.1rem;
   opacity: 0.5;
   flex-shrink: 0;
@@ -697,16 +697,16 @@
   align-items: center;
   gap: 10px;
   padding: 2.5rem 0;
-  color: var(--playa-ocean);
+  color: var(--beach-ocean);
   font-size: 0.85rem;
 }
 
 /* --- Empty / Error messages --- */
 .hp-empty-msg {
   padding: 1.25rem 0 1.25rem 14px;
-  color: var(--playa-text-muted);
+  color: var(--beach-text-muted);
   font-size: 0.85rem;
-  border-left: 3px solid var(--playa-border);
+  border-left: 3px solid var(--beach-border);
 }
 
 .hp-empty-msg p {
@@ -715,8 +715,8 @@
 
 .hp-error-msg {
   padding: 1.25rem 0 1.25rem 14px;
-  border-left: 3px solid var(--playa-flag-red);
-  color: var(--playa-text);
+  border-left: 3px solid var(--beach-flag-red);
+  color: var(--beach-text);
   font-size: 0.85rem;
 }
 
@@ -747,7 +747,7 @@
   }
 
   .hp-location-banner:not(.hp-location-banner--blocked):hover {
-    background: var(--playa-ocean-light);
+    background: var(--beach-ocean-light);
   }
 }
 
@@ -794,7 +794,7 @@
   }
 
   .hp-nearest-card {
-    border-top: 1px solid var(--playa-border);
+    border-top: 1px solid var(--beach-border);
     border-bottom: none;
   }
 
@@ -806,7 +806,7 @@
   }
 
   .hp-caution-card {
-    border-top: 1px solid var(--playa-border);
+    border-top: 1px solid var(--beach-border);
     border-bottom: none;
   }
 }

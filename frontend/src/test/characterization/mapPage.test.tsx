@@ -192,7 +192,7 @@ describe('MapaPage — qué playas se pintan', () => {
 
     const names = screen
       .getAllByTestId('marker')
-      .map((m) => m.querySelector('.mapa-popup-title')?.textContent);
+      .map((m) => m.querySelector('.map-popup-title')?.textContent);
 
     expect(names).toEqual([
       'VientoFuerte',
@@ -238,7 +238,7 @@ describe('MapaPage — iconos de marcador', () => {
 
     expect(html).toContain('☀️');
     expect(html).toContain('21°');
-    expect(html).toContain('mapa-pennant--green');
+    expect(html).toContain('map-pennant--green');
   });
 });
 
@@ -248,7 +248,7 @@ describe('MapaPage — popup', () => {
     const popup = markerByName('EnElCorte');
 
     expect(popup).toHaveTextContent('Municipio:');
-    expect(popup.querySelector('.mapa-popup-status--good')).toHaveTextContent(
+    expect(popup.querySelector('.map-popup-status--good')).toHaveTextContent(
       'cielo despejado, viento flojo',
     );
   });
@@ -257,9 +257,9 @@ describe('MapaPage — popup', () => {
     await renderMap();
 
     expect(
-      markerByName('MedioBajo').querySelector('.mapa-popup-status--medium'),
+      markerByName('MedioBajo').querySelector('.map-popup-status--medium'),
     ).toHaveTextContent('viento');
-    expect(markerByName('Malo').querySelector('.mapa-popup-status--bad')).toHaveTextContent(
+    expect(markerByName('Malo').querySelector('.map-popup-status--bad')).toHaveTextContent(
       'bandera roja',
     );
   });

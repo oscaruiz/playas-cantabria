@@ -35,7 +35,7 @@ const TextWithSource: React.FC<{ labelKey: TextKey; source: string }> = ({ label
       {before}
       {attribution ? (
         <a
-          className="procedencia-enlace"
+          className="provenance-link"
           href={attribution.url}
           target="_blank"
           rel="noopener noreferrer"
@@ -116,7 +116,7 @@ export const AttributionNote: React.FC<{
   const attribution = sourceAttribution(source);
   if (!source || !attribution?.note) return null;
   return (
-    <p className={`procedencia-atribucion ${className ?? ''}`.trim()}>
+    <p className={`provenance-attribution ${className ?? ''}`.trim()}>
       <TextWithSource labelKey={attribution.note} source={source} />
     </p>
   );
@@ -139,7 +139,7 @@ export const EstimatedValues: React.FC<{
   if (!fields || fields.length === 0) return null;
   const names = fields.map((c) => t(`datos.estimado.${c}` as TextKey));
   return (
-    <p className={`procedencia-estatica ${className ?? ''}`.trim()}>
+    <p className={`provenance-static ${className ?? ''}`.trim()}>
       {t('datos.estimados', { campos: names.join(', ') })}
     </p>
   );
@@ -169,7 +169,7 @@ export const ComputedAt: React.FC<{
   // wording is already taken by each block's own freshness.
   const absolute = formatAbsoluteInstant(ms, language);
   return (
-    <p className={`procedencia-estatica ${className ?? ''}`.trim()}>
+    <p className={`provenance-static ${className ?? ''}`.trim()}>
       {t('datos.calculado', {
         hace: '',
       }).trim()}{' '}
@@ -188,7 +188,7 @@ export const DataStatus: React.FC<{
   className?: string;
 }> = ({ labelKey: key, className }) => {
   const { t } = useLanguage();
-  return <p className={`procedencia-estatica ${className ?? ''}`.trim()}>{t(key)}</p>;
+  return <p className={`provenance-static ${className ?? ''}`.trim()}>{t(key)}</p>;
 };
 
 /**
@@ -205,7 +205,7 @@ export const SourceAndFreshness: React.FC<{
     return null;
   }
   return (
-    <div className={`procedencia-linea ${className ?? ''}`.trim()}>
+    <div className={`provenance-line ${className ?? ''}`.trim()}>
       <DataSourceLabel source={provenance.source} textKey={sourceKey} />
       {provenance.source && provenance.instantMs != null && ' · '}
       <FreshnessLabel instant={provenance.instantMs} />

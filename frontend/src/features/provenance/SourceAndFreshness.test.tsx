@@ -53,7 +53,7 @@ describe('SourceAndFreshness', () => {
         provenance={{ kind: 'prevision', source: 'Open-Meteo', instantMs: null }}
       />
     );
-    expect(container.querySelector('.procedencia-linea')).toHaveTextContent(
+    expect(container.querySelector('.provenance-line')).toHaveTextContent(
       'Datos meteorológicos: Open-Meteo'
     );
     expect(container.querySelector('time')).toBeNull();
@@ -65,7 +65,7 @@ describe('SourceAndFreshness', () => {
         provenance={{ kind: 'prevision', source: 'Open-Meteo', instantMs: null }}
       />
     );
-    const link = container.querySelector('a.procedencia-enlace');
+    const link = container.querySelector('a.provenance-link');
     expect(link).toHaveTextContent('Open-Meteo');
     expect(link).toHaveAttribute('href', 'https://open-meteo.com');
   });
@@ -76,7 +76,7 @@ describe('SourceAndFreshness', () => {
         provenance={{ kind: 'prevision', source: 'Meteovecino', instantMs: null }}
       />
     );
-    expect(container.querySelector('.procedencia-linea')).toHaveTextContent(
+    expect(container.querySelector('.provenance-line')).toHaveTextContent(
       'Datos meteorológicos: Meteovecino'
     );
     expect(container.querySelector('a')).toBeNull();
@@ -89,7 +89,7 @@ describe('SourceAndFreshness', () => {
         sourceKey="datos.enDirectoFuente"
       />
     );
-    expect(container.querySelector('.procedencia-linea')).toHaveTextContent(
+    expect(container.querySelector('.provenance-line')).toHaveTextContent(
       'Observación en directo de OpenWeather'
     );
     expect(container.querySelector('time')).not.toBeNull();
@@ -133,7 +133,7 @@ describe('ForecastHero wiring', () => {
     const { container } = renderWithProviders(
       <ForecastHero day={DAY} currentConditions={NOW_ISO} />
     );
-    expect(container.querySelector('.procedencia-linea')).toHaveTextContent(
+    expect(container.querySelector('.provenance-line')).toHaveTextContent(
       'Observación en directo de OpenWeather'
     );
     expect(container.querySelector('time')).not.toBeNull();
@@ -145,14 +145,14 @@ describe('ForecastHero wiring', () => {
     );
     // La frescura no es letra pequeña: es el dato. La nota de licencia del
     // observador viaja con el resto bajo la ⓘ que cierra la columna.
-    expect(container.querySelector('.procedencia-linea')).toHaveTextContent(
+    expect(container.querySelector('.provenance-line')).toHaveTextContent(
       'actualizado hace 7 min'
     );
-    expect(container.querySelector('.procedencia-atribucion')).toBeNull();
+    expect(container.querySelector('.provenance-attribution')).toBeNull();
   });
 
   it('without an observation there is no provenance line at all', () => {
     const { container } = renderWithProviders(<ForecastHero day={DAY} />);
-    expect(container.querySelector('.procedencia-linea')).toBeNull();
+    expect(container.querySelector('.provenance-line')).toBeNull();
   });
 });

@@ -70,7 +70,7 @@ const HeaderActions: React.FC = () => {
               usa lector ya lo oye en el nombre accesible del enlace. */}
           <a
             role="menuitem"
-            className="header-info-externo"
+            className="header-info-external"
             href={GITHUB}
             target="_blank"
             rel="noopener noreferrer"
@@ -78,22 +78,22 @@ const HeaderActions: React.FC = () => {
           >
             <IonIcon icon={logoGithub} aria-hidden="true" />
             <span>GitHub</span>
-            <IonIcon className="header-info-salida" icon={openOutline} aria-hidden="true" />
+            <IonIcon className="header-info-exit" icon={openOutline} aria-hidden="true" />
           </a>
           <a
             role="menuitem"
-            className="header-info-externo"
+            className="header-info-external"
             href={`mailto:${EMAIL}`}
             aria-label={`${t('nav.enviarEmail')} ${t('nav.abreFuera')}`}
           >
             <IonIcon icon={mailOutline} aria-hidden="true" />
             <span>{t('nav.enviarEmail')}</span>
-            <IonIcon className="header-info-salida" icon={openOutline} aria-hidden="true" />
+            <IonIcon className="header-info-exit" icon={openOutline} aria-hidden="true" />
           </a>
           {/* El rótulo va decorativo: el propio selector ya se anuncia como un
               grupo llamado "Idioma", y repetirlo lo diría dos veces. */}
           {!pillInBar && (
-            <div className="header-info-idioma" role="none">
+            <div className="header-info-language" role="none">
               <span aria-hidden="true">{t('selector.idioma')}</span>
               <LanguageSelector />
             </div>

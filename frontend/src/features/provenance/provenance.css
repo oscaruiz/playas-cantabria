@@ -1,40 +1,40 @@
 /* Provenance lines: always present, never loud. Same muted voice as the
    existing .tides-source / .source-label footers. */
 
-.procedencia-linea {
+.provenance-line {
   font-size: 0.68rem;
-  color: var(--playa-text-muted);
+  color: var(--beach-text-muted);
   margin-top: 8px;
 }
 
-.procedencia-estatica {
+.provenance-static {
   font-size: 0.68rem;
-  color: var(--playa-text-muted);
+  color: var(--beach-text-muted);
   margin: 8px 0 0;
 }
 
 /* Legal notice of a source, next to its data: same muted voice, but it has to
    stay legible — it is an obligation, not a footnote to hide. */
-.procedencia-atribucion {
+.provenance-attribution {
   font-size: 0.68rem;
   line-height: 1.45;
-  color: var(--playa-text-muted);
+  color: var(--beach-text-muted);
   margin: 6px 0 0;
 }
 
 /* Dato retirado por antiguo. No es un error de carga, así que no se pinta
    como tal: es una ausencia declarada. */
-.procedencia-caducada {
+.provenance-expired {
   font-style: italic;
 }
 
 /* El control ⓘ: discreto, pero un control — se toca, así que se ve que se
    puede tocar. Todo lo que declara el bloque vive dentro. */
-.info-datos {
+.info-data {
   margin-top: 8px;
 }
 
-.info-datos-btn {
+.info-data-btn {
   display: inline-flex;
   align-items: center;
   gap: 5px;
@@ -44,56 +44,56 @@
   cursor: pointer;
   font: inherit;
   font-size: 0.68rem;
-  color: var(--playa-text-muted);
+  color: var(--beach-text-muted);
   text-decoration: underline;
   text-underline-offset: 2px;
 }
 
-.info-datos-btn ion-icon {
+.info-data-btn ion-icon {
   font-size: 0.95rem;
   text-decoration: none;
 }
 
-.info-datos-btn:hover,
-.info-datos-btn:focus-visible {
+.info-data-btn:hover,
+.info-data-btn:focus-visible {
   color: var(--ion-color-primary);
 }
 
-.info-datos-panel {
+.info-data-panel {
   margin-top: 6px;
   padding-top: 6px;
-  border-top: 1px solid var(--playa-border, rgba(0, 0, 0, 0.08));
+  border-top: 1px solid var(--beach-border, rgba(0, 0, 0, 0.08));
   font-size: 0.68rem;
   line-height: 1.45;
-  color: var(--playa-text-muted);
+  color: var(--beach-text-muted);
 }
 
 /* Los párrafos sueltos del panel (avisos) comparten la voz del resto. */
-.info-datos-panel > p {
+.info-data-panel > p {
   margin: 0 0 6px;
 }
 
-.info-datos-panel > p:last-child,
-.info-datos-panel > *:last-child {
+.info-data-panel > p:last-child,
+.info-data-panel > *:last-child {
   margin-bottom: 0;
 }
 
 /* Sobre el fondo oceánico del hero el texto apagado no se lee. Las notas de
    dentro traen su propio color apagado, así que no basta con heredar: hay que
    ganarles, o la atribución queda ilegible sobre el azul. */
-.info-datos--hero .info-datos-btn,
-.info-datos--hero .info-datos-panel,
-.info-datos--hero .info-datos-panel p,
-.info-datos--hero .info-datos-panel time {
+.info-data--hero .info-data-btn,
+.info-data--hero .info-data-panel,
+.info-data--hero .info-data-panel p,
+.info-data--hero .info-data-panel time {
   color: rgba(255, 255, 255, 0.85);
 }
 
-.info-datos--hero .info-datos-panel {
+.info-data--hero .info-data-panel {
   border-top-color: rgba(255, 255, 255, 0.28);
 }
 
-.info-datos--hero .info-datos-btn:hover,
-.info-datos--hero .info-datos-btn:focus-visible {
+.info-data--hero .info-data-btn:hover,
+.info-data--hero .info-data-btn:focus-visible {
   color: #fff;
 }
 
@@ -103,19 +103,19 @@
   flex-wrap: wrap;
 }
 
-.flag-banner .info-datos {
+.flag-banner .info-data {
   flex-basis: 100%;
 }
 
 .flag-banner .safety-notice { flex-basis: 100%; }
 
 /* The credited name is a link and must look like one, muted text or not. */
-.procedencia-enlace {
+.provenance-link {
   color: inherit;
   text-decoration: underline;
 }
 
-.procedencia-enlace:hover,
-.procedencia-enlace:focus-visible {
+.provenance-link:hover,
+.provenance-link:focus-visible {
   color: var(--ion-color-primary);
 }

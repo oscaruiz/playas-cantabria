@@ -35,7 +35,7 @@
   gap: 2px;
   border: none;
   background: transparent;
-  color: var(--playa-text-muted);
+  color: var(--beach-text-muted);
   cursor: pointer;
   padding: 6px 0;
   transition: color 0.2s ease;
@@ -53,7 +53,7 @@
 }
 
 .bottom-nav-tab.active {
-  color: var(--playa-ocean);
+  color: var(--beach-ocean);
   font-weight: 600;
 }
 
@@ -66,11 +66,11 @@
 }
 
 .bottom-nav-tab:active:not(.active) {
-  color: var(--playa-text);
+  color: var(--beach-text);
 }
 
 .bottom-nav-tab:focus-visible {
-  outline: 2px solid var(--playa-ocean);
+  outline: 2px solid var(--beach-ocean);
   outline-offset: -2px;
   border-radius: 4px;
 }
@@ -78,7 +78,7 @@
 /* --- Hover (solo dispositivos con ratón) --- */
 @media (hover: hover) {
   .bottom-nav-tab:hover:not(.active) {
-    color: var(--playa-text);
+    color: var(--beach-text);
   }
 }
 

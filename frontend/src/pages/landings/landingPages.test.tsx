@@ -72,12 +72,12 @@ describe('MunicipiosIndex', () => {
     expect(await screen.findByText('Suances')).toBeInTheDocument();
     // Santander has 2 beaches in the fixture; its row says so — and the row
     // is a REAL link with a copyable href.
-    const santander = screen.getByText('Santander').closest('.ld-fila');
+    const santander = screen.getByText('Santander').closest('.ld-row');
     expect(santander).toHaveTextContent('2 playas');
     expect(santander?.tagName).toBe('A');
     expect(santander).toHaveAttribute('href', '/municipios/santander');
     // 5 unique municipalities in the fixture → 5 rows.
-    expect(document.querySelectorAll('.ld-fila')).toHaveLength(5);
+    expect(document.querySelectorAll('.ld-row')).toHaveLength(5);
     await waitFor(() => expect(document.title).toContain('Municipios'));
   });
 });

@@ -142,13 +142,13 @@ const ForecastHero: React.FC<{
             <span className="forecast-hero-max">{t('detalle.max')} {day.temperaturaMaxima}&deg;</span>
           )}
           {raining && (
-            <span className="forecast-hero-lluvia" role="status">
+            <span className="forecast-hero-rain" role="status">
               {currentConditions?.lluvia?.ultimaHora ? t('detalle.lluviaUltimaHora') : t('detalle.lloviendoAhora')}
               {rainMm != null && rainMm > 0 && ` · ${rainMm.toFixed(1)} mm`}
             </span>
           )}
           {expected && (
-            <span className="forecast-hero-lluvia forecast-hero-lluvia-prevista" role="status">
+            <span className="forecast-hero-rain forecast-hero-rain-expected" role="status">
               {expectedHour
                 ? t('detalle.lluviaPrevistaHora', { hora: expectedHour })
                 : t('detalle.lluviaPrevistaHoy')}
@@ -164,7 +164,7 @@ const ForecastHero: React.FC<{
             </span>
           )}
           {day.temperaturaAgua != null && (
-            <span className="forecast-hero-agua">{t('detalle.aguaGrados', { temp: day.temperaturaAgua })}</span>
+            <span className="forecast-hero-water">{t('detalle.aguaGrados', { temp: day.temperaturaAgua })}</span>
           )}
         </div>
         {wind && <WindTurbine level={wLevel} label={translateApiText(wind, language)} />}
@@ -175,7 +175,7 @@ const ForecastHero: React.FC<{
       {expired ? (
         /* Se dice que falta, y desde cuándo: callarlo dejaría la previsión
            pasando por observación sin que nadie pueda notarlo. */
-        <p className="procedencia-linea procedencia-caducada">
+        <p className="provenance-line provenance-expired">
           {t('datos.noDisponible')}{' '}
           <FreshnessLabel instant={received?.timestamp} />
         </p>

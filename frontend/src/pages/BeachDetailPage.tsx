@@ -167,7 +167,7 @@ const BeachDetailPage: React.FC = () => {
   const todaysDay = todayIndex >= 0 ? pred?.dias[todayIndex] : undefined;
 
   return (
-    <IonPage className="playa-detalle-page">
+    <IonPage className="beach-detail-page">
       {/* Whether reached by slug or by legacy code, the canonical URL is
           always the slug one: that is what "resolves" old links for SEO
           without remounting the Ionic view stack with a client redirect. */}
@@ -208,7 +208,7 @@ const BeachDetailPage: React.FC = () => {
             <p style={{ margin: 0 }}>{t('detalle.errorCarga')}</p>
             {/* La causa, que es lo primero que hace falta: el estado HTTP no
                 necesita traducción y el fallo de red sí. */}
-            <p className="error-causa">
+            <p className="error-cause">
               {statusError != null ? `HTTP ${statusError}` : t('detalle.sinRespuesta')}
             </p>
           </div>
@@ -287,7 +287,7 @@ const BeachDetailPage: React.FC = () => {
                     selectedDay={safeDayIndex}
                     onSelect={setSelectedDay}
                   />
-                  <div className="detail-card prevision-panel">
+                  <div className="detail-card forecast-panel">
                     <ForecastHero
                       day={pred.dias[safeDayIndex]}
                       currentWeather={isToday(pred.dias[safeDayIndex].fecha) ? data.temperaturaActual : undefined}
@@ -373,8 +373,8 @@ const BeachDetailPage: React.FC = () => {
               )}
 
               {/* Sibling beaches: the canonical municipality page. */}
-              <div className="pd-otras-playas">
-                <Link className="ld-enlace" to={municipalityPath(data.municipio)}>
+              <div className="pd-others-beaches">
+                <Link className="ld-link" to={municipalityPath(data.municipio)}>
                   {t('detalle.otrasPlayasMunicipio', { municipio: data.municipio })} &#8250;
                 </Link>
               </div>
@@ -387,7 +387,7 @@ const BeachDetailPage: React.FC = () => {
                   fuentes no es decir que colaboren. */}
               <DataInfo label="info.sobreDatos" aria="info.aria.ficha" className="pd-info-ficha">
                 <ComputedAt generatedAt={data.generadoEn} />
-                <p className="procedencia-estatica">{t('atribucion.independiente')}</p>
+                <p className="provenance-static">{t('atribucion.independiente')}</p>
               </DataInfo>
             </div>
           </>

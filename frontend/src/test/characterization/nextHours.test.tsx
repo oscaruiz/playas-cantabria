@@ -51,13 +51,13 @@ describe('ProximasHoras — la tira que respalda la ventana', () => {
     // El día va explícito y en hora de Madrid: "Lo que queda de hoy (jueves 21)".
     expect(screen.getByText(/^Lo que queda de hoy \([a-zá-ú]+ \d{1,2}\)$/)).toBeInTheDocument();
 
-    const items = container.querySelectorAll('.pd-hora');
+    const items = container.querySelectorAll('.pd-hour');
     expect(items).toHaveLength(4);
     // 15:00 y 16:00 Madrid dentro de la ventana; 14:00 y 17:00 fuera.
-    expect(items[0].classList.contains('pd-hora--mejor')).toBe(false);
-    expect(items[1].classList.contains('pd-hora--mejor')).toBe(true);
-    expect(items[2].classList.contains('pd-hora--mejor')).toBe(true);
-    expect(items[3].classList.contains('pd-hora--mejor')).toBe(false);
+    expect(items[0].classList.contains('pd-hour--best')).toBe(false);
+    expect(items[1].classList.contains('pd-hour--best')).toBe(true);
+    expect(items[2].classList.contains('pd-hour--best')).toBe(true);
+    expect(items[3].classList.contains('pd-hour--best')).toBe(false);
   });
 
   it('una hora mojada cambia el icono a lluvia y lo dice en su frase accesible', () => {
@@ -66,11 +66,11 @@ describe('ProximasHoras — la tira que respalda la ventana', () => {
       { route: '/' },
     );
 
-    const wet = container.querySelectorAll('.pd-hora')[3];
-    expect(wet.querySelector('.pd-hora-icono--lluvia')).not.toBeNull();
+    const wet = container.querySelectorAll('.pd-hour')[3];
+    expect(wet.querySelector('.pd-hour-icon--rain')).not.toBeNull();
     expect(wet.getAttribute('aria-label')).toContain('lluvia prevista');
     // Las horas secas conservan la frase de siempre.
-    const dry = container.querySelectorAll('.pd-hora')[0];
+    const dry = container.querySelectorAll('.pd-hour')[0];
     expect(dry.getAttribute('aria-label')).toContain('% de nubes');
   });
 

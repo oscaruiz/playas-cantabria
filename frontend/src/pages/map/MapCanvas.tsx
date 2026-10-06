@@ -63,7 +63,7 @@ function getBeachIcon(weather: FeaturedBeach, isBest: boolean): DivIcon {
   const html = `<div class="beach-marker beach-marker--${status}${sizeClass}${bestClass}">
     <span class="beach-marker__sky">${sky}</span>
     <span class="beach-marker__temp">${temp}</span>
-    ${flag && flag !== 'unknown' ? `<span class="mapa-pennant mapa-pennant--${flag} beach-marker__pennant"></span>` : ''}
+    ${flag && flag !== 'unknown' ? `<span class="map-pennant map-pennant--${flag} beach-marker__pennant"></span>` : ''}
     ${badge ? `<span class="beach-marker__badge">${badge}</span>` : ''}
   </div>`;
 
@@ -164,7 +164,7 @@ const MapCanvas: React.FC<{
   });
 
   return (
-    <div id="mapa-container">
+    <div id="map-container">
       <MapContainer
         center={[REGION.map.center.lat, REGION.map.center.lon]}
         zoom={REGION.map.zoom}
@@ -202,9 +202,9 @@ const MapCanvas: React.FC<{
               ref={(ref) => { if (ref) markersRef.current.set(beach.codigo, ref); }}
             >
               <Popup>
-                <div className="mapa-popup">
-                  <h3 className="mapa-popup-title">{beach.nombre}</h3>
-                  <p className="mapa-popup-row">
+                <div className="map-popup">
+                  <h3 className="map-popup-title">{beach.nombre}</h3>
+                  <p className="map-popup-row">
                     <strong>{t('mapa.municipio')}</strong> {beach.municipio}
                   </p>
                   {weather && (() => {
@@ -215,7 +215,7 @@ const MapCanvas: React.FC<{
                       weather.pronostico ? noForecastFragment(text) : text;
                     return (
                       <>
-                        <p className="mapa-popup-row">
+                        <p className="map-popup-row">
                           {rankedSkyEmoji(weather)}{' '}
                           {weather.temperatura != null ? `${Math.round(weather.temperatura)}°` : ''}{' '}
                           {/* La palabra de la app: aquí se leía la cadena cruda
@@ -228,37 +228,37 @@ const MapCanvas: React.FC<{
                           )}{weather.vientoMs != null ? `, ${t(windLevelKey(weather.vientoMs))}` : ''}
                         </p>
                         {status === 'good' && (
-                          <p className="mapa-popup-status mapa-popup-status--good">
+                          <p className="map-popup-status map-popup-status--good">
                             {translateApiText(noRepeat(weather.razonRanking), language)}
                           </p>
                         )}
                         {status === 'medium' && weather.motivoBaja && (
-                          <p className="mapa-popup-status mapa-popup-status--medium">
+                          <p className="map-popup-status map-popup-status--medium">
                             {translateApiText(noRepeat(weather.motivoBaja), language)}
                           </p>
                         )}
                         {status === 'bad' && weather.motivoBaja && (
-                          <p className="mapa-popup-status mapa-popup-status--bad">
+                          <p className="map-popup-status map-popup-status--bad">
                             {translateApiText(noRepeat(weather.motivoBaja), language)}
                           </p>
                         )}
                         {/* Al abrir la playa: hacia dónde va y por qué. */}
                         <TrendBadge outlook={weather.pronostico} />
                         {weather.bandera && (
-                          <p className="mapa-popup-flag">
-                            <span className={`mapa-pennant mapa-pennant--${flagColorClass(weather.bandera)}`} aria-hidden="true" />
-                            <span className="mapa-popup-flag-label">{t(flagKey(weather.bandera))}</span>
+                          <p className="map-popup-flag">
+                            <span className={`map-pennant map-pennant--${flagColorClass(weather.bandera)}`} aria-hidden="true" />
+                            <span className="map-popup-flag-label">{t(flagKey(weather.bandera))}</span>
                           </p>
                         )}
                         {weather.vientoMs != null && weather.vientoMs > 8 && (
-                          <p className="mapa-popup-status mapa-popup-status--bad">
+                          <p className="map-popup-status map-popup-status--bad">
                             {t('mapa.vientoFuerteKmh', { kmh: Math.round(weather.vientoMs * 3.6) })}
                           </p>
                         )}
                       </>
                     );
                   })()}
-                  <p className="mapa-popup-row mapa-popup-muted">
+                  <p className="map-popup-row map-popup-muted">
                     {isLifeguarded && operator
                       ? t('mapa.vigilada', { operador: translateOperator(operator, language) })
                       // null = the backend says nobody watches it; absent =
@@ -269,13 +269,13 @@ const MapCanvas: React.FC<{
                         : t('mapa.sinInfoCruzRoja')}
                   </p>
                   {webcamAvailable(beach.webcam) && (
-                    <p className="mapa-popup-row mapa-popup-webcam">
+                    <p className="map-popup-row map-popup-webcam">
                       <IonIcon icon={videocamOutline} aria-hidden="true" />
                       {t('mapa.webcamDisponible')}
                     </p>
                   )}
                   <button
-                    className="mapa-popup-btn"
+                    className="map-popup-btn"
                     onClick={() => history.push(beachPath(beach))}
                   >
                     {t('mapa.verDetalles')}
@@ -295,7 +295,7 @@ const MapCanvas: React.FC<{
 
       <button
         type="button"
-        className={`mapa-locate-btn${locationDenied ? ' mapa-locate-btn--denied' : ''}`}
+        className={`map-locate-btn${locationDenied ? ' map-locate-btn--denied' : ''}`}
         onClick={handleLocate}
         aria-label={t('mapa.localizarme')}
         title={t('mapa.localizarme')}
@@ -307,18 +307,18 @@ const MapCanvas: React.FC<{
         )}
       </button>
 
-      <div className="mapa-leyenda">
-        <span className="mapa-leyenda-item">
-          <span className="mapa-leyenda-dot mapa-leyenda-dot--good" aria-hidden="true" /> {t('mapa.leyendaBuenas')}
+      <div className="map-legend">
+        <span className="map-legend-item">
+          <span className="map-legend-dot map-legend-dot--good" aria-hidden="true" /> {t('mapa.leyendaBuenas')}
         </span>
-        <span className="mapa-leyenda-item">
-          <span className="mapa-leyenda-dot mapa-leyenda-dot--medium" aria-hidden="true" /> {t('mapa.leyendaRegular')}
+        <span className="map-legend-item">
+          <span className="map-legend-dot map-legend-dot--medium" aria-hidden="true" /> {t('mapa.leyendaRegular')}
         </span>
-        <span className="mapa-leyenda-item">
-          <span className="mapa-leyenda-dot mapa-leyenda-dot--bad" aria-hidden="true" /> {t('mapa.leyendaMalas')}
+        <span className="map-legend-item">
+          <span className="map-legend-dot map-legend-dot--bad" aria-hidden="true" /> {t('mapa.leyendaMalas')}
         </span>
-        <span className="mapa-leyenda-item mapa-leyenda-item--flag">
-          <span className="mapa-pennant mapa-pennant--green" aria-hidden="true" /> {t('mapa.leyendaBandera')}
+        <span className="map-legend-item map-legend-item--flag">
+          <span className="map-pennant map-pennant--green" aria-hidden="true" /> {t('mapa.leyendaBandera')}
         </span>
       </div>
     </div>

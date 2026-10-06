@@ -3,26 +3,26 @@
    nothing that would fight the host: the hover and active rules carry a
    pseudo-class, so they outrank the plain `.hp-badge` background without
    depending on which stylesheet loaded last. */
-.instalar-chip {
+.install-chip {
   border: 0;
   cursor: pointer;
   font-family: inherit;
   -webkit-tap-highlight-color: transparent;
 }
 
-.instalar-chip:active {
+.install-chip:active {
   transform: scale(0.96);
 }
 
 @media (hover: hover) {
-  .instalar-chip:hover {
+  .install-chip:hover {
     background: rgba(255, 255, 255, 0.28);
   }
 }
 
 /* Its own line inside the hero's flex row of badges, instead of squeezing
    between two pills. */
-.instalar-ayuda {
+.install-help {
   flex-basis: 100%;
   margin-top: 2px;
   padding: 10px 12px;
@@ -33,12 +33,12 @@
   line-height: 1.45;
 }
 
-.instalar-ayuda__titulo {
+.install-help__title {
   margin: 0 0 4px;
   font-weight: 600;
 }
 
-.instalar-ayuda__pasos {
+.install-help__steps {
   margin: 0;
   padding-left: 18px;
   display: flex;

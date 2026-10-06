@@ -106,7 +106,7 @@ describe('favoritas en la página de inicio', () => {
     expect(section).toBeInTheDocument();
     // First section of the body: favorites go at the very top.
     const first = container.querySelector('.hp-body section');
-    expect(first).toHaveClass('hp-section--favoritas');
+    expect(first).toHaveClass('hp-section--favorites');
     expect(first).toHaveTextContent('La Concha');
     // With the ranking loaded, the row carries current conditions.
     await waitFor(() => expect(first).toHaveTextContent('22°'));

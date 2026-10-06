@@ -1,11 +1,11 @@
-.legal-page { color: var(--playa-text); }
+.legal-page { color: var(--beach-text); }
 .legal-header {
   min-height: 64px;
   padding: 12px 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: var(--playa-header-grad);
+  background: var(--beach-header-grad);
 }
 /* Mismo criterio que en portada, listado y mapa: el título y las acciones
    terminan justo donde termina el texto (760px centrados), no pegados al filo
@@ -19,7 +19,7 @@
     padding-right: max(20px, calc((100% - 760px) / 2 + 20px));
   }
 }
-.legal-header-izq { display: flex; align-items: center; gap: 10px; }
+.legal-header-left { display: flex; align-items: center; gap: 10px; }
 /* `.pd-back-btn` se define en PlayaDetalle.css, que esta página no carga:
    se repite aquí el mínimo para que el botón no salga sin estilo. */
 .legal-header .pd-back-btn {
@@ -39,7 +39,7 @@
 .legal-main p { margin: 0 0 12px; }
 .legal-main ul { padding-left: 1.25rem; }
 .legal-main li { margin-bottom: 8px; }
-.legal-main a { color: var(--playa-ocean); text-underline-offset: 2px; }
-.legal-main blockquote { margin: 18px 0; padding: 14px 16px; border-left: 4px solid var(--playa-buoy); background: var(--playa-foam); font-size: 0.94rem; line-height: 1.65; }
+.legal-main a { color: var(--beach-ocean); text-underline-offset: 2px; }
+.legal-main blockquote { margin: 18px 0; padding: 14px 16px; border-left: 4px solid var(--beach-buoy); background: var(--beach-foam); font-size: 0.94rem; line-height: 1.65; }
 .legal-main code { font-size: 0.9em; }
 @media (max-width: 390px) { .legal-main { padding-bottom: 148px; } }

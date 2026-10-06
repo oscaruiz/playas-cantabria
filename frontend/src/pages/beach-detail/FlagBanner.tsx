@@ -56,7 +56,7 @@ const FlagBanner: React.FC<{
   const colorClass = status === 'color'
     ? flagColorClass(redCross!.bandera)
     : last
-      ? `${flagColorClass(last.bandera)} atenuada`
+      ? `${flagColorClass(last.bandera)} dimmed`
       : 'unknown';
   const flagCaptureMs =
     status === 'color' ? normalizeInstant(redCross?.ultimaActualizacion) : null;
@@ -76,11 +76,11 @@ const FlagBanner: React.FC<{
             : t(flagStatusKey(status, redCross!.bandera))}
         </div>
         {redCross!.horario && (
-          <div className="flag-horario">{t('detalle.vigilancia', { horario: redCross!.horario })}</div>
+          <div className="flag-schedule">{t('detalle.vigilancia', { horario: redCross!.horario })}</div>
         )}
-        {last && <div className="flag-horario">{registeredText(last.registradaIso, t, language)}</div>}
+        {last && <div className="flag-schedule">{registeredText(last.registradaIso, t, language)}</div>}
         {flagCaptureMs != null && (
-          <div className="flag-horario">
+          <div className="flag-schedule">
             <FreshnessLabel instant={flagCaptureMs} capitalized />
           </div>
         )}

@@ -184,8 +184,8 @@ function contenidoMapa() {
  * and there is nothing to flash.
  */
 const OCULTAR_CON_JS =
-  '<script>document.documentElement.classList.add("con-js")</script>\n    ' +
-  '<style>html.con-js .prerender{display:none}</style>';
+  '<script>document.documentElement.classList.add("with-js")</script>\n    ' +
+  '<style>html.with-js .prerender{display:none}</style>';
 
 /** Injects head tags + title + root content into the built template. */
 function paginaHtml(titulo, descripcion, ruta, contenido) {

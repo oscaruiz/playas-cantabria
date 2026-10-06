@@ -86,7 +86,7 @@ const WeatherHero: React.FC<{
       {days.length > 1 && (
         <DaySelector dates={days.map((d) => d.fecha)} selectedDay={sel} onSelect={setChosenDay} />
       )}
-      <div className="detail-card prevision-panel">
+      <div className="detail-card forecast-panel">
         <ForecastHero
           day={day}
           currentWeather={current.esHoy ? currentTemperature : undefined}

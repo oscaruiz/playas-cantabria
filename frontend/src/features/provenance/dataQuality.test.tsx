@@ -58,7 +58,7 @@ describe('ForecastHero — observación caducada', () => {
     expect(container.querySelector('.forecast-hero-temp')).toHaveTextContent('21');
     expect(screen.queryByText('Sol')).not.toBeInTheDocument();
     // And it says so, instead of silently swapping the value.
-    expect(container.querySelector('.procedencia-caducada')).toHaveTextContent(
+    expect(container.querySelector('.provenance-expired')).toHaveTextContent(
       'Dato no disponible'
     );
   });

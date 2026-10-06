@@ -156,12 +156,12 @@ const BeachList: React.FC = () => {
           texto no mueve nada. */}
       <div className="home-sticky-header">
         <div
-          className="home-sticky-marca marca-con-logo"
+          className="home-sticky-brand brand-with-logo"
           onClick={() => window.location.reload()}
           style={{ cursor: 'pointer' }}
         >
           <BrandLogo />
-          <div className="marca-texto">
+          <div className="brand-text">
             <h1 className="home-sticky-title">{t('app.titulo')}</h1>
             <p className="home-sticky-subtitle">{t('lista.subtitulo')}</p>
           </div>
@@ -198,9 +198,9 @@ const BeachList: React.FC = () => {
               role="combobox"
               aria-expanded={showSuggestions && suggestions.length > 0}
               aria-autocomplete="list"
-              aria-controls="sugerencias-lista"
+              aria-controls="suggestions-list"
               aria-activedescendant={
-                showSuggestions && activeIdx >= 0 ? `sugerencia-${activeIdx}` : undefined
+                showSuggestions && activeIdx >= 0 ? `suggestion-${activeIdx}` : undefined
               }
             />
             {filter.length > 0 && (
@@ -257,11 +257,11 @@ const BeachList: React.FC = () => {
             </button>
           </div>
           {showSuggestions && suggestions.length > 0 && (
-            <ul className="search-suggestions" role="listbox" id="sugerencias-lista">
+            <ul className="search-suggestions" role="listbox" id="suggestions-list">
               {suggestions.map((s, i) => (
                 <li
-                  key={s.kind === 'municipio' ? `municipio-${s.ruta}` : s.beach.codigo}
-                  id={`sugerencia-${i}`}
+                  key={s.kind === 'municipio' ? `municipality-${s.ruta}` : s.beach.codigo}
+                  id={`suggestion-${i}`}
                   className={`search-suggestion-item${i === activeIdx ? ' search-suggestion-item--active' : ''}`}
                   role="option"
                   aria-selected={i === activeIdx}
@@ -273,14 +273,14 @@ const BeachList: React.FC = () => {
                   {s.kind === 'municipio' ? (
                     <>
                       <span className="suggestion-name">{s.municipio}</span>
-                      <span className="suggestion-municipio">
+                      <span className="suggestion-municipality">
                         {t('detalle.municipio')} · {tPlural('lista.contador', s.total)}
                       </span>
                     </>
                   ) : (
                     <>
                       <span className="suggestion-name">{s.beach.nombre}</span>
-                      <span className="suggestion-municipio">{s.beach.municipio}</span>
+                      <span className="suggestion-municipality">{s.beach.municipio}</span>
                     </>
                   )}
                 </li>

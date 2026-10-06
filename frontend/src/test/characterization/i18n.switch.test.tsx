@@ -110,7 +110,7 @@ describe('i18n — contenido que viene del backend', () => {
     // through in Spanish, without warning. The coastal warnings are free prose
     // from AEMET and are not in any table — and the wind splitter must not
     // touch them either.
-    expect(container.querySelector('.aviso-yellow')).toHaveTextContent(
+    expect(container.querySelector('.warning-yellow')).toHaveTextContent(
       'Aviso amarillo por oleaje',
     );
   });
