@@ -28,8 +28,11 @@ on:
     # fueron días sanos con publicación tardía. Por eso mediodía puede CERRAR el
     # aviso pero no abrirlo, y la de la tarde —"el día se acaba sin banderas"—
     # es la única que abre.
-    - cron: '0 12 * * *' # 14:00 Madrid: detecta la recuperación; no abre aviso
-    - cron: '0 16 * * *' # 18:00 Madrid: la única pasada que abre el aviso
+    #
+    # Only June–September (same window as `enTemporadaDePlaya`). The `avisar`
+    # condition below compares against the literal cron string: keep them in sync.
+    - cron: '0 12 * 6-9 *' # 14:00 Madrid: detecta la recuperación; no abre aviso
+    - cron: '0 16 * 6-9 *' # 18:00 Madrid: la única pasada que abre el aviso
   workflow_dispatch: {}
 
 jobs:
@@ -65,7 +68,7 @@ jobs:
   # se retrasa es el aviso, no el registro.
   avisar:
     needs: frescura
-    if: failure() && github.event.schedule != '0 12 * * *'
+    if: failure() && github.event.schedule != '0 12 * 6-9 *'
     uses: ./.github/workflows/alerta-issue.yml
     permissions:
       issues: write

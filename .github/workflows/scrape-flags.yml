@@ -31,7 +31,8 @@ on:
     # un no-op inofensivo (sin banderas izadas no se sobrescribe nada).
     # En invierno (CET = UTC+1) sería 08:30–18:30 Madrid, pero fuera de temporada no
     # hay banderas izadas, así que esas pasadas también son no-op.
-    - cron: '30 7-17 * * *'
+    # Only June–September: the same window as `enTemporadaDePlaya` (config.ts).
+    - cron: '30 7-17 * 6-9 *'
   workflow_dispatch: {}
 
 permissions:
@@ -54,6 +55,16 @@ jobs:
       - id: detectar
         run: |
           set -euo pipefail
+          # The push trigger can't be filtered by month in `on:`. Out of season
+          # there is nothing to scrape, and committing flags-diag.json would
+          # redeploy Render for nothing. Manual dispatch still runs year-round.
+          mes=$(date -u +%-m)
+          if [[ "${{ github.event_name }}" == push ]] && (( mes < 6 || mes > 9 )); then
+            echo "lista=[]" >> "$GITHUB_OUTPUT"
+            echo "hay=false" >> "$GITHUB_OUTPUT"
+            echo "Out of season: skipping"
+            exit 0
+          fi
           lista=$(find regions -mindepth 2 -maxdepth 2 -name region.json -print0             | xargs -0 -n1 jq -r 'select((.flagProviders // []) | length > 0) | .id'             | sort | jq -R . | jq -sc .)
           echo "lista=$lista" >> "$GITHUB_OUTPUT"
           echo "hay=$([ "$lista" = "[]" ] && echo false || echo true)" >> "$GITHUB_OUTPUT"
