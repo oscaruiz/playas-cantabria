@@ -2,7 +2,7 @@
  * CHARACTERIZATION — FROZEN.
  *
  * Pins down `getFeaturedBeaches()`: same 5 min cache and same deduplication as
- * `getPlayas` but implemented separately (F2 unifies them into `ttlCache` /
+ * `getBeaches` but implemented separately (F2 unifies them into `ttlCache` /
  * `inFlight`), with the difference that here `{ force: true }` DOES exist to
  * skip the cache — it is what the home's retry button uses.
  *
@@ -27,14 +27,14 @@ afterEach(() => {
 });
 
 describe('getFeaturedBeaches', () => {
-  it('devuelve la respuesta del backend', async () => {
+  it('returns the backend response', async () => {
     installFetchMock([route(FEATURED, { json: featuredResponse })]);
     const { getFeaturedBeaches } = await loadApi();
 
     await expect(getFeaturedBeaches()).resolves.toEqual(featuredResponse);
   });
 
-  it('rechaza cuando la respuesta no es ok', async () => {
+  it('rejects when the response is not ok', async () => {
     installFetchMock([route(FEATURED, { status: 503 })]);
     const { getFeaturedBeaches } = await loadApi();
 
@@ -43,7 +43,7 @@ describe('getFeaturedBeaches', () => {
     );
   });
 
-  it('reutiliza la caché dentro de los 5 min', async () => {
+  it('reuses the cache within 5 min', async () => {
     jest.useFakeTimers();
     const fetchMock = installFetchMock([route(FEATURED, { json: featuredResponse })]);
     const { getFeaturedBeaches } = await loadApi();
@@ -54,7 +54,7 @@ describe('getFeaturedBeaches', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  it('vuelve a pedir cuando la caché ha caducado', async () => {
+  it('requests again when the cache has expired', async () => {
     jest.useFakeTimers();
     const fetchMock = installFetchMock([route(FEATURED, { json: featuredResponse })]);
     const { getFeaturedBeaches } = await loadApi();
@@ -66,7 +66,7 @@ describe('getFeaturedBeaches', () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
-  it('`force: true` se salta la caché', async () => {
+  it('`force: true` skips the cache', async () => {
     const fetchMock = installFetchMock([route(FEATURED, { json: featuredResponse })]);
     const { getFeaturedBeaches } = await loadApi();
 
@@ -76,7 +76,7 @@ describe('getFeaturedBeaches', () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
-  it('deduplica dos llamadas concurrentes', async () => {
+  it('deduplicates two concurrent calls', async () => {
     const fetchMock = installFetchMock([route(FEATURED, { json: featuredResponse, delayMs: 10 })]);
     const { getFeaturedBeaches } = await loadApi();
 

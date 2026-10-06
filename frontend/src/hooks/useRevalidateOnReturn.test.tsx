@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, act } from '@testing-library/react';
-import { useRevalidateOnReturn } from '../../../../../Dev/playas-cantabria/frontend/src/hooks/useRevalidateOnReturn';
+import { useRevalidateOnReturn } from './useRevalidateOnReturn';
 
 function setVisibility(status: DocumentVisibilityState) {
   Object.defineProperty(document, 'visibilityState', {
@@ -19,8 +19,8 @@ const Probe: React.FC<{ onReturn: () => void }> = ({ onReturn }) => {
 
 afterEach(() => setVisibility('visible'));
 
-describe('useRevalidarAlVolver', () => {
-  it('revalida al volver a la pestaña, no al dejarla', () => {
+describe('useRevalidateOnReturn', () => {
+  it('revalidates when returning to the tab, not when leaving it', () => {
     const revalidate = jest.fn();
     render(<Probe onReturn={revalidate} />);
 
@@ -31,7 +31,7 @@ describe('useRevalidarAlVolver', () => {
     expect(revalidate).toHaveBeenCalledTimes(1);
   });
 
-  it('llama a la ÚLTIMA función recibida, sin resuscribirse en cada render', () => {
+  it('calls the LAST function received, without resubscribing on every render', () => {
     const old = jest.fn();
     const newValue = jest.fn();
     const { rerender } = render(<Probe onReturn={old} />);
@@ -43,7 +43,7 @@ describe('useRevalidarAlVolver', () => {
     expect(newValue).toHaveBeenCalledTimes(1);
   });
 
-  it('deja de escuchar al desmontar', () => {
+  it('stops listening on unmount', () => {
     const revalidate = jest.fn();
     const { unmount } = render(<Probe onReturn={revalidate} />);
     unmount();

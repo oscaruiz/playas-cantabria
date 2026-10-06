@@ -8,7 +8,7 @@
 import React from 'react';
 import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { useHistory } from 'react-router-dom';
-import BeachDetailPage from '../../../../../../Dev/playas-cantabria/frontend/src/pages/BeachDetailPage';
+import BeachDetailPage from '../../pages/BeachDetailPage';
 import { renderWithProviders } from '../../test/render';
 import { installFetchMock, restoreFetch, route, deferred, RouteSpec } from '../../test/http/fakeFetch';
 import { beachesResponse } from '../../test/fixtures/beaches';
@@ -31,8 +31,8 @@ afterEach(() => {
   restoreFetch();
 });
 
-describe('ruta canónica /playas/:municipio/:playa', () => {
-  it('resuelve los slugs contra el catálogo y pide el detalle por código', async () => {
+describe('canonical route /playas/:municipio/:playa', () => {
+  it('resolves the slugs against the catalog and requests the detail by code', async () => {
     renderWithProviders(<BeachDetailPage />, {
       route: '/playas/suances/la-concha',
       path: '/playas/:municipio/:playa',
@@ -45,7 +45,7 @@ describe('ruta canónica /playas/:municipio/:playa', () => {
     expect(urls.some((u) => u.includes('/beaches/3908503/details'))).toBe(true);
   });
 
-  it('unos slugs desconocidos muestran el error con su causa (404)', async () => {
+  it('unknown slugs show the error with its cause (404)', async () => {
     renderWithProviders(<BeachDetailPage />, {
       route: '/playas/suances/no-existe',
       path: '/playas/:municipio/:playa',
@@ -68,12 +68,12 @@ const ChangeRoute: React.FC<{ a: string }> = ({ a }) => {
   return <button onClick={() => history.push(a)}>cambiar-ruta</button>;
 };
 
-describe('reutilización de la vista entre playas', () => {
+describe('view reuse between beaches', () => {
   // The harness router is plain MemoryRouter ON PURPOSE (see
   // src/test/render.tsx): the page only needs React Router's params, and
   // what this pins is the page's own guarantee — the derived-state guard
   // clears the previous beach the moment the route identity changes.
-  it('al cambiar de playa, la anterior desaparece EN EL ACTO, y su fallo no la resucita', async () => {
+  it('when switching beach, the previous one disappears AT ONCE, and its failure does not resurrect it', async () => {
     const responseB = deferred<RouteSpec>();
     let calls = 0;
     fetchMock = installFetchMock([
@@ -108,8 +108,8 @@ describe('reutilización de la vista entre playas', () => {
   });
 });
 
-describe('compartir desde el detalle', () => {
-  it('sin Web Share API copia la URL canónica y lo dice un momento', async () => {
+describe('sharing from the detail', () => {
+  it('without the Web Share API it copies the canonical URL and says so for a moment', async () => {
     const write = jest.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, 'clipboard', {
       configurable: true,
@@ -131,8 +131,8 @@ describe('compartir desde el detalle', () => {
   });
 });
 
-describe('ruta heredada /playas/:codigo', () => {
-  it('sigue funcionando y declara como canónica la URL con slugs', async () => {
+describe('legacy route /playas/:codigo', () => {
+  it('keeps working and declares the slug URL as canonical', async () => {
     renderWithProviders(<BeachDetailPage />, {
       route: '/playas/3905201',
       path: '/playas/:codigo',

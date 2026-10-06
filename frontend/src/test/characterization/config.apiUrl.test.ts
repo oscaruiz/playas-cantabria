@@ -42,33 +42,33 @@ afterEach(() => {
 });
 
 describe('API_BASE_URL', () => {
-  it('usa la URL de producción cuando no hay variable de entorno', async () => {
+  it('uses the production URL when there is no env variable', async () => {
     const { API_BASE_URL } = await loadConfig(undefined);
     expect(API_BASE_URL).toBe(DEFAULT_URL);
   });
 
-  it('ignora una variable vacía o solo con espacios', async () => {
+  it('ignores an empty or whitespace-only variable', async () => {
     const { API_BASE_URL } = await loadConfig('   ');
     expect(API_BASE_URL).toBe(DEFAULT_URL);
   });
 
-  it('respeta un override válido', async () => {
+  it('honours a valid override', async () => {
     const { API_BASE_URL } = await loadConfig('http://localhost:4000');
     expect(API_BASE_URL).toBe('http://localhost:4000');
   });
 
-  it('quita las barras finales', async () => {
+  it('strips trailing slashes', async () => {
     const { API_BASE_URL } = await loadConfig('https://api.example.test///');
     expect(API_BASE_URL).toBe('https://api.example.test');
   });
 
-  it('descarta protocolos no http(s)', async () => {
+  it('discards non-http(s) protocols', async () => {
     const { API_BASE_URL } = await loadConfig('ftp://api.example.test');
     expect(API_BASE_URL).toBe(DEFAULT_URL);
     expect(warnSpy).toHaveBeenCalled();
   });
 
-  it('descarta un valor que no es una URL', async () => {
+  it('discards a value that is not a URL', async () => {
     const { API_BASE_URL } = await loadConfig('no-es-una-url');
     expect(API_BASE_URL).toBe(DEFAULT_URL);
     expect(warnSpy).toHaveBeenCalled();
@@ -76,14 +76,14 @@ describe('API_BASE_URL', () => {
 });
 
 describe('buildApiUrl', () => {
-  it('acepta rutas con y sin barra inicial', async () => {
+  it('accepts paths with and without a leading slash', async () => {
     const { buildApiUrl } = await loadConfig('https://api.example.test');
 
     expect(buildApiUrl('/api/beaches')).toBe('https://api.example.test/api/beaches');
     expect(buildApiUrl('api/beaches')).toBe('https://api.example.test/api/beaches');
   });
 
-  it('devuelve la base cuando la ruta está vacía', async () => {
+  it('returns the base when the path is empty', async () => {
     const { buildApiUrl, API_BASE_URL } = await loadConfig('https://api.example.test');
     expect(buildApiUrl('')).toBe(API_BASE_URL);
   });

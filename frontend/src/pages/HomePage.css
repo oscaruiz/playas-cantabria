@@ -1,7 +1,7 @@
 /* =============================================
    HomePage – Landing / Discovery Page
-   Sistema "carta náutica": papel, tinta, atlántico
-   plano y hairlines. Sin gradientes ni card-itis.
+   "Nautical chart" system: paper, ink, flat Atlantic
+   and hairlines. No gradients or card-itis.
    ============================================= */
 
 /* --- Page --- */
@@ -26,8 +26,8 @@
   gap: 10px;
 }
 
-/* La marca se queda con lo que dejan las acciones, y ni un pixel más: sin el
-   `min-width: 0` el texto no deja encoger a su caja y empuja la ⓘ fuera. */
+/* The brand takes what the actions leave, and not a pixel more: without
+   `min-width: 0` the text keeps its box from shrinking and pushes the ⓘ out. */
 .hp-sticky-brand {
   flex: 1;
   min-width: 0;
@@ -70,14 +70,14 @@
   .hp-sticky-subtitle { font-size: clamp(0.6rem, 3vw - 0.05rem, 0.72rem); }
 }
 
-/* La cabecera mide 84px fijos (`--beach-header-h`) y el contenido de todas las
-   páginas se descuelga de ese número, así que el título no puede pasar de una
-   línea. Pacifico es ancha, pero "Playucas.es" pide ~190px a 1.6rem y en un
-   móvil de 360px quedan unos 280 con la ⓘ ya sin etiqueta: cabe sin ceder
-   tamaño (el breakpoint de 430px que pedía "Playas de Cantabria" sobró al
-   acortar la marca). La marca de una región más larga acabará en puntos
-   suspensivos: es la forma aceptada de degradar, la misma que el nombre de
-   playa en el detalle. */
+/* The header is a fixed 84px tall and the content of every page hangs from
+   that number, so the title cannot go past one line. Pacifico is wide, but
+   "Playucas.es" needs ~190px at 1.6rem and on a 360px phone about 280 remain
+   with the ⓘ already without a label: it fits without giving up size (the
+   430px breakpoint that "Playas de Cantabria" required became unnecessary
+   once the brand got shorter). The brand of a longer region will end in an
+   ellipsis: it is the accepted way to degrade, the same as the beach name in
+   the detail. */
 
 /* --- Hero band (scrollable, below sticky header) --- */
 .hp-hero {
@@ -149,7 +149,7 @@
   margin-bottom: 32px;
 }
 
-/* --- Hero card: la mejor playa para hoy --- */
+/* --- Hero card: the best beach for today --- */
 .hp-hero-card {
   background: var(--beach-foam);
   border: 1px solid var(--beach-border);
@@ -262,7 +262,7 @@
   font-size: 0.9rem;
 }
 
-/* Nota informativa (priorizada por cercanía) — mismo layout, tono océano */
+/* Informative note (prioritised by proximity) — same layout, ocean tone */
 .hp-hero-caveat--info {
   color: var(--beach-ocean);
 }
@@ -339,7 +339,7 @@
   }
 }
 
-/* --- Flag dot (compartido) --- */
+/* --- Flag dot (shared) --- */
 .hp-flag-dot {
   width: 8px;
   height: 8px;
@@ -364,7 +364,7 @@
   background: #111827;
 }
 
-/* --- Alternative rows (lista abierta con hairlines) --- */
+/* --- Alternative rows (open list with hairlines) --- */
 .hp-alt-list {
   border-top: 1px solid var(--beach-border);
 }
@@ -446,7 +446,7 @@
   text-overflow: ellipsis;
 }
 
-/* Chip "mejor puntuación" en la alternativa con mayor puntuación cruda */
+/* "Mejor puntuación" chip on the alternative with the highest raw score */
 .hp-alt-chip-best {
   display: inline-flex;
   align-items: center;
@@ -537,7 +537,7 @@
   margin: 2px 0 0;
 }
 
-/* --- Nearest rows (lista abierta) --- */
+/* --- Nearest rows (open list) --- */
 .hp-nearest-list {
   border-top: 1px solid var(--beach-border);
 }
@@ -636,7 +636,7 @@
   animation-delay: 0.15s;
 }
 
-/* --- Caution rows (lista abierta con margen de aviso) --- */
+/* --- Caution rows (open list with a warning margin) --- */
 .hp-caution-list {
   border-top: 1px solid var(--beach-border);
 }
@@ -753,16 +753,16 @@
 
 /* --- Desktop layout --- */
 @media (min-width: 720px) {
-  /* Alinea el contenido del header/hero a sangre con el cuerpo limitado */
+  /* Aligns the header/hero content flush with the constrained body */
   .hp-sticky-header,
   .hp-hero {
     padding-left: max(20px, calc((100% - 1080px) / 2 + 20px));
     padding-right: max(20px, calc((100% - 1080px) / 2 + 20px));
   }
 
-  /* Las acciones ya terminan donde termina el `padding-right` de arriba, que
-     es donde terminan las fichas: al ir en el flujo no hay un `right:` propio
-     que mantener a juego con él. */
+  /* The actions already end where the `padding-right` above ends, which is
+     where the cards end: being in the flow there is no `right:` of their own
+     to keep in step with it. */
 }
 
 @media (min-width: 900px) {
@@ -785,7 +785,7 @@
     flex: 0 1 auto;
   }
 
-  /* Evita filas estiradas de borde a borde en pantallas anchas */
+  /* Avoids rows stretched edge to edge on wide screens */
   .hp-nearest-list {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));

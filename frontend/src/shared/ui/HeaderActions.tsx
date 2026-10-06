@@ -2,9 +2,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import { informationCircleOutline, logoGithub, mailOutline, openOutline } from 'ionicons/icons';
 import { IonIcon } from '@ionic/react';
 import { Link } from 'react-router-dom';
-import { useLanguage } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
-import LanguageSelector from '../../../../../../Dev/playas-cantabria/frontend/src/shared/ui/LanguageSelector';
-import { GITHUB, EMAIL } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/config/contact';
+import { useLanguage } from '../i18n/LanguageContext';
+import LanguageSelector from './LanguageSelector';
+import { GITHUB, EMAIL } from '../config/contact';
 import './HeaderActions.css';
 
 /* A phone header does not fit the brand title plus two controls: "Playas de

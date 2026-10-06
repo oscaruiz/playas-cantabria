@@ -1,12 +1,12 @@
 import React, { useMemo } from 'react';
 import { IonPage, IonContent, IonFooter, IonSpinner } from '@ionic/react';
 import { Link } from 'react-router-dom';
-import { useLanguage } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
-import SeoHead from '../../../../../../Dev/playas-cantabria/frontend/src/shared/seo/SeoHead';
-import { municipalitiesSummary } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/seo/landings';
-import BottomNavBar from '../../../../../../Dev/playas-cantabria/frontend/src/shared/ui/BottomNavBar';
-import HeaderActions from '../../../../../../Dev/playas-cantabria/frontend/src/shared/ui/HeaderActions';
-import { useCatalog } from '../../../../../../Dev/playas-cantabria/frontend/src/pages/landings/useCatalog';
+import { useLanguage } from '../../shared/i18n/LanguageContext';
+import SeoHead from '../../shared/seo/SeoHead';
+import { municipalitiesSummary } from '../../shared/seo/landings';
+import BottomNavBar from '../../shared/ui/BottomNavBar';
+import HeaderActions from '../../shared/ui/HeaderActions';
+import { useCatalog } from './useCatalog';
 import './landings.css';
 
 interface MunicipalityRow {

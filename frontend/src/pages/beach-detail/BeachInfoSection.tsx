@@ -1,12 +1,12 @@
 import React from 'react';
 import { IonIcon } from '@ionic/react';
 import { Link } from 'react-router-dom';
-import { BeachDetail } from '../../../../../../Dev/playas-cantabria/frontend/src/services/api';
-import { municipalityPath } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/seo/landings';
-import { getActiveAttrs } from '../../../../../../Dev/playas-cantabria/frontend/src/utils/beachHelpers';
-import { useLanguage } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
-import { TextKey } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/es';
-import { translateApiText } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/apiText';
+import { BeachDetail } from '../../services/api';
+import { municipalityPath } from '../../shared/seo/landings';
+import { getActiveAttrs } from '../../utils/beachHelpers';
+import { useLanguage } from '../../shared/i18n/LanguageContext';
+import { TextKey } from '../../shared/i18n/es';
+import { translateApiText } from '../../shared/i18n/apiText';
 
 /** Static editorial data: dimensions, sand, access, parking, bus, hospital. */
 export const BeachInfoSection: React.FC<{ data: BeachDetail }> = ({ data }) => {

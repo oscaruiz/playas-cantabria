@@ -5,8 +5,8 @@ import { readFavorites, saveFavorites } from '../infrastructure/favoritesStorage
  * Shared favorites store: ONE in-memory set backed by localStorage, so the
  * star in a list row, the detail header and the list filter always agree
  * without prop-drilling or a context provider. React components subscribe
- * through `useFavoritas` (useSyncExternalStore); non-React code can call
- * `toggleFavorita` directly.
+ * through `useFavoriteCodes` (useSyncExternalStore); non-React code can call
+ * `toggleFavorite` directly.
  */
 
 let codes: ReadonlySet<string> | null = null;

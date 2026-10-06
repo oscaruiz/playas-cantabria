@@ -7,22 +7,22 @@ import {
   API_TABLES,
   translateOperator,
 } from './apiText';
-import { translateApiDayName, formatShortDate } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/dates';
+import { translateApiDayName, formatShortDate } from './dates';
 
-describe('traducirTextoApi', () => {
-  it('en español devuelve el texto original', () => {
+describe('translateApiText', () => {
+  it('in Spanish returns the original text', () => {
     expect(translateApiText('Cielo nublado, temperatura fresca', 'es')).toBe(
       'Cielo nublado, temperatura fresca'
     );
   });
 
-  it('traduce frases compuestas fragmento a fragmento', () => {
+  it('translates compound phrases fragment by fragment', () => {
     expect(
       translateApiText('Cielo nublado, temperatura fresca, sin cobertura Cruz Roja, oleaje fuerte', 'en')
     ).toBe('Cloudy sky, cool temperature, no Red Cross coverage, heavy surf');
   });
 
-  it('traduce los fragmentos de lluvia del ranking (motivoBaja/razonRanking)', () => {
+  it('translates the ranking rain fragments (motivoBaja/razonRanking)', () => {
     expect(translateApiText('Lloviendo ahora, 24°, brisa suave', 'en')).toBe(
       'Raining now, 24°, gentle breeze'
     );
@@ -34,50 +34,50 @@ describe('traducirTextoApi', () => {
     );
   });
 
-  it('traduce la previsión de las próximas horas (WeatherOutlook)', () => {
+  it('translates the outlook for the next few hours (WeatherOutlook)', () => {
     expect(translateApiText('Nublado, 20°, brisa suave, mejora en las próximas horas', 'en')).toBe(
       'Cloudy, 20°, gentle breeze, improving in the next few hours'
     );
-    // Cuando es el único motivo llega capitalizado desde el backend.
+    // When it is the only reason it arrives capitalized from the backend.
     expect(translateApiText('Empeora en las próximas horas', 'en')).toBe(
       'Getting worse in the next few hours'
     );
   });
 
-  it('conserva la capitalización inicial', () => {
+  it('keeps the initial capitalization', () => {
     expect(translateApiText('Nublado', 'en')).toBe('Cloudy');
     expect(translateApiText('nublado', 'en')).toBe('cloudy');
   });
 
-  it('deja intactos fragmentos numéricos y texto no reconocido', () => {
+  it('leaves numeric fragments and unrecognized text intact', () => {
     expect(translateApiText('Nublado, 19°, flojo', 'en')).toBe('Cloudy, 19°, light');
     expect(translateApiText('Texto inventado xyz', 'en')).toBe('Texto inventado xyz');
   });
 
-  it('gestiona null/undefined', () => {
+  it('handles null/undefined', () => {
     expect(translateApiText(null, 'en')).toBe('');
     expect(translateApiText(undefined, 'es')).toBe('');
   });
 });
 
-describe('razonLegible', () => {
-  it('antepone "viento" a flojo/fuerte sueltos', () => {
+describe('readableReason', () => {
+  it('prepends "viento" to a bare flojo/fuerte', () => {
     expect(readableReason('Sol, 24°, flojo, bandera verde')).toBe('Sol, 24°, viento flojo, bandera verde');
     expect(readableReason('Bandera roja, fuerte')).toBe('Bandera roja, viento fuerte');
   });
 
-  it('no duplica "viento" si ya está delante', () => {
+  it('does not duplicate "viento" if it is already in front', () => {
     expect(readableReason('viento fuerte')).toBe('viento fuerte');
     expect(readableReason('viento flojo del norte')).toBe('viento flojo del norte');
   });
 
-  it('deja intactas las razones sin flojo/fuerte', () => {
+  it('leaves reasons without flojo/fuerte intact', () => {
     expect(readableReason('Sol, 24°, sin viento, bandera verde')).toBe('Sol, 24°, sin viento, bandera verde');
   });
 });
 
-describe('claveBandera', () => {
-  it('mapea los colores a claves de diccionario', () => {
+describe('flagKey', () => {
+  it('maps colors to dictionary keys', () => {
     expect(flagKey('Negra')).toBe('bandera.negra');
     expect(flagKey('Roja')).toBe('bandera.roja');
     expect(flagKey('Amarilla')).toBe('bandera.amarilla');
@@ -86,8 +86,8 @@ describe('claveBandera', () => {
   });
 });
 
-describe('claveEstadoBandera', () => {
-  it('mapea el estado a la clave correcta', () => {
+describe('flagStatusKey', () => {
+  it('maps the state to the right key', () => {
     expect(flagStatusKey('color', 'Verde')).toBe('bandera.verde');
     expect(flagStatusKey('color', 'Roja')).toBe('bandera.roja');
     expect(flagStatusKey('fueraDeHorario')).toBe('bandera.fueraDeHorario');
@@ -95,8 +95,8 @@ describe('claveEstadoBandera', () => {
   });
 });
 
-describe('claveNivelVientoMs', () => {
-  it('clasifica por velocidad', () => {
+describe('windLevelKey', () => {
+  it('classifies by speed', () => {
     expect(windLevelKey(1)).toBe('viento.sinViento');
     expect(windLevelKey(4)).toBe('viento.brisaSuave');
     expect(windLevelKey(8)).toBe('viento.moderado');
@@ -104,52 +104,52 @@ describe('claveNivelVientoMs', () => {
   });
 });
 
-describe('fechas', () => {
-  it('traduce nombres de día del API', () => {
+describe('dates', () => {
+  it('translates day names from the API', () => {
     expect(translateApiDayName('domingo', 'en')).toBe('Sunday');
     expect(translateApiDayName('miercoles', 'en')).toBe('Wednesday');
     expect(translateApiDayName('domingo', 'es')).toBe('domingo');
     expect(translateApiDayName('xyz', 'en')).toBeNull();
   });
 
-  it('formatea fecha corta por idioma', () => {
+  it('formats the short date per language', () => {
     expect(formatShortDate('Domingo', 5, 5, 'es')).toBe('Domingo 5 de junio');
     expect(formatShortDate('Sunday', 5, 5, 'en')).toBe('Sunday, June 5');
   });
 });
 
-describe('viento compuesto', () => {
+describe('compound wind', () => {
   const tr = (t: string) => translateApiText(t, 'en');
 
-  it('traduce intensidad + dirección', () => {
+  it('translates intensity + direction', () => {
     expect(tr('flojo del noreste')).toBe('light wind from the northeast');
     expect(tr('moderado del oeste')).toBe('moderate wind from the west');
     expect(tr('fuerte del noroeste')).toBe('strong wind from the northwest');
     expect(tr('muy fuerte del sur')).toBe('very strong wind from the south');
   });
 
-  it('traduce intensidad + variable', () => {
+  it('translates intensity + variable', () => {
     expect(tr('flojo variable')).toBe('light variable wind');
     expect(tr('muy fuerte variable')).toBe('very strong variable wind');
   });
 
-  it('acepta las variantes de AEMET "componente" y nordeste/sudoeste', () => {
+  it('accepts AEMET variants "componente" and nordeste/sudoeste', () => {
     expect(tr('moderado de componente norte')).toBe('moderate wind from the north');
     expect(tr('flojo del nordeste')).toBe('light wind from the northeast');
     expect(tr('fuerte del sudoeste')).toBe('strong wind from the southwest');
   });
 
-  it('da lo mismo lleve o no el prefijo "viento" que añade razonLegible', () => {
-    // The home and the list go through razonLegible; the detail does not.
+  it('gives the same result with or without the "viento" prefix that readableReason adds', () => {
+    // The home and the list go through readableReason; the detail does not.
     expect(tr('viento flojo del noreste')).toBe('light wind from the northeast');
     expect(tr('flojo del noreste')).toBe('light wind from the northeast');
   });
 
-  it('respeta la mayúscula inicial', () => {
+  it('respects the initial capital letter', () => {
     expect(tr('Flojo del noreste')).toBe('Light wind from the northeast');
   });
 
-  it('compone bien dentro de una razón de ranking completa', () => {
+  it('composes correctly inside a full ranking reason', () => {
     const rationale = readableReason('Sol, 24°, flojo del noreste, bandera verde');
     expect(rationale).toBe('Sol, 24°, viento flojo del noreste, bandera verde');
     expect(translateApiText(rationale, 'en')).toBe(
@@ -157,40 +157,40 @@ describe('viento compuesto', () => {
     );
   });
 
-  it('no interfiere con el oleaje de la misma frase', () => {
+  it('does not interfere with the swell in the same phrase', () => {
     expect(tr('Sol, fuerte del noroeste, oleaje fuerte')).toBe(
       'Sun, strong wind from the northwest, heavy surf'
     );
   });
 
-  it('el acierto directo sigue teniendo prioridad', () => {
+  it('a direct hit still takes priority', () => {
     expect(tr('Nublado, 19°, flojo')).toBe('Cloudy, 19°, light');
     expect(tr('en calma')).toBe('calm');
   });
 
-  it('SEGURIDAD: no toca el texto libre que contiene "de" o "del"', () => {
+  it('SAFETY: does not touch free text containing "de" or "del"', () => {
     const access = 'A pie por el recinto de la península de La Magdalena';
     expect(tr(access)).toBe(access);
     expect(tr('aviso amarillo por oleaje')).toBe('aviso amarillo por oleaje');
     expect(tr('Desde Monte; último tramo a pie')).toBe('Desde Monte; último tramo a pie');
   });
 
-  it('hueco conocido: las variantes con "tendiendo a" pasan sin traducir', () => {
+  it('known gap: variants with "tendiendo a" pass through untranslated', () => {
     const text = 'moderado del oeste tendiendo a flojo';
     expect(tr(text)).toBe(text);
   });
 });
 
-describe('entradas nuevas de las tablas', () => {
+describe('new table entries', () => {
   const tr = (t: string) => translateApiText(t, 'en');
 
-  it('cubre los niveles de viento y oleaje derivados en el backend', () => {
+  it('covers the wind and swell levels derived in the backend', () => {
     expect(tr('viento fresco')).toBe('fresh wind');
     expect(tr('agitado')).toBe('choppy');
     expect(tr('tranquilo')).toBe('calm');
   });
 
-  it('traduce sin desplazar los niveles de la escala Douglas', () => {
+  it('translates without displacing the Douglas scale levels', () => {
     expect(tr('gruesa')).toBe('rough sea');
     expect(tr('muy gruesa')).toBe('very rough sea');
     expect(tr('arbolada')).toBe('high sea');
@@ -199,13 +199,13 @@ describe('entradas nuevas de las tablas', () => {
     expect(tr('mar gruesa')).toBe('rough sea');
   });
 
-  it('cubre la escala de sensación térmica completa', () => {
+  it('covers the full thermal sensation scale', () => {
     expect(tr('templado')).toBe('mild');
     expect(tr('calor moderado')).toBe('warm');
     expect(tr('calor intenso')).toBe('very hot');
   });
 
-  it('cubre los cinco colores de bandera', () => {
+  it('covers the five flag colors', () => {
     expect(tr('Verde')).toBe('Green');
     expect(tr('Amarilla')).toBe('Yellow');
     expect(tr('Roja')).toBe('Red');
@@ -213,7 +213,7 @@ describe('entradas nuevas de las tablas', () => {
     expect(tr('Desconocida')).toBe('Unknown');
   });
 
-  it('cubre los motivos de exclusión, que llegan como cadena completa', () => {
+  it('covers the exclusion reasons, which arrive as a full string', () => {
     expect(tr('Baño prohibido (bandera negra)')).toBe('Swimming prohibited (black flag)');
     expect(tr('Bandera roja con viento muy fuerte')).toBe('Red flag with very strong wind');
     expect(tr('Tormenta activa')).toBe('Active storm');
@@ -221,32 +221,32 @@ describe('entradas nuevas de las tablas', () => {
     expect(tr('Condiciones peligrosas')).toBe('Dangerous conditions');
   });
 
-  it('cubre los factores de bajada del ranking', () => {
+  it('covers the ranking downgrade factors', () => {
     expect(tr('Condiciones aceptables')).toBe('Acceptable conditions');
     expect(tr('UV muy alto')).toBe('Very high UV');
     expect(tr('temperatura baja')).toBe('low temperature');
     expect(tr('condiciones poco favorables')).toBe('unfavourable conditions');
   });
 
-  it('el nivel UV sigue traduciéndose sin el prefijo que recorta el detalle', () => {
+  it('the UV level is still translated without the prefix that the detail trims', () => {
     expect(tr('Muy alto')).toBe('Very high');
     expect(tr('Extremo')).toBe('Extreme');
   });
 
-  it('cubre los tamaños de parking que existen en los datos', () => {
+  it('covers the parking sizes that exist in the data', () => {
     expect(tr('Menos de 50 plazas')).toBe('Fewer than 50 spaces');
     expect(tr('Entre 50 y 100 plazas')).toBe('50-100 spaces');
   });
 
-  it('traduce el "cielo claro" de OpenWeather, no solo el de AEMET', () => {
+  it(`translates OpenWeather's "cielo claro", not only AEMET's`, () => {
     // `tiempoActual.cielo` comes from OpenWeather and uses a different word than AEMET.
     expect(tr('Cielo claro')).toBe('Clear sky');
     expect(tr('Cielo despejado')).toBe('Clear sky');
   });
 });
 
-describe('integridad de las tablas', () => {
-  it('no hay colisiones entre tablas salvo la documentada de "fresco"', () => {
+describe('table integrity', () => {
+  it('no collisions between tables except the documented one for "fresco"', () => {
     const seen = new Map<string, string>();
     const collisions: string[] = [];
 
@@ -261,18 +261,18 @@ describe('integridad de las tablas', () => {
     // 'fresco' is both a wind level and a thermal sensation; sensation
     // wins due to the spread order. Any other collision would be a bug:
     // the last table would silently shadow the previous one.
-    expect(collisions).toEqual(['fresco (MAPA_VIENTO vs MAPA_SENSACION)']);
+    expect(collisions).toEqual(['fresco (WIND_MAP vs FEELS_LIKE_MAP)']);
   });
 });
 
-describe('operador de banderas', () => {
-  it('traduce el nombre de Cruz Roja y deja intacto uno desconocido', () => {
+describe('flag operator', () => {
+  it('translates the Cruz Roja name and leaves an unknown one intact', () => {
     expect(translateOperator('Cruz Roja', 'en')).toBe('Red Cross');
     expect(translateOperator('Cruz Roja', 'es')).toBe('Cruz Roja');
     expect(translateOperator('DYA', 'en')).toBe('DYA');
   });
 
-  it('traduce "sin cobertura X" para cualquier operador', () => {
+  it('translates "sin cobertura X" for any operator', () => {
     // Cantabria's exact string keeps its own dictionary entry (contract with
     // the deployed frontend); any other operator goes through the frame.
     expect(translateApiText('sin cobertura Cruz Roja', 'en')).toBe('no Red Cross coverage');

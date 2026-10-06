@@ -1,33 +1,34 @@
 /**
- * El 2-sep-2026 la primera carga de la mañana pintó el cielo de anoche —iconos
- * de luna y temperaturas de ayer— sin decir nada y sin corregirse.
+ * On 2-Sep-2026 the first load of the morning painted last night's sky — moon
+ * icons and yesterday's temperatures — without saying anything and without
+ * correcting itself.
  *
- * La causa está fuera de la app: `NetworkFirst` abandona la red a los tres
- * segundos y resuelve con lo que tenga guardado, y la primera petición del día
- * siempre pasa de ahí porque el backend recalcula `/featured` en frío. A nivel
- * de `fetch` esa copia es un 200 normal.
+ * The cause is outside the app: `NetworkFirst` gives up on the network after
+ * three seconds and resolves with whatever it has stored, and the first request
+ * of the day always goes past that because the backend recomputes `/featured`
+ * cold. At the `fetch` level that copy is a normal 200.
  *
- * Aquí se fija la parte que le toca a la portada: decir que lo pintado no es de
- * ahora, y pintar la respuesta buena cuando el service worker la entrega. Que
- * el worker la entregue —una vez, con el cuerpo dentro y sin realimentarse— es
- * cosa suya y se comprobó contra Chrome.
+ * What is pinned here is the home page's part: saying that what is painted is
+ * not current, and painting the good response when the service worker delivers
+ * it. That the worker delivers it — once, with the body inside and without
+ * feeding back on itself — is its own business and was checked against Chrome.
  */
 
 import React from 'react';
 import { screen, waitFor, act } from '@testing-library/react';
-import HomePage from '../../../../../Dev/playas-cantabria/frontend/src/pages/HomePage';
-import { renderWithProviders } from '../../../../../Dev/playas-cantabria/frontend/src/test/render';
-import { installFetchMock, restoreFetch, route, deferred } from '../../../../../Dev/playas-cantabria/frontend/src/test/http/fakeFetch';
-import type { RouteSpec } from '../../../../../Dev/playas-cantabria/frontend/src/test/http/fakeFetch';
-import { beachesResponse } from '../../../../../Dev/playas-cantabria/frontend/src/test/fixtures/beaches';
-import { featuredResponse } from '../../../../../Dev/playas-cantabria/frontend/src/test/fixtures/featured';
-import { FEATURED_PATH as FEATURED, BEACHES_PATH as BEACHES } from '../../../../../Dev/playas-cantabria/frontend/src/test/apiRoutes';
-import { API_UPDATED_MESSAGE } from '../../../../../Dev/playas-cantabria/frontend/src/hooks/useServiceWorkerRefresh';
+import HomePage from '../pages/HomePage';
+import { renderWithProviders } from './render';
+import { installFetchMock, restoreFetch, route, deferred } from './http/fakeFetch';
+import type { RouteSpec } from './http/fakeFetch';
+import { beachesResponse } from './fixtures/beaches';
+import { featuredResponse } from './fixtures/featured';
+import { FEATURED_PATH as FEATURED, BEACHES_PATH as BEACHES } from './apiRoutes';
+import { API_UPDATED_MESSAGE } from '../hooks/useServiceWorkerRefresh';
 
 const URL_FEATURED = 'https://api.example/api/cantabria/beaches/featured';
 const WARNING = /última visita/i;
 
-/** jsdom no trae `navigator.serviceWorker`: basta un EventTarget. */
+/** jsdom has no `navigator.serviceWorker`: an EventTarget is enough. */
 const channel = new EventTarget();
 
 beforeAll(() => {
@@ -35,13 +36,13 @@ beforeAll(() => {
 });
 
 /**
- * El ranking en vigor vive en variables de módulo de `services/api` y NO se
- * reinicia entre tests —igual que no se reinicia entre dos pantallas de la app,
- * que es justo para lo que está—. Así que la portada abre pintando lo que dejó
- * el caso anterior y se corrige cuando llega su respuesta, exactamente como le
- * pasa a una pantalla que se abre con un ranking viejo en vigor: por eso los
- * casos esperan a que la pantalla SE ASIENTE, en vez de mirarla al instante.
- * Cada test arranca además dos minutos después, con el memo de 60 s caducado.
+ * The ranking in force lives in module variables of `services/api` and is NOT
+ * reset between tests — just as it is not reset between two screens of the app,
+ * which is exactly what it is for. So the home page opens painting what the
+ * previous case left and corrects itself when its response arrives, exactly as
+ * happens to a screen that opens with an old ranking in force: that is why the
+ * cases wait for the screen to SETTLE instead of looking at it instantly.
+ * Each test also starts two minutes later, with the 60 s memo expired.
  */
 let now = Date.now();
 
@@ -54,7 +55,7 @@ beforeEach(() => {
 
 afterEach(() => restoreFetch());
 
-/** Lo que el service worker manda cuando llega la respuesta que abandonó. */
+/** What the service worker sends when the response it had given up on arrives. */
 function deliverFromSW(data: unknown) {
   act(() => {
     const event = new Event('message') as Event & { data?: unknown };
@@ -67,8 +68,8 @@ function withAge(hours: number) {
   return { ...featuredResponse, timestamp: Date.now() - hours * 60 * 60 * 1000 };
 }
 
-describe('HomePage — respuesta servida por el service worker', () => {
-  it('avisa cuando lo pintado lo construyó el backend hace horas', async () => {
+describe('HomePage — response served by the service worker', () => {
+  it('warns when what is painted was built by the backend hours ago', async () => {
     installFetchMock([
       route(FEATURED, { json: withAge(12) }),
       route(BEACHES, { json: beachesResponse }),
@@ -79,7 +80,7 @@ describe('HomePage — respuesta servida por el service worker', () => {
     expect(await screen.findByText(WARNING)).toBeInTheDocument();
   });
 
-  it('no avisa de nada cuando el dato es de ahora mismo', async () => {
+  it('warns of nothing when the data is current', async () => {
     installFetchMock([
       route(FEATURED, { json: withAge(0) }),
       route(BEACHES, { json: beachesResponse }),
@@ -91,7 +92,7 @@ describe('HomePage — respuesta servida por el service worker', () => {
     await waitFor(() => expect(screen.queryByText(WARNING)).not.toBeInTheDocument());
   });
 
-  it('se repinta con lo que trae el mensaje, y el aviso se retira solo', async () => {
+  it('repaints with what the message carries, and the notice withdraws by itself', async () => {
     installFetchMock([
       route(FEATURED, { json: withAge(12) }),
       route(BEACHES, { json: beachesResponse }),
@@ -105,11 +106,11 @@ describe('HomePage — respuesta servida por el service worker', () => {
     await waitFor(() => expect(screen.queryByText(WARNING)).not.toBeInTheDocument());
   });
 
-  it('vuelve a pedir el ranking por su cuenta cuando lo pintado es viejo', async () => {
-    // El mensaje del worker puede no llegar nunca: la petición que abandonó
-    // falla, o el backend devuelve el mismo ranking viejo. Por eso la portada
-    // vuelve a pedir sola — y sola es la palabra: el aviso es un párrafo, no un
-    // botón, porque el toque no tenía forma de ganar.
+  it('requests the ranking again on its own when what is painted is old', async () => {
+    // The worker's message may never arrive: the request it gave up on fails,
+    // or the backend returns the same old ranking. That is why the home page
+    // requests again by itself — and by itself is the word: the notice is a
+    // paragraph, not a button, because the tap had no way of winning.
     let calls = 0;
     installFetchMock([
       route(FEATURED, () => ({ json: calls++ === 0 ? withAge(12) : withAge(0) })),
@@ -123,10 +124,10 @@ describe('HomePage — respuesta servida por el service worker', () => {
     await waitFor(() => expect(screen.queryByText(WARNING)).not.toBeInTheDocument());
   });
 
-  it('dice la hora de Madrid del ranking aunque no haya ninguna recomendada', async () => {
-    // El chip colgaba de `featured.playas.length`, así que el día sin ninguna
-    // playa recomendada —el día en que más importa saber de cuándo es el
-    // dato— era justo el día en que no se decía.
+  it('states the Madrid time of the ranking even when none is recommended', async () => {
+    // The chip hung off `featured.playas.length`, so the day with no recommended
+    // beach — the day when it matters most to know how old the data is — was
+    // exactly the day it was not stated.
     installFetchMock([
       route(FEATURED, { json: { ...withAge(0), playas: [], mejores: [] } }),
       route(BEACHES, { json: beachesResponse }),
@@ -143,7 +144,7 @@ describe('HomePage — respuesta servida por el service worker', () => {
     expect(await screen.findByText(new RegExp(hour))).toBeInTheDocument();
   });
 
-  it('ignora la entrega de otro endpoint: el ranking no es el catálogo', async () => {
+  it('ignores the delivery from another endpoint: the ranking is not the catalogue', async () => {
     installFetchMock([
       route(FEATURED, { json: withAge(12) }),
       route(BEACHES, { json: beachesResponse }),
@@ -165,10 +166,10 @@ describe('HomePage — respuesta servida por el service worker', () => {
     expect(screen.getByText(WARNING)).toBeInTheDocument();
   });
 
-  it('enseña que está actualizando mientras la petición está en vuelo', async () => {
-    // La app pide sola, pero callada parecía atascada: el reloj del chip de
-    // frescura se vuelve spinner mientras hay una petición DE VERDAD en vuelo,
-    // y vuelve a ser reloj cuando termina — traiga algo nuevo o no.
+  it('shows it is updating while the request is in flight', async () => {
+    // The app requests by itself, but silently it looked stuck: the freshness
+    // chip's clock turns into a spinner while a REAL request is in flight, and
+    // goes back to a clock when it finishes — whether or not it brings anything new.
     const inFlight = deferred<RouteSpec>();
     let calls = 0;
     installFetchMock([

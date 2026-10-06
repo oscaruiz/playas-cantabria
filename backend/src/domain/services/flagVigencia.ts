@@ -10,8 +10,8 @@ import { FlagColor, FlagStatus } from '../entities/Flag';
  * confirmed in eight hours must not be painted as what is flying.
  *
  * MIRROR of the frontend: the same rule lives in
- * `frontend/src/utils/beachHelpers.ts` (`dentroDeHorario` + `esInfoReciente`,
- * used by `estadoBandera`, which already separates 'fueraDeHorario' from
+ * `frontend/src/utils/beachHelpers.ts` (`withinHours` + `isRecentInfo`,
+ * used by `flagStatus`, which already separates 'fueraDeHorario' from
  * 'sinDatos' exactly as `vigenciaBandera` does here). Keep both sides in sync.
  */
 

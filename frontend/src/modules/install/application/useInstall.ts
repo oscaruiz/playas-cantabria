@@ -4,8 +4,8 @@ import {
   currentOffer,
   launchPrompt,
   openApp,
-} from '../../../../../../../Dev/playas-cantabria/frontend/src/modules/install/infrastructure/installPrompt';
-import type { Offer } from '../../../../../../../Dev/playas-cantabria/frontend/src/modules/install/domain/whatToOffer';
+} from '../infrastructure/installPrompt';
+import type { Offer } from '../domain/whatToOffer';
 
 /**
  * React binding over the module's single store. There is one install event per

@@ -7,16 +7,16 @@
  * seconds to wake up, well above the 2.5 s timeout.
  */
 
-import { installFetchMock, restoreFetch, route } from '../../../../../../Dev/playas-cantabria/frontend/src/test/http/fakeFetch';
-import { beachesResponse } from '../../../../../../Dev/playas-cantabria/frontend/src/test/fixtures/beaches';
-import { BEACHES_PATH as BEACHES } from '../../../../../../Dev/playas-cantabria/frontend/src/test/apiRoutes';
-import { LOCAL_CATALOG_SIZE } from '../../../../../../Dev/playas-cantabria/frontend/src/test/localCatalog';
+import { installFetchMock, restoreFetch, route } from '../http/fakeFetch';
+import { beachesResponse } from '../fixtures/beaches';
+import { BEACHES_PATH as BEACHES } from '../apiRoutes';
+import { LOCAL_CATALOG_SIZE } from '../localCatalog';
 
 const KEY = 'playas:ultimoListado';
 
 async function loadApi() {
   jest.resetModules();
-  return import('../../../../../../Dev/playas-cantabria/frontend/src/services/api');
+  return import('../../services/api');
 }
 
 beforeEach(() => {
@@ -29,8 +29,8 @@ afterEach(() => {
   jest.useRealTimers();
 });
 
-describe('getPlayas — persistencia del último listado', () => {
-  it('guarda la respuesta del backend para futuras visitas', async () => {
+describe('getBeaches — persistence of the last listing', () => {
+  it('saves the backend response for future visits', async () => {
     installFetchMock([route(BEACHES, { json: beachesResponse })]);
     const { getBeaches } = await loadApi();
 
@@ -41,7 +41,7 @@ describe('getPlayas — persistencia del último listado', () => {
     expect(typeof saved.guardadoEn).toBe('number');
   });
 
-  it('sirve la copia guardada, en vez del JSON del build, cuando el backend no responde', async () => {
+  it('serves the saved copy, instead of the build JSON, when the backend does not respond', async () => {
     installFetchMock([route(BEACHES, { json: beachesResponse })]);
     const firstVisit = await loadApi();
     await firstVisit.getBeaches({ timeoutMs: 50 });
@@ -56,7 +56,7 @@ describe('getPlayas — persistencia del último listado', () => {
     expect(result).toEqual(beachesResponse);
   });
 
-  it('descarta la copia si tiene más de un día y vuelve al JSON del build', async () => {
+  it('discards the copy if it is more than a day old and goes back to the build JSON', async () => {
     const twoDaysAgo = Date.now() - 48 * 60 * 60 * 1000;
     localStorage.setItem(
       KEY,
@@ -70,7 +70,7 @@ describe('getPlayas — persistencia del último listado', () => {
     expect(result).toHaveLength(LOCAL_CATALOG_SIZE);
   });
 
-  it('ignora una copia corrupta sin romper la carga', async () => {
+  it('ignores a corrupt copy without breaking the load', async () => {
     localStorage.setItem(KEY, 'esto no es JSON');
     installFetchMock([route(BEACHES, { networkError: true })]);
     const { getBeaches } = await loadApi();
@@ -78,7 +78,7 @@ describe('getPlayas — persistencia del último listado', () => {
     await expect(getBeaches({ timeoutMs: 50 })).resolves.toHaveLength(LOCAL_CATALOG_SIZE);
   });
 
-  it('no guarda una respuesta vacía: dejaría a la app sin fallback útil', async () => {
+  it('does not save an empty response: it would leave the app with no useful fallback', async () => {
     installFetchMock([route(BEACHES, { json: [] })]);
     const { getBeaches } = await loadApi();
 

@@ -11,7 +11,7 @@
  * this dependency disappears.
  *
  * Detail that gets pinned down: the error can only come from `/featured`. The
- * beach list (`getPlayas`) never rejects, so the counter is rendered all the
+ * beach list (`getBeaches`) never rejects, so the counter is rendered all the
  * same even when the backend is down.
  */
 
@@ -35,8 +35,8 @@ afterEach(() => {
   restoreFetch();
 });
 
-describe('HomePage — estados', () => {
-  it('no pinta las favoritas hasta que /featured termina, y sí cuando falla', async () => {
+describe('HomePage — states', () => {
+  it('does not paint favourites until /featured finishes, but does when it fails', async () => {
     // Seeded straight into storage: the catalog arrives at once (local
     // fallback) and used to paint this section alone above the spinner.
     localStorage.setItem(
@@ -69,7 +69,7 @@ describe('HomePage — estados', () => {
     reloadFavorites();
   });
 
-  it('muestra el mensaje de búsqueda y da paso al error si falla', async () => {
+  it('shows the searching message and gives way to the error if it fails', async () => {
     const pending = deferred<RouteSpec>();
     installFetchMock([
       route(FEATURED, () => pending.promise),
@@ -91,7 +91,7 @@ describe('HomePage — estados', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('muestra el error de condiciones cuando /featured responde 500', async () => {
+  it('shows the conditions error when /featured answers 500', async () => {
     installFetchMock([
       route(FEATURED, { status: 500 }),
       route(BEACHES, { json: beachesResponse }),
@@ -105,7 +105,7 @@ describe('HomePage — estados', () => {
     expect(await screen.findByText('7 playas')).toBeInTheDocument();
   });
 
-  it('el botón de reintentar vuelve a pedir y recupera la página', async () => {
+  it('the retry button requests again and recovers the page', async () => {
     let attempts = 0;
     const fetchMock = installFetchMock([
       route(FEATURED, () => {

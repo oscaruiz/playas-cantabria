@@ -1,8 +1,8 @@
 import React, { useId, useState } from 'react';
 import { IonIcon } from '@ionic/react';
 import { informationCircleOutline } from 'ionicons/icons';
-import { useLanguage } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
-import type { TextKey } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/es';
+import { useLanguage } from '../../shared/i18n/LanguageContext';
+import type { TextKey } from '../../shared/i18n/es';
 import './provenance.css';
 
 /**

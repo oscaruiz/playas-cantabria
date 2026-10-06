@@ -71,8 +71,8 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-describe('HomePage — sin ubicación', () => {
-  it('preside la playa con mayor puntuación cruda del pool >= 60', async () => {
+describe('HomePage — without location', () => {
+  it('the beach with the highest raw score in the pool >= 60 presides', async () => {
     const { container } = await renderHome();
 
     expect(screen.getByText('La mejor playa para hoy')).toBeInTheDocument();
@@ -80,19 +80,19 @@ describe('HomePage — sin ubicación', () => {
     expect(container.querySelector('.hp-hero-score-num')).toHaveTextContent('93');
   });
 
-  it('dice hacia dónde va el día y por qué, sin repetirlo en la razón', async () => {
+  it('says where the day is heading and why, without repeating it in the reason', async () => {
     const { container } = await renderHome();
     const hero = container.querySelector('.hp-hero-card') as HTMLElement;
 
-    // La nota ya lleva el ajuste del pronóstico dentro; sin esto la playa subía
-    // en el ranking sin nada en pantalla que lo explicara.
+    // The score already includes the forecast adjustment; without this the beach
+    // climbed in the ranking with nothing on screen to explain it.
     const chip = hero.querySelector('.trend-badge');
     expect(chip).toHaveTextContent('Está mejorando');
     expect(chip).toHaveTextContent('se despeja');
     expect(hero.querySelector('.hp-hero-reason')).not.toHaveTextContent('próximas horas');
   });
 
-  it('una alternativa sin cambios previstos no gasta una línea en decirlo', async () => {
+  it('an alternative with no expected changes does not spend a line saying so', async () => {
     const { container } = await renderHome();
     const arnia = Array.from(container.querySelectorAll('.hp-alt-row')).find(
       (row) => row.querySelector('.hp-alt-name')?.textContent === 'La Arnía',
@@ -101,23 +101,23 @@ describe('HomePage — sin ubicación', () => {
     expect(arnia.querySelector('.trend-badge')).toBeNull();
   });
 
-  it('muestra como alternativas el resto del pool, sin La Salvé (59 < 60)', async () => {
+  it('shows the rest of the pool as alternatives, without La Salvé (59 < 60)', async () => {
     const { container } = await renderHome();
 
     expect(names(container, '.hp-alt-name')).toEqual(['El Sardinero', 'La Arnía']);
   });
 
-  it('pinta los badges de la cabecera', async () => {
+  it('paints the header badges', async () => {
     await renderHome();
 
     expect(screen.getByText('21° media')).toBeInTheDocument();
-    // The counter comes from getPlayas (7 in the fixture), not from featured,
+    // The counter comes from getBeaches (7 in the fixture), not from featured,
     // and therefore lands on its own schedule: awaited, not read on the spot.
     expect(await screen.findByText('7 playas')).toBeInTheDocument();
     expect(screen.getByText('actualizado hace 30 min')).toBeInTheDocument();
   });
 
-  it('detalla el hero: emoji, temperatura, bandera y viento', async () => {
+  it('details the hero: emoji, temperature, flag and wind', async () => {
     const { container } = await renderHome();
     const hero = container.querySelector('.hp-hero-card') as HTMLElement;
 
@@ -129,21 +129,21 @@ describe('HomePage — sin ubicación', () => {
     expect(hero).toHaveTextContent('brisa suave');
   });
 
-  it('no muestra la nota de cercanía cuando la hero ya es la de más puntos', async () => {
+  it('does not show the proximity note when the hero is already the highest-scoring one', async () => {
     const { container } = await renderHome();
 
     expect(screen.queryByText(/Priorizada por cercanía/)).not.toBeInTheDocument();
     expect(container.querySelector('.hp-alt-chip-best')).toBeNull();
   });
 
-  it('lista las playas a revisar', async () => {
+  it('lists the beaches to review', async () => {
     const { container } = await renderHome();
 
     expect(screen.getByText('Mejor revisar antes de ir')).toBeInTheDocument();
     expect(names(container, '.hp-caution-name')).toEqual(['Berria', 'Langre']);
   });
 
-  it('oculta "Cerca de ti" y los banners cuando el navegador no da geolocalización', async () => {
+  it('hides "Cerca de ti" and the banners when the browser gives no geolocation', async () => {
     await renderHome();
 
     expect(screen.queryByText('Playas más cerca de ti')).not.toBeInTheDocument();
@@ -151,7 +151,7 @@ describe('HomePage — sin ubicación', () => {
     expect(screen.queryByText('Localización no disponible')).not.toBeInTheDocument();
   });
 
-  it('navega al detalle desde el hero', async () => {
+  it('navigates to the detail from the hero', async () => {
     await renderHome();
 
     fireEvent.click(screen.getByText('Ver detalles'));
@@ -161,24 +161,24 @@ describe('HomePage — sin ubicación', () => {
   });
 });
 
-describe('HomePage — con ubicación', () => {
+describe('HomePage — with location', () => {
   beforeEach(() => {
     setGeolocation('granted');
   });
 
-  it('cambia el título de la sección principal', async () => {
+  it('changes the title of the main section', async () => {
     await renderHome();
     expect(screen.getByText('La mejor para ti hoy')).toBeInTheDocument();
   });
 
-  it('muestra la distancia en el hero y en las alternativas', async () => {
+  it('shows the distance in the hero and in the alternatives', async () => {
     const { container } = await renderHome();
 
     expect(container.querySelector('.hp-hero-meta')).toHaveTextContent('a 50 km');
     expect(names(container, '.hp-alt-dist')).toEqual(['a 29 km', 'a 43 km']);
   });
 
-  it('lista las 3 playas más cercanas de resumenTodas', async () => {
+  it('lists the 3 nearest beaches from resumenTodas', async () => {
     const { container } = await renderHome();
 
     expect(screen.getByText('Playas más cerca de ti')).toBeInTheDocument();
@@ -187,15 +187,15 @@ describe('HomePage — con ubicación', () => {
     expect(container.querySelector('.hp-nearest-sub')).toHaveTextContent('Laredo · a 2 km');
   });
 
-  it('la penalización por distancia no cambia quién preside en este fixture', async () => {
+  it('the distance penalty does not change who presides in this fixture', async () => {
     const { container } = await renderHome();
     // La Concha: 82 - 0.4*49.5 = 62.2; El Sardinero: 71 - 0.4*28.8 = 59.5.
     expect(container.querySelector('#hp-hero-name')).toHaveTextContent('La Concha');
   });
 });
 
-describe('HomePage — banners de ubicación', () => {
-  it('muestra 3 esqueletos mientras se resuelve la ubicación', async () => {
+describe('HomePage — location banners', () => {
+  it('shows 3 skeletons while the location is being resolved', async () => {
     setGeolocation('pending');
     const { container } = await renderHome();
 
@@ -203,7 +203,7 @@ describe('HomePage — banners de ubicación', () => {
     expect(container.querySelectorAll('.hp-nearest-skeleton')).toHaveLength(3);
   });
 
-  it('muestra el banner de permiso bloqueado, sin acción de reintento', async () => {
+  it('shows the blocked-permission banner, with no retry action', async () => {
     setGeolocation('blocked');
     const { container } = await renderHome();
 
@@ -214,7 +214,7 @@ describe('HomePage — banners de ubicación', () => {
     expect(screen.queryByText('Localización no disponible')).not.toBeInTheDocument();
   });
 
-  it('muestra el banner reintentable con otros errores de geolocalización', async () => {
+  it('shows the retryable banner for other geolocation errors', async () => {
     setGeolocation('denied');
     const { container } = await renderHome();
 
@@ -224,7 +224,7 @@ describe('HomePage — banners de ubicación', () => {
     expect(banner).not.toHaveClass('hp-location-banner--blocked');
   });
 
-  it('oculta "Cerca de ti" cuando se ha denegado la ubicación', async () => {
+  it('hides "Cerca de ti" when the location has been denied', async () => {
     setGeolocation('denied');
     await renderHome();
 

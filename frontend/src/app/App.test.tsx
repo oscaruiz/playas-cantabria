@@ -30,7 +30,7 @@ test('renders without crashing', async () => {
   });
 });
 
-test('una URL arbitraria cae en la página de no encontrada, con noindex', async () => {
+test('an arbitrary URL falls on the not-found page, with noindex', async () => {
   window.history.pushState(null, '', '/esto-no-existe');
   try {
     render(<App />);

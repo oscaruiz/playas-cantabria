@@ -1,12 +1,12 @@
 /**
  * CHARACTERIZATION — FROZEN.
  *
- * Loading and error states of `PlayasList`. They go in their own file because
+ * Loading and error states of `BeachList`. They go in their own file because
  * they need the `services/api.ts` cache empty, and jest only starts a fresh
  * module registry between files, not between tests.
  *
  * Finding that this file pinned down: **the error state was unreachable**.
- * `getPlayas()` never rejects (it falls back to the local JSON on any failure),
+ * `getBeaches()` never rejects (it falls back to the local JSON on any failure),
  * so the page's `.catch(() => setError(true))` would only have fired if the
  * `import()` of the bundled JSON itself failed. With the backend down the
  * user sees the full listing, not an error.
@@ -18,7 +18,7 @@
 
 import React from 'react';
 import { screen, waitFor } from '@testing-library/react';
-import BeachList from '../../../../../../Dev/playas-cantabria/frontend/src/pages/BeachList';
+import BeachList from '../../pages/BeachList';
 import { renderWithProviders } from '../render';
 import { installFetchMock, restoreFetch, route, deferred, RouteSpec } from '../http/fakeFetch';
 import { FEATURED_PATH as FEATURED, BEACHES_PATH as BEACHES } from '../apiRoutes';
@@ -29,8 +29,8 @@ afterEach(() => {
   restoreFetch();
 });
 
-describe('PlayasList — estados', () => {
-  it('muestra el spinner mientras no hay datos y lo sustituye al llegar', async () => {
+describe('BeachList — states', () => {
+  it('shows the spinner while there is no data and replaces it on arrival', async () => {
     const pending = deferred<RouteSpec>();
     installFetchMock([
       route(FEATURED, () => pending.promise),
@@ -53,7 +53,7 @@ describe('PlayasList — estados', () => {
     expect(screen.queryByText('Cargando playas...')).not.toBeInTheDocument();
   });
 
-  it('con el backend caído pinta el JSON local, no el estado de error', async () => {
+  it('with the backend down it paints the local JSON, not the error state', async () => {
     installFetchMock([
       route(FEATURED, { networkError: true }),
       route(BEACHES, { networkError: true }),

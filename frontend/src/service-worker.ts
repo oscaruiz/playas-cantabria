@@ -112,22 +112,22 @@ const API_UPDATED_MESSAGE = 'API_ACTUALIZADA';
  */
 const deliverFreshResponse: WorkboxPlugin = {
   cacheDidUpdate: async ({ cacheName, oldResponse, request }) => {
-    // Sin `oldResponse` esta entrada se llena por primera vez y la app ya está
-    // pintando ese mismo cuerpo: no hay nada que corregir.
+    // Without `oldResponse` this entry is being filled for the first time and the
+    // app is already painting that same body: there is nothing to correct.
     if (!oldResponse) return;
 
     let data: unknown;
     try {
-      // Se relee del caché en vez de clonar `newResponse`: para cuando este
-      // callback corre, workbox ya ha gastado ese cuerpo en el `cache.put`, y
-      // clonarlo lanza. El fallo era mudo —el `catch` se lo tragaba— y el aviso
-      // sencillamente no salía nunca.
+      // Re-read from the cache instead of cloning `newResponse`: by the time this
+      // callback runs, workbox has already consumed that body in `cache.put`, and
+      // cloning it throws. The failure was silent —the `catch` swallowed it— and
+      // the notice simply never went out.
       const cache = await caches.open(cacheName);
       const saved = await cache.match(request);
       if (!saved) return;
       data = await saved.json();
     } catch {
-      return; // no es JSON utilizable: mejor callar que mandar basura
+      return; // not usable JSON: better to stay silent than to send garbage
     }
 
     const clients = await self.clients.matchAll({ type: 'window' });

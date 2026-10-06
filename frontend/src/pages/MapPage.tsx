@@ -1,19 +1,19 @@
 import { IonPage, IonContent, IonFooter, IonSpinner } from '@ionic/react';
 import React, { Suspense, useEffect, useMemo, useState } from 'react';
-import { Beach, getBeaches } from '../../../../../Dev/playas-cantabria/frontend/src/services/api';
-import { useRanking } from '../../../../../Dev/playas-cantabria/frontend/src/features/ranking/useRanking';
-import { useLanguage } from '../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
-import BottomNavBar from '../../../../../Dev/playas-cantabria/frontend/src/shared/ui/BottomNavBar';
-import HeaderActions from '../../../../../Dev/playas-cantabria/frontend/src/shared/ui/HeaderActions';
-import BrandLogo from '../../../../../Dev/playas-cantabria/frontend/src/shared/ui/BrandLogo';
-import SeoHead from '../../../../../Dev/playas-cantabria/frontend/src/shared/seo/SeoHead';
+import { Beach, getBeaches } from '../services/api';
+import { useRanking } from '../features/ranking/useRanking';
+import { useLanguage } from '../shared/i18n/LanguageContext';
+import BottomNavBar from '../shared/ui/BottomNavBar';
+import HeaderActions from '../shared/ui/HeaderActions';
+import BrandLogo from '../shared/ui/BrandLogo';
+import SeoHead from '../shared/seo/SeoHead';
 import './MapPage.css';
 
 // Leaflet is the heaviest dependency in the app and only this route uses
 // it, so the whole canvas is code-split INSIDE the page — the only split
 // IonRouterOutlet tolerates (see App.tsx). Data is fetched here so the
 // requests start while the chunk downloads.
-const MapCanvas = React.lazy(() => import('../../../../../Dev/playas-cantabria/frontend/src/pages/map/MapCanvas'));
+const MapCanvas = React.lazy(() => import('./map/MapCanvas'));
 
 const MapPage: React.FC = () => {
   const [beaches, setBeaches] = useState<Beach[]>([]);

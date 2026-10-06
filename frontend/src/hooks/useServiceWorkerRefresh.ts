@@ -24,7 +24,7 @@ export interface FreshResponse {
  * cache, and writing the cache is exactly what emits this message — that loop
  * was measured at 634 messages in a single session before it was closed.
  *
- * Same shape as `useRevalidarAlVolver`: the callback lives in a ref so an inline
+ * Same shape as `useRevalidateOnReturn`: the callback lives in a ref so an inline
  * arrow does not tear down and rebuild the listener on every render.
  */
 export function useServiceWorkerRefresh(onArrive: (fresh: FreshResponse) => void): void {

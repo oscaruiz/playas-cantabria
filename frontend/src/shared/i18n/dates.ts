@@ -1,8 +1,8 @@
-import type { Language } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
+import type { Language } from './LanguageContext';
 
 /**
  * Day/month names and date formatting per language. Replaces the
- * DIAS_SEMANA/MESES arrays that used to live in PlayaDetalle.tsx.
+ * DIAS_SEMANA/MESES arrays that used to live in BeachDetailPage.tsx.
  *
  * The API (AEMET) returns dates like "domingo 05" (name in Spanish)
  * or ISO "2026-04-06".
@@ -71,7 +71,7 @@ export function todayLabelMadrid(language: Language, now: Date = new Date()): st
 
 /**
  * Readable short date: es → "Domingo 5 de junio" | en → "Sunday, June 5".
- * `nombreDiaTexto` must already come in the target language and capitalized.
+ * `dayNameText` must already come in the target language and capitalized.
  */
 export function formatShortDate(dayNameText: string, dayOfMonth: number, monthIndex: number, language: Language): string {
   if (language === 'en') {

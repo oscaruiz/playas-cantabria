@@ -1,15 +1,15 @@
-import type { FeaturedBeach, HourlyForecast } from '../../../../../../../Dev/playas-cantabria/frontend/src/services/api';
-import type { Language, TranslateFn } from '../../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
+import type { FeaturedBeach, HourlyForecast } from '../../../services/api';
+import type { Language, TranslateFn } from '../../../shared/i18n/LanguageContext';
 import {
   translateApiText,
   readableReason,
   windLevelKey,
   noForecastFragment,
-} from '../../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/apiText';
-import { skyEmoji, isNightAt, flagColorClass } from '../../../../../../../Dev/playas-cantabria/frontend/src/utils/beachHelpers';
-import { capitalize } from '../../../../../../../Dev/playas-cantabria/frontend/src/shared/format/text';
-import { madridLocalHour } from '../../../../../../../Dev/playas-cantabria/frontend/src/shared/format/time';
-import { formatShortDate, dayName } from '../../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/dates';
+} from '../../../shared/i18n/apiText';
+import { skyEmoji, isNightAt, flagColorClass } from '../../../utils/beachHelpers';
+import { capitalize } from '../../../shared/format/text';
+import { madridLocalHour } from '../../../shared/format/time';
+import { formatShortDate, dayName } from '../../../shared/i18n/dates';
 
 /** Flag band, as a name — the hex lives in the layer that paints. */
 export type FlagColor = 'green' | 'yellow' | 'red' | 'black' | 'unknown';

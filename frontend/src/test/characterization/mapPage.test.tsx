@@ -1,7 +1,7 @@
 /**
  * CHARACTERIZATION — FROZEN.
  *
- * Pins down `MapaPage`: which beaches make it to the map and in what order, how
+ * Pins down `MapPage`: which beaches make it to the map and in what order, how
  * each marker's icon is decided and what is seen in the popup.
  *
  * `react-leaflet` is replaced by a double: Leaflet needs to measure the DOM and
@@ -21,7 +21,7 @@ import { fireEvent, screen, within } from '@testing-library/react';
 import type { Beach, FeaturedBeach, FeaturedBeachesResponse } from '../../services/api';
 import { renderWithProviders } from '../render';
 import { installFetchMock, restoreFetch, route } from '../http/fakeFetch';
-import MapPage from '../../../../../../Dev/playas-cantabria/frontend/src/pages/MapPage';
+import MapPage from '../../pages/MapPage';
 import { FEATURED_PATH as FEATURED, BEACHES_PATH as BEACHES } from '../apiRoutes';
 
 
@@ -41,7 +41,7 @@ jest.mock('react-leaflet', () => {
         ref: React.Ref<unknown>,
       ) => {
         // react-leaflet hands over the map instance through a ref; the double
-        // hands over `mockMapa` in an effect to respect the child→parent order.
+        // hands over `mockMap` in an effect to respect the child→parent order.
         ReactMock.useEffect(() => {
           if (typeof ref === 'function') ref(mockMap);
           else if (ref) (ref as React.MutableRefObject<unknown>).current = mockMap;
@@ -186,8 +186,8 @@ afterEach(() => {
   restoreFetch();
 });
 
-describe('MapaPage — qué playas se pintan', () => {
-  it('descarta las de coordenadas inválidas y ordena de oeste a este', async () => {
+describe('MapPage — which beaches are painted', () => {
+  it('discards those with invalid coordinates and sorts west to east', async () => {
     await renderMap();
 
     const names = screen
@@ -207,8 +207,8 @@ describe('MapaPage — qué playas se pintan', () => {
   });
 });
 
-describe('MapaPage — iconos de marcador', () => {
-  it('usa los umbrales 60 y 35 para el color', async () => {
+describe('MapPage — marker icons', () => {
+  it('uses the 60 and 35 thresholds for the colour', async () => {
     await renderMap();
 
     expect(markerHtml(markerByName('EnElCorte'))).toContain('beach-marker--good');
@@ -217,14 +217,14 @@ describe('MapaPage — iconos de marcador', () => {
     expect(markerHtml(markerByName('Malo'))).toContain('beach-marker--bad');
   });
 
-  it('destaca solo la playa de mayor puntuación', async () => {
+  it('highlights only the highest-scoring beach', async () => {
     await renderMap();
 
     expect(markerHtml(markerByName('LaMejor'))).toContain('beach-marker--best');
     expect(markerHtml(markerByName('EnElCorte'))).not.toContain('beach-marker--best');
   });
 
-  it('marca con "!" la bandera roja y el viento por encima de 8 m/s', async () => {
+  it('marks with "!" the red flag and wind above 8 m/s', async () => {
     await renderMap();
 
     expect(markerHtml(markerByName('BanderaRoja'))).toContain('beach-marker__badge');
@@ -232,7 +232,7 @@ describe('MapaPage — iconos de marcador', () => {
     expect(markerHtml(markerByName('EnElCorte'))).not.toContain('beach-marker__badge');
   });
 
-  it('incluye emoji, temperatura y banderín en el HTML del icono', async () => {
+  it('includes emoji, temperature and pennant in the icon HTML', async () => {
     await renderMap();
     const html = markerHtml(markerByName('LaMejor'));
 
@@ -242,8 +242,8 @@ describe('MapaPage — iconos de marcador', () => {
   });
 });
 
-describe('MapaPage — popup', () => {
-  it('muestra municipio, clima y puntuación buena', async () => {
+describe('MapPage — popup', () => {
+  it('shows municipality, weather and good score', async () => {
     await renderMap();
     const popup = markerByName('EnElCorte');
 
@@ -253,7 +253,7 @@ describe('MapaPage — popup', () => {
     );
   });
 
-  it('muestra el motivo de bajada en las de puntuación media y baja', async () => {
+  it('shows the reason for the drop on medium and low scores', async () => {
     await renderMap();
 
     expect(
@@ -264,7 +264,7 @@ describe('MapaPage — popup', () => {
     );
   });
 
-  it('al abrir una playa dice hacia dónde va y por qué', async () => {
+  it('on opening a beach says where it is heading and why', async () => {
     await renderMap();
     const chip = markerByName('EnElCorte').querySelector('.trend-badge');
 
@@ -272,19 +272,19 @@ describe('MapaPage — popup', () => {
     expect(chip).toHaveTextContent('se despeja');
   });
 
-  it('sin pronóstico el popup queda como estaba', async () => {
+  it('without a forecast the popup stays as it was', async () => {
     await renderMap();
 
     expect(markerByName('Malo').querySelector('.trend-badge')).toBeNull();
   });
 
-  it('avisa del viento fuerte en km/h', async () => {
+  it('warns of strong wind in km/h', async () => {
     await renderMap();
     // 11.2 m/s * 3.6 = 40.32 → 40 km/h
     expect(markerByName('VientoFuerte')).toHaveTextContent('Viento fuerte (40 km/h)');
   });
 
-  it('distingue vigilada de sin información según idCruzRoja', async () => {
+  it('tells watched from no-information according to idCruzRoja', async () => {
     await renderMap();
 
     // The unwatched beach no longer names an operator it does not have.
@@ -292,7 +292,7 @@ describe('MapaPage — popup', () => {
     expect(markerByName('EnElCorte')).toHaveTextContent('No hay info de vigilancia');
   });
 
-  it('anuncia la webcam solo donde la hay', async () => {
+  it('announces the webcam only where there is one', async () => {
     await renderMap();
 
     expect(markerByName('VientoFuerte')).toHaveTextContent('Webcam disponible');
@@ -300,22 +300,22 @@ describe('MapaPage — popup', () => {
   });
 });
 
-describe('MapaPage — navegación por query params', () => {
-  it('vuela a las coordenadas indicadas en la URL', async () => {
+describe('MapPage — navigation by query params', () => {
+  it('flies to the coordinates given in the URL', async () => {
     await renderMap('/mapa?lat=43.45&lon=-3.5&codigo=C-60');
 
     expect(mockMap.flyTo).toHaveBeenCalledWith([43.45, -3.5], 14, { duration: 0.8 });
   });
 
-  it('no vuela si la URL no trae coordenadas', async () => {
+  it('does not fly if the URL carries no coordinates', async () => {
     await renderMap('/mapa');
 
     expect(mockMap.flyTo).not.toHaveBeenCalled();
   });
 });
 
-describe('MapaPage — botón de localizarme', () => {
-  it('pide la ubicación cuando aún no se tiene', async () => {
+describe('MapPage — locate-me button', () => {
+  it('asks for the location when it is not yet known', async () => {
     const getCurrentPosition = jest.fn();
     Object.defineProperty(navigator, 'geolocation', {
       configurable: true,
@@ -331,7 +331,7 @@ describe('MapaPage — botón de localizarme', () => {
     expect(mockMap.flyTo).not.toHaveBeenCalled();
   });
 
-  it('centra el mapa si ya se conoce la ubicación', async () => {
+  it('centres the map if the location is already known', async () => {
     Object.defineProperty(navigator, 'geolocation', {
       configurable: true,
       value: {

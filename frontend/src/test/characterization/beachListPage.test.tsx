@@ -1,7 +1,7 @@
 /**
  * CHARACTERIZATION — FROZEN.
  *
- * Pins down `PlayasList` (route `/playas`): normalized search, the suggestions
+ * Pins down `BeachList` (route `/playas`): normalized search, the suggestions
  * combobox with its keyboard navigation, the two sort criteria and the card
  * badges.
  *
@@ -15,7 +15,7 @@
 import React from 'react';
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { Route } from 'react-router-dom';
-import BeachList from '../../../../../../Dev/playas-cantabria/frontend/src/pages/BeachList';
+import BeachList from '../../pages/BeachList';
 import { renderWithProviders } from '../render';
 import { installFetchMock, restoreFetch, route } from '../http/fakeFetch';
 import { beachesResponse } from '../fixtures/beaches';
@@ -60,8 +60,8 @@ afterEach(() => {
   restoreFetch();
 });
 
-describe('PlayasList — listado', () => {
-  it('ordena alfabéticamente por defecto', async () => {
+describe('BeachList — listing', () => {
+  it('sorts alphabetically by default', async () => {
     const { container } = await renderList();
 
     expect(cardNames(container)).toEqual([
@@ -75,12 +75,12 @@ describe('PlayasList — listado', () => {
     ]);
   });
 
-  it('muestra el contador en plural', async () => {
+  it('shows the counter in plural', async () => {
     await renderList();
     expect(screen.getByText('7 playas')).toBeInTheDocument();
   });
 
-  it('enriquece con clima solo las playas presentes en resumenTodas', async () => {
+  it('enriches with weather only the beaches present in resumenTodas', async () => {
     const { container } = await renderList();
 
     const laConcha = container.querySelectorAll('.beach-card')[2];
@@ -94,49 +94,49 @@ describe('PlayasList — listado', () => {
   });
 });
 
-describe('PlayasList — búsqueda', () => {
+describe('BeachList — search', () => {
   async function search(term: string) {
     const { container } = await renderList();
     fireEvent.change(screen.getByRole('combobox'), { target: { value: term } });
     return container;
   }
 
-  it('encuentra ignorando las tildes', async () => {
+  it('finds ignoring accents', async () => {
     const container = await search('arnia');
     expect(cardNames(container)).toEqual(['La Arnía']);
   });
 
-  it('encuentra por alias', async () => {
+  it('finds by alias', async () => {
     const container = await search('covachos');
     expect(cardNames(container)).toEqual(['La Arnía']);
   });
 
-  it('encuentra por municipio', async () => {
+  it('finds by municipality', async () => {
     const container = await search('suances');
     expect(cardNames(container)).toEqual(['La Concha']);
   });
 
-  it('muestra el contador filtrado con el término', async () => {
+  it('shows the filtered counter with the term', async () => {
     await search('arnia');
     expect(screen.getByText(/1 playa/)).toBeInTheDocument();
     expect(screen.getByText(/para "arnia"/)).toBeInTheDocument();
   });
 
-  it('muestra el estado vacío cuando no hay coincidencias', async () => {
+  it('shows the empty state when there are no matches', async () => {
     await search('zzzz');
     expect(
       screen.getByText('No se encontraron playas para "zzzz"'),
     ).toBeInTheDocument();
   });
 
-  it('el botón de borrar limpia el filtro', async () => {
+  it('the clear button clears the filter', async () => {
     const container = await search('arnia');
     fireEvent.click(screen.getByLabelText('Borrar búsqueda'));
     expect(cardNames(container)).toHaveLength(7);
   });
 });
 
-describe('PlayasList — sugerencias', () => {
+describe('BeachList — suggestions', () => {
   async function typeSearch(term: string) {
     await renderList();
     const input = screen.getByRole('combobox');
@@ -144,12 +144,12 @@ describe('PlayasList — sugerencias', () => {
     return input;
   }
 
-  it('no sugiere con menos de 2 caracteres', async () => {
+  it('does not suggest with fewer than 2 characters', async () => {
     await typeSearch('l');
     expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
   });
 
-  it('sugiere municipios primero y luego playas', async () => {
+  it('suggests municipalities first and then beaches', async () => {
     // "su" matches the municipality Suances AND its beach La Concha: the
     // municipality (the broader answer) leads.
     await typeSearch('su');
@@ -164,13 +164,13 @@ describe('PlayasList — sugerencias', () => {
     );
   });
 
-  it('corta en 5 sugerencias aunque haya más coincidencias', async () => {
+  it('cuts at 5 suggestions even if there are more matches', async () => {
     await typeSearch('la');
     // "la" matches 6 beaches (see fixture), but only 5 are listed.
     expect(screen.getAllByRole('option')).toHaveLength(5);
   });
 
-  it('ArrowDown recorre las sugerencias y vuelve al principio', async () => {
+  it('ArrowDown walks through the suggestions and wraps to the start', async () => {
     const input = await typeSearch('la');
 
     fireEvent.keyDown(input, { key: 'ArrowDown' });
@@ -186,14 +186,14 @@ describe('PlayasList — sugerencias', () => {
     expect(screen.getAllByRole('option')[0]).toHaveAttribute('aria-selected', 'true');
   });
 
-  it('ArrowUp desde el principio salta a la última', async () => {
+  it('ArrowUp from the start jumps to the last one', async () => {
     const input = await typeSearch('la');
 
     fireEvent.keyDown(input, { key: 'ArrowUp' });
     expect(screen.getAllByRole('option')[4]).toHaveAttribute('aria-selected', 'true');
   });
 
-  it('Enter sobre una playa activa la selecciona y cierra la lista', async () => {
+  it('Enter on an active beach selects it and closes the list', async () => {
     const input = await typeSearch('la');
 
     // "la" puts two municipalities first (Laredo, Piélagos); the third
@@ -207,7 +207,7 @@ describe('PlayasList — sugerencias', () => {
     expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
   });
 
-  it('Enter sin sugerencia activa no selecciona nada', async () => {
+  it('Enter with no active suggestion selects nothing', async () => {
     const input = await typeSearch('la');
     fireEvent.keyDown(input, { key: 'Enter' });
 
@@ -215,7 +215,7 @@ describe('PlayasList — sugerencias', () => {
     expect(screen.getByRole('listbox')).toBeInTheDocument();
   });
 
-  it('Escape cierra la lista sin cambiar el filtro', async () => {
+  it('Escape closes the list without changing the filter', async () => {
     const input = await typeSearch('la');
     fireEvent.keyDown(input, { key: 'Escape' });
 
@@ -223,7 +223,7 @@ describe('PlayasList — sugerencias', () => {
     expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
   });
 
-  it('el blur cierra la lista tras 150 ms', async () => {
+  it('blur closes the list after 150 ms', async () => {
     const input = await typeSearch('la');
     expect(screen.getByRole('listbox')).toBeInTheDocument();
 
@@ -234,7 +234,7 @@ describe('PlayasList — sugerencias', () => {
     await waitFor(() => expect(screen.queryByRole('listbox')).not.toBeInTheDocument());
   });
 
-  it('el click en una sugerencia de playa la selecciona', async () => {
+  it('clicking a beach suggestion selects it', async () => {
     const input = await typeSearch('su');
     // Option 0 is the municipality Suances; option 1 is the beach.
     fireEvent.mouseDown(screen.getAllByRole('option')[1]);
@@ -242,7 +242,7 @@ describe('PlayasList — sugerencias', () => {
     expect(input).toHaveValue('La Concha');
   });
 
-  it('elegir un municipio navega a su página', async () => {
+  it('choosing a municipality navigates to its page', async () => {
     renderWithProviders(
       <>
         <BeachList />
@@ -262,8 +262,8 @@ describe('PlayasList — sugerencias', () => {
   });
 });
 
-describe('PlayasList — filtro de webcam', () => {
-  it('deja solo las playas con webcam activa y se puede quitar', async () => {
+describe('BeachList — webcam filter', () => {
+  it('leaves only beaches with an active webcam and can be removed', async () => {
     const { container } = await renderList();
     const button = screen.getByRole('button', { name: 'Mostrar solo playas con webcam' });
 
@@ -277,8 +277,8 @@ describe('PlayasList — filtro de webcam', () => {
   });
 });
 
-describe('PlayasList — badges de la tarjeta', () => {
-  it('marca como vigilada si hay idCruzRoja o puestos de Cruz Roja', async () => {
+describe('BeachList — card badges', () => {
+  it('marks as watched if there is idCruzRoja or Cruz Roja posts', async () => {
     const { container } = await renderList();
     const cards = Array.from(container.querySelectorAll('.beach-card'));
     const byName = (name: string) =>
@@ -293,7 +293,7 @@ describe('PlayasList — badges de la tarjeta', () => {
     expect(byName('La Arnía').querySelector('.badge-lifeguarded')).toBeNull();
   });
 
-  it('oculta el badge de webcam cuando está desactivada', async () => {
+  it('hides the webcam badge when it is disabled', async () => {
     const { container } = await renderList();
     const cards = Array.from(container.querySelectorAll('.beach-card'));
     const byName = (name: string) =>
@@ -304,7 +304,7 @@ describe('PlayasList — badges de la tarjeta', () => {
     expect(byName('La Salvé').querySelector('.badge-webcam')).toBeNull();
   });
 
-  it('muestra el badge de Bandera Azul solo en playas premiadas', async () => {
+  it('shows the Bandera Azul badge only on awarded beaches', async () => {
     const { container } = await renderList();
     const cards = Array.from(container.querySelectorAll('.beach-card'));
     const byName = (name: string) =>
@@ -315,7 +315,7 @@ describe('PlayasList — badges de la tarjeta', () => {
     expect(byName('La Salvé').querySelector('.badge-flag-blue')).toBeNull();
   });
 
-  it('cada tarjeta dice si la playa va a mejor y por qué', async () => {
+  it('each card says whether the beach is improving and why', async () => {
     const { container } = await renderList();
     const cards = Array.from(container.querySelectorAll('.beach-card'));
     const byName = (name: string) =>
@@ -324,17 +324,17 @@ describe('PlayasList — badges de la tarjeta', () => {
     const chip = byName('La Concha').querySelector('.trend-badge');
     expect(chip).toHaveTextContent('Está mejorando');
     expect(chip).toHaveTextContent('se despeja');
-    // El backend ya lo dice en razonRanking; con el chip se diría dos veces.
+    // The backend already says it in razonRanking; with the chip it would be said twice.
     expect(byName('La Concha').querySelector('.beach-card-reason')).not.toHaveTextContent(
       'próximas horas',
     );
 
-    // La Arnía viene "estable": en una lista eso es una línea de ruido por
-    // tarjeta, así que no se pinta.
+    // La Arnía comes as "estable": in a list that is a line of noise per
+    // card, so it is not painted.
     expect(byName('La Arnía').querySelector('.trend-badge')).toBeNull();
   });
 
-  it('muestra como mucho 4 iconos de atributos', async () => {
+  it('shows at most 4 attribute icons', async () => {
     const { container } = await renderList();
     const laConcha = Array.from(container.querySelectorAll('.beach-card')).find(
       (c) => c.querySelector('.beach-card-name')?.textContent === 'La Concha',
@@ -345,13 +345,13 @@ describe('PlayasList — badges de la tarjeta', () => {
   });
 });
 
-describe('PlayasList — orden por cercanía', () => {
-  it('no ofrece el orden por cercanía sin ubicación', async () => {
+describe('BeachList — sort by proximity', () => {
+  it('does not offer proximity sort without a location', async () => {
     await renderList();
     expect(screen.queryByLabelText('Ordenar por cercanía')).not.toBeInTheDocument();
   });
 
-  it('ordena por distancia y muestra los km cuando hay ubicación', async () => {
+  it('sorts by distance and shows the km when there is a location', async () => {
     setGeolocation([43.42, -3.43]); // next to Laredo
     const { container } = await renderList();
 
@@ -361,7 +361,7 @@ describe('PlayasList — orden por cercanía', () => {
     expect(container.querySelector('.beach-card-dist')).toHaveTextContent('· a 0 km');
   });
 
-  it('el botón AZ devuelve al orden alfabético', async () => {
+  it('the AZ button returns to alphabetical order', async () => {
     setGeolocation([43.42, -3.43]);
     const { container } = await renderList();
 

@@ -15,8 +15,8 @@
 import React from 'react';
 import { screen } from '@testing-library/react';
 import type { Beach, BeachDetail } from '../../services/api';
-import BeachList from '../../../../../../Dev/playas-cantabria/frontend/src/pages/BeachList';
-import BeachDetailPage from '../../../../../../Dev/playas-cantabria/frontend/src/pages/BeachDetailPage';
+import BeachList from '../../pages/BeachList';
+import BeachDetailPage from '../../pages/BeachDetailPage';
 import { renderWithProviders } from '../render';
 import { installFetchMock, restoreFetch, route } from '../http/fakeFetch';
 import { beachesResponse } from '../fixtures/beaches';
@@ -44,7 +44,7 @@ afterEach(() => {
   jest.useRealTimers();
 });
 
-describe('el listado nombra al operador que informa el backend', () => {
+describe('the list names the operator the backend reports', () => {
   const withOtherOperator: Beach = {
     ...beachesResponse[0],
     nombre: 'Playa con otro operador',
@@ -74,16 +74,16 @@ describe('el listado nombra al operador que informa el backend', () => {
     await screen.findByText(withOtherOperator.nombre);
   });
 
-  it('usa el operador de la región, no una marca fija', () => {
+  it('uses the region operator, not a fixed brand', () => {
     expect(badgeFor('Playa con otro operador')).toHaveTextContent('DYA');
   });
 
-  it('no marca como vigilada una playa que nadie vigila', () => {
+  it('does not mark as watched a beach nobody watches', () => {
     expect(badgeFor('Playa sin servicio')).toBeNull();
   });
 });
 
-describe('el detalle atribuye el estado del baño a quien vigila', () => {
+describe('the detail attributes the bathing status to whoever watches', () => {
   function renderDetail(flagSource: BeachDetail['fuenteBanderas']) {
     const detail = { ...buildAemetDetail(MIDDAY), fuenteBanderas: flagSource };
     jest.useFakeTimers().setSystemTime(MIDDAY);
@@ -97,12 +97,12 @@ describe('el detalle atribuye el estado del baño a quien vigila', () => {
     });
   }
 
-  it('nombra al operador que vigila la playa', async () => {
+  it('names the operator watching the beach', async () => {
     renderDetail('DYA');
     expect(await screen.findByText('Estado para bañarse (según DYA)')).toBeInTheDocument();
   });
 
-  it('sin operador no muestra la sección de banderas', async () => {
+  it('without an operator it shows no flags section', async () => {
     const { container } = renderDetail(null);
     // Waits for the same content the previous test waits for, so the absence is
     // checked on a rendered page and not on one that had not painted yet.

@@ -12,12 +12,12 @@
 
 import React from 'react';
 import { screen } from '@testing-library/react';
-import type { Beach } from '../../../../../../Dev/playas-cantabria/frontend/src/services/api';
-import { renderWithProviders } from '../../../../../../Dev/playas-cantabria/frontend/src/test/render';
-import { installFetchMock, restoreFetch, route } from '../../../../../../Dev/playas-cantabria/frontend/src/test/http/fakeFetch';
-import { BEACHES_PATH as BEACHES, FEATURED_PATH as FEATURED } from '../../../../../../Dev/playas-cantabria/frontend/src/test/apiRoutes';
-import { beachesResponse } from '../../../../../../Dev/playas-cantabria/frontend/src/test/fixtures/beaches';
-import { featuredResponse } from '../../../../../../Dev/playas-cantabria/frontend/src/test/fixtures/featured';
+import type { Beach } from '../../services/api';
+import { renderWithProviders } from '../render';
+import { installFetchMock, restoreFetch, route } from '../http/fakeFetch';
+import { BEACHES_PATH as BEACHES, FEATURED_PATH as FEATURED } from '../apiRoutes';
+import { beachesResponse } from '../fixtures/beaches';
+import { featuredResponse } from '../fixtures/featured';
 
 // Leaflet measures the DOM and does not work in jsdom; only the popup markup
 // matters here.
@@ -65,12 +65,12 @@ beforeEach(() => {
 
 afterEach(() => restoreFetch());
 
-it('distingue "sin servicio" de "sin información" en el popup', async () => {
+it('tells "sin servicio" from "sin información" in the popup', async () => {
   installFetchMock([
     route(FEATURED, { json: featuredResponse }),
     route(BEACHES, { json: [noService, unreported] }),
   ]);
-  const MapPage = (await import('../../../../../../Dev/playas-cantabria/frontend/src/pages/MapPage')).default;
+  const MapPage = (await import('../../pages/MapPage')).default;
   renderWithProviders(<MapPage />, { route: '/mapa' });
   await screen.findByText('Playa sin servicio');
 

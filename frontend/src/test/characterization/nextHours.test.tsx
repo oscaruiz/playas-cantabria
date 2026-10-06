@@ -1,15 +1,15 @@
 /**
- * La tira horaria es la EVIDENCIA de la ventana del día: cubre lo que queda
- * de franja, marca con lluvia las horas mojadas (lo que la ventana esquiva) y
- * resalta el tramo recomendado. Sin eso, "mejor momento: 15:00–19:00" era un
- * veredicto sin pruebas a la vista.
+ * The hourly strip is the EVIDENCE for the day's window: it covers what is left
+ * of the range, marks the wet hours with rain (what the window dodges) and
+ * highlights the recommended stretch. Without it, "mejor momento: 15:00–19:00"
+ * was a verdict with no proof in sight.
  */
 
 import React from 'react';
 import { fireEvent, screen } from '@testing-library/react';
-import NextHours from '../../../../../../Dev/playas-cantabria/frontend/src/pages/beach-detail/NextHours';
-import { renderWithProviders } from '../../../../../../Dev/playas-cantabria/frontend/src/test/render';
-import { HourlyForecast, DayWindow } from '../../../../../../Dev/playas-cantabria/frontend/src/services/api';
+import NextHours from '../../pages/beach-detail/NextHours';
+import { renderWithProviders } from '../render';
+import { HourlyForecast, DayWindow } from '../../services/api';
 
 const hour = (isoUtc: string, extra: Partial<HourlyForecast> = {}): HourlyForecast => ({
   horaIso: isoUtc,
@@ -19,7 +19,7 @@ const hour = (isoUtc: string, extra: Partial<HourlyForecast> = {}): HourlyForeca
   ...extra,
 });
 
-// 13:00 Madrid del 27-jul: las horas y la ventana de estos casos son futuras.
+// 13:00 Madrid time on 27-Jul: the hours and the window in these cases are in the future.
 beforeEach(() => {
   jest.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-07-27T11:00:00.000Z'));
 });
@@ -41,26 +41,26 @@ const TIME_WINDOW: DayWindow = {
   horasConsideradas: 4,
 };
 
-describe('ProximasHoras — la tira que respalda la ventana', () => {
-  it('titula el resto del día y resalta exactamente las horas de la ventana', () => {
+describe('NextHours — the strip backing the window', () => {
+  it('titles the rest of the day and highlights exactly the window hours', () => {
     const { container } = renderWithProviders(
       <NextHours hours={HOURS} source="Open-Meteo" timeWindow={TIME_WINDOW} />,
       { route: '/' },
     );
 
-    // El día va explícito y en hora de Madrid: "Lo que queda de hoy (jueves 21)".
+    // The day is explicit and in Madrid time: "Lo que queda de hoy (jueves 21)".
     expect(screen.getByText(/^Lo que queda de hoy \([a-zá-ú]+ \d{1,2}\)$/)).toBeInTheDocument();
 
     const items = container.querySelectorAll('.pd-hour');
     expect(items).toHaveLength(4);
-    // 15:00 y 16:00 Madrid dentro de la ventana; 14:00 y 17:00 fuera.
+    // 15:00 and 16:00 Madrid time inside the window; 14:00 and 17:00 outside.
     expect(items[0].classList.contains('pd-hour--best')).toBe(false);
     expect(items[1].classList.contains('pd-hour--best')).toBe(true);
     expect(items[2].classList.contains('pd-hour--best')).toBe(true);
     expect(items[3].classList.contains('pd-hour--best')).toBe(false);
   });
 
-  it('una hora mojada cambia el icono a lluvia y lo dice en su frase accesible', () => {
+  it('a wet hour switches the icon to rain and says so in its accessible phrase', () => {
     const { container } = renderWithProviders(
       <NextHours hours={HOURS} source="Open-Meteo" timeWindow={TIME_WINDOW} />,
       { route: '/' },
@@ -69,13 +69,13 @@ describe('ProximasHoras — la tira que respalda la ventana', () => {
     const wet = container.querySelectorAll('.pd-hour')[3];
     expect(wet.querySelector('.pd-hour-icon--rain')).not.toBeNull();
     expect(wet.getAttribute('aria-label')).toContain('lluvia prevista');
-    // Las horas secas conservan la frase de siempre.
+    // Dry hours keep the usual phrase.
     const dry = container.querySelectorAll('.pd-hour')[0];
     expect(dry.getAttribute('aria-label')).toContain('% de nubes');
   });
 
-  it('cuando la tira oculta horas, la flecha lo señala y desplaza al pulsarla', () => {
-    // jsdom no mide: se simula una tira de 600 px en un hueco de 300.
+  it('when the strip hides hours, the arrow signals it and scrolls when pressed', () => {
+    // jsdom does not measure: a 600 px strip in a 300 px gap is simulated.
     jest.spyOn(HTMLElement.prototype, 'scrollWidth', 'get').mockReturnValue(600);
     jest.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(300);
     const scrollBy = jest.fn();
@@ -89,17 +89,17 @@ describe('ProximasHoras — la tira que respalda la ventana', () => {
       { route: '/' },
     );
 
-    // Al inicio solo hay más contenido por delante: una única flecha.
+    // At the start there is only more content ahead: a single arrow.
     expect(screen.queryByRole('button', { name: 'Ver horas anteriores' })).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Ver más horas' }));
     expect(scrollBy).toHaveBeenCalledWith(
-      expect.objectContaining({ left: 240 }), // el 80% del hueco visible
+      expect.objectContaining({ left: 240 }), // 80% of the visible gap
     );
 
     delete (HTMLElement.prototype as { scrollBy?: unknown }).scrollBy;
   });
 
-  it('la ventana dentro de la tira va en modo detallado: nombra su motivo', () => {
+  it('the window inside the strip goes in detailed mode: it names its reason', () => {
     renderWithProviders(
       <NextHours hours={HOURS} source="Open-Meteo" timeWindow={TIME_WINDOW} />,
       { route: '/' },

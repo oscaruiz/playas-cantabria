@@ -1,19 +1,19 @@
 import React from 'react';
-import { BeachDetail } from '../../../../../../Dev/playas-cantabria/frontend/src/services/api';
+import { BeachDetail } from '../../services/api';
 import {
   flagColorClass,
   flagStatus,
   lastRecordedFlag,
   lifeguardOperator,
-} from '../../../../../../Dev/playas-cantabria/frontend/src/utils/beachHelpers';
-import { madridDate, madridLocalHour } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/format/time';
-import { capitalize } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/format/text';
-import { FreshnessLabel } from '../../../../../../Dev/playas-cantabria/frontend/src/features/provenance/SourceAndFreshness';
-import SafetyNotice from '../../../../../../Dev/playas-cantabria/frontend/src/shared/ui/SafetyNotice';
-import { normalizeInstant } from '../../../../../../Dev/playas-cantabria/frontend/src/features/provenance/provenance';
-import { useLanguage, Language, TranslateFn } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
-import { translateApiText, flagStatusKey, translateOperator } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/apiText';
-import { dayName, formatShortDate } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/dates';
+} from '../../utils/beachHelpers';
+import { madridDate, madridLocalHour } from '../../shared/format/time';
+import { capitalize } from '../../shared/format/text';
+import { FreshnessLabel } from '../../features/provenance/SourceAndFreshness';
+import SafetyNotice from '../../shared/ui/SafetyNotice';
+import { normalizeInstant } from '../../features/provenance/provenance';
+import { useLanguage, Language, TranslateFn } from '../../shared/i18n/LanguageContext';
+import { translateApiText, flagStatusKey, translateOperator } from '../../shared/i18n/apiText';
+import { dayName, formatShortDate } from '../../shared/i18n/dates';
 
 /** "Registered today / yesterday / on <date> at HH:MM" — moment in Madrid time. */
 function registeredText(iso: string, t: TranslateFn, language: Language): string {

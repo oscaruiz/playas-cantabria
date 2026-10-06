@@ -12,7 +12,7 @@ beforeEach(() => {
 });
 
 describe('FavoriteButton', () => {
-  it('marca y desmarca, persistiendo en localStorage', () => {
+  it('marks and unmarks, persisting to localStorage', () => {
     renderWithProviders(<FavoriteButton code="3908503" name="La Concha" />);
 
     const btn = screen.getByRole('button', { name: 'Guardar La Concha en favoritas' });
@@ -32,7 +32,7 @@ describe('FavoriteButton', () => {
     expect(JSON.parse(localStorage.getItem(KEY) as string).beachCodes).toEqual([]);
   });
 
-  it('la marca sobrevive a un remontaje que relee el almacenamiento', () => {
+  it('the mark survives a remount that rereads the storage', () => {
     const first = renderWithProviders(<FavoriteButton code="X" name="X" />);
     fireEvent.click(screen.getByRole('button'));
     first.unmount();
@@ -42,7 +42,7 @@ describe('FavoriteButton', () => {
     expect(screen.getByRole('button')).toHaveAttribute('aria-pressed', 'true');
   });
 
-  it('con el almacenamiento corrupto arranca sin favoritas y puede marcar', () => {
+  it('with corrupt storage it starts with no favorites and can mark', () => {
     localStorage.setItem(KEY, '{corrupto');
     reloadFavorites();
 
@@ -55,7 +55,7 @@ describe('FavoriteButton', () => {
     expect(JSON.parse(localStorage.getItem(KEY) as string).beachCodes).toEqual(['X']);
   });
 
-  it('ni el click ni Enter/Espacio llegan a la fila que navega', () => {
+  it('neither click nor Enter/Space reach the row that navigates', () => {
     const row = jest.fn();
     renderWithProviders(
       <div role="link" tabIndex={0} onClick={row} onKeyDown={row}>
@@ -70,7 +70,7 @@ describe('FavoriteButton', () => {
     expect(row).not.toHaveBeenCalled();
   });
 
-  it('la etiqueta accesible está traducida', () => {
+  it('the accessible label is translated', () => {
     renderWithProviders(<FavoriteButton code="X" name="Langre" />, { language: 'en' });
     expect(
       screen.getByRole('button', { name: 'Save Langre to favorites' })

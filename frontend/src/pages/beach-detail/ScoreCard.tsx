@@ -1,19 +1,19 @@
 import React, { useState } from 'react';
 import { IonIcon } from '@ionic/react';
 import { warningOutline, chevronDownOutline } from 'ionicons/icons';
-import { FeaturedBeach, SubScores } from '../../../../../../Dev/playas-cantabria/frontend/src/services/api';
-import { isRainActive } from '../../../../../../Dev/playas-cantabria/frontend/src/utils/beachHelpers';
-import ScoreBadge from '../../../../../../Dev/playas-cantabria/frontend/src/components/ScoreBadge';
-import TrendBadge from '../../../../../../Dev/playas-cantabria/frontend/src/components/TrendBadge';
-import { useLanguage } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
-import { TextKey } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/es';
-import SafetyNotice from '../../../../../../Dev/playas-cantabria/frontend/src/shared/ui/SafetyNotice';
+import { FeaturedBeach, SubScores } from '../../services/api';
+import { isRainActive } from '../../utils/beachHelpers';
+import ScoreBadge from '../../components/ScoreBadge';
+import TrendBadge from '../../components/TrendBadge';
+import { useLanguage } from '../../shared/i18n/LanguageContext';
+import { TextKey } from '../../shared/i18n/es';
+import SafetyNotice from '../../shared/ui/SafetyNotice';
 import {
   translateApiText,
   readableReason,
   windLevelKey,
   noForecastFragment,
-} from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/apiText';
+} from '../../shared/i18n/apiText';
 
 /**
  * Cap texts, with the value the backend used to apply when it did not send

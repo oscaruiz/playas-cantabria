@@ -1,6 +1,6 @@
 # Frontend — CLAUDE.md
 
-Ionic React + Capacitor PWA para información de playas. Es un motor **agnóstico de región**: el mismo código genera la app de Cantabria o la de cualquier otra región (ver «Build por región»). Los comentarios están en inglés; el texto de UI, las claves de i18n y los nombres de variables siguen en español. Consulta el `CLAUDE.md` raíz para contexto general del monorepo.
+Ionic React + Capacitor PWA para información de playas. Es un motor **agnóstico de región**: el mismo código genera la app de Cantabria o la de cualquier otra región (ver «Build por región»). El código está en inglés (identificadores, archivos, clases CSS, comentarios y títulos de test); siguen en español el texto de UI, las claves de i18n, los campos del JSON del API, las rutas públicas y las claves de almacenamiento (ver «Convenciones»). Consulta el `CLAUDE.md` raíz para contexto general del monorepo.
 
 ## Comandos
 
@@ -18,31 +18,35 @@ Ionic React + Capacitor PWA para información de playas. Es un motor **agnóstic
 
 ```
 src/
-├── App.tsx                  — Entrada principal, define rutas con IonReactRouter
+├── app/App.tsx              — Entrada principal, define rutas con IonReactRouter
+├── app/theme/variables.css  — Variables CSS de Ionic (colores, fuentes, dark mode)
 ├── index.tsx                — ReactDOM render + service worker
-├── config/
-│   └── api.ts               — API_BASE_URL y helper buildApiUrl()
-├── services/
-│   └── api.ts               — Funciones fetch (getPlayas, getDetallePlaya) + interfaces TS
+├── services/api.ts          — Funciones fetch (getBeaches, getBeachDetail, getFeaturedBeaches) + interfaces TS
 ├── pages/
-│   ├── Home.tsx / .css       — Listado de playas con búsqueda y ordenación
-│   ├── PlayaDetalle.tsx / .css — Detalle: clima, mareas, banderas, previsión 3 días
-│   └── MapaPage.tsx / .css   — Mapa Leaflet con marcadores numerados
-├── components/
-│   └── ExploreContainer.tsx  — Boilerplate de Ionic (sin uso)
-├── data/
-│   └── beaches.json          — Datos de playas para fallback local
-└── theme/
-    └── variables.css         — Variables CSS de Ionic (colores, fuentes, dark mode)
+│   ├── HomePage.tsx / .css        — Inicio: ranking del día, cercanas, favoritas
+│   ├── BeachList.tsx / .css       — Listado con búsqueda y ordenación
+│   ├── BeachDetailPage.tsx / .css — Detalle; sus secciones viven en beach-detail/
+│   ├── MapPage.tsx / .css         — Mapa Leaflet (el lienzo, en map/MapCanvas.tsx)
+│   └── landings/                  — Landings SEO y páginas de municipio
+├── components/              — Piezas compartidas (BeachCard, BestTime, ScoreBadge, TrendBadge)
+├── features/                — provenance (fuente y frescura), ranking
+├── modules/                 — favorites, share, install (cada uno con su index.ts público)
+├── shared/                  — config, format, i18n, seo, sky, ui
+└── data/beaches.json        — Datos de playas para fallback local (generado)
 ```
 
 ## Rutas
 
 | Ruta | Página | Descripción |
 |------|--------|-------------|
-| `/` | `Home` | Listado con filtro de búsqueda y orden A-Z/Z-A |
-| `/playas/:codigo` | `PlayaDetalle` | Detalle con clima, bandera Cruz Roja, mareas |
-| `/mapa` | `MapaPage` | Mapa Leaflet con todas las playas |
+| `/` | `HomePage` | Ranking del día, playas cercanas y favoritas |
+| `/playas` | `BeachList` | Listado con filtro de búsqueda y orden A-Z/Z-A |
+| `/playas/:codigo` | `BeachDetailPage` | Detalle con clima, bandera Cruz Roja, mareas |
+| `/mapa` | `MapPage` | Mapa Leaflet con todas las playas |
+
+Las rutas son públicas (SEO, sitemap, rewrites de Firebase, enlaces compartidos) y siguen en
+español a propósito; los nombres de parámetro (`:codigo`, `:municipio`) también, porque los lee
+`useParams`.
 
 Enrutamiento: `IonReactRouter` > `IonRouterOutlet` > `Route` (React Router v5).
 
@@ -61,23 +65,25 @@ Sin store global (no Redux, no Context). Solo hooks de React:
 **`src/config/region.ts`** — La región de este build. Único sitio que sabe cuál es.
 
 **`src/services/api.ts`** — Dos funciones principales:
-- `getPlayas(options?)` — Lista de playas. Implementa fallback: si el backend no responde en 2.5s, devuelve datos de `data/beaches.json` y actualiza vía callback `onBackendData` cuando llega la respuesta real.
-- `getDetallePlaya(codigo)` — Detalle completo de una playa (clima + Cruz Roja + mareas).
+- `getBeaches(options?)` — Lista de playas. Implementa fallback: si el backend no responde en 2.5s, devuelve datos de `data/beaches.json` y actualiza vía callback `onBackendData` cuando llega la respuesta real.
+- `getBeachDetail(codigo)` — Detalle completo de una playa (clima + Cruz Roja + mareas).
 
 Endpoints consumidos: `GET /api/{region}/beaches`, `/{codigo}/details` y `/featured`.
 
 ## Modelos de Datos
 
-Todas las interfaces están en `src/services/api.ts`:
+Todas las interfaces están en `src/services/api.ts`. Sus **nombres** están en inglés; sus
+**campos** reproducen el JSON del backend y siguen en español (`codigo`, `nombre`, `cruzRoja`…):
+renombrar un campo rompe el contrato.
 
 | Interfaz | Uso |
 |----------|-----|
-| `Playa` | Datos básicos: nombre, municipio, codigo, lat, lon, idCruzRoja |
-| `PlayaDetalle` | Extiende Playa con clima, cruzRoja, prediccionCompleta |
-| `DatosClima` | Clima simplificado (fuente, hoy, mañana) |
-| `DatosCruzRoja` | Bandera, cobertura, horario |
-| `PrediccionCompletaDTO` | Previsión 3 días con mareas y avisos |
-| `DiaPrediccionDTO` | Un día: mañana/tarde, temperaturas, UV, avisos |
+| `Beach` | Datos básicos: nombre, municipio, codigo, lat, lon, idCruzRoja |
+| `BeachDetail` | Extiende Beach con clima, cruzRoja, prediccionCompleta |
+| `WeatherData` | Clima simplificado (fuente, hoy, mañana) |
+| `RedCrossData` | Bandera, cobertura, horario |
+| `FullForecastDTO` | Previsión 3 días con mareas y avisos |
+| `ForecastDayDTO` | Un día: mañana/tarde, temperaturas, UV, avisos |
 | `HalfDayDTO` | Medio día: cielo, viento, oleaje |
 
 ## Estilos
@@ -93,8 +99,14 @@ Todas las interfaces están en `src/services/api.ts`:
 - **Componentes**: PascalCase (`FlagBanner`, `QuickStats`, `TidesSection`)
 - **Variables de estado**: camelCase
 - **Helpers**: funciones utilitarias definidas inline dentro de los archivos de página (no extraídas a utils/)
-- **Idioma**: comentarios (nuevos y existentes) en inglés; texto de UI, claves de i18n y nombres de variables en español. Nunca traduzcas claves ni valores de i18n: son contrato y producto
-- **Subcomponentes**: `PlayaDetalle.tsx` contiene múltiples componentes internos (`FlagBanner`, `ForecastHero`, `DaySelector`, `TidesSection`, etc.)
+- **Idioma**: el código va en inglés: identificadores, archivos y carpetas, clases e ids CSS, variables CSS, comentarios y títulos de test. Siguen en español, porque son contrato o producto:
+  - texto de UI y claves y valores de i18n (nunca se traducen);
+  - campos del JSON del API y valores que vienen de él (`'Verde'`, `'directo'`; también los sufijos de clase construidos con ellos, como `score-badge--alta` y `trend-badge--mejora`);
+  - rutas públicas y slugs de landings;
+  - claves y formas de `localStorage` (`app_idioma`, `playas:favoritas`, `playas:ultimoListado` con `{ guardadoEn, playas }`), porque viven en el navegador de cada usuario;
+  - el mensaje del service worker (`'API_ACTUALIZADA'`, `datos`) y la caché `api-playas`, porque un SW antiguo puede hablar con una página nueva;
+  - los datos JSON de `regions/` y `src/data/`.
+- **Subcomponentes**: el detalle está repartido en `pages/beach-detail/` (`FlagBanner`, `ForecastHero`, `DaySelector`, `TidesSection`, etc.)
 
 ## Testing
 
@@ -137,18 +149,17 @@ que «una región es un directorio de datos». Con `--require-hosting` sí falla
 workflow de despliegue, que es donde de verdad bloquea.
 
 **Nunca escribas a fuego el nombre de una región, un centro de mapa ni una ruta del API.** El
-nombre entra en los textos como `{region}`, que `IdiomaContext` interpola solo; el resto sale de
+nombre entra en los textos como `{region}`, que `LanguageContext` interpola solo; el resto sale de
 `src/config/region.ts`.
 
 Los tests leen la región del build en vez de dar por hecho Cantabria (`src/test/apiRoutes.ts`),
-y `regionBuild.otraRegion.test.tsx` sustituye el módulo de región por otra distinta: es lo que
+y `regionBuild.otherRegion.test.tsx` sustituye el módulo de región por otra distinta: es lo que
 detecta que algo siga clavado a Cantabria, porque su `region.json` reproduce exactamente los
 valores que antes estaban a fuego.
 
 ## Notas Importantes
 
-- El mecanismo de fallback de 2.5s en `getPlayas()` es intencional — el backend en Render tiene cold starts largos
-- `ExploreContainer.tsx` es boilerplate de Ionic sin usar; se puede eliminar
+- El mecanismo de fallback de 2.5s en `getBeaches()` es intencional — el backend en Render tiene cold starts largos
 - El service worker (PWA) está registrado en `index.tsx` y mantiene bundle y respuestas regionales del API disponibles offline.
 - Los iconos de clima usan URLs de AEMET (`www.aemet.es/imagenes/png/estado_cielo/`)
 - ESLint: `react-in-jsx-scope` desactivado (React 17+ JSX transform)

@@ -18,7 +18,7 @@ import { installFetchMock, restoreFetch, route } from '../http/fakeFetch';
 import { BEACHES_PATH, FEATURED_PATH } from '../apiRoutes';
 import { beachesResponse } from '../fixtures/beaches';
 import { featuredResponse } from '../fixtures/featured';
-import BeachList from '../../../../../../Dev/playas-cantabria/frontend/src/pages/BeachList';
+import BeachList from '../../pages/BeachList';
 
 // The `mock` prefix is what lets jest.mock's factory reference them.
 const mockMapCenter: Array<[number, number]> = [];
@@ -48,8 +48,8 @@ jest.mock('react-leaflet', () => {
 
 afterEach(() => restoreFetch());
 
-describe('la URL del API lleva la región del build', () => {
-  it('compone /api/<region>/<recurso>', () => {
+describe('the API URL carries the build region', () => {
+  it('composes /api/<region>/<resource>', () => {
     expect(REGION_API_PATH).toBe(`/api/${REGION.id}`);
     expect(buildRegionApiUrl('/beaches')).toBe(buildApiUrl(`/api/${REGION.id}/beaches`));
     // Tolerates the leading slash being absent, like buildApiUrl does.
@@ -58,11 +58,11 @@ describe('la URL del API lleva la región del build', () => {
     );
   });
 
-  it('no usa el alias sin región, que es solo para clientes ya instalados', () => {
+  it('does not use the regionless alias, which is only for already installed clients', () => {
     expect(buildRegionApiUrl('/beaches')).not.toBe(buildApiUrl('/api/beaches'));
   });
 
-  it('la app pide realmente esa ruta', async () => {
+  it('the app really requests that route', async () => {
     const fetchMock = installFetchMock([
       route(FEATURED_PATH, { json: featuredResponse }),
       route(BEACHES_PATH, { json: beachesResponse }),
@@ -76,8 +76,8 @@ describe('la URL del API lleva la región del build', () => {
   });
 });
 
-describe('los textos de cabecera llevan el nombre de la región', () => {
-  it('interpola {region} sin que la página tenga que pasarlo', async () => {
+describe('the header texts carry the region name', () => {
+  it('interpolates {region} without the page having to pass it', async () => {
     installFetchMock([
       route(FEATURED_PATH, { json: featuredResponse }),
       route(BEACHES_PATH, { json: beachesResponse }),
@@ -95,8 +95,8 @@ describe('los textos de cabecera llevan el nombre de la región', () => {
   });
 });
 
-describe('el mapa arranca donde dice la región', () => {
-  it('toma el centro y el zoom de region.json', async () => {
+describe('the map starts where the region says', () => {
+  it('takes the centre and zoom from region.json', async () => {
     mockMapCenter.length = 0;
     mockMapZoom.length = 0;
     installFetchMock([
@@ -104,7 +104,7 @@ describe('el mapa arranca donde dice la región', () => {
       route(BEACHES_PATH, { json: beachesResponse }),
     ]);
     // Imported here so the react-leaflet mock is in place before the module loads.
-    const MapPage = (await import('../../../../../../Dev/playas-cantabria/frontend/src/pages/MapPage')).default;
+    const MapPage = (await import('../../pages/MapPage')).default;
     renderWithProviders(<MapPage />, { route: '/mapa' });
     await screen.findByText(beachesResponse[0].nombre);
 

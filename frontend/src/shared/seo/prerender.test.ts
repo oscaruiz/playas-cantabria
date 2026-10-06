@@ -31,7 +31,7 @@ describe('scripts/prerender.mjs', () => {
     rmdirSync(dir, { recursive: true });
   });
 
-  it('genera una página por playa con título, canónica y contenido estático', () => {
+  it('generates one page per beach with title, canonical and static content', () => {
     const output = runPrerender(dir);
     expect(output).toMatch(/rutas generadas/);
 
@@ -47,7 +47,7 @@ describe('scripts/prerender.mjs', () => {
     expect(sheet).toContain('href="/playas"');
   });
 
-  it('el índice y el listado llevan enlaces a todas las playas', () => {
+  it('the index and the listing carry links to every beach', () => {
     runPrerender(dir);
 
     const catalog = JSON.parse(
@@ -64,7 +64,7 @@ describe('scripts/prerender.mjs', () => {
     expect(start).not.toContain('<div id="root"></div>');
   });
 
-  it('oculta el bloque estático en cuanto hay JS, pero lo deja en el HTML', () => {
+  it('hides the static block as soon as JS is on, but leaves it in the HTML', () => {
     runPrerender(dir);
     const start = readFileSync(join(dir, 'index.html'), 'utf8');
 
@@ -76,7 +76,7 @@ describe('scripts/prerender.mjs', () => {
     expect(start).toContain('<h1>Playucas.es</h1>');
   });
 
-  it('genera páginas de municipio y de landings (Fase 6) desde los mismos selectores', () => {
+  it('generates municipality and landing pages (Phase 6) from the same selectors', () => {
     runPrerender(dir);
 
     // The index is the crawlable entry to every municipality page, and the
@@ -95,7 +95,7 @@ describe('scripts/prerender.mjs', () => {
     expect(webcam).toContain('la app no comprueba si emite');
   });
 
-  it('falla en alto si la plantilla no tiene el root vacío', () => {
+  it('fails loudly if the template does not have an empty root', () => {
     writeFileSync(join(dir, 'index.html'), TEMPLATE.replace('<div id="root"></div>', '<div id="app"></div>'));
     expect(() => runPrerender(dir)).toThrow();
   });

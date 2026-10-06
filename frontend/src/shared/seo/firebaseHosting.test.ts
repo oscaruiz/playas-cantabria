@@ -8,7 +8,7 @@ import { join } from 'path';
  * new hosting target cannot regress it silently.
  */
 describe('firebase.json hosting', () => {
-  it('todos los targets fijan trailingSlash en false', () => {
+  it('every target sets trailingSlash to false', () => {
     const config = JSON.parse(
       readFileSync(join(__dirname, '..', '..', '..', 'firebase.json'), 'utf8')
     ) as { hosting: Array<{ target: string; trailingSlash?: boolean }> };

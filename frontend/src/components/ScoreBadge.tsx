@@ -1,5 +1,5 @@
 import React from 'react';
-import { useLanguage } from '../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
+import { useLanguage } from '../shared/i18n/LanguageContext';
 import './ScoreBadge.css';
 
 type Segment = 'alta' | 'media' | 'baja';

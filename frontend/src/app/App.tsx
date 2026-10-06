@@ -7,15 +7,15 @@ import {
 import { IonReactRouter } from '@ionic/react-router';
 import { Route } from 'react-router-dom';
 import HomePage from '../pages/HomePage';
-import BeachList from '../../../../../Dev/playas-cantabria/frontend/src/pages/BeachList';
-import BeachDetailPage from '../../../../../Dev/playas-cantabria/frontend/src/pages/BeachDetailPage';
-import MapPage from '../../../../../Dev/playas-cantabria/frontend/src/pages/MapPage';
-import MunicipalityPage from '../../../../../Dev/playas-cantabria/frontend/src/pages/landings/MunicipalityPage';
-import MunicipalitiesIndex from '../../../../../Dev/playas-cantabria/frontend/src/pages/landings/MunicipalitiesIndex';
-import NotFound from '../../../../../Dev/playas-cantabria/frontend/src/pages/NotFound';
-import BeachLanding, { LandingId } from '../../../../../Dev/playas-cantabria/frontend/src/pages/landings/BeachLanding';
+import BeachList from '../pages/BeachList';
+import BeachDetailPage from '../pages/BeachDetailPage';
+import MapPage from '../pages/MapPage';
+import MunicipalityPage from '../pages/landings/MunicipalityPage';
+import MunicipalitiesIndex from '../pages/landings/MunicipalitiesIndex';
+import NotFound from '../pages/NotFound';
+import BeachLanding, { LandingId } from '../pages/landings/BeachLanding';
 import { LANDINGS } from '../shared/seo/landings';
-import { LanguageProvider } from '../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
+import { LanguageProvider } from '../shared/i18n/LanguageContext';
 import LegalPage from '../pages/LegalPage';
 
 // Routes are imported statically on purpose: IonRouterOutlet keeps

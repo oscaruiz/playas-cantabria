@@ -1,9 +1,9 @@
 import React from 'react';
-import { HalfDayDTO } from '../../../../../../Dev/playas-cantabria/frontend/src/services/api';
-import { skyEmoji } from '../../../../../../Dev/playas-cantabria/frontend/src/utils/beachHelpers';
-import { capitalize } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/format/text';
-import { useLanguage } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
-import { translateApiText } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/apiText';
+import { HalfDayDTO } from '../../services/api';
+import { skyEmoji } from '../../utils/beachHelpers';
+import { capitalize } from '../../shared/format/text';
+import { useLanguage } from '../../shared/i18n/LanguageContext';
+import { translateApiText } from '../../shared/i18n/apiText';
 
 export function hasHalfDayData(h: HalfDayDTO): boolean {
   return h.cielo != null || h.viento != null || h.oleaje != null;

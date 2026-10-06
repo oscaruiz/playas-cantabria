@@ -7,7 +7,7 @@ function meta(selector: string): string | null {
 }
 
 describe('SeoHead', () => {
-  it('fija título, descripción, canónica y etiquetas sociales', () => {
+  it('sets title, description, canonical and social tags', () => {
     render(
       <SeoHead
         title="La Concha: bandera, tiempo y mareas hoy"
@@ -31,7 +31,7 @@ describe('SeoHead', () => {
     );
   });
 
-  it('navegar a otra página sobrescribe las etiquetas: no se acumulan', () => {
+  it('navigating to another page overwrites the tags: they do not pile up', () => {
     render(
       <SeoHead title="Página A" description="Descripción A" canonicalPath="/a" />
     );
@@ -48,7 +48,7 @@ describe('SeoHead', () => {
     ).toBe(`${window.location.origin}/b`);
   });
 
-  it('noindex marca robots y elimina la canónica y og:url heredadas', () => {
+  it('noindex sets robots and removes the inherited canonical and og:url', () => {
     render(<SeoHead title="Página A" description="a" canonicalPath="/a" />);
     render(<SeoHead title="No encontrada" description="x" canonicalPath="" noindex />);
 
@@ -57,7 +57,7 @@ describe('SeoHead', () => {
     expect(document.head.querySelector('meta[property="og:url"]')).toBeNull();
   });
 
-  it('volver a una página normal retira el robots y restaura la canónica', () => {
+  it('going back to a normal page removes robots and restores the canonical', () => {
     render(<SeoHead title="No encontrada" description="x" canonicalPath="" noindex />);
     render(<SeoHead title="Página B" description="b" canonicalPath="/b" />);
 
@@ -67,7 +67,7 @@ describe('SeoHead', () => {
     ).toBe(`${window.location.origin}/b`);
   });
 
-  it('reacciona a un cambio de props (idioma, otra playa)', () => {
+  it('reacts to a props change (language, another beach)', () => {
     const { rerender } = render(
       <SeoHead title="Antes" description="d" canonicalPath="/x" />
     );

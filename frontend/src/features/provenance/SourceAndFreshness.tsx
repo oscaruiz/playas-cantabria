@@ -1,16 +1,16 @@
 import React from 'react';
-import { useLanguage } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
+import { useLanguage } from '../../shared/i18n/LanguageContext';
 import type { TextKey } from '../../shared/i18n/es';
 import type { EstimatedField } from '../../services/api';
-import { formatTimeAgo } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/format/time';
-import { capitalize } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/format/text';
+import { formatTimeAgo } from '../../shared/format/time';
+import { capitalize } from '../../shared/format/text';
 import {
   Provenance,
   normalizeInstant,
   formatAbsoluteInstant,
   STALE_DATA_THRESHOLD_MS,
-} from '../../../../../../Dev/playas-cantabria/frontend/src/features/provenance/provenance';
-import { sourceAttribution } from '../../../../../../Dev/playas-cantabria/frontend/src/features/provenance/attributions';
+} from './provenance';
+import { sourceAttribution } from './attributions';
 import './provenance.css';
 
 /**
@@ -151,8 +151,8 @@ export const EstimatedValues: React.FC<{
  * stale-while-revalidate cache, so "I just loaded the page" says nothing about
  * how old the numbers are.
  *
- * `umbralCacheMs` is the age past which the copy is no longer the one this
- * request produced. It defaults to `UMBRAL_DATOS_VIEJOS_MS`, the same one the
+ * `cacheThresholdMs` is the age past which the copy is no longer the one this
+ * request produced. It defaults to `STALE_DATA_THRESHOLD_MS`, the same one the
  * ranking uses: the two screens must not disagree about what counts as old.
  */
 export const ComputedAt: React.FC<{

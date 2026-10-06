@@ -1,7 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { es, TextKey, BasePlural } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/es';
-import { en } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/en';
-import { REGION } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/config/region';
+import { es, TextKey, BasePlural } from './es';
+import { en } from './en';
+import { REGION } from '../config/region';
 
 export type Language = 'es' | 'en';
 
@@ -96,6 +96,6 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
 export function useLanguage(): LanguageContextValue {
   const ctx = useContext(LanguageContext);
-  if (!ctx) throw new Error('useIdioma debe usarse dentro de <IdiomaProvider>');
+  if (!ctx) throw new Error('useLanguage must be used inside <LanguageProvider>');
   return ctx;
 }

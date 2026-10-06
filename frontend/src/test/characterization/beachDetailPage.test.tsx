@@ -1,7 +1,7 @@
 /**
  * CHARACTERIZATION — FROZEN.
  *
- * Pins down `PlayaDetalle` (route `/playas/:codigo`), which today is 1052 lines
+ * Pins down `BeachDetailPage` (route `/playas/:codigo`), which today is 1052 lines
  * with 16 components declared inside it. It is the page that moves the most in
  * F4, so it is where nailing down the behaviour matters most.
  *
@@ -14,7 +14,7 @@
  * That is why the flag `describe`s set up their own clock and do not assert on
  * the tabs, and vice versa.
  *
- * `getDetallePlaya` does not cache, so here different payloads can be used in
+ * `getBeachDetail` does not cache, so here different payloads can be used in
  * each test. The only cache in play is the `/featured` one, and all the tests
  * share the same fixture.
  */
@@ -22,7 +22,7 @@
 import React from 'react';
 import { fireEvent, screen, waitFor } from '@testing-library/react';
 import type { BeachDetail, CurrentRain } from '../../services/api';
-import BeachDetailPage from '../../../../../../Dev/playas-cantabria/frontend/src/pages/BeachDetailPage';
+import BeachDetailPage from '../../pages/BeachDetailPage';
 import { renderWithProviders } from '../render';
 import { installFetchMock, restoreFetch, route, deferred, RouteSpec } from '../http/fakeFetch';
 import { featuredResponse } from '../fixtures/featured';
@@ -72,13 +72,13 @@ afterEach(() => {
 
 // ---------------------------------------------------------------------------
 
-describe('PlayaDetalle — previsión AEMET', () => {
+describe('BeachDetailPage — AEMET forecast', () => {
   beforeEach(() => {
     jest.useFakeTimers().setSystemTime(MIDDAY);
     mockDetail(buildAemetDetail(MIDDAY));
   });
 
-  it('rotula las tres pestañas como Hoy / Mañana / Pasado mañana', async () => {
+  it('labels the three tabs as Hoy / Mañana / Pasado mañana', async () => {
     renderDetail();
     await screen.findByText('Hoy');
 
@@ -91,7 +91,7 @@ describe('PlayaDetalle — previsión AEMET', () => {
     expect(tabs[0]).toHaveAttribute('aria-selected', 'true');
   });
 
-  it('fecha las pestañas con el mes real, también al cambiar de mes', async () => {
+  it('dates the tabs with the real month, also across a month change', async () => {
     // AEMET only labels the day of month ("sábado 01"), so pairing it with the
     // current month dated August 1st as "1 de julio" on the last days of July.
     const monthEnd = localNoon('2026-07-30'); // Thursday; +2 days lands in August
@@ -107,14 +107,14 @@ describe('PlayaDetalle — previsión AEMET', () => {
     expect(dates).toEqual(['Jueves 30 de julio', 'Viernes 31 de julio', 'Sábado 1 de agosto']);
   });
 
-  it('para HOY prioriza la observación real sobre la previsión de la tarde', async () => {
+  it('for TODAY prioritizes the real observation over the afternoon forecast', async () => {
     const { container } = renderDetail();
     await screen.findByText('Hoy');
 
     // tiempoActual.cielo = "cielo despejado" -> "Sol";
     // dias[0].tarde.cielo = "intervalos nubosos" -> "Parcialmente soleado".
-    // El titular usa la palabra de la app, no la del proveedor, para no decir
-    // "Cielo despejado" donde la tarjeta de puntuación dice "Sol".
+    // The headline uses the app's word, not the provider's, so as not to say
+    // "Cielo despejado" where the score card says "Sol".
     expect(container.querySelector('.forecast-hero-sky')).toHaveTextContent('Sol');
     expect(container.querySelector('.forecast-hero-sky')).not.toHaveTextContent(
       'Parcialmente soleado',
@@ -122,7 +122,7 @@ describe('PlayaDetalle — previsión AEMET', () => {
     expect(container.querySelector('.forecast-hero-icon-emoji')).toHaveTextContent('☀️');
   });
 
-  it('muestra la temperatura observada y la máxima prevista', async () => {
+  it('shows the observed temperature and the forecast maximum', async () => {
     const { container } = renderDetail();
     await screen.findByText('Hoy');
 
@@ -132,7 +132,7 @@ describe('PlayaDetalle — previsión AEMET', () => {
     expect(container.querySelector('.forecast-hero-water')).toHaveTextContent('Agua 19°C');
   });
 
-  it('oculta el bloque de mañana cuando no hay datos de mañana', async () => {
+  it('hides the tomorrow block when there is no tomorrow data', async () => {
     const { container } = renderDetail();
     await screen.findByText('Hoy');
 
@@ -141,7 +141,7 @@ describe('PlayaDetalle — previsión AEMET', () => {
     expect(container.querySelector('.halfday-block.afternoon')).not.toBeNull();
   });
 
-  it('pinta sensación, UV con su color y aviso con su nivel', async () => {
+  it('paints feels-like, UV with its color and warning with its level', async () => {
     const { container } = renderDetail();
     await screen.findByText('Hoy');
 
@@ -160,7 +160,7 @@ describe('PlayaDetalle — previsión AEMET', () => {
     );
   });
 
-  it('ordena las mareas por hora e indica hacia dónde va', async () => {
+  it('sorts the tides by time and says which way it is heading', async () => {
     const { container } = renderDetail();
     await screen.findByText('Hoy');
 
@@ -178,7 +178,7 @@ describe('PlayaDetalle — previsión AEMET', () => {
     expect(container.querySelector('.tide-status')).toHaveClass('tide-status-rising');
   });
 
-  it('limpia el asterisco de la fuente de mareas y el sufijo de la fuente meteo', async () => {
+  it('cleans the asterisk of the tides source and the suffix of the weather source', async () => {
     const { container } = renderDetail();
     await screen.findByText('Hoy');
 
@@ -186,24 +186,24 @@ describe('PlayaDetalle — previsión AEMET', () => {
     expect(container.querySelector('.tides-source')?.textContent).not.toContain('*');
   });
 
-  it('la previsión no lleva letra pequeña a la vista: va toda bajo su ⓘ', async () => {
+  it('the forecast has no visible small print: it is all under its ⓘ', async () => {
     const { container } = renderDetail();
     await screen.findByText('Hoy');
 
     const meta = container.querySelector('.detail-col--forecast .forecast-metadata');
-    // Cerrada por defecto: el panel no existe hasta que se pide.
+    // Closed by default: the panel does not exist until it is requested.
     expect(meta).not.toHaveTextContent('Agencia Estatal de Meteorología');
     expect(meta?.querySelector('.info-data-panel')).toBeNull();
     expect(meta?.querySelector('.info-data-btn')).toHaveAttribute('aria-expanded', 'false');
   });
 
-  it('al abrir esa ⓘ salen la atribución de AEMET, su hora y la zona de avisos', async () => {
+  it('opening that ⓘ shows the AEMET attribution, its time and the warnings zone', async () => {
     const { container } = renderDetail();
     await screen.findByText('Hoy');
 
     fireEvent.click(openInfo('Fuente de la previsión'));
 
-    // Dentro de la columna de la previsión, no en un pie perdido al final.
+    // Inside the forecast column, not in a footer lost at the end.
     const panel = container.querySelector(
       '.detail-col--forecast .forecast-metadata .info-data-panel',
     );
@@ -218,22 +218,22 @@ describe('PlayaDetalle — previsión AEMET', () => {
     );
   });
 
-  it('el aviso de la bandera está bajo la ⓘ del banner, y solo ahí', async () => {
+  it('the flag notice is under the banner ⓘ, and only there', async () => {
     const { container } = renderDetail();
     await screen.findByText('Hoy');
 
     const panels = Array.from(container.querySelectorAll('.safety-notice')).map(
       (n) => n.textContent ?? '',
     );
-    // Uno por afirmación, no uno por componente: la bandera se afirma en el
-    // banner y otra vez en la tarjeta, y el aviso viaja solo con el banner.
+    // One per claim, not one per component: the flag is asserted in the banner
+    // and again in the card, and the notice travels only with the banner.
     expect(panels.filter((p) => p.includes('Información orientativa'))).toHaveLength(1);
     expect(container.querySelector('.flag-banner .safety-notice')).toHaveTextContent(
       'Comprueba siempre la bandera presente en la playa',
     );
   });
 
-  it('el aviso del ranking encabeza «cómo se calcula», sin una segunda ⓘ', async () => {
+  it('the ranking notice heads «cómo se calcula», without a second ⓘ', async () => {
     const { container } = renderDetail();
     await screen.findByText('Hoy');
 
@@ -243,7 +243,7 @@ describe('PlayaDetalle — previsión AEMET', () => {
     expect(container.querySelectorAll('.pd-score-block .info-data-btn')).toHaveLength(0);
   });
 
-  it('la ficha se declara independiente, bajo la ⓘ del pie', async () => {
+  it('the sheet declares itself independent, under the footer ⓘ', async () => {
     const { container } = renderDetail();
     await screen.findByText('Hoy');
 
@@ -256,7 +256,7 @@ describe('PlayaDetalle — previsión AEMET', () => {
     expect(panel).toHaveTextContent('Datos calculados el');
   });
 
-  it('al cambiar de día usa la máxima prevista y muestra los dos medios días', async () => {
+  it('when changing day it uses the forecast maximum and shows both half days', async () => {
     const { container } = renderDetail();
     await screen.findByText('Hoy');
 
@@ -269,7 +269,7 @@ describe('PlayaDetalle — previsión AEMET', () => {
     expect(container.querySelector('.halfday-block.morning')).not.toBeNull();
   });
 
-  it('el estado de la marea solo se calcula para el día de hoy', async () => {
+  it('the tide state is only computed for today', async () => {
     const { container } = renderDetail();
     await screen.findByText('Hoy');
 
@@ -282,7 +282,7 @@ describe('PlayaDetalle — previsión AEMET', () => {
 
 // ---------------------------------------------------------------------------
 
-describe('PlayaDetalle — badges de lluvia', () => {
+describe('BeachDetailPage — rain badges', () => {
   /** Clones the AEMET fixture changing only the rain signal. */
   function withRain(rain: CurrentRain): BeachDetail {
     const detail = buildAemetDetail(MIDDAY);
@@ -295,7 +295,7 @@ describe('PlayaDetalle — badges de lluvia', () => {
     jest.useFakeTimers().setSystemTime(MIDDAY);
   });
 
-  it('muestra "Lloviendo ahora" con los mm y oculta la previsión', async () => {
+  it('shows "Lloviendo ahora" with the mm and hides the forecast', async () => {
     mockDetail(
       withRain({
         estado: 'lloviendo',
@@ -319,7 +319,7 @@ describe('PlayaDetalle — badges de lluvia', () => {
     expect(container.querySelector('.forecast-hero-icon-emoji')).toHaveTextContent('🌧️');
   });
 
-  it('muestra la lluvia prevista con su hora cuando no llueve', async () => {
+  it('shows the forecast rain with its time when it is not raining', async () => {
     mockDetail(
       withRain({
         estado: 'sin_lluvia',
@@ -340,7 +340,7 @@ describe('PlayaDetalle — badges de lluvia', () => {
     );
   });
 
-  it('distingue la lluvia de la última hora', async () => {
+  it('tells apart the rain of the last hour', async () => {
     mockDetail(
       withRain({
         estado: 'lloviendo',
@@ -363,13 +363,13 @@ describe('PlayaDetalle — badges de lluvia', () => {
 
 // ---------------------------------------------------------------------------
 
-describe('PlayaDetalle — playas sin ficha AEMET', () => {
+describe('BeachDetailPage — beaches without an AEMET sheet', () => {
   beforeEach(() => {
     jest.useFakeTimers().setSystemTime(MIDDAY);
     mockDetail(buildOpenWeatherDetail(MIDDAY));
   });
 
-  it('cae al hero de `clima` sin selector de días ni mareas', async () => {
+  it('falls back to the `clima` hero without day selector or tides', async () => {
     const { container } = renderDetail('3905201');
     await screen.findByText('La Arnía');
 
@@ -379,7 +379,7 @@ describe('PlayaDetalle — playas sin ficha AEMET', () => {
     expect(container.querySelector('.forecast-hero')).not.toBeNull();
   });
 
-  it('sintetiza el nivel de UV a partir del índice', async () => {
+  it('synthesizes the UV level from the index', async () => {
     const { container } = renderDetail('3905201');
     await screen.findByText('La Arnía');
 
@@ -389,12 +389,12 @@ describe('PlayaDetalle — playas sin ficha AEMET', () => {
     expect(uv).toHaveClass('uv-high');
   });
 
-  it('etiqueta la fuente meteorológica declarada por `clima`', async () => {
+  it('labels the weather source declared by `clima`', async () => {
     const { container } = renderDetail('3905201');
     await screen.findByText('La Arnía');
 
-    // Sin hoja de AEMET la fuente la declara `clima`, y se acredita bajo la ⓘ
-    // del propio panel: no hay una etiqueta de página que lo repita al pie.
+    // Without an AEMET sheet the source is declared by `clima`, and credited under
+    // the panel's own ⓘ: there is no page label repeating it at the bottom.
     fireEvent.click(openInfo('Fuente de la previsión'));
 
     const notes = Array.from(container.querySelectorAll('.provenance-attribution')).map(
@@ -406,8 +406,8 @@ describe('PlayaDetalle — playas sin ficha AEMET', () => {
 
 // ---------------------------------------------------------------------------
 
-describe('PlayaDetalle — bandera de Cruz Roja', () => {
-  it('dentro de horario y con captura fresca pinta el color pleno', async () => {
+describe('BeachDetailPage — Cruz Roja flag', () => {
+  it('within hours and with a fresh capture it paints the full color', async () => {
     // 12:00Z = 14:00 in Madrid, within 11:00-20:00.
     const now = new Date('2026-07-27T12:00:00.000Z');
     jest.useFakeTimers().setSystemTime(now);
@@ -423,8 +423,8 @@ describe('PlayaDetalle — bandera de Cruz Roja', () => {
     expect(container.querySelector('.flag-info')).toHaveTextContent('Vigilancia: 11:00 - 20:00');
   });
 
-  it('recién cerrado enseña la última registrada, atenuada y fechada', async () => {
-    // 21:00Z = 23:00 en Madrid. Izada hasta las 19:30: hace 3,5 h.
+  it('just closed it shows the last one recorded, dimmed and dated', async () => {
+    // 21:00Z = 23:00 in Madrid. Flown until 19:30: 3.5 h ago.
     jest.useFakeTimers().setSystemTime(new Date('2026-07-27T21:00:00.000Z'));
     mockDetail(buildOutOfHoursDetail());
 
@@ -442,9 +442,9 @@ describe('PlayaDetalle — bandera de Cruz Roja', () => {
     );
   });
 
-  it('a la mañana siguiente ya no hay color: la bandera pasa de 8h', async () => {
-    // 05:00Z = 07:00 en Madrid. Dejó de ondear ayer a las 19:30, hace 13,5 h.
-    // Se sigue diciendo que está fuera de horario, pero sin pintar bandera.
+  it('the next morning there is no color: the flag is over 8h old', async () => {
+    // 05:00Z = 07:00 in Madrid. It stopped flying yesterday at 19:30, 13.5 h ago.
+    // It still says it is out of hours, but without painting a flag.
     jest.useFakeTimers().setSystemTime(new Date('2026-07-28T05:00:00.000Z'));
     mockDetail(buildOutOfHoursDetail());
 
@@ -456,7 +456,7 @@ describe('PlayaDetalle — bandera de Cruz Roja', () => {
     expect(container.querySelector('.flag-value')).not.toHaveTextContent('Verde');
   });
 
-  it('oculta el banner cuando no hay bandera vigente dentro de horario', async () => {
+  it('hides the banner when there is no current flag within hours', async () => {
     const now = new Date('2026-07-27T12:00:00.000Z');
     jest.useFakeTimers().setSystemTime(now);
 
@@ -472,7 +472,7 @@ describe('PlayaDetalle — bandera de Cruz Roja', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('la tarjeta de Cruz Roja viene desplegada solo con bandera vigente', async () => {
+  it('the Cruz Roja card comes expanded only with a current flag', async () => {
     const now = new Date('2026-07-27T12:00:00.000Z');
     jest.useFakeTimers().setSystemTime(now);
     mockDetail(buildAemetDetail(now));
@@ -485,7 +485,7 @@ describe('PlayaDetalle — bandera de Cruz Roja', () => {
     expect(container.querySelector('.card-header')).toHaveAttribute('aria-expanded', 'true');
   });
 
-  it('la tarjeta se pliega y despliega al pulsarla', async () => {
+  it('the card collapses and expands when pressed', async () => {
     const now = new Date('2026-07-27T12:00:00.000Z');
     jest.useFakeTimers().setSystemTime(now);
     mockDetail(buildAemetDetail(now));
@@ -503,13 +503,13 @@ describe('PlayaDetalle — bandera de Cruz Roja', () => {
 
 // ---------------------------------------------------------------------------
 
-describe('PlayaDetalle — puntuación', () => {
+describe('BeachDetailPage — score', () => {
   beforeEach(() => {
     jest.useFakeTimers().setSystemTime(MIDDAY);
     mockDetail(buildAemetDetail(MIDDAY));
   });
 
-  it('toma la puntuación de resumenTodas buscando por código', async () => {
+  it('takes the score from resumenTodas looking up by code', async () => {
     const { container } = renderDetail('3908503');
     await screen.findByText('Puntuación de hoy');
 
@@ -519,7 +519,7 @@ describe('PlayaDetalle — puntuación', () => {
     );
   });
 
-  it('el desplegable "cómo se calcula" abre los 6 factores de ESTA playa y las 2 reglas', async () => {
+  it('the "cómo se calcula" dropdown opens the 6 factors of THIS beach and the 2 rules', async () => {
     const { container } = renderDetail('3908503');
     await screen.findByText('Puntuación de hoy');
 
@@ -527,25 +527,25 @@ describe('PlayaDetalle — puntuación', () => {
 
     fireEvent.click(screen.getByText('Cómo se calcula'));
 
-    // Seis, no siete: el UV dejó de puntuar (restaba en todo día despejado, que
-    // son justo los días que merece la pena ir) y no puede figurar como factor.
+    // Six, not seven: UV stopped scoring (it subtracted on every clear day, which
+    // are exactly the days worth going) and cannot appear as a factor.
     const factors = container.querySelectorAll('.pd-score-info .pd-factor');
     expect(factors).toHaveLength(6);
     expect(container.querySelector('.pd-score-info')).not.toHaveTextContent('UV');
     expect(factors[0].querySelector('.pd-factor-name')).toHaveTextContent('Sol y cielo');
     expect(factors[0].querySelector('.pd-factor-points')).toHaveTextContent('25/25');
-    // La explicación genérica no se pierde: baja a texto secundario de la fila.
+    // The generic explanation is not lost: it drops to the row's secondary text.
     expect(factors[0].querySelector('.pd-factor-note')).toHaveTextContent(
       'cuanto más despejado, mejor.',
     );
 
-    // Lluvia y peligro no puntúan: son reglas que limitan o excluyen.
+    // Rain and danger do not score: they are rules that cap or exclude.
     const rules = container.querySelectorAll('.pd-score-info .beach-info-row');
     expect(rules).toHaveLength(2);
     expect(rules[0].querySelector('.beach-info-label')).toHaveTextContent('Lluvia');
   });
 
-  it('cada factor enseña el dato de la playa que explica sus puntos', async () => {
+  it('each factor shows the beach datum that explains its points', async () => {
     const { container } = renderDetail('3908503');
     await screen.findByText('Puntuación de hoy');
     fireEvent.click(screen.getByText('Cómo se calcula'));
@@ -554,14 +554,14 @@ describe('PlayaDetalle — puntuación', () => {
       (n) => n.textContent,
     );
 
-    expect(values[0]).toBe('cielo despejado');   // cielo
-    expect(values[1]).toBe('22°');               // temperatura
-    expect(values[3]).toBe('Verde');             // bandera (viento va antes: pesa más)
-    expect(values[4]).toBe('marejadilla');       // oleaje
-    expect(values[5]).toBe('clima y bandera');   // datos
+    expect(values[0]).toBe('cielo despejado');   // sky
+    expect(values[1]).toBe('22°');               // temperature
+    expect(values[3]).toBe('Verde');             // flag (wind comes first: it weighs more)
+    expect(values[4]).toBe('marejadilla');       // swell
+    expect(values[5]).toBe('clima y bandera');   // data
   });
 
-  it('22° se lee como muy buena temperatura, no como un aprobado raspado', async () => {
+  it('22° reads as a very good temperature, not as a bare pass', async () => {
     const { container } = renderDetail('3908503');
     await screen.findByText('Puntuación de hoy');
     fireEvent.click(screen.getByText('Cómo se calcula'));
@@ -570,7 +570,7 @@ describe('PlayaDetalle — puntuación', () => {
     expect(points[1]).toHaveTextContent('22/25');
   });
 
-  it('los puntos del desglose suman la nota cuando no hay tope', async () => {
+  it('the breakdown points add up to the score when there is no cap', async () => {
     const { container } = renderDetail('3908503');
     await screen.findByText('Puntuación de hoy');
     fireEvent.click(screen.getByText('Cómo se calcula'));
@@ -583,42 +583,42 @@ describe('PlayaDetalle — puntuación', () => {
     expect(container.querySelector('.pd-score-cap')).toBeNull();
   });
 
-  it('anuncia hacia dónde va el día sin desplegar nada, y sin repetirlo en la razón', async () => {
+  it('announces where the day is heading without expanding anything, and without repeating it in the reason', async () => {
     const { container } = renderDetail('3908503');
     await screen.findByText('Puntuación de hoy');
 
     const chip = container.querySelector('.trend-badge');
     expect(chip).toHaveTextContent('Está mejorando');
     expect(chip).toHaveTextContent('+6 puntos');
-    // Y por qué mejora: "Mejora" a secas no dice si merece la pena esperar.
+    // And why it improves: a bare "Mejora" does not say whether it is worth waiting.
     expect(chip).toHaveTextContent('se despeja');
-    // El backend ya lo dice en razonRanking; con el chip se diría dos veces.
+    // The backend already says it in razonRanking; with the chip it would be said twice.
     expect(container.querySelector('.pd-score-reason')).not.toHaveTextContent('próximas horas');
   });
 
-  it('la tira horaria se ve sin desplegar nada y va justo encima de mareas', async () => {
+  it('the hourly strip is visible without expanding anything and sits right above tides', async () => {
     const { container } = renderDetail('3908503');
     await screen.findByText('Puntuación de hoy');
 
-    // Sin tocar "Cómo se calcula": vive en su propia sección de la página.
+    // Without touching "Cómo se calcula": it lives in its own section of the page.
     const hours = container.querySelectorAll('.next-hours-section .pd-hour');
     expect(hours).toHaveLength(3);
     expect(hours[0].querySelector('.pd-hour-temp')).toHaveTextContent('21°');
     expect(hours[2].querySelector('.pd-hour-temp')).toHaveTextContent('23°');
 
-    // El orden en el DOM: primero las próximas horas, después las mareas.
+    // The DOM order: next hours first, then tides.
     const sections = Array.from(
       container.querySelectorAll('.next-hours-section, .tides-section'),
     ).map((n) => n.className);
     expect(sections).toEqual(['next-hours-section', 'tides-section']);
   });
 
-  it('acredita quién pronostica esas horas, con lo que dice el API', async () => {
+  it('credits who forecasts those hours, with what the API says', async () => {
     const { container } = renderDetail('3908503');
     await screen.findByText('Puntuación de hoy');
 
-    // Acreditar y decir que van adaptados es UNA frase: la nota de la licencia
-    // ya enlaza a Open-Meteo, así que no se repite el crédito genérico encima.
+    // Crediting and saying they are adapted is ONE sentence: the license note
+    // already links to Open-Meteo, so the generic credit is not repeated above.
     fireEvent.click(openInfo('Fuente de las próximas horas'));
 
     const source = container.querySelector('.next-hours-source .info-data-panel');
@@ -629,7 +629,7 @@ describe('PlayaDetalle — puntuación', () => {
     expect(container.querySelectorAll('.next-hours-source')).toHaveLength(1);
   });
 
-  it('el desplegable de la puntuación ya no repite la tira', async () => {
+  it('the score dropdown no longer repeats the strip', async () => {
     const { container } = renderDetail('3908503');
     await screen.findByText('Puntuación de hoy');
     fireEvent.click(screen.getByText('Cómo se calcula'));
@@ -637,8 +637,8 @@ describe('PlayaDetalle — puntuación', () => {
     expect(container.querySelectorAll('.pd-score-info .pd-hour')).toHaveLength(0);
   });
 
-  it('sin desglose (backend antiguo) el panel sigue abriendo con sus reglas', async () => {
-    // La Salvé no lleva el bloque aditivo en el fixture.
+  it('without breakdown (old backend) the panel still opens with its rules', async () => {
+    // La Salvé has no additive block in the fixture.
     const { container } = renderDetail('3903501');
     await screen.findByText('Puntuación de hoy');
     fireEvent.click(screen.getByText('Cómo se calcula'));
@@ -648,7 +648,7 @@ describe('PlayaDetalle — puntuación', () => {
     expect(container.querySelector('.trend-badge')).toBeNull();
   });
 
-  it('no muestra bloque de puntuación si la playa no está en el ranking', async () => {
+  it('shows no score block if the beach is not in the ranking', async () => {
     const detail = buildAemetDetail(MIDDAY);
     detail.codigo = 'NO-EXISTE';
     mockDetail(detail);
@@ -662,13 +662,13 @@ describe('PlayaDetalle — puntuación', () => {
 
 // ---------------------------------------------------------------------------
 
-describe('PlayaDetalle — información de la playa', () => {
+describe('BeachDetailPage — beach information', () => {
   beforeEach(() => {
     jest.useFakeTimers().setSystemTime(MIDDAY);
     mockDetail(buildAemetDetail(MIDDAY));
   });
 
-  it('lista las filas de información con sus unidades', async () => {
+  it('lists the information rows with their units', async () => {
     renderDetail();
     await screen.findByText('Información de la playa');
 
@@ -678,7 +678,7 @@ describe('PlayaDetalle — información de la playa', () => {
     expect(screen.getByText('Hospital').nextElementSibling).toHaveTextContent('a 10 km');
   });
 
-  it('añade submarinismo a los atributos aunque venga como campo suelto', async () => {
+  it('adds diving to the attributes even when it comes as a loose field', async () => {
     renderDetail();
     await screen.findByText('Servicios y características');
 
@@ -688,7 +688,7 @@ describe('PlayaDetalle — información de la playa', () => {
     expect(screen.queryByText('Aseos')).not.toBeInTheDocument();
   });
 
-  it('enlaza la webcam en una pestaña nueva y de forma segura', async () => {
+  it('links the webcam in a new tab and safely', async () => {
     renderDetail();
     await screen.findByText('Webcam en directo');
 
@@ -698,7 +698,7 @@ describe('PlayaDetalle — información de la playa', () => {
     expect(link).toHaveAttribute('rel', 'noopener noreferrer');
   });
 
-  it('ofrece cómo llegar y ver en el mapa', async () => {
+  it('offers directions and view on the map', async () => {
     renderDetail();
     await screen.findByText('Cómo llegar');
 
@@ -712,8 +712,8 @@ describe('PlayaDetalle — información de la playa', () => {
 
 // ---------------------------------------------------------------------------
 
-describe('PlayaDetalle — estados', () => {
-  it('muestra el spinner mientras carga', async () => {
+describe('BeachDetailPage — states', () => {
+  it('shows the spinner while loading', async () => {
     jest.useFakeTimers().setSystemTime(MIDDAY);
     const pending = deferred<RouteSpec>();
     mockDetail(() => pending.promise);
@@ -726,7 +726,7 @@ describe('PlayaDetalle — estados', () => {
     await screen.findByText('Hoy');
   });
 
-  it('muestra el error si el detalle falla', async () => {
+  it('shows the error if the detail fails', async () => {
     jest.useFakeTimers().setSystemTime(MIDDAY);
     mockDetail(() => ({ status: 500 }));
 
@@ -736,9 +736,9 @@ describe('PlayaDetalle — estados', () => {
     expect(screen.queryByText('Cargando datos de la playa...')).not.toBeInTheDocument();
   });
 
-  it('dice la causa: el estado HTTP cuando el servidor contesta', async () => {
-    // Tres veces hoy el mismo texto con tres causas distintas. La causa es lo
-    // primero que hace falta, no un adorno.
+  it('states the cause: the HTTP status when the server answers', async () => {
+    // Three times today the same text with three different causes. The cause is
+    // the first thing needed, not an ornament.
     jest.useFakeTimers().setSystemTime(MIDDAY);
     mockDetail(() => ({ status: 429 }));
 
@@ -748,7 +748,7 @@ describe('PlayaDetalle — estados', () => {
     expect(container.querySelector('.error-cause')).toHaveTextContent('HTTP 429');
   });
 
-  it('dice la causa: sin respuesta cuando la petición ni vuelve', async () => {
+  it('states the cause: no response when the request never comes back', async () => {
     jest.useFakeTimers().setSystemTime(MIDDAY);
     mockDetail(() => ({ networkError: true }));
 
@@ -758,10 +758,10 @@ describe('PlayaDetalle — estados', () => {
     expect(container.querySelector('.error-cause')).toHaveTextContent('Sin respuesta del servidor');
   });
 
-  it('un fallo pasajero no deja el aviso clavado si el reintento trae los datos', async () => {
-    // Lo de la captura: la ficha entera pintada (78/100, previsión, webcam...)
-    // y encima el cartel rojo de "no se pudo cargar". El primer intento falló,
-    // el segundo funcionó, y el error no se apagaba nunca.
+  it('a transient failure does not leave the notice stuck if the retry brings the data', async () => {
+    // The screenshot case: the whole sheet painted (78/100, forecast, webcam...)
+    // and on top the red "no se pudo cargar" banner. The first attempt failed,
+    // the second worked, and the error never went away.
     jest.useFakeTimers().setSystemTime(MIDDAY);
     let attempt = 0;
     installFetchMock([
@@ -775,7 +775,7 @@ describe('PlayaDetalle — estados', () => {
     const { unmount } = renderDetail();
     await screen.findByText('No se pudo cargar el detalle de la playa');
 
-    // Segundo montaje (lo que hace StrictMode en desarrollo, o una renavegación).
+    // Second mount (what StrictMode does in development, or a re-navigation).
     unmount();
     renderDetail();
 
@@ -783,7 +783,7 @@ describe('PlayaDetalle — estados', () => {
     expect(screen.queryByText('No se pudo cargar el detalle de la playa')).not.toBeInTheDocument();
   });
 
-  it('el aviso de error nunca convive con la ficha cargada', async () => {
+  it('the error notice never coexists with the loaded sheet', async () => {
     jest.useFakeTimers().setSystemTime(MIDDAY);
     mockDetail(buildAemetDetail(MIDDAY));
 
@@ -801,8 +801,8 @@ describe('PlayaDetalle — estados', () => {
  * cache in `services/api.ts` would hand that swapped ranking to any test that
  * ran after it (same debt the states file documents).
  */
-describe('PlayaDetalle — tope publicado', () => {
-  it('la nota del tope enseña el valor que publica el backend, no el 59 a fuego', async () => {
+describe('BeachDetailPage — published cap', () => {
+  it('the cap note shows the value the backend publishes, not a hardcoded 59', async () => {
     // The forecast cap is graded now: rain 3 h away caps at 75, not 59.
     const withCap = {
       ...featuredResponse,

@@ -34,7 +34,7 @@ afterEach(() => {
   restoreFetch();
 });
 
-it('muestra el aviso de "sin destacadas" cuando ninguna playa llega a 60', async () => {
+it('shows the "sin destacadas" notice when no beach reaches 60', async () => {
   Object.defineProperty(navigator, 'geolocation', { configurable: true, value: undefined });
   installFetchMock([
     route(FEATURED, { json: noFeatured }),
@@ -50,7 +50,7 @@ it('muestra el aviso de "sin destacadas" cuando ninguna playa llega a 60', async
   expect(screen.getByText('Mejor revisar antes de ir')).toBeInTheDocument();
 });
 
-it('el aviso de "sin destacadas" lleva un botón al listado completo', async () => {
+it('the "sin destacadas" notice carries a button to the full list', async () => {
   Object.defineProperty(navigator, 'geolocation', { configurable: true, value: undefined });
   installFetchMock([
     route(FEATURED, { json: noFeatured }),

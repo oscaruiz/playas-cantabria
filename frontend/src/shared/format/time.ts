@@ -4,7 +4,7 @@
  * whatever timezone the device is set to.
  */
 
-import type { TranslateFn } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
+import type { TranslateFn } from '../i18n/LanguageContext';
 
 /** Minutes elapsed in the day in Madrid time (robust to the device's TZ). */
 export function madridMinutes(date: Date): number {

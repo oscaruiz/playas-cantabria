@@ -20,7 +20,7 @@
  * outage, if there was one): 32 badges appeared all at once when
  * `onBackendData` arrived.
  *
- * The fix is `vigilanciaDisponible()`, which looks at both sources. The property
+ * The fix is `lifeguardAvailable()`, which looks at both sources. The property
  * this file pins down is the EQUIVALENCE between both paths.
  *
  * TEST ORDER MATTERS: `services/api.ts` caches 5 min in a module variable and
@@ -31,7 +31,7 @@
 import React from 'react';
 import { screen } from '@testing-library/react';
 import beachesJson from '../../data/beaches.json';
-import BeachList from '../../../../../../Dev/playas-cantabria/frontend/src/pages/BeachList';
+import BeachList from '../../pages/BeachList';
 import { renderWithProviders } from '../render';
 import { installFetchMock, restoreFetch, route } from '../http/fakeFetch';
 import { beachesResponse } from '../fixtures/beaches';
@@ -62,7 +62,7 @@ afterEach(() => {
   restoreFetch();
 });
 
-it('el JSON empaquetado reparte la vigilancia entre dos campos distintos', () => {
+it('the bundled JSON splits lifeguard coverage across two different fields', () => {
   const beaches = beachesJson as JsonEntry[];
 
   const withId = beaches.filter((p) => (p.idCruzRoja ?? 0) > 0);
@@ -78,7 +78,7 @@ it('el JSON empaquetado reparte la vigilancia entre dos campos distintos', () =>
   expect(withId.length + onlyWithStations.length).toBe(42);
 });
 
-it('con el backend caído, La Concha sigue mostrando el badge', async () => {
+it('with the backend down, La Concha still shows the badge', async () => {
   installFetchMock([
     route(FEATURED, { networkError: true }),
     route(BEACHES, { networkError: true }),
@@ -92,7 +92,7 @@ it('con el backend caído, La Concha sigue mostrando el badge', async () => {
   expect(badgeFor(container, 'La Concha')).not.toBeNull();
 });
 
-it('las playas sin ninguna fuente de vigilancia no muestran badge', async () => {
+it('beaches with no lifeguard source show no badge', async () => {
   installFetchMock([
     route(FEATURED, { networkError: true }),
     route(BEACHES, { networkError: true }),
@@ -108,7 +108,7 @@ it('las playas sin ninguna fuente de vigilancia no muestran badge', async () => 
 
 // It goes last: it is the only one that responds well and therefore the only one
 // that fills the module cache of `services/api.ts` (see the header).
-it('con datos del backend, La Concha muestra el badge', async () => {
+it('with backend data, La Concha shows the badge', async () => {
   installFetchMock([
     route(FEATURED, { json: featuredResponse }),
     route(BEACHES, { json: beachesResponse }),

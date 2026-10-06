@@ -2,15 +2,15 @@ import React, { useMemo } from 'react';
 import { IonPage, IonContent, IonFooter, IonSpinner, IonIcon } from '@ionic/react';
 import { chevronBackOutline } from 'ionicons/icons';
 import { useParams, useHistory } from 'react-router-dom';
-import { Beach } from '../../../../../../Dev/playas-cantabria/frontend/src/services/api';
-import { useLanguage } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
-import SeoHead from '../../../../../../Dev/playas-cantabria/frontend/src/shared/seo/SeoHead';
-import { beachesOfMunicipalitySlug, municipalityPath } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/seo/landings';
-import BottomNavBar from '../../../../../../Dev/playas-cantabria/frontend/src/shared/ui/BottomNavBar';
-import HeaderActions from '../../../../../../Dev/playas-cantabria/frontend/src/shared/ui/HeaderActions';
-import BeachCard from '../../../../../../Dev/playas-cantabria/frontend/src/components/BeachCard';
-import { useCatalog } from '../../../../../../Dev/playas-cantabria/frontend/src/pages/landings/useCatalog';
-import { FreshnessLabel } from '../../../../../../Dev/playas-cantabria/frontend/src/features/provenance/SourceAndFreshness';
+import { Beach } from '../../services/api';
+import { useLanguage } from '../../shared/i18n/LanguageContext';
+import SeoHead from '../../shared/seo/SeoHead';
+import { beachesOfMunicipalitySlug, municipalityPath } from '../../shared/seo/landings';
+import BottomNavBar from '../../shared/ui/BottomNavBar';
+import HeaderActions from '../../shared/ui/HeaderActions';
+import BeachCard from '../../components/BeachCard';
+import { useCatalog } from './useCatalog';
+import { FreshnessLabel } from '../../features/provenance/SourceAndFreshness';
 import './landings.css';
 
 /** The beaches of one municipality, each linking to its canonical page. */

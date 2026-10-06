@@ -6,7 +6,7 @@ import type { FeaturedBeach, FeaturedBeachesResponse } from '../../services/api'
  * The scores are chosen to straddle the three cutoffs that exist in the
  * code today, which do NOT match each other:
  *   - `ScoreBadge.tramo`      → high ≥ 60, medium ≥ 40
- *   - `MapaPage.markerStatus` → good ≥ 60, medium ≥ 35
+ *   - `MapPage.markerStatus` → good ≥ 60, medium ≥ 35
  *   - `HomePage`              → "recommended" ≥ 60
  * That is why there are beaches with 93, 71, 60, 59, 40, 38 and 34: each falls on a
  * different side of at least one of the cutoffs. See `scoreBands` in the F1 plan.
@@ -50,9 +50,9 @@ export const featuredLaConcha: FeaturedBeach = {
   topeAplicado: null,
   oleaje: 'marejadilla',
   /**
-   * El ejemplo aprobado de la feature: "Mejor momento: 11:00–14:00 · a partir
-   * de las 17:00 aumenta el viento". En UTC porque así viaja en el API; el
-   * cliente lo pinta en hora de Madrid (verano, UTC+2).
+   * The feature's approved example: "Mejor momento: 11:00–14:00 · a partir
+   * de las 17:00 aumenta el viento". In UTC because that is how it travels in the
+   * API; the client paints it in Madrid time (summer, UTC+2).
    */
   ventanaDia: {
     inicio: '2026-07-27T09:00:00.000Z',
@@ -90,9 +90,9 @@ export const featuredLaArnia: FeaturedBeach = {
   puntuacion: 60,
   razonRanking: 'cielo despejado, sin datos de bandera',
   /**
-   * Sin cambios en las próximas horas: en una lista no debe pintar nada. Va
-   * aquí y no en La Salvé porque esa es la playa "de backend antiguo" con la
-   * que se comprueba que un cliente instalado sigue funcionando sin el bloque.
+   * No changes in the next hours: in a list it must paint nothing. It goes
+   * here and not on La Salvé because that one is the "old backend" beach used to
+   * check that an installed client keeps working without the block.
    */
   pronostico: { direccion: 'estable', delta: 0, causa: null },
 };
@@ -113,7 +113,7 @@ export const featuredLaSalve: FeaturedBeach = {
   razonRanking: 'nubes, viento moderado',
 };
 
-/** At `ScoreBadge`'s 40 cutoff, above `MapaPage`'s 35. */
+/** At `ScoreBadge`'s 40 cutoff, above `MapPage`'s 35. */
 export const featuredBerria: FeaturedBeach = {
   ...base,
   nombre: 'Berria',
@@ -147,9 +147,9 @@ export const featuredSomo: FeaturedBeach = {
   razonRanking: 'lluvia ligera, viento fuerte',
   motivoBaja: 'lluvia',
   /**
-   * El caso incómodo: el cielo se abre (delta +4) pero va a llover, y la lluvia
-   * manda en el pronóstico publicado. Dirección y delta se contradicen a
-   * propósito — es lo que obliga al chip a callarse los puntos.
+   * The awkward case: the sky clears (delta +4) but it is going to rain, and rain
+   * rules in the published forecast. Direction and delta contradict each other
+   * on purpose — it is what forces the chip to omit the points.
    */
   pronostico: { direccion: 'empeora', delta: 4, causa: 'lluvia_prevista' },
 };

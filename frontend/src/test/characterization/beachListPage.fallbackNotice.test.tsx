@@ -1,8 +1,8 @@
 /**
  * CHARACTERIZATION — FROZEN.
  *
- * The local data notice of `PlayasList`. It replaces the error state that
- * existed before and that was unreachable: `getPlayas` never rejects, so with
+ * The local data notice of `BeachList`. It replaces the error state that
+ * existed before and that was unreachable: `getBeaches` never rejects, so with
  * the backend down the user saw the full listing without any hint that it
  * was a build-time copy.
  *
@@ -12,7 +12,7 @@
 
 import React from 'react';
 import { screen, waitFor } from '@testing-library/react';
-import BeachList from '../../../../../../Dev/playas-cantabria/frontend/src/pages/BeachList';
+import BeachList from '../../pages/BeachList';
 import { renderWithProviders } from '../render';
 import { installFetchMock, restoreFetch, route, deferred, RouteSpec } from '../http/fakeFetch';
 import { beachesResponse } from '../fixtures/beaches';
@@ -35,7 +35,7 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-it('avisa cuando el backend está caído, y sigue mostrando el listado', async () => {
+it('notifies when the backend is down, and keeps showing the listing', async () => {
   installFetchMock([
     route(FEATURED, { networkError: true }),
     route(BEACHES, { networkError: true }),
@@ -50,7 +50,7 @@ it('avisa cuando el backend está caído, y sigue mostrando el listado', async (
   expect(warning.closest('[role="status"]')).not.toBeNull();
 });
 
-it('el aviso se traduce', async () => {
+it('the notice is translated', async () => {
   installFetchMock([
     route(FEATURED, { networkError: true }),
     route(BEACHES, { networkError: true }),
@@ -64,7 +64,7 @@ it('el aviso se traduce', async () => {
   ).toBeInTheDocument();
 });
 
-it('el aviso desaparece si el backend acaba respondiendo', async () => {
+it('the notice disappears if the backend ends up responding', async () => {
   const late = deferred<RouteSpec>();
   installFetchMock([
     route(FEATURED, { networkError: true }),
@@ -84,7 +84,7 @@ it('el aviso desaparece si el backend acaba respondiendo', async () => {
   expect(screen.queryByText(WARNING)).not.toBeInTheDocument();
 }, 10000);
 
-it('no avisa cuando el backend responde a tiempo', async () => {
+it('does not notify when the backend responds in time', async () => {
   const fetchMock = installFetchMock([
     route(FEATURED, { json: featuredResponse }),
     route(BEACHES, { json: beachesResponse }),

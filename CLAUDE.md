@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Playucas.es (repo: playas-cantabria) is a beach information app for Cantabria, Spain. It displays beach listings with real-time weather (AEMET, OpenWeatherMap) and flag/safety data (Cruz Roja). The UI text is Spanish, and the public API keys are Spanish (frontend contract — never rename them). The public brand comes from each region's `region.json` (`branding.appName`), interpolated as `{marca}` in i18n/SEO templates — never hardcode it.
 
-**Language convention**: NEW code and comments are written in English. Existing Spanish comments and identifiers stay as they are — do not translate them opportunistically; they often carry operational history.
+**Language convention**: NEW code and comments are written in English. The frontend code is fully in English (identifiers, files, CSS classes, comments); `frontend/CLAUDE.md` lists what stays Spanish there because it is contract or product (UI text, i18n keys, API JSON fields, routes, storage keys). In the backend, existing Spanish comments and identifiers stay as they are — do not translate them opportunistically; they often carry operational history.
 
 ## Repository Structure
 
@@ -83,8 +83,8 @@ DI is manual (no framework) — see `infrastructure/di/dependencies.ts` for the 
 
 Ionic React app with three routes:
 - `/` — Home (beach list)
-- `/playas/:codigo` — PlayaDetalle (beach detail with weather/flags)
-- `/mapa` — MapaPage (Leaflet map)
+- `/playas/:codigo` — BeachDetailPage (beach detail with weather/flags)
+- `/mapa` — MapPage (Leaflet map)
 
 API base URL configured via `REACT_APP_API_BASE_URL` env var (defaults to production Render URL); calls go to `/api/<region>/...`. The app is region-agnostic: `REACT_APP_REGION=<id> npm run build` generates that region's app, with branding, map centre and catalog copied from root `regions/<id>/` by the `sync-region` prebuild. One Firebase Hosting site per region, one app id per region. The frontend has a fallback mechanism: if the backend doesn't respond within 2.5s, it serves beach data from a local JSON file, then updates when the backend responds.
 

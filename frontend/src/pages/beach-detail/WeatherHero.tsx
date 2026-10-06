@@ -4,19 +4,19 @@ import {
   ForecastDayDTO,
   HalfDayDTO,
   ForecastDay,
-} from '../../../../../../Dev/playas-cantabria/frontend/src/services/api';
-import DaySelector from '../../../../../../Dev/playas-cantabria/frontend/src/pages/beach-detail/DaySelector';
-import ForecastHero from '../../../../../../Dev/playas-cantabria/frontend/src/pages/beach-detail/ForecastHero';
-import DailyStats from '../../../../../../Dev/playas-cantabria/frontend/src/pages/beach-detail/DailyStats';
-import { AttributionNote, EstimatedValues } from '../../../../../../Dev/playas-cantabria/frontend/src/features/provenance/SourceAndFreshness';
-import DataInfo from '../../../../../../Dev/playas-cantabria/frontend/src/features/provenance/DataInfo';
-import { sameSource } from '../../../../../../Dev/playas-cantabria/frontend/src/features/provenance/attributions';
+} from '../../services/api';
+import DaySelector from './DaySelector';
+import ForecastHero from './ForecastHero';
+import DailyStats from './DailyStats';
+import { AttributionNote, EstimatedValues } from '../../features/provenance/SourceAndFreshness';
+import DataInfo from '../../features/provenance/DataInfo';
+import { sameSource } from '../../features/provenance/attributions';
 
 /**
  * UV level (translatable label) derived from the index, WHO scale. OpenWeather
  * only gives the number, so we synthesize the label so that `DailyStats`
  * shows "10 — Muy alto" as on beaches with an AEMET sheet. Keys aligned
- * with `MAPA_UV` from `i18n/apiText.ts`.
+ * with `UV_MAP` from `i18n/apiText.ts`.
  */
 function uvLevelFromIndex(index: number): string {
   // Rounded first: Open-Meteo reports decimals and 7.25 would fall in the next
@@ -93,13 +93,15 @@ const WeatherHero: React.FC<{
           currentConditions={current.esHoy ? currentConditions : undefined}
         />
         <DailyStats day={day} embedded />
-        {/* Ésta es la ficha SIN hoja de AEMET: la que más valores rellena el
-            backend por su cuenta, y donde más falta hace poder mirar de dónde
-            sale cada cosa. Todo bajo la misma ⓘ que el resto de bloques. */}
+        {/* This is the sheet WITHOUT an AEMET page: the one where the backend
+            fills in the most values on its own, and where being able to see
+            where each thing comes from matters most. All under the same ⓘ as
+            the rest of the blocks. */}
         <DataInfo label="info.fuente" aria="info.aria.prevision">
           <AttributionNote source={weather.fuente} />
-          {/* El observador solo se acredita aparte cuando NO es el mismo que
-              firma la previsión: repetirlo sería decir dos veces lo mismo. */}
+          {/* The observer is credited separately only when it is NOT the same
+              one that signs the forecast: repeating it would be saying the
+              same thing twice. */}
           {current.esHoy && !sameSource(weather.fuente, currentConditions?.fuente) && (
             <AttributionNote source={currentConditions?.fuente} />
           )}

@@ -10,20 +10,20 @@ import { searchOutline, locateOutline, starOutline, videocamOutline } from 'ioni
 import {
   Beach,
   getBeaches,
-} from '../../../../../Dev/playas-cantabria/frontend/src/services/api';
-import { useRanking } from '../../../../../Dev/playas-cantabria/frontend/src/features/ranking/useRanking';
-import { matchesBeach, normalizeSearch, webcamAvailable } from '../../../../../Dev/playas-cantabria/frontend/src/utils/beachHelpers';
-import { haversineKm } from '../../../../../Dev/playas-cantabria/frontend/src/shared/geo/haversine';
-import { useUserLocation } from '../../../../../Dev/playas-cantabria/frontend/src/hooks/useUserLocation';
-import { useLanguage } from '../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
+} from '../services/api';
+import { useRanking } from '../features/ranking/useRanking';
+import { matchesBeach, normalizeSearch, webcamAvailable } from '../utils/beachHelpers';
+import { haversineKm } from '../shared/geo/haversine';
+import { useUserLocation } from '../hooks/useUserLocation';
+import { useLanguage } from '../shared/i18n/LanguageContext';
 import { useHistory } from 'react-router-dom';
-import BeachCard from '../../../../../Dev/playas-cantabria/frontend/src/components/BeachCard';
-import BottomNavBar from '../../../../../Dev/playas-cantabria/frontend/src/shared/ui/BottomNavBar';
-import HeaderActions from '../../../../../Dev/playas-cantabria/frontend/src/shared/ui/HeaderActions';
-import BrandLogo from '../../../../../Dev/playas-cantabria/frontend/src/shared/ui/BrandLogo';
-import { useFavoriteCodes } from '../../../../../Dev/playas-cantabria/frontend/src/modules/favorites';
-import { municipalitiesSummary } from '../../../../../Dev/playas-cantabria/frontend/src/shared/seo/landings';
-import SeoHead from '../../../../../Dev/playas-cantabria/frontend/src/shared/seo/SeoHead';
+import BeachCard from '../components/BeachCard';
+import BottomNavBar from '../shared/ui/BottomNavBar';
+import HeaderActions from '../shared/ui/HeaderActions';
+import BrandLogo from '../shared/ui/BrandLogo';
+import { useFavoriteCodes } from '../modules/favorites';
+import { municipalitiesSummary } from '../shared/seo/landings';
+import SeoHead from '../shared/seo/SeoHead';
 import './BeachList.css';
 
 /** A search suggestion: a municipality (navigates) or a beach (filters). */
@@ -40,7 +40,7 @@ const BeachList: React.FC = () => {
   const [onlyFavorites, setOnlyFavorites] = useState(false);
   const [onlyWithWebcam, setOnlyWithWebcam] = useState(false);
   const { favorites } = useFavoriteCodes();
-  // There is no error state: `getPlayas` never rejects, it always falls back to the local
+  // There is no error state: `getBeaches` never rejects, it always falls back to the local
   // JSON. What does need to be conveyed is that the data is not fresh.
   const [isFallback, setIsFallback] = useState(false);
   const [dataUnavailable, setDataUnavailable] = useState(false);

@@ -2,7 +2,7 @@ import React from 'react';
 import { IonIcon } from '@ionic/react';
 import { trendingUpOutline, trendingDownOutline, removeOutline } from 'ionicons/icons';
 import { Outlook, OutlookCause } from '../services/api';
-import { useLanguage } from '../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
+import { useLanguage } from '../shared/i18n/LanguageContext';
 import { TextKey } from '../shared/i18n/es';
 import './TrendBadge.css';
 

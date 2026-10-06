@@ -8,10 +8,10 @@
  *
  * The event can fire BEFORE React mounts, and it fires once per page load: a
  * listener registered from a component would simply never see it. That is why
- * `escucharInstalacion()` is called from index.tsx.
+ * `listenForInstall()` is called from index.tsx.
  */
 
-import { whatToOffer, Offer } from '../../../../../../../Dev/playas-cantabria/frontend/src/modules/install/domain/whatToOffer';
+import { whatToOffer, Offer } from '../domain/whatToOffer';
 
 /** Not in lib.dom yet: Chrome-only, still outside the standard. */
 interface InstallEvent extends Event {

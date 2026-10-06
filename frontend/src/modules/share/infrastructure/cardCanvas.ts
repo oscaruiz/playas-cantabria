@@ -1,4 +1,4 @@
-import type { FlagColor, CardSummary } from '../../../../../../../Dev/playas-cantabria/frontend/src/modules/share/domain/cardSummary';
+import type { FlagColor, CardSummary } from '../domain/cardSummary';
 
 /*
  * The card is drawn by hand on a canvas instead of photographing the DOM.

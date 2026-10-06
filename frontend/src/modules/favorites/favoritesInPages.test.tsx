@@ -6,8 +6,8 @@
 
 import React from 'react';
 import { fireEvent, screen, waitFor } from '@testing-library/react';
-import BeachList from '../../../../../../Dev/playas-cantabria/frontend/src/pages/BeachList';
-import BeachDetailPage from '../../../../../../Dev/playas-cantabria/frontend/src/pages/BeachDetailPage';
+import BeachList from '../../pages/BeachList';
+import BeachDetailPage from '../../pages/BeachDetailPage';
 import HomePage from '../../pages/HomePage';
 import { renderWithProviders } from '../../test/render';
 import { installFetchMock, restoreFetch, route } from '../../test/http/fakeFetch';
@@ -48,8 +48,8 @@ function cardNamesOf(container: HTMLElement): string[] {
   );
 }
 
-describe('favoritas en el listado', () => {
-  it('cada fila tiene su estrella, y marcar no abre el detalle', async () => {
+describe('favorites in the list', () => {
+  it('each row has its star, and starring does not open the detail', async () => {
     await renderList();
 
     fireEvent.click(screen.getByRole('button', { name: 'Guardar La Arnía en favoritas' }));
@@ -61,7 +61,7 @@ describe('favoritas en el listado', () => {
     ).toHaveAttribute('aria-pressed', 'true');
   });
 
-  it('el filtro deja solo las favoritas, con contador, y compone con la búsqueda', async () => {
+  it('the filter leaves only favorites, with a counter, and composes with the search', async () => {
     const { container } = await renderList();
 
     fireEvent.click(screen.getByRole('button', { name: 'Guardar La Arnía en favoritas' }));
@@ -80,7 +80,7 @@ describe('favoritas en el listado', () => {
     expect(cardNamesOf(container)).toHaveLength(7);
   });
 
-  it('sin favoritas, el filtro muestra un estado vacío que explica cómo guardar', async () => {
+  it('with no favorites, the filter shows an empty state that explains how to save', async () => {
     await renderList();
 
     fireEvent.click(screen.getByRole('button', { name: 'Mostrar solo favoritas' }));
@@ -89,7 +89,7 @@ describe('favoritas en el listado', () => {
   });
 });
 
-describe('favoritas en la página de inicio', () => {
+describe('favorites on the home page', () => {
   function saveFavorite(code: string) {
     localStorage.setItem(
       'playas:favoritas',
@@ -98,7 +98,7 @@ describe('favoritas en la página de inicio', () => {
     reloadFavorites();
   }
 
-  it('la sección "Tus playas favoritas" sale la primera, con la playa guardada', async () => {
+  it('the "Tus playas favoritas" section comes first, with the saved beach', async () => {
     saveFavorite('3908503'); // La Concha
     const { container } = renderWithProviders(<HomePage />, { route: '/' });
 
@@ -112,15 +112,15 @@ describe('favoritas en la página de inicio', () => {
     await waitFor(() => expect(first).toHaveTextContent('22°'));
   });
 
-  it('sin favoritas no hay sección', async () => {
+  it('with no favorites there is no section', async () => {
     renderWithProviders(<HomePage />, { route: '/' });
     await screen.findByText('La mejor playa para hoy');
     expect(screen.queryByText('Tus playas favoritas')).not.toBeInTheDocument();
   });
 });
 
-describe('favorita desde el detalle', () => {
-  it('la estrella de la cabecera marca la playa y persiste', async () => {
+describe('favorite from the detail', () => {
+  it('the header star marks the beach and persists', async () => {
     renderWithProviders(<BeachDetailPage />, {
       route: '/playas/3908503',
       path: '/playas/:codigo',

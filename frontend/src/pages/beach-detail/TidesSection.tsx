@@ -1,6 +1,6 @@
 import React from 'react';
-import { useLanguage } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
-import { TextKey } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/es';
+import { useLanguage } from '../../shared/i18n/LanguageContext';
+import { TextKey } from '../../shared/i18n/es';
 
 function parseTimeMinutes(t: string): number {
   const [h, m] = t.split(':').map(Number);

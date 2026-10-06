@@ -1,4 +1,4 @@
-/* --- Sticky header (coherente con el resto de páginas) --- */
+/* --- Sticky header (consistent with the other pages) --- */
 .map-sticky-header {
   position: fixed;
   top: 0;
@@ -15,8 +15,8 @@
   gap: 10px;
 }
 
-/* Igual que en la portada y el listado: la marca se queda con lo que dejan las
-   acciones, y el `min-width: 0` le deja encoger en vez de empujarlas fuera. */
+/* Same as on the home page and the list: the brand takes what the actions
+   leave, and `min-width: 0` lets it shrink instead of pushing them out. */
 .map-sticky-brand {
   flex: 1;
   min-width: 0;
@@ -47,21 +47,21 @@
   text-overflow: ellipsis;
 }
 
-/* Same title size as the other pages on phones — see PlayasList.css. */
+/* Same title size as the other pages on phones — see BeachList.css. */
 @media (max-width: 480px) {
   .map-sticky-subtitle { font-size: clamp(0.6rem, 3vw - 0.05rem, 0.72rem); }
 }
 
-/* Alinea el título/selector con el contenedor de las demás páginas
-   (el mapa en sí sigue a sangre completa) */
+/* Aligns the title/selector with the container of the other pages
+   (the map itself stays full-bleed) */
 @media (min-width: 720px) {
   .map-sticky-header {
     padding-left: max(20px, calc((100% - 1080px) / 2 + 20px));
     padding-right: max(20px, calc((100% - 1080px) / 2 + 20px));
   }
 
-  /* Las acciones ya terminan donde termina el `padding-right` de arriba: van
-     en el flujo y no tienen un `right:` propio que mantener a juego. */
+  /* The actions already end where the `padding-right` above ends: they sit
+     in the flow and have no `right:` of their own to keep in step. */
 }
 
 /* --- Content --- */
@@ -89,13 +89,13 @@
    as a gray line across the sea. OSM's water tone makes those seams (and
    not-yet-loaded areas) blend with the map instead.
    The #id raises specificity above leaflet.css's `.leaflet-container`,
-   which loads AFTER this file (it ships in the lazy MapaLienzo chunk) and
+   which loads AFTER this file (it ships in the lazy MapCanvas chunk) and
    would win the cascade on order alone. */
 #map-container .leaflet-map {
   background: #aad3df;
 }
 
-/* --- Popup (clases propias, sin estilos inline) --- */
+/* --- Popup (own classes, no inline styles) --- */
 .leaflet-popup-content {
   font-family: 'Poppins', sans-serif;
   font-size: 13px;
@@ -191,7 +191,7 @@
   }
 }
 
-/* Popup en dark mode (Leaflet pinta el fondo del wrapper) */
+/* Popup in dark mode (Leaflet paints the wrapper background) */
 @media (prefers-color-scheme: dark) {
   .leaflet-popup-content-wrapper,
   .leaflet-popup-tip {
@@ -204,8 +204,8 @@
   }
 }
 
-/* --- Banderín Cruz Roja (mástil + gallardete; compartido por
-       marcador, popup y leyenda) --- */
+/* --- Cruz Roja pennant (mast + streamer; shared by
+       marker, popup and legend) --- */
 .map-pennant {
   position: relative;
   display: inline-block;
@@ -274,7 +274,7 @@
 
 .beach-marker--medium {
   background: var(--beach-flag-yellow);
-  color: #1b2a32; /* tinta sobre amarillo: blanco no contrasta */
+  color: #1b2a32; /* ink on yellow: white does not contrast */
 }
 
 .beach-marker--bad {
@@ -317,7 +317,7 @@
   font-size: 0.75rem;
 }
 
-/* Banderín izado sobre el marcador */
+/* Pennant hoisted over the marker */
 .beach-marker__pennant {
   position: absolute;
   top: -14px;
@@ -343,7 +343,7 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
-/* --- Marcador fallback y de usuario (sin azul Ionic) --- */
+/* --- Fallback and user marker (no Ionic blue) --- */
 .fallback-marker {
   background-color: var(--beach-deep);
   color: #ffffff;
@@ -398,8 +398,8 @@
   }
 }
 
-/* --- Leyenda (overlay sobre el mapa) --- */
-/* Botón "localizarme" (estilo Google Maps): esquina inferior derecha */
+/* --- Legend (overlay on the map) --- */
+/* "Localizarme" button (Google Maps style): bottom-right corner */
 .map-locate-btn {
   position: absolute;
   right: 12px;

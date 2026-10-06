@@ -1,10 +1,10 @@
-import { cardSummary } from '../../../../../../Dev/playas-cantabria/frontend/src/modules/share/domain/cardSummary';
-import { cardFileName } from '../../../../../../Dev/playas-cantabria/frontend/src/modules/share/infrastructure/shareImage';
-import { es } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/es';
-import { en } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/en';
-import type { TextKey } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/es';
-import type { Language } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
-import type { FeaturedBeach } from '../../../../../../Dev/playas-cantabria/frontend/src/services/api';
+import { cardSummary } from './domain/cardSummary';
+import { cardFileName } from './infrastructure/shareImage';
+import { es } from '../../shared/i18n/es';
+import { en } from '../../shared/i18n/en';
+import type { TextKey } from '../../shared/i18n/es';
+import type { Language } from '../../shared/i18n/LanguageContext';
+import type { FeaturedBeach } from '../../services/api';
 
 /** `t` without the provider: the card is built from data, not from a tree. */
 const translator = (language: Language) => (key: TextKey) =>
@@ -40,20 +40,20 @@ const input = (language: Language, scored: FeaturedBeach = SCORED) => ({
   language,
 });
 
-describe('resumen de la tarjeta compartible', () => {
-  it('dice lo mismo que la ficha: nota redondeada, resumen y las tres celdas', () => {
+describe('shareable card summary', () => {
+  it('says the same as the sheet: rounded score, summary and the three cells', () => {
     const r = cardSummary(input('es'));
 
     expect(r.name).toBe('La Maruca');
     expect(r.context).toBe('Santander · Miércoles 5 de agosto');
-    // 66.4 se redondea: la imagen no puede enseñar decimales que la ficha no enseña.
+    // 66.4 is rounded: the image cannot show decimals the sheet does not show.
     expect(r.score).toBe(66);
     expect(r.summary).toBe('Nublado, 20º, sin viento');
     expect(r.cells.map((c) => c.value)).toEqual(['Sin viento', 'Débil', 'Verde']);
     expect(r.cells[2].flag).toBe('green');
   });
 
-  it('traduce al inglés todo lo que se pinta, también lo que viene del backend', () => {
+  it('translates to English everything that is painted, also what comes from the backend', () => {
     const r = cardSummary(input('en'));
 
     expect(r.context).toBe('Santander · Wednesday, August 5');
@@ -63,16 +63,16 @@ describe('resumen de la tarjeta compartible', () => {
     expect(r.warning).toBe(en['aviso.ranking']);
   });
 
-  // Una celda diciendo "sin bandera ahora" se leía como un fallo. Donde nadie
-  // vigila no hay nada que informar, y las dos que quedan ocupan el ancho.
-  it('una playa sin vigilancia no trae celda de bandera', () => {
+  // A cell saying "sin bandera ahora" read like a failure. Where nobody keeps
+  // watch there is nothing to report, and the two that remain fill the width.
+  it('an unwatched beach carries no flag cell', () => {
     const r = cardSummary(input('es', { ...SCORED, bandera: null }));
 
     expect(r.cells).toHaveLength(2);
     expect(r.cells.map((c) => c.label)).toEqual(['Viento', 'Oleaje']);
   });
 
-  it('sin viento ni oleaje medidos, lo dice en vez de inventar un valor', () => {
+  it('with no measured wind or waves, it says so instead of inventing a value', () => {
     const r = cardSummary(input('es', { ...SCORED, vientoMs: null, oleaje: null }));
 
     const noData = 'Sin dato';
@@ -80,10 +80,10 @@ describe('resumen de la tarjeta compartible', () => {
     expect(r.cells[1].value).toBe(noData);
   });
 
-  // El ranking redondea el viento por su cuenta: 2,9 m/s puntúa como "sin
-  // viento" mientras la previsión del mismo momento dice "flojo". La tarjeta
-  // llegó a enseñar las dos, una en la celda y otra en la línea de arriba.
-  it('el viento y el oleaje los manda la previsión, que es la que pinta la ficha', () => {
+  // The ranking rounds the wind on its own: 2.9 m/s scores as "sin viento"
+  // while the forecast for the same moment says "flojo". The card ended up
+  // showing both, one in the cell and the other on the line above.
+  it('wind and waves come from the forecast, which is what the sheet paints', () => {
     const r = cardSummary({
       ...input('es'),
       forecast: { wind: 'Flojo', waves: 'Débil' },
@@ -93,7 +93,7 @@ describe('resumen de la tarjeta compartible', () => {
     expect(r.cells[1].value).toBe('Débil');
   });
 
-  it('recorta la tira horaria a cuatro y traduce el cielo a un glifo', () => {
+  it('trims the hourly strip to four and translates the sky to a glyph', () => {
     const r = cardSummary({
       ...input('es'),
       hours: [
@@ -108,11 +108,11 @@ describe('resumen de la tarjeta compartible', () => {
     expect(r.hours).toHaveLength(4);
     expect(r.hours.map((h) => h.emoji)).toEqual(['☀️', '⛅', '☁️', '⛅']);
     expect(r.hours[0]).toMatchObject({ hour: '15:00', temperature: '21°', wind: '3 m/s' });
-    // Lo que falta se dice, no se rellena.
+    // What is missing is stated, not filled in.
     expect(r.hours[3]).toMatchObject({ temperature: '--', wind: '--' });
   });
 
-  it('ordena las mareas por hora y le quita a AEMET su asterisco de nota', () => {
+  it('sorts the tides by hour and strips AEMET of its note asterisk', () => {
     const r = cardSummary({
       ...input('es'),
       tides: { pleamar: ['06:12', '18:40'], bajamar: ['00:05', '12:25'] },
@@ -124,7 +124,7 @@ describe('resumen de la tarjeta compartible', () => {
     expect(r.tidePort).toBe('Puerto de Santander');
   });
 
-  it('sin tira horaria ni mareas, la tarjeta simplemente no las lleva', () => {
+  it('with no hourly strip or tides, the card simply does not carry them', () => {
     const r = cardSummary(input('es'));
 
     expect(r.hours).toEqual([]);
@@ -132,16 +132,16 @@ describe('resumen de la tarjeta compartible', () => {
     expect(r.tidePort).toBeNull();
   });
 
-  it('sin previsión cae a lo que midió el ranking', () => {
+  it('without a forecast it falls back to what the ranking measured', () => {
     const r = cardSummary({ ...input('es'), forecast: { wind: null, waves: null } });
 
     expect(r.cells[0].value).toBe('Sin viento');
     expect(r.cells[1].value).toBe('Débil');
   });
 
-  // El aviso viaja DENTRO de la imagen: una tarjeta reenviada sin él se lee
-  // como una promesa sobre el estado del mar, y no lo es.
-  it('lleva siempre el aviso, la marca y el sitio', () => {
+  // The notice travels INSIDE the image: a forwarded card without it reads as
+  // a promise about the state of the sea, and it is not one.
+  it('always carries the notice, the brand and the site', () => {
     const r = cardSummary(input('es'));
 
     expect(r.warning).toBe(es['aviso.ranking']);
@@ -150,8 +150,8 @@ describe('resumen de la tarjeta compartible', () => {
   });
 });
 
-describe('nombre del archivo compartido', () => {
-  it('es legible en el chat: playa y día, sin tildes ni códigos', () => {
+describe('shared file name', () => {
+  it('is readable in the chat: beach and day, no accents or codes', () => {
     expect(cardFileName('La Maruca', NOW_ISO)).toBe('la-maruca-2026-08-05.png');
     expect(cardFileName('Somo / Loredo', NOW_ISO)).toBe('somo-loredo-2026-08-05.png');
     expect(cardFileName('Berría', NOW_ISO)).toBe('berria-2026-08-05.png');

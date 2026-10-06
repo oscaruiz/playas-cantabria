@@ -10,7 +10,7 @@ import {
   lifeguardOperator,
   webcamAvailable,
 } from '../utils/beachHelpers';
-import { useLanguage } from '../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
+import { useLanguage } from '../shared/i18n/LanguageContext';
 import { TextKey } from '../shared/i18n/es';
 import {
   translateApiText,
@@ -25,7 +25,7 @@ import { beachPath } from '../shared/seo/beachUrls';
 import { municipalityPath } from '../shared/seo/landings';
 
 /**
- * One beach row — THE beach row: extracted from PlayasList so the
+ * One beach row — THE beach row: extracted from BeachList so the
  * municipality and landing pages show exactly the same card (sky+temp,
  * attributes, ranking reason, trend, score, badges, favorite star) instead
  * of a poorer copy. Conditions render only when the featured ranking

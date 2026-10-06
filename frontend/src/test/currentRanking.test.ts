@@ -12,13 +12,13 @@
  * where it is asked about — no React, no fake service worker.
  */
 
-import { installFetchMock, restoreFetch, route } from '../../../../../Dev/playas-cantabria/frontend/src/test/http/fakeFetch';
-import { FEATURED_PATH as FEATURED } from '../../../../../Dev/playas-cantabria/frontend/src/test/apiRoutes';
-import type { FeaturedBeachesResponse } from '../../../../../Dev/playas-cantabria/frontend/src/services/api';
+import { installFetchMock, restoreFetch, route } from './http/fakeFetch';
+import { FEATURED_PATH as FEATURED } from './apiRoutes';
+import type { FeaturedBeachesResponse } from '../services/api';
 
 async function loadApiModule() {
   jest.resetModules();
-  return import('../../../../../Dev/playas-cantabria/frontend/src/services/api');
+  return import('../services/api');
 }
 
 afterEach(() => restoreFetch());
@@ -37,8 +37,8 @@ function ranking(
   } as unknown as FeaturedBeachesResponse;
 }
 
-describe('el ranking en vigor', () => {
-  it('sustituye al anterior en la caché que leen todas las pantallas', async () => {
+describe('the ranking in force', () => {
+  it('replaces the previous one in the cache every screen reads', async () => {
     installFetchMock([route(FEATURED, { json: ranking(0, 'no debería pedirse') })]);
     const { applyFreshFeatured, getFeaturedBeaches } = await loadApiModule();
 
@@ -46,33 +46,33 @@ describe('el ranking en vigor', () => {
     const newValue = ranking(2001, 'cielo claro');
     applyFreshFeatured(newValue);
 
-    // Escribir solo en una caché VACÍA habría pasado antes del arreglo: lo que
-    // el mapa releía al volver a la pestaña seguía siendo el cielo viejo.
+    // Writing only to an EMPTY cache would have passed before the fix: what the
+    // map re-read on returning to the tab was still the old sky.
     await expect(getFeaturedBeaches()).resolves.toEqual(newValue);
   });
 
-  it('no deja que un cuerpo atrasado pise el ranking ya servido', async () => {
+  it('does not let a stale body overwrite the ranking already served', async () => {
     installFetchMock([route(FEATURED, { json: ranking(0, 'no debería pedirse') })]);
     const { applyFreshFeatured, getFeaturedBeaches } = await loadApiModule();
 
     const newValue = ranking(3001, 'cielo claro');
     applyFreshFeatured(newValue);
 
-    // Lo que se devuelve es lo que queda EN VIGOR, no lo que trae la llamada:
-    // pintar el cuerpo descartado sería el parpadeo hacia atrás.
+    // What is returned is what remains IN FORCE, not what the call brings:
+    // painting the discarded body would be the flicker backwards.
     expect(applyFreshFeatured(ranking(3000, 'nubes'))).toEqual(newValue);
     await expect(getFeaturedBeaches()).resolves.toEqual(newValue);
   });
 
-  it('no deja que una petición en vuelo deshaga el cuerpo ya aplicado', async () => {
+  it('does not let an in-flight request undo the body already applied', async () => {
     let resolver: (r: unknown) => void = () => undefined;
     global.fetch = jest.fn(
       () => new Promise((r) => { resolver = r; }),
     ) as unknown as typeof fetch;
     const { applyFreshFeatured, getFeaturedBeaches } = await loadApiModule();
 
-    // La ventana por la que viaja la copia del worker: la petición se resolvió
-    // con el cuerpo VIEJO y aterriza después.
+    // The window the worker's copy travels through: the request resolved with
+    // the OLD body and lands afterwards.
     applyFreshFeatured(ranking(4000, 'nubes'));
     const inFlight = getFeaturedBeaches({ force: true });
     const newValue = ranking(4002, 'cielo claro');
@@ -83,13 +83,13 @@ describe('el ranking en vigor', () => {
     await expect(getFeaturedBeaches()).resolves.toEqual(newValue);
   });
 
-  it('con el mismo ranking, gana el que juzgó las banderas más tarde', async () => {
+  it('with the same ranking, the one that judged the flags later wins', async () => {
     installFetchMock([route(FEATURED, { json: ranking(0, 'no debería pedirse') })]);
     const { applyFreshFeatured, getFeaturedBeaches } = await loadApiModule();
 
-    // El mismo ranking ensamblado, servido dos veces. La lectura posterior es la
-    // que ya vio caducar la bandera: dejar ganar a la anterior devolvería una
-    // bandera de socorrista a una playa cuya lectura había expirado.
+    // The same assembled ranking, served twice. The later reading is the one that
+    // already saw the flag expire: letting the earlier one win would hand a
+    // lifeguard flag back to a beach whose reading had expired.
     const afternoon = ranking(6000, 'sin bandera', 6_500_000);
     applyFreshFeatured(afternoon);
     applyFreshFeatured(ranking(6000, 'bandera verde', 6_000_000));

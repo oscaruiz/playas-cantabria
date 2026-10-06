@@ -6,14 +6,14 @@
  * The API mixes formats: ISO strings (`tiempoActual.timestamp`,
  * `cruzRoja.ultimaActualizacion`), epoch milliseconds (featured `timestamp`)
  * and raw prose (`prediccionCompleta.elaboracion`). Everything here goes
- * through `normalizarInstante`; prose is NEVER parsed into a timestamp.
+ * through `normalizeInstant`; prose is NEVER parsed into a timestamp.
  *
  * Nothing in this module invents data: every builder returns `null` (or a
  * null field) when the API did not send the value.
  */
 
-import type { BeachDetail } from '../../../../../../Dev/playas-cantabria/frontend/src/services/api';
-import type { Language } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
+import type { BeachDetail } from '../../services/api';
+import type { Language } from '../../shared/i18n/LanguageContext';
 
 /** Nature of a displayed value. Mirrors the plan's live/forecast/static/unavailable. */
 export type DataKind = 'directo' | 'prevision' | 'estatico' | 'sinDatos';

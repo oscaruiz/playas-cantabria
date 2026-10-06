@@ -11,9 +11,9 @@ import {
   normalizeInstant,
   RANKING_REVALIDATE_AGE_MS,
   STALE_RANKING_THRESHOLD_MS,
-} from '../../../../../../Dev/playas-cantabria/frontend/src/features/provenance/provenance';
-import { useServiceWorkerRefresh } from '../../../../../../Dev/playas-cantabria/frontend/src/hooks/useServiceWorkerRefresh';
-import { useRevalidateOnReturn } from '../../../../../../Dev/playas-cantabria/frontend/src/hooks/useRevalidateOnReturn';
+} from '../provenance/provenance';
+import { useServiceWorkerRefresh } from '../../hooks/useServiceWorkerRefresh';
+import { useRevalidateOnReturn } from '../../hooks/useRevalidateOnReturn';
 
 /**
  * The ranking in force, for every screen that paints a sky.

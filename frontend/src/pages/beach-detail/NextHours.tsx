@@ -8,15 +8,15 @@ import {
   chevronBackOutline,
   chevronForwardOutline,
 } from 'ionicons/icons';
-import { HourlyForecast, DayWindow } from '../../../../../../Dev/playas-cantabria/frontend/src/services/api';
-import BestTime from '../../../../../../Dev/playas-cantabria/frontend/src/components/BestTime';
-import { useLanguage } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
-import { madridLocalHour } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/format/time';
-import { hourlyForecastProvenance } from '../../../../../../Dev/playas-cantabria/frontend/src/features/provenance/provenance';
-import { todayLabelMadrid } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/dates';
-import { sourceAttribution } from '../../../../../../Dev/playas-cantabria/frontend/src/features/provenance/attributions';
-import { AttributionNote, SourceAndFreshness } from '../../../../../../Dev/playas-cantabria/frontend/src/features/provenance/SourceAndFreshness';
-import DataInfo from '../../../../../../Dev/playas-cantabria/frontend/src/features/provenance/DataInfo';
+import { HourlyForecast, DayWindow } from '../../services/api';
+import BestTime from '../../components/BestTime';
+import { useLanguage } from '../../shared/i18n/LanguageContext';
+import { madridLocalHour } from '../../shared/format/time';
+import { hourlyForecastProvenance } from '../../features/provenance/provenance';
+import { todayLabelMadrid } from '../../shared/i18n/dates';
+import { sourceAttribution } from '../../features/provenance/attributions';
+import { AttributionNote, SourceAndFreshness } from '../../features/provenance/SourceAndFreshness';
+import DataInfo from '../../features/provenance/DataInfo';
 
 /** Cloud cover → the same three states the score uses (clear / scattered / broken). */
 function cloudIcon(pct: number | null): string {
@@ -134,8 +134,8 @@ const NextHours: React.FC<{
         {list.map((h, i) => {
           const wet = (h.precipitacionMm ?? 0) > 0;
           return (
-          /* Una frase por hora para quien no ve la tira: la nubosidad solo la
-             cuenta el icono, y el icono es decorativo. */
+          /* One sentence per hour for whoever cannot see the strip: cloud cover
+             is told only by the icon, and the icon is decorative. */
           <li
             className={`pd-hour${inWindow(i) ? ' pd-hour--best' : ''}`}
             key={h.horaIso}
@@ -190,11 +190,11 @@ const NextHours: React.FC<{
       </div>
       )}
       <BestTime timeWindow={timeWindow} detailed />
-      {/* Quién lo pronostica, y qué hacemos con ello: estas mismas horas
-          alimentan la puntuación, así que la licencia obliga a decir que los
-          datos van adaptados. Esa nota ya acredita y enlaza la fuente, de modo
-          que el crédito genérico solo sale cuando no hay nota — repetirlo
-          sería decir dos veces lo mismo. The API sends no emission time for
+      {/* Who forecasts it, and what we do with it: these same hours feed the
+          score, so the licence requires saying the data is adapted. That note
+          already credits and links the source, so the generic credit only
+          shows when there is no note — repeating it would be saying the same
+          thing twice. The API sends no emission time for
           the outlook, so none is shown either way. */}
       {hasHours && (
         <DataInfo label="info.fuente" aria="info.aria.horas" className="next-hours-source">

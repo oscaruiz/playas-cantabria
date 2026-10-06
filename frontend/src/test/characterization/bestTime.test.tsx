@@ -1,19 +1,19 @@
 /**
- * "Mejor hora para ir": la portada no solo dice si la mejor playa está bien,
- * dice CUÁNDO ir — la frase por bandas, la mejor franja del día y el primer
- * cambio a peor. Las horas llegan del API como instantes UTC y aquí se
- * comprueban ya compuestas en hora de Madrid (verano, UTC+2).
+ * "Mejor hora para ir": the home page doesn't only say whether the best beach is
+ * good, it says WHEN to go — the banded phrase, the best slot of the day and the
+ * first change for the worse. Hours arrive from the API as UTC instants and are
+ * checked here already composed in Madrid time (summer, UTC+2).
  */
 
 import React from 'react';
 import { screen } from '@testing-library/react';
-import HomePage from '../../../../../../Dev/playas-cantabria/frontend/src/pages/HomePage';
-import BestTime from '../../../../../../Dev/playas-cantabria/frontend/src/components/BestTime';
-import { renderWithProviders } from '../../../../../../Dev/playas-cantabria/frontend/src/test/render';
-import { installFetchMock, restoreFetch, route } from '../../../../../../Dev/playas-cantabria/frontend/src/test/http/fakeFetch';
-import { beachesResponse } from '../../../../../../Dev/playas-cantabria/frontend/src/test/fixtures/beaches';
-import { featuredResponse } from '../../../../../../Dev/playas-cantabria/frontend/src/test/fixtures/featured';
-import { FEATURED_PATH as FEATURED, BEACHES_PATH as BEACHES } from '../../../../../../Dev/playas-cantabria/frontend/src/test/apiRoutes';
+import HomePage from '../../pages/HomePage';
+import BestTime from '../../components/BestTime';
+import { renderWithProviders } from '../render';
+import { installFetchMock, restoreFetch, route } from '../http/fakeFetch';
+import { beachesResponse } from '../fixtures/beaches';
+import { featuredResponse } from '../fixtures/featured';
+import { FEATURED_PATH as FEATURED, BEACHES_PATH as BEACHES } from '../apiRoutes';
 
 const NOW = featuredResponse.timestamp + 30 * 60 * 1000;
 
@@ -32,34 +32,34 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-describe('HomePage — mejor momento del día en el hero', () => {
-  it('compone la frase, la franja empezada y el cambio del ejemplo aprobado', async () => {
+describe('HomePage — best time of day in the hero', () => {
+  it('composes the phrase, the started window and the change from the approved example', async () => {
     renderWithProviders(<HomePage />, { route: '/' });
     await screen.findByText('La Concha');
 
-    // Frase por bandas: 93 ≥ 75. El nombre va interpolado, nunca a fuego.
+    // Banded phrase: 93 ≥ 75. The name is interpolated, never hardcoded.
     expect(screen.getByText('La Concha está muy bien hoy')).toBeInTheDocument();
-    // Son las 12:30 Madrid y la ventana es 11:00–14:00: ya está empezada, y
-    // anunciar un inicio en el pasado leería como dato caducado. Se dice lo
-    // que queda de ella.
+    // It is 12:30 Madrid time and the window is 11:00–14:00: it has already
+    // started, and announcing a start in the past would read as stale data. What
+    // remains of it is stated instead.
     expect(screen.getByText('Buen momento hasta las 14:00')).toBeInTheDocument();
     expect(screen.getByText('A partir de las 17:00 aumenta el viento')).toBeInTheDocument();
   });
 });
 
-describe('MejorMomento — sin datos no se inventa nada', () => {
-  // Las ventanas de estos casos viven el 27-jul: el reloj se ancla antes de
-  // su inicio para que el guard de caducidad no las vea pasadas.
+describe('BestTime — nothing is invented without data', () => {
+  // The windows in these cases live on 27-Jul: the clock is anchored before
+  // their start so the expiry guard does not see them as past.
   beforeEach(() => {
     jest.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-07-27T08:00:00.000Z'));
   });
 
-  it('sin ventana no pinta nada', () => {
+  it('renders nothing without a window', () => {
     const { container } = renderWithProviders(<BestTime timeWindow={null} />, { route: '/' });
     expect(container.querySelector('.best-time')).toBeNull();
   });
 
-  it('una ventana que llega al final de la franja no avisa de ningún cambio', () => {
+  it('a window reaching the end of the range announces no change', () => {
     renderWithProviders(
       <BestTime
         timeWindow={{
@@ -76,8 +76,8 @@ describe('MejorMomento — sin datos no se inventa nada', () => {
   });
 });
 
-describe('MejorMomento — el reloj manda sobre la caché', () => {
-  it('una ventana ya terminada no se pinta: venía de una respuesta cacheada', () => {
+describe('BestTime — the clock overrides the cache', () => {
+  it('an already finished window is not rendered: it came from a cached response', () => {
     jest.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-07-27T20:00:00.000Z'));
     const { container } = renderWithProviders(
       <BestTime
@@ -89,7 +89,7 @@ describe('MejorMomento — el reloj manda sobre la caché', () => {
     expect(container.querySelector('.best-time')).toBeNull();
   });
 
-  it('una ventana empezada dice lo que queda, no un inicio en el pasado', () => {
+  it('a started window says what remains, not a start in the past', () => {
     jest.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-07-27T10:30:00.000Z'));
     renderWithProviders(
       <BestTime
@@ -103,7 +103,7 @@ describe('MejorMomento — el reloj manda sobre la caché', () => {
   });
 });
 
-describe('MejorMomento — el porqué, solo en la vista detallada', () => {
+describe('BestTime — the reason, only in the detailed view', () => {
   beforeEach(() => {
     jest.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-07-27T08:00:00.000Z'));
   });
@@ -116,20 +116,20 @@ describe('MejorMomento — el porqué, solo en la vista detallada', () => {
     horasConsideradas: 10,
   };
 
-  it('con `detallada` nombra el motivo del tramo junto al cambio', () => {
+  it('with `detallada` names the reason for the stretch next to the change', () => {
     renderWithProviders(<BestTime timeWindow={windowWithReason} detailed />, { route: '/' });
 
     expect(screen.getByText('Elegido por ser el tramo sin lluvia previsto')).toBeInTheDocument();
     expect(screen.getByText('A partir de las 15:00 se espera lluvia')).toBeInTheDocument();
   });
 
-  it('sin `detallada` (la portada) el motivo no sale: la tarjeta se queda compacta', () => {
+  it('without `detallada` (the home page) the reason is omitted: the card stays compact', () => {
     renderWithProviders(<BestTime timeWindow={windowWithReason} />, { route: '/' });
 
     expect(screen.queryByText(/Elegido por/)).toBeNull();
   });
 
-  it('sin motivo ni cambio, la calma también se dice', () => {
+  it('with no reason or change, the calm is stated too', () => {
     renderWithProviders(
       <BestTime
         timeWindow={{ inicio: '2026-07-27T09:00:00.000Z', fin: '2026-07-27T19:00:00.000Z', cambio: null, motivo: null }}

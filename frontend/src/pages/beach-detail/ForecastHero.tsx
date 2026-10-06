@@ -1,20 +1,20 @@
 import React from 'react';
-import { BeachDetail, ForecastDayDTO } from '../../../../../../Dev/playas-cantabria/frontend/src/services/api';
+import { BeachDetail, ForecastDayDTO } from '../../services/api';
 import {
   skyEmoji,
   isRainActive,
   expectedRain,
   skyWord,
-} from '../../../../../../Dev/playas-cantabria/frontend/src/utils/beachHelpers';
-import { madridLocalHour } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/format/time';
-import { capitalize } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/format/text';
-import { useLanguage } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
-import { translateApiText } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/apiText';
-import { observationProvenance, currentObservation } from '../../../../../../Dev/playas-cantabria/frontend/src/features/provenance/provenance';
+} from '../../utils/beachHelpers';
+import { madridLocalHour } from '../../shared/format/time';
+import { capitalize } from '../../shared/format/text';
+import { useLanguage } from '../../shared/i18n/LanguageContext';
+import { translateApiText } from '../../shared/i18n/apiText';
+import { observationProvenance, currentObservation } from '../../features/provenance/provenance';
 import {
   FreshnessLabel,
   SourceAndFreshness,
-} from '../../../../../../Dev/playas-cantabria/frontend/src/features/provenance/SourceAndFreshness';
+} from '../../features/provenance/SourceAndFreshness';
 
 /** Map wind description text to a speed level 0–4 for animation. */
 function windSpeedLevel(text: string): number {
@@ -101,15 +101,15 @@ const ForecastHero: React.FC<{
   const inForce = currentObservation(received);
   const currentConditions = inForce ? received : undefined;
   const expired = received != null && !inForce;
-  // skyText/viento/oleaje are the raw Spanish from the API: emojiCielo and
+  // skyText/viento/oleaje are the raw Spanish from the API: skyEmoji and
   // windSpeedLevel run regexes over it — translate only when displaying.
   // For TODAY we prioritize the real observation ("now") over the afternoon
   // forecast; that way the headline stops contradicting the morning/afternoon breakdown.
   const skyText = capitalize(currentConditions?.cielo ?? day.tarde.cielo ?? day.manana.cielo ?? '');
   const wind = capitalize(day.tarde.viento ?? day.manana.viento ?? '');
   const waves = capitalize(day.tarde.oleaje ?? day.manana.oleaje ?? '');
-  // Solo la observación de HOY sabe si es de noche; una previsión de pasado
-  // mañana no describe un instante concreto, así que se pinta como día.
+  // Only TODAY's observation knows whether it is night; a forecast for the day
+  // after tomorrow does not describe a specific instant, so it is painted as day.
   const isNight = currentConditions?.esNoche === true;
   const skyGlyph = skyEmoji(skyText || null, isNight);
 
@@ -154,10 +154,10 @@ const ForecastHero: React.FC<{
                 : t('detalle.lluviaPrevistaHoy')}
             </span>
           )}
-          {/* La palabra de la app, no la del proveedor: la tarjeta de
-              puntuación de esta MISMA pantalla dice "Sol" y aquí se leía
-              "Cielo claro" para el mismo cielo. Si no la reconocemos, se
-              enseña el texto crudo antes que perder el dato. */}
+          {/* The app's word, not the provider's: the score card on this SAME
+              screen says "Sol" and here it read "Cielo claro" for the same
+              sky. If we do not recognise it, the raw text is shown rather
+              than losing the data. */}
           {skyText && (
             <span className="forecast-hero-sky">
               {translateApiText(skyWord(skyText, isNight) ?? skyText, language)}
@@ -173,8 +173,8 @@ const ForecastHero: React.FC<{
       {/* The headline mixes observation over forecast (skyText above): say
           who observed it and when, or the freshest value has no face. */}
       {expired ? (
-        /* Se dice que falta, y desde cuándo: callarlo dejaría la previsión
-           pasando por observación sin que nadie pueda notarlo. */
+        /* It says it is missing, and since when: staying silent would let the
+           forecast pass as an observation with no one able to notice. */
         <p className="provenance-line provenance-expired">
           {t('datos.noDisponible')}{' '}
           <FreshnessLabel instant={received?.timestamp} />
@@ -185,9 +185,9 @@ const ForecastHero: React.FC<{
           sourceKey="datos.enDirectoFuente"
         />
       )}
-      {/* La nota de licencia del observador ya no se pinta aquí: viaja con el
-          resto de lo que declara esta columna, bajo la ⓘ que la cierra. Lo
-          que queda es la frescura, que no es letra pequeña sino el dato. */}
+      {/* The observer's licence note is no longer painted here: it travels
+          with the rest of what this column declares, under the ⓘ that closes
+          it. What remains is freshness, which is not fine print but the data. */}
     </div>
   );
 };

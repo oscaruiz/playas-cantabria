@@ -1,10 +1,10 @@
 import React from 'react';
 import { screen } from '@testing-library/react';
-import { renderWithProviders } from '../../../../../../Dev/playas-cantabria/frontend/src/test/render';
-import { EstimatedValues, ComputedAt } from '../../../../../../Dev/playas-cantabria/frontend/src/features/provenance/SourceAndFreshness';
-import { currentObservation, MAX_OBSERVATION_AGE_MS } from '../../../../../../Dev/playas-cantabria/frontend/src/features/provenance/provenance';
-import ForecastHero from '../../../../../../Dev/playas-cantabria/frontend/src/pages/beach-detail/ForecastHero';
-import type { ForecastDayDTO, CurrentConditions } from '../../../../../../Dev/playas-cantabria/frontend/src/services/api';
+import { renderWithProviders } from '../../test/render';
+import { EstimatedValues, ComputedAt } from './SourceAndFreshness';
+import { currentObservation, MAX_OBSERVATION_AGE_MS } from './provenance';
+import ForecastHero from '../../pages/beach-detail/ForecastHero';
+import type { ForecastDayDTO, CurrentConditions } from '../../services/api';
 
 const DAY: ForecastDayDTO = {
   fecha: '2026-08-03',
@@ -27,7 +27,7 @@ const observation = (ago: number): CurrentConditions => ({
   timestamp: new Date(Date.now() - ago).toISOString(),
 });
 
-describe('observacionVigente', () => {
+describe('currentObservation', () => {
   it('accepts a reading within the window and rejects one past it', () => {
     expect(currentObservation(observation(MAX_OBSERVATION_AGE_MS - 60_000))).toBe(true);
     expect(currentObservation(observation(MAX_OBSERVATION_AGE_MS + 60_000))).toBe(false);
@@ -39,7 +39,7 @@ describe('observacionVigente', () => {
   });
 });
 
-describe('ForecastHero — observación caducada', () => {
+describe('ForecastHero — expired observation', () => {
   it('uses the reading while it is recent', () => {
     const { container } = renderWithProviders(
       <ForecastHero day={DAY} currentWeather={28} currentConditions={observation(10 * 60_000)} />

@@ -1,14 +1,14 @@
 import React, { useMemo } from 'react';
 import { IonPage, IonContent, IonFooter, IonSpinner } from '@ionic/react';
-import { useLanguage } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
-import { TextKey } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/es';
-import SeoHead from '../../../../../../Dev/playas-cantabria/frontend/src/shared/seo/SeoHead';
-import { LANDINGS } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/seo/landings';
-import BottomNavBar from '../../../../../../Dev/playas-cantabria/frontend/src/shared/ui/BottomNavBar';
-import HeaderActions from '../../../../../../Dev/playas-cantabria/frontend/src/shared/ui/HeaderActions';
-import BeachCard from '../../../../../../Dev/playas-cantabria/frontend/src/components/BeachCard';
-import { useCatalog } from '../../../../../../Dev/playas-cantabria/frontend/src/pages/landings/useCatalog';
-import { FreshnessLabel } from '../../../../../../Dev/playas-cantabria/frontend/src/features/provenance/SourceAndFreshness';
+import { useLanguage } from '../../shared/i18n/LanguageContext';
+import { TextKey } from '../../shared/i18n/es';
+import SeoHead from '../../shared/seo/SeoHead';
+import { LANDINGS } from '../../shared/seo/landings';
+import BottomNavBar from '../../shared/ui/BottomNavBar';
+import HeaderActions from '../../shared/ui/HeaderActions';
+import BeachCard from '../../components/BeachCard';
+import { useCatalog } from './useCatalog';
+import { FreshnessLabel } from '../../features/provenance/SourceAndFreshness';
 import './landings.css';
 
 export type LandingId =

@@ -14,7 +14,7 @@
   border: 1.5px solid var(--score-color, var(--ion-color-primary));
 }
 
-/* Tramos de color */
+/* Colour bands */
 .score-badge--alta {
   --score-color: var(--beach-flag-green);
   --score-bg: color-mix(in srgb, var(--beach-flag-green) 12%, transparent);
@@ -28,14 +28,14 @@
   --score-bg: color-mix(in srgb, var(--beach-flag-red) 12%, transparent);
 }
 
-/* Tamaño pequeño (tarjetas de lista / cerca de ti) */
+/* Small size (list cards / near you) */
 .score-badge--sm {
   min-width: 30px;
   padding: 3px 7px;
   font-size: 0.9rem;
 }
 
-/* Tamaño grande (cabecera del detalle) */
+/* Large size (detail header) */
 .score-badge--lg {
   padding: 8px 14px;
   font-size: 1.7rem;

@@ -1,9 +1,9 @@
-/* Las acciones son el último elemento de la fila de la cabecera y se pegan a su
-   extremo derecho. Antes iban en `absolute`, y eso obligaba a cada cabecera a
-   reservarles el hueco a mano (un `margin-right` medido, un `right:` por
-   breakpoint). Cuando la ⓘ se llevó una etiqueta de texto, esas medidas se
-   quedaron cortas de golpe y el título y la estrella acabaron debajo. En el
-   flujo el reparto lo hace la propia cabecera y no hay nada que mantener. */
+/* The actions are the last element of the header row and stick to its right
+   edge. They used to be `absolute`, which forced every header to reserve their
+   space by hand (a measured `margin-right`, a `right:` per breakpoint). When
+   the ⓘ gained a text label, those measurements suddenly fell short and the
+   title and the star ended up underneath. In the flow the header itself does
+   the distribution and there is nothing to maintain. */
 .header-actions {
   position: relative;
   z-index: 20;
@@ -60,8 +60,8 @@
   border-radius: 6px;
 }
 
-/* Los enlaces que salen de la app: icono a la izquierda, flecha de salida
-   pegada al borde derecho para que se lea igual en todas las filas. */
+/* Links that leave the app: icon on the left, exit arrow flush with the right
+   edge so that it reads the same on every row. */
 .header-info-external {
   display: flex;
   align-items: center;
@@ -88,8 +88,8 @@
 
 .header-info-menu a:hover, .header-info-menu a:focus-visible { background: var(--beach-ocean-light); color: var(--beach-ocean); }
 
-/* El selector cuando cae dentro del menú: la píldora está pintada para ir
-   sobre la cabecera azul (bordes y texto blancos), y aquí el fondo es papel. */
+/* The selector when it falls inside the menu: the pill is painted to sit on
+   the blue header (white borders and text), and here the background is paper. */
 .header-info-language {
   display: flex;
   align-items: center;
@@ -118,8 +118,8 @@
   color: #ffffff;
 }
 
-/* En el móvil la etiqueta es lo primero que sobra: el icono y el nombre
-   accesible del botón siguen diciendo qué es. */
+/* On mobile the label is the first thing to go: the icon and the button's
+   accessible name still say what it is. */
 @media (max-width: 559px) {
   .header-info-button {
     width: 34px;

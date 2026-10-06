@@ -6,13 +6,13 @@
 
 import React from 'react';
 import { screen, fireEvent, act } from '@testing-library/react';
-import { renderWithProviders } from '../../../../../../Dev/playas-cantabria/frontend/src/test/render';
-import { whatToOffer } from '../../../../../../Dev/playas-cantabria/frontend/src/modules/install/domain/whatToOffer';
+import { renderWithProviders } from '../../test/render';
+import { whatToOffer } from './domain/whatToOffer';
 import {
   listenForInstall,
   resetInstallForTests,
-} from '../../../../../../Dev/playas-cantabria/frontend/src/modules/install/infrastructure/installPrompt';
-import InstallButton from '../../../../../../Dev/playas-cantabria/frontend/src/modules/install/ui/InstallButton';
+} from './infrastructure/installPrompt';
+import InstallButton from './ui/InstallButton';
 
 const UA_IPHONE =
   'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1';
@@ -48,26 +48,26 @@ function setInstalledApps(apps: unknown[] | null): void {
   });
 }
 
-describe('queOfrecer', () => {
-  it('no ofrece nada dentro de la app ya instalada, ni con evento ni en iOS', () => {
+describe('whatToOffer', () => {
+  it('offers nothing inside the already installed app, neither with an event nor on iOS', () => {
     expect(whatToOffer({ hasEvent: true, isIOS: true, inAppMode: true, installed: true })).toBeNull();
   });
 
-  it('prefiere el evento del navegador a las instrucciones manuales', () => {
+  it('prefers the browser event over manual instructions', () => {
     expect(whatToOffer({ hasEvent: true, isIOS: true, inAppMode: false, installed: false })).toBe('prompt');
   });
 
-  it('cae a las instrucciones solo en iOS, y a nada en el resto', () => {
+  it('falls back to instructions only on iOS, and to nothing elsewhere', () => {
     expect(whatToOffer({ hasEvent: false, isIOS: true, inAppMode: false, installed: false })).toBe('ios');
     expect(whatToOffer({ hasEvent: false, isIOS: false, inAppMode: false, installed: false })).toBeNull();
   });
 
-  it('ofrece abrir cuando el navegador acaba de confirmar la instalación', () => {
+  it('offers to open when the browser has just confirmed the installation', () => {
     expect(whatToOffer({ hasEvent: false, isIOS: false, inAppMode: false, installed: true })).toBe('open');
   });
 });
 
-describe('BotonInstalar', () => {
+describe('InstallButton', () => {
   const originalUa = window.navigator.userAgent;
 
   beforeEach(() => {
@@ -82,12 +82,12 @@ describe('BotonInstalar', () => {
     setInstalledApps(null);
   });
 
-  it('no pinta nada mientras el navegador no ofrezca instalar', () => {
+  it('paints nothing while the browser does not offer to install', () => {
     renderWithProviders(<InstallButton />);
     expect(screen.queryByRole('button', { name: /instalar app/i })).not.toBeInTheDocument();
   });
 
-  it('aparece cuando llega el evento y lanza el prompt del navegador al pulsarlo', async () => {
+  it('appears when the event arrives and launches the browser prompt when pressed', async () => {
     renderWithProviders(<InstallButton />);
     const { prompt } = fireBeforeInstallPrompt();
 
@@ -97,7 +97,7 @@ describe('BotonInstalar', () => {
     expect(prompt).toHaveBeenCalledTimes(1);
   });
 
-  it('desaparece tras usar el evento: no se puede volver a lanzar el mismo', async () => {
+  it('disappears after using the event: the same one cannot be launched again', async () => {
     renderWithProviders(<InstallButton />);
     fireBeforeInstallPrompt();
 
@@ -109,7 +109,7 @@ describe('BotonInstalar', () => {
     expect(screen.queryByRole('button', { name: /instalar app/i })).not.toBeInTheDocument();
   });
 
-  it('se convierte en Abrir app cuando el navegador confirma la instalación', async () => {
+  it('turns into Abrir app when the browser confirms the installation', async () => {
     renderWithProviders(<InstallButton />);
     fireBeforeInstallPrompt();
     await screen.findByRole('button', { name: /instalar app/i });
@@ -122,10 +122,10 @@ describe('BotonInstalar', () => {
     expect(screen.getByRole('button', { name: /abrir app/i })).toBeInTheDocument();
   });
 
-  it('al volver más tarde pregunta al navegador y ofrece abrir la app ya instalada', async () => {
-    // Regresión: `appinstalled` solo suena en la pestaña donde se instaló y no
-    // se recordaba, así que en la siguiente visita el chip desaparecía del
-    // todo — Chrome retiene `beforeinstallprompt` una vez instalada.
+  it('on a later return it asks the browser and offers to open the already installed app', async () => {
+    // Regression: `appinstalled` only fires in the tab where it was installed
+    // and was not remembered, so on the next visit the chip vanished entirely
+    // — Chrome withholds `beforeinstallprompt` once installed.
     resetInstallForTests();
     setInstalledApps([{ platform: 'webapp', url: 'https://x/manifest.json' }]);
     listenForInstall();
@@ -135,7 +135,7 @@ describe('BotonInstalar', () => {
     expect(await screen.findByRole('button', { name: /abrir app/i })).toBeInTheDocument();
   });
 
-  it('si el navegador dice que no la tiene, no se inventa el botón', async () => {
+  it('if the browser says it does not have it, the button is not invented', async () => {
     resetInstallForTests();
     setInstalledApps([]);
     listenForInstall();
@@ -149,7 +149,7 @@ describe('BotonInstalar', () => {
     expect(screen.queryByRole('button', { name: /abrir app/i })).not.toBeInTheDocument();
   });
 
-  it('en iOS, donde no hay API, despliega las instrucciones manuales', () => {
+  it('on iOS, where there is no API, it shows the manual instructions', () => {
     setUserAgent(UA_IPHONE);
     renderWithProviders(<InstallButton />);
 

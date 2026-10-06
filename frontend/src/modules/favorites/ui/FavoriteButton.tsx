@@ -1,7 +1,7 @@
 import React from 'react';
 import { IonIcon } from '@ionic/react';
 import { star, starOutline } from 'ionicons/icons';
-import { useLanguage } from '../../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
+import { useLanguage } from '../../../shared/i18n/LanguageContext';
 import { useFavoriteCodes } from '../application/useFavorites';
 import './favorites.css';
 

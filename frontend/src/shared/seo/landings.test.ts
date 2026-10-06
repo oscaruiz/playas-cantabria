@@ -15,8 +15,8 @@ function byId(id: string): { id: string; filtro: (p: unknown) => boolean } {
   return landing;
 }
 
-describe('selectores de landings (solo datos estáticos del catálogo)', () => {
-  it('webcam: presente y no desactivada', () => {
+describe('landing selectors (static catalog data only)', () => {
+  it('webcam: present and not disabled', () => {
     const filter = byId('playas-con-webcam').filtro;
     const names = beachesResponse.filter(filter).map((p) => p.nombre);
     expect(names).toContain('La Concha');
@@ -24,7 +24,7 @@ describe('selectores de landings (solo datos estáticos del catálogo)', () => {
     expect(names).not.toContain('La Salvé');
   });
 
-  it('accesible: solo el atributo explícito a true; ausente = desconocido, fuera', () => {
+  it('accessible: only the explicit attribute set to true; absent = unknown, out', () => {
     const filter = byId('playas-accesibles').filtro;
     expect(filter({ atributos: { accesible: true } })).toBe(true);
     expect(filter({ atributos: { accesible: false } })).toBe(false);
@@ -32,7 +32,7 @@ describe('selectores de landings (solo datos estáticos del catálogo)', () => {
     expect(filter({})).toBe(false);
   });
 
-  it('socorrista: puesto con id > 0 o idCruzRoja > 0 (el 0 es "sin cobertura")', () => {
+  it('lifeguard: post with id > 0 or idCruzRoja > 0 (0 means "no coverage")', () => {
     const filter = byId('playas-con-socorrista').filtro;
     expect(filter({ cruzRojaStations: [{ id: 373 }] })).toBe(true);
     expect(filter({ idCruzRoja: 310 })).toBe(true);
@@ -41,26 +41,26 @@ describe('selectores de landings (solo datos estáticos del catálogo)', () => {
     expect(filter({})).toBe(false);
   });
 
-  it('surf: solo el atributo explícito', () => {
+  it('surf: only the explicit attribute', () => {
     const filter = byId('playas-para-surf').filtro;
     expect(filter({ atributos: { surf: true } })).toBe(true);
     expect(filter({ atributos: { surf: false } })).toBe(false);
     expect(filter({})).toBe(false);
   });
 
-  it('no existe una landing de familias: el catálogo no tiene ese dato', () => {
+  it('there is no families landing: the catalog has no such data', () => {
     expect(
       LANDINGS.find((l: { id: string }) => l.id === 'playas-para-familias')
     ).toBeUndefined();
   });
 });
 
-describe('categorías vacías nunca se publican', () => {
-  it('con un catálogo vacío no hay landings', () => {
+describe('empty categories are never published', () => {
+  it('with an empty catalog there are no landings', () => {
     expect(nonEmptyLandings([])).toEqual([]);
   });
 
-  it('en el catálogo real de la región construida las cuatro tienen playas', () => {
+  it('in the real catalog of the built region all four have beaches', () => {
     expect(nonEmptyLandings(catalogoReal).map((l: { id: string }) => l.id)).toEqual([
       'playas-con-webcam',
       'playas-accesibles',
@@ -70,8 +70,8 @@ describe('categorías vacías nunca se publican', () => {
   });
 });
 
-describe('municipios', () => {
-  it('únicos y ordenados', () => {
+describe('municipalities', () => {
+  it('unique and sorted', () => {
     expect(municipalitiesOf(beachesResponse)).toEqual([
       'Laredo',
       'Piélagos',
@@ -81,11 +81,11 @@ describe('municipios', () => {
     ]);
   });
 
-  it('la ruta usa el mismo slugify que las playas', () => {
+  it('the route uses the same slugify as the beaches', () => {
     expect(municipalityPath('Ribamontán al Mar')).toBe('/municipios/ribamontan-al-mar');
   });
 
-  it('el resumen del índice trae ruta y número de playas por municipio', () => {
+  it('the index summary carries route and beach count per municipality', () => {
     const summary = municipalitiesSummary(beachesResponse);
     expect(summary).toContainEqual({
       municipio: 'Santander',
@@ -102,7 +102,7 @@ describe('municipios', () => {
     );
   });
 
-  it('el slug reencuentra sus playas; uno desconocido, ninguna', () => {
+  it('the slug finds its beaches again; an unknown one, none', () => {
     const fromSantander = beachesOfMunicipalitySlug(beachesResponse, 'santander');
     expect(fromSantander.map((p: { nombre: string }) => p.nombre).sort()).toEqual([
       'El Sardinero',

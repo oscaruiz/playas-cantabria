@@ -6,13 +6,13 @@ beforeEach(() => {
   localStorage.clear();
 });
 
-describe('guardar y leer favoritas', () => {
-  it('sobrevive al ciclo guardar → leer conservando el orden', () => {
+describe('saving and reading favorites', () => {
+  it('survives the save → read cycle keeping the order', () => {
     saveFavorites(['3908503', '3900101']);
     expect(readFavorites()).toEqual(['3908503', '3900101']);
   });
 
-  it('deduplica al guardar', () => {
+  it('deduplicates on save', () => {
     saveFavorites(['a', 'a', 'b', 'a']);
     expect(readFavorites()).toEqual(['a', 'b']);
     expect(JSON.parse(localStorage.getItem(KEY) as string)).toEqual({
@@ -21,28 +21,28 @@ describe('guardar y leer favoritas', () => {
     });
   });
 
-  it('una lista vacía también persiste (quitar la última favorita)', () => {
+  it('an empty list also persists (removing the last favorite)', () => {
     saveFavorites(['a']);
     saveFavorites([]);
     expect(readFavorites()).toEqual([]);
   });
 });
 
-describe('leerFavoritas con almacenamiento corrupto', () => {
+describe('readFavorites with corrupt storage', () => {
   it.each([
-    ['JSON roto', '{no es json'],
-    ['un array a pelo', '["a","b"]'],
-    ['un primitivo', '42'],
-    ['versión desconocida', '{"version":2,"beachCodes":["a"]}'],
-    ['sin versión', '{"beachCodes":["a"]}'],
-    ['beachCodes no-array', '{"version":1,"beachCodes":"a"}'],
-    ['sin beachCodes', '{"version":1}'],
-  ])('%s → sin favoritas, sin explotar', (_case, raw) => {
+    ['broken JSON', '{no es json'],
+    ['a bare array', '["a","b"]'],
+    ['a primitive', '42'],
+    ['unknown version', '{"version":2,"beachCodes":["a"]}'],
+    ['no version', '{"beachCodes":["a"]}'],
+    ['non-array beachCodes', '{"version":1,"beachCodes":"a"}'],
+    ['no beachCodes', '{"version":1}'],
+  ])('%s → no favorites, no blow-up', (_case, raw) => {
     localStorage.setItem(KEY, raw);
     expect(readFavorites()).toEqual([]);
   });
 
-  it('filtra las entradas que no son códigos y deduplica', () => {
+  it('filters out entries that are not codes and deduplicates', () => {
     localStorage.setItem(
       KEY,
       JSON.stringify({ version: 1, beachCodes: [1, null, 'ok', '', 'ok', {}, 'otro'] })
@@ -51,8 +51,8 @@ describe('leerFavoritas con almacenamiento corrupto', () => {
   });
 });
 
-describe('fallos del propio localStorage', () => {
-  it('guardar no explota cuando setItem lanza (modo privado, cuota)', () => {
+describe('failures of localStorage itself', () => {
+  it('saving does not blow up when setItem throws (private mode, quota)', () => {
     const spy = jest.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       throw new Error('QuotaExceededError');
     });
@@ -60,7 +60,7 @@ describe('fallos del propio localStorage', () => {
     spy.mockRestore();
   });
 
-  it('leer no explota cuando getItem lanza', () => {
+  it('reading does not blow up when getItem throws', () => {
     const spy = jest.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
       throw new Error('SecurityError');
     });

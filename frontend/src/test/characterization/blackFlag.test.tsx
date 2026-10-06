@@ -4,8 +4,8 @@
  * The backend emits `'Negra'` in `CruzRojaDTO.bandera`, and it is the most
  * serious signal of all: swimming forbidden. Until this was fixed, the frontend
  * dropped it at every step — `flagColorClass` returned 'unknown',
- * `isFlagAvailable` returned false so `estadoBandera` yielded 'sinDatos' and no
- * banner rendered, `claveBandera` fell back to 'bandera.sinDatos', and no
+ * `isFlagAvailable` returned false so `flagStatus` yielded 'sinDatos' and no
+ * banner rendered, `flagKey` fell back to 'bandera.sinDatos', and no
  * `bandera.negra` key existed in `es.ts`/`en.ts`. A swimmer saw the same screen
  * as a beach with no information.
  *
@@ -18,7 +18,7 @@
 import React from 'react';
 import { screen } from '@testing-library/react';
 import { es } from '../../shared/i18n/es';
-import BeachDetailPage from '../../../../../../Dev/playas-cantabria/frontend/src/pages/BeachDetailPage';
+import BeachDetailPage from '../../pages/BeachDetailPage';
 import { renderWithProviders } from '../render';
 import { installFetchMock, restoreFetch, route } from '../http/fakeFetch';
 import { featuredResponse } from '../fixtures/featured';
@@ -41,11 +41,11 @@ afterEach(() => {
   jest.useRealTimers();
 });
 
-it('existe una clave de traducción para la bandera negra', () => {
+it('a translation key exists for the black flag', () => {
   expect(Object.keys(es)).toContain('bandera.negra');
 });
 
-it('la bandera negra pinta el banner de prohibición', async () => {
+it('the black flag paints the prohibition banner', async () => {
   const { container } = renderWithProviders(<BeachDetailPage />, {
     route: '/playas/3906002',
     path: '/playas/:codigo',
@@ -57,7 +57,7 @@ it('la bandera negra pinta el banner de prohibición', async () => {
   expect(container.querySelector('.flag-pennant.black')).toBeInTheDocument();
 });
 
-it('la tarjeta de Cruz Roja conserva el valor negro recibido', async () => {
+it('the Cruz Roja card keeps the received black value', async () => {
   renderWithProviders(<BeachDetailPage />, {
     route: '/playas/3906002',
     path: '/playas/:codigo',

@@ -4,10 +4,10 @@ import {
   weatherSourceName,
   observationProvenance,
   hourlyForecastProvenance,
-} from '../../../../../../Dev/playas-cantabria/frontend/src/features/provenance/provenance';
-import type { CurrentConditions } from '../../../../../../Dev/playas-cantabria/frontend/src/services/api';
+} from './provenance';
+import type { CurrentConditions } from '../../services/api';
 
-describe('normalizarInstante', () => {
+describe('normalizeInstant', () => {
   it('parses an ISO string to epoch ms', () => {
     expect(normalizeInstant('2026-08-02T10:00:00.000Z')).toBe(
       Date.UTC(2026, 7, 2, 10, 0, 0)
@@ -45,7 +45,7 @@ describe('formatearInstanteAbsoluto', () => {
   });
 });
 
-describe('nombreFuenteMeteo', () => {
+describe('weatherSourceName', () => {
   it('collapses AEMET transport variants into the public name', () => {
     expect(weatherSourceName('AEMET_XML')).toBe('AEMET');
     expect(weatherSourceName('AEMET_HTML')).toBe('AEMET');
@@ -65,7 +65,7 @@ const OBSERVATION: CurrentConditions = {
   timestamp: '2026-08-02T10:00:00.000Z',
 };
 
-describe('procedenciaObservacion', () => {
+describe('observationProvenance', () => {
   it('credits the provider and the capture instant', () => {
     expect(observationProvenance(OBSERVATION)).toEqual({
       kind: 'directo',
@@ -88,7 +88,7 @@ describe('procedenciaObservacion', () => {
   });
 });
 
-describe('procedenciaPrevisionHoras', () => {
+describe('hourlyForecastProvenance', () => {
   it('is a forecast with a source and, honestly, no emission time', () => {
     expect(hourlyForecastProvenance('Open-Meteo')).toEqual({
       kind: 'prevision',

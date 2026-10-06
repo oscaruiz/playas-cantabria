@@ -1,5 +1,5 @@
 import React from 'react';
-import { useLanguage, Language } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
+import { useLanguage, Language } from '../i18n/LanguageContext';
 import './LanguageSelector.css';
 
 const LANGUAGES: Language[] = ['es', 'en'];

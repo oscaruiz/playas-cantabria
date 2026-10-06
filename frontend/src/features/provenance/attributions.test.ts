@@ -1,6 +1,6 @@
-import { sourceAttribution, sameSource, publicSourceName } from '../../../../../../Dev/playas-cantabria/frontend/src/features/provenance/attributions';
+import { sourceAttribution, sameSource, publicSourceName } from './attributions';
 
-describe('atribucionDeFuente', () => {
+describe('sourceAttribution', () => {
   it('credits AEMET whatever transport the API names', () => {
     for (const source of ['AEMET', 'AEMET_XML', 'AEMET_HTML']) {
       const attribution = sourceAttribution(source);
@@ -29,14 +29,14 @@ describe('atribucionDeFuente', () => {
   });
 });
 
-describe('nombrePublicoFuente', () => {
+describe('publicSourceName', () => {
   it('normalizes what it knows and leaves the rest intact', () => {
     expect(publicSourceName('AEMET_HTML')).toBe('AEMET');
     expect(publicSourceName('Meteovecino')).toBe('Meteovecino');
   });
 });
 
-describe('mismaFuente', () => {
+describe('sameSource', () => {
   it('sees through the transport suffix', () => {
     expect(sameSource('AEMET_HTML', 'AEMET')).toBe(true);
     expect(sameSource('OpenWeather', 'Open-Meteo')).toBe(false);

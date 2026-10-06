@@ -1,6 +1,6 @@
-import { TranslateFn, Language } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
-import { capitalize } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/format/text';
-import { dayName, translateApiDayName, formatShortDate } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/dates';
+import { TranslateFn, Language } from '../../shared/i18n/LanguageContext';
+import { capitalize } from '../../shared/format/text';
+import { dayName, translateApiDayName, formatShortDate } from '../../shared/i18n/dates';
 
 /**
  * Extract day-of-month from fecha string.

@@ -5,8 +5,8 @@ import {
   FreshnessLabel,
   SourceAndFreshness,
 } from './SourceAndFreshness';
-import { formatAbsoluteInstant } from '../../../../../../Dev/playas-cantabria/frontend/src/features/provenance/provenance';
-import ForecastHero from '../../../../../../Dev/playas-cantabria/frontend/src/pages/beach-detail/ForecastHero';
+import { formatAbsoluteInstant } from './provenance';
+import ForecastHero from '../../pages/beach-detail/ForecastHero';
 import type { ForecastDayDTO, CurrentConditions } from '../../services/api';
 
 const sevenMinAgo = () => Date.now() - 7 * 60000;
@@ -143,8 +143,8 @@ describe('ForecastHero wiring', () => {
     const { container } = renderWithProviders(
       <ForecastHero day={DAY} currentConditions={NOW_ISO} />
     );
-    // La frescura no es letra pequeña: es el dato. La nota de licencia del
-    // observador viaja con el resto bajo la ⓘ que cierra la columna.
+    // Freshness is not fine print: it is the data. The observer's licence
+    // note travels with the rest under the ⓘ that closes the column.
     expect(container.querySelector('.provenance-line')).toHaveTextContent(
       'actualizado hace 7 min'
     );

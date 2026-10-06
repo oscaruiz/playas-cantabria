@@ -18,34 +18,34 @@ function mount(route: string) {
 }
 
 describe('BottomNavBar', () => {
-  it('enciende la pestaña de la sección en la que se está', () => {
+  it('lights up the tab of the section you are in', () => {
     mount('/mapa');
     expect(screen.getByRole('button', { name: 'Mapa' })).toHaveAttribute('aria-current', 'page');
     expect(screen.getByRole('button', { name: 'Inicio' })).not.toHaveAttribute('aria-current');
   });
 
-  it('una playa cuenta como Playas, no como Inicio', () => {
+  it('a beach counts as Playas, not as Inicio', () => {
     mount('/playas/suances/tagle');
     expect(screen.getByRole('button', { name: 'Playas' })).toHaveAttribute('aria-current', 'page');
   });
 
-  it('desde las páginas legales, Inicio lleva a la portada', () => {
-    // Regresión: el respaldo de `deriveTab` era 'home', así que en /acerca-de
-    // el botón creía que ya estabas en la portada y su propio guardia se
-    // tragaba el clic. No pasaba nada al pulsarlo.
+  it('from the legal pages, Inicio goes to the home page', () => {
+    // Regression: the fallback of `deriveTab` was 'home', so on /acerca-de the
+    // button thought you were already on the home page and its own guard
+    // swallowed the click. Nothing happened when pressing it.
     mount('/acerca-de');
     fireEvent.click(screen.getByRole('button', { name: 'Inicio' }));
     expect(screen.getByTestId('ruta')).toHaveTextContent('/');
   });
 
-  it('y en esas páginas no hay pestaña encendida: no son ninguna de las tres', () => {
+  it('and on those pages no tab is lit: they are none of the three', () => {
     mount('/privacidad');
     for (const name of ['Inicio', 'Playas', 'Mapa']) {
       expect(screen.getByRole('button', { name })).not.toHaveAttribute('aria-current');
     }
   });
 
-  it('estando ya en la portada, Inicio no vuelve a navegar', () => {
+  it('when already on the home page, Inicio does not navigate again', () => {
     mount('/');
     fireEvent.click(screen.getByRole('button', { name: 'Inicio' }));
     expect(screen.getByTestId('ruta')).toHaveTextContent('/');

@@ -4,18 +4,18 @@
  *
  * Written BEFORE extracting `shared/cielo/sky.ts` and kept after: the same
  * table must hold when `beachHelpers` merely re-exports the new module. The
- * inventory is `TABLAS_API.MAPA_CIELO` (the es→en table is the project's
+ * inventory is `API_TABLES.SKY_MAP` (the es→en table is the project's
  * real catalog of provider phrasings) plus edge cases; a coverage assertion
- * forces every future MAPA_CIELO phrase to get a golden row here.
+ * forces every future SKY_MAP phrase to get a golden row here.
  *
  * Two rows pin DELIBERATE unification changes (see plan/commit):
  *  - "Chubasco" (singular): emoji was ⛅ (old regex required the plural),
- *    now 🌧️ — the `chubasc` stem of palabraCielo wins everywhere.
+ *    now 🌧️ — the `chubasc` stem of skyWord wins everywhere.
  *  - "rayos": active rain was false (old fallback only knew 'tormenta'),
  *    now true — storm counts as precipitation, as it already did for emoji.
  */
-import { skyEmoji, skyWord, isRainActive } from '../../../../../../Dev/playas-cantabria/frontend/src/utils/beachHelpers';
-import { API_TABLES } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/apiText';
+import { skyEmoji, skyWord, isRainActive } from '../../utils/beachHelpers';
+import { API_TABLES } from '../i18n/apiText';
 
 const STORM = '⛈️';
 const SNOW = '\u{1F328}️';
@@ -81,7 +81,7 @@ const GOLDEN: Array<[string, string, string, string | null, string | null, boole
   ['texto que nadie reconoce', CLOUD_SUN, CLOUD_SUN, null, null, false],
 ];
 
-describe('cielo — golden del trío emoji / palabra / lluvia activa', () => {
+describe('sky — golden of the emoji / word / active-rain trio', () => {
   it.each(GOLDEN)('"%s"', (phrase, dayEmoji, nightEmoji, dayWord, nightWord, rain) => {
     expect(skyEmoji(phrase, false)).toBe(dayEmoji);
     expect(skyEmoji(phrase, true)).toBe(nightEmoji);
@@ -90,7 +90,7 @@ describe('cielo — golden del trío emoji / palabra / lluvia activa', () => {
     expect(isRainActive({ cielo: phrase })).toBe(rain);
   });
 
-  it('sin texto: luna de noche, placeholder de día, palabra null', () => {
+  it('no text: moon at night, placeholder by day, null word', () => {
     expect(skyEmoji(null, false)).toBe(CLOUD_SUN);
     expect(skyEmoji(null, true)).toBe(MOON);
     expect(skyWord(null)).toBeNull();
@@ -99,9 +99,9 @@ describe('cielo — golden del trío emoji / palabra / lluvia activa', () => {
     expect(isRainActive(null)).toBe(false);
   });
 
-  it('cada frase de MAPA_CIELO tiene fila golden', () => {
+  it('every SKY_MAP phrase has a golden row', () => {
     const inTable = new Set(GOLDEN.map(([phrase]) => phrase.toLowerCase()));
-    for (const phrase of Object.keys(API_TABLES.MAPA_CIELO)) {
+    for (const phrase of Object.keys(API_TABLES.SKY_MAP)) {
       expect(inTable).toContain(phrase);
     }
   });

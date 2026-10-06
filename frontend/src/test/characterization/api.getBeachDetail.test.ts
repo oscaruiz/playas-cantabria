@@ -1,8 +1,8 @@
 /**
  * CHARACTERIZATION — FROZEN.
  *
- * Pins down `getDetallePlaya()`. What matters here is what it does NOT do:
- * unlike `getPlayas`, it has no timeout, no local fallback and no cache, and it
+ * Pins down `getBeachDetail()`. What matters here is what it does NOT do:
+ * unlike `getBeaches`, it has no timeout, no local fallback and no cache, and it
  * DOES reject when the backend answers badly. With a cold Render that means an
  * indefinite spinner on `/playas/:codigo`.
  *
@@ -26,8 +26,8 @@ afterEach(() => {
   restoreFetch();
 });
 
-describe('getDetallePlaya', () => {
-  it('pide /api/{region}/beaches/{codigo}/details y devuelve el cuerpo tal cual', async () => {
+describe('getBeachDetail', () => {
+  it('requests /api/{region}/beaches/{codigo}/details and returns the body as is', async () => {
     const detail = buildAemetDetail(localNoon('2026-07-27'));
     const fetchMock = installFetchMock([route(DETAILS, { json: detail })]);
     const { getBeachDetail } = await loadApi();
@@ -38,7 +38,7 @@ describe('getDetallePlaya', () => {
     expect(String(fetchMock.mock.calls[0][0])).toContain(`${REGION_API_PATH}/beaches/3908503/details`);
   });
 
-  it('rechaza cuando la respuesta no es ok', async () => {
+  it('rejects when the response is not ok', async () => {
     installFetchMock([route(DETAILS, { status: 500 })]);
     const { getBeachDetail } = await loadApi();
 
@@ -47,14 +47,14 @@ describe('getDetallePlaya', () => {
     );
   });
 
-  it('rechaza cuando falla la red: no hay fallback local', async () => {
+  it('rejects when the network fails: there is no local fallback', async () => {
     installFetchMock([route(DETAILS, { networkError: 'offline' })]);
     const { getBeachDetail } = await loadApi();
 
     await expect(getBeachDetail('3908503')).rejects.toThrow();
   });
 
-  it('no cachea: dos llamadas seguidas hacen dos peticiones', async () => {
+  it('does not cache: two consecutive calls make two requests', async () => {
     const detail = buildAemetDetail(localNoon('2026-07-27'));
     const fetchMock = installFetchMock([route(DETAILS, { json: detail })]);
     const { getBeachDetail } = await loadApi();

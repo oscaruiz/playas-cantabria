@@ -1,11 +1,11 @@
 import React from 'react';
-import { useLanguage } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
+import { useLanguage } from '../../shared/i18n/LanguageContext';
 import {
   AttributionNote,
   EstimatedValues,
-} from '../../../../../../Dev/playas-cantabria/frontend/src/features/provenance/SourceAndFreshness';
-import DataInfo from '../../../../../../Dev/playas-cantabria/frontend/src/features/provenance/DataInfo';
-import type { EstimatedField } from '../../../../../../Dev/playas-cantabria/frontend/src/services/api';
+} from '../../features/provenance/SourceAndFreshness';
+import DataInfo from '../../features/provenance/DataInfo';
+import type { EstimatedField } from '../../services/api';
 
 /**
  * Everything the AEMET column has to declare — who elaborated the forecast and

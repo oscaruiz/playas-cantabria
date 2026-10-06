@@ -36,8 +36,8 @@ beforeEach(() => {
   });
 });
 
-describe('useUserLocation — caché', () => {
-  it('arranca con la ubicación cacheada si es reciente y no muestra carga', () => {
+describe('useUserLocation — cache', () => {
+  it('starts with the cached location if recent and shows no loading', () => {
     localStorage.setItem(
       CACHE_KEY,
       JSON.stringify({ coords: [43.4, -3.8], timestamp: Date.now() - 60_000 }),
@@ -51,7 +51,7 @@ describe('useUserLocation — caché', () => {
     expect(getCurrentPosition).toHaveBeenCalledTimes(1);
   });
 
-  it('ignora una caché de más de 5 min', () => {
+  it('ignores a cache older than 5 min', () => {
     localStorage.setItem(
       CACHE_KEY,
       JSON.stringify({ coords: [43.4, -3.8], timestamp: Date.now() - CACHE_MAX_AGE - 1 }),
@@ -63,7 +63,7 @@ describe('useUserLocation — caché', () => {
     expect(result.current.locationLoading).toBe(true);
   });
 
-  it('ignora una caché corrupta sin romperse', () => {
+  it('ignores a corrupt cache without breaking', () => {
     localStorage.setItem(CACHE_KEY, 'esto no es json');
 
     const { result } = renderHook(() => useUserLocation());
@@ -71,7 +71,7 @@ describe('useUserLocation — caché', () => {
     expect(result.current.userLocation).toBeNull();
   });
 
-  it('guarda en caché la ubicación obtenida', () => {
+  it('caches the obtained location', () => {
     const { result } = renderHook(() => useUserLocation());
 
     act(() => {
@@ -84,8 +84,8 @@ describe('useUserLocation — caché', () => {
   });
 });
 
-describe('useUserLocation — errores', () => {
-  it('marca denegada Y bloqueada cuando el permiso está denegado (code 1)', () => {
+describe('useUserLocation — errors', () => {
+  it('flags denied AND blocked when permission is denied (code 1)', () => {
     const { result } = renderHook(() => useUserLocation());
 
     act(() => {
@@ -97,7 +97,7 @@ describe('useUserLocation — errores', () => {
     expect(result.current.locationLoading).toBe(false);
   });
 
-  it('marca solo denegada con otros códigos de error', () => {
+  it('flags only denied for other error codes', () => {
     const { result } = renderHook(() => useUserLocation());
 
     act(() => {
@@ -108,7 +108,7 @@ describe('useUserLocation — errores', () => {
     expect(result.current.locationBlocked).toBe(false);
   });
 
-  it('`retryLocation()` limpia el estado de error y vuelve a pedir', () => {
+  it('`retryLocation()` clears the error state and requests again', () => {
     const { result } = renderHook(() => useUserLocation());
 
     act(() => {
@@ -127,8 +127,8 @@ describe('useUserLocation — errores', () => {
   });
 });
 
-describe('useUserLocation — sin soporte de geolocalización', () => {
-  it('no muestra carga si el navegador no expone geolocation', () => {
+describe('useUserLocation — without geolocation support', () => {
+  it('shows no loading if the browser does not expose geolocation', () => {
     Object.defineProperty(navigator, 'geolocation', { value: undefined, configurable: true });
 
     const { result } = renderHook(() => useUserLocation());
@@ -139,13 +139,13 @@ describe('useUserLocation — sin soporte de geolocalización', () => {
 });
 
 /**
- * Añadido tras un error real en el navegador: `Invalid LatLng object: (NaN, NaN)`
- * al montar MapaPage. `flyTo` recibía las coordenadas del hook sin que nadie
- * hubiera comprobado que fueran números. El mapa se cae con estrépito; la
- * ordenación por cercanía de Home y del listado se habría equivocado en silencio,
- * que es peor.
+ * Added after a real browser error: `Invalid LatLng object: (NaN, NaN)`
+ * when mounting MapPage. `flyTo` received the hook's coordinates without anyone
+ * having checked that they were numbers. The map crashes loudly; the
+ * proximity sorting on Home and on the list would have been silently wrong,
+ * which is worse.
  */
-describe('useUserLocation — coordenadas inservibles', () => {
+describe('useUserLocation — unusable coordinates', () => {
   it.each([
     ['coords nulas', [null, null]],
     ['coords ausentes', undefined],
@@ -161,9 +161,9 @@ describe('useUserLocation — coordenadas inservibles', () => {
     expect(result.current.userLocation).toBeNull();
   });
 
-  it('descarta la caché si el timestamp no es un número', () => {
-    // Con un timestamp no numérico la resta da NaN y toda comparación contra él
-    // es falsa: la entrada caducada colaba como si fuera fresca.
+  it('discards the cache if the timestamp is not a number', () => {
+    // With a non-numeric timestamp the subtraction yields NaN and every
+    // comparison against it is false: the expired entry slipped through as fresh.
     localStorage.setItem(
       CACHE_KEY,
       JSON.stringify({ coords: [43.4, -4.05], timestamp: 'ayer' }),
@@ -174,7 +174,7 @@ describe('useUserLocation — coordenadas inservibles', () => {
     expect(result.current.userLocation).toBeNull();
   });
 
-  it('no acepta una lectura del navegador sin coordenadas', () => {
+  it('does not accept a browser reading without coordinates', () => {
     const { result } = renderHook(() => useUserLocation());
 
     act(() => {
@@ -183,13 +183,13 @@ describe('useUserLocation — coordenadas inservibles', () => {
 
     expect(result.current.userLocation).toBeNull();
     expect(result.current.locationLoading).toBe(false);
-    // Nadie ha denegado un permiso: no debe mandarse al usuario a los ajustes.
+    // Nobody denied a permission: the user must not be sent to the settings.
     expect(result.current.locationDenied).toBe(true);
     expect(result.current.locationBlocked).toBe(false);
     expect(localStorage.getItem(CACHE_KEY)).toBeNull();
   });
 
-  it('sigue aceptando una lectura buena', () => {
+  it('still accepts a good reading', () => {
     const { result } = renderHook(() => useUserLocation());
 
     act(() => {

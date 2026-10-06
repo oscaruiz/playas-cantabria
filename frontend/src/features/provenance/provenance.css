@@ -22,14 +22,14 @@
   margin: 6px 0 0;
 }
 
-/* Dato retirado por antiguo. No es un error de carga, así que no se pinta
-   como tal: es una ausencia declarada. */
+/* Data withdrawn for being too old. It is not a load error, so it is not
+   painted as one: it is a declared absence. */
 .provenance-expired {
   font-style: italic;
 }
 
-/* El control ⓘ: discreto, pero un control — se toca, así que se ve que se
-   puede tocar. Todo lo que declara el bloque vive dentro. */
+/* The ⓘ control: discreet, but a control — it is tapped, so it has to look
+   tappable. Everything the block declares lives inside. */
 .info-data {
   margin-top: 8px;
 }
@@ -68,7 +68,7 @@
   color: var(--beach-text-muted);
 }
 
-/* Los párrafos sueltos del panel (avisos) comparten la voz del resto. */
+/* The panel's loose paragraphs (notices) share the voice of the rest. */
 .info-data-panel > p {
   margin: 0 0 6px;
 }
@@ -78,9 +78,9 @@
   margin-bottom: 0;
 }
 
-/* Sobre el fondo oceánico del hero el texto apagado no se lee. Las notas de
-   dentro traen su propio color apagado, así que no basta con heredar: hay que
-   ganarles, o la atribución queda ilegible sobre el azul. */
+/* On the hero's ocean background muted text is unreadable. The notes inside
+   bring their own muted colour, so inheriting is not enough: we have to
+   outrank them, or the attribution is illegible over the blue. */
 .info-data--hero .info-data-btn,
 .info-data--hero .info-data-panel,
 .info-data--hero .info-data-panel p,
@@ -97,8 +97,8 @@
   color: #fff;
 }
 
-/* Dentro del banner de bandera, que es una fila flex, la ⓘ ocupa su
-   propia línea en vez de meterse entre el banderín y el texto. */
+/* Inside the flag banner, which is a flex row, the ⓘ takes its own line
+   instead of squeezing in between the pennant and the text. */
 .flag-banner {
   flex-wrap: wrap;
 }

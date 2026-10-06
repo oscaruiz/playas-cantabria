@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import App from './app/App';
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 import reportWebVitals from './reportWebVitals';
-import { listenForInstall } from '../../../../Dev/playas-cantabria/frontend/src/modules/install';
+import { listenForInstall } from './modules/install';
 
 // Before rendering, not inside a component: Chrome fires `beforeinstallprompt`
 // during page load and only once, so a listener added after mount would miss

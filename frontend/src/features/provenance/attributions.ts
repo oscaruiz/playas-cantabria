@@ -5,13 +5,13 @@
  *
  * It is ONE table because attribution is a legal obligation, not decoration: a
  * source that reaches the API without an entry here would be shown uncredited.
- * `atribucionDeFuente` normalizes whatever the API sends (`AEMET_HTML`,
+ * `sourceAttribution` normalizes whatever the API sends (`AEMET_HTML`,
  * `AEMET_XML`, `Open-Meteo`, `OpenMeteo`…) instead of trusting each call site
  * to spell it the same way, and returns null for anything unknown — an
  * invented credit would be worse than none.
  */
 
-import type { TextKey } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/es';
+import type { TextKey } from '../../shared/i18n/es';
 
 export interface Attribution {
   /** Public name of the producer, exactly as it must be credited. */

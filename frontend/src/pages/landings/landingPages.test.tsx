@@ -1,9 +1,9 @@
 import React from 'react';
 import { screen, waitFor } from '@testing-library/react';
-import MunicipalityPage from '../../../../../../Dev/playas-cantabria/frontend/src/pages/landings/MunicipalityPage';
-import MunicipalitiesIndex from '../../../../../../Dev/playas-cantabria/frontend/src/pages/landings/MunicipalitiesIndex';
-import BeachLanding from '../../../../../../Dev/playas-cantabria/frontend/src/pages/landings/BeachLanding';
-import BeachList from '../../../../../../Dev/playas-cantabria/frontend/src/pages/BeachList';
+import MunicipalityPage from './MunicipalityPage';
+import MunicipalitiesIndex from './MunicipalitiesIndex';
+import BeachLanding from './BeachLanding';
+import BeachList from '../BeachList';
 import { renderWithProviders } from '../../test/render';
 import { installFetchMock, restoreFetch, route } from '../../test/http/fakeFetch';
 import { beachesResponse } from '../../test/fixtures/beaches';
@@ -21,8 +21,8 @@ afterEach(() => {
   restoreFetch();
 });
 
-describe('MunicipioPage', () => {
-  it('lista solo las playas del municipio, con título propio', async () => {
+describe('MunicipalityPage', () => {
+  it('lists only the municipality beaches, with its own title', async () => {
     renderWithProviders(<MunicipalityPage />, {
       route: '/municipios/santander',
       path: '/municipios/:municipio',
@@ -39,7 +39,7 @@ describe('MunicipioPage', () => {
     await waitFor(() => expect(document.title).toContain('Santander'));
   });
 
-  it('marca la pestaña Playas y ofrece volver atrás', async () => {
+  it('marks the Playas tab and offers a way back', async () => {
     renderWithProviders(<MunicipalityPage />, {
       route: '/municipios/santander',
       path: '/municipios/:municipio',
@@ -53,7 +53,7 @@ describe('MunicipioPage', () => {
     expect(screen.getByRole('button', { name: 'Volver' })).toBeInTheDocument();
   });
 
-  it('un municipio desconocido explica y ofrece el listado', async () => {
+  it('an unknown municipality explains and offers the list', async () => {
     renderWithProviders(<MunicipalityPage />, {
       route: '/municipios/no-existe',
       path: '/municipios/:municipio',
@@ -65,8 +65,8 @@ describe('MunicipioPage', () => {
   });
 });
 
-describe('MunicipiosIndex', () => {
-  it('lista todos los municipios con su número de playas', async () => {
+describe('MunicipalitiesIndex', () => {
+  it('lists all municipalities with their beach count', async () => {
     renderWithProviders(<MunicipalitiesIndex />, { route: '/municipios' });
 
     expect(await screen.findByText('Suances')).toBeInTheDocument();
@@ -82,8 +82,8 @@ describe('MunicipiosIndex', () => {
   });
 });
 
-describe('acceso al municipio desde el listado de playas', () => {
-  it('el nombre del municipio es un enlace real a su página', async () => {
+describe('municipality access from the beach list', () => {
+  it('the municipality name is a real link to its page', async () => {
     renderWithProviders(<BeachList />, { route: '/playas' });
     await screen.findByText('La Concha');
 
@@ -97,7 +97,7 @@ describe('acceso al municipio desde el listado de playas', () => {
 });
 
 describe('LandingPlayas', () => {
-  it('la landing de webcams lista solo playas con webcam activa', async () => {
+  it('the webcams landing lists only beaches with an active webcam', async () => {
     renderWithProviders(<BeachLanding id="playas-con-webcam" />, {
       route: '/playas-con-webcam',
     });
@@ -112,7 +112,7 @@ describe('LandingPlayas', () => {
     expect(await screen.findByText(/actualizado hace/)).toBeInTheDocument();
   });
 
-  it('la landing de socorrismo usa el criterio del catálogo', async () => {
+  it('the lifeguard landing uses the catalog criterion', async () => {
     const { container } = renderWithProviders(
       <BeachLanding id="playas-con-socorrista" />,
       { route: '/playas-con-socorrista' }

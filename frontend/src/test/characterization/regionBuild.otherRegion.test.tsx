@@ -7,10 +7,10 @@
 
 import React from 'react';
 import { screen } from '@testing-library/react';
-import { renderWithProviders } from '../../../../../../Dev/playas-cantabria/frontend/src/test/render';
-import { installFetchMock, restoreFetch, route } from '../../../../../../Dev/playas-cantabria/frontend/src/test/http/fakeFetch';
-import { beachesResponse } from '../../../../../../Dev/playas-cantabria/frontend/src/test/fixtures/beaches';
-import { featuredResponse } from '../../../../../../Dev/playas-cantabria/frontend/src/test/fixtures/featured';
+import { renderWithProviders } from '../render';
+import { installFetchMock, restoreFetch, route } from '../http/fakeFetch';
+import { beachesResponse } from '../fixtures/beaches';
+import { featuredResponse } from '../fixtures/featured';
 
 const OTHER_REGION = {
   id: 'asturias',
@@ -84,9 +84,9 @@ beforeEach(() => {
 
 afterEach(() => restoreFetch());
 
-it('el listado pide /api/asturias y titula con Asturias', async () => {
+it('the list requests /api/asturias and is titled with Asturias', async () => {
   const fetchMock = mockApi();
-  const BeachList = (await import('../../../../../../Dev/playas-cantabria/frontend/src/pages/BeachList')).default;
+  const BeachList = (await import('../../pages/BeachList')).default;
   renderWithProviders(<BeachList />, { route: '/playas' });
 
   expect(await screen.findByText('Playas de Asturias')).toBeInTheDocument();
@@ -101,11 +101,11 @@ it('el listado pide /api/asturias y titula con Asturias', async () => {
   expect(urls.some((u) => u.includes('/api/cantabria'))).toBe(false);
 });
 
-it('el mapa arranca en el centro de Asturias, no en el de Cantabria', async () => {
+it('the map starts at the centre of Asturias, not Cantabria', async () => {
   mockMapCenter.length = 0;
   mockMapZoom.length = 0;
   mockApi();
-  const MapPage = (await import('../../../../../../Dev/playas-cantabria/frontend/src/pages/MapPage')).default;
+  const MapPage = (await import('../../pages/MapPage')).default;
   renderWithProviders(<MapPage />, { route: '/mapa' });
   await screen.findByText(beachesResponse[0].nombre);
 
@@ -113,9 +113,9 @@ it('el mapa arranca en el centro de Asturias, no en el de Cantabria', async () =
   expect(mockMapZoom[0]).toBe(OTHER_REGION.map.zoom);
 });
 
-it('la app en inglés también lleva la marca de la región', async () => {
+it('the English app also carries the region brand', async () => {
   mockApi();
-  const BeachList = (await import('../../../../../../Dev/playas-cantabria/frontend/src/pages/BeachList')).default;
+  const BeachList = (await import('../../pages/BeachList')).default;
   renderWithProviders(<BeachList />, { route: '/playas', language: 'en' });
 
   // The brand is a proper name from region.json: it does not translate.

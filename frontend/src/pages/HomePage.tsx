@@ -8,7 +8,7 @@ import {
   getBeaches,
 } from '../services/api';
 import { rankedSkyEmoji, flagColorClass } from '../utils/beachHelpers';
-import { formatTimeAgo, madridLocalHour } from '../../../../../Dev/playas-cantabria/frontend/src/shared/format/time';
+import { formatTimeAgo, madridLocalHour } from '../shared/format/time';
 import { FreshnessLabel } from '../features/provenance/SourceAndFreshness';
 import { rankBeaches, topScoreCodeNoHero } from '../utils/beachRanking';
 import { haversineKm } from '../shared/geo/haversine';
@@ -16,8 +16,8 @@ import { useUserLocation } from '../hooks/useUserLocation';
 import { useRanking } from '../features/ranking/useRanking';
 import BottomNavBar from '../shared/ui/BottomNavBar';
 import HeaderActions from '../shared/ui/HeaderActions';
-import BrandLogo from '../../../../../Dev/playas-cantabria/frontend/src/shared/ui/BrandLogo';
-import { useLanguage } from '../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
+import BrandLogo from '../shared/ui/BrandLogo';
+import { useLanguage } from '../shared/i18n/LanguageContext';
 import {
   translateApiText,
   readableReason,
@@ -27,13 +27,13 @@ import {
 } from '../shared/i18n/apiText';
 import ScoreBadge from '../components/ScoreBadge';
 import TrendBadge from '../components/TrendBadge';
-import BestTime from '../../../../../Dev/playas-cantabria/frontend/src/components/BestTime';
+import BestTime from '../components/BestTime';
 import type { TextKey } from '../shared/i18n/es';
 import SafetyNotice from '../shared/ui/SafetyNotice';
 import { beachPath } from '../shared/seo/beachUrls';
 import SeoHead from '../shared/seo/SeoHead';
 import { useFavoriteCodes } from '../modules/favorites';
-import { InstallButton } from '../../../../../Dev/playas-cantabria/frontend/src/modules/install';
+import { InstallButton } from '../modules/install';
 import './HomePage.css';
 
 /**
@@ -173,8 +173,8 @@ const HeroBeachCard: React.FC<{
   onViewOnMap: () => void;
 }> = ({ beach, distKm, prioritizedByProximity, onViewDetails, onViewOnMap }) => {
   const { t, language } = useLanguage();
-  // `iconoClima` es el icono de OpenWeather ('01d'/'01n'): trae su propia
-  // decisión de día o noche, que sigue al ocaso real de esas coordenadas.
+  // `iconoClima` is the OpenWeather icon ('01d'/'01n'): it carries its own
+  // day-or-night decision, which follows the real sunset at those coordinates.
   const emoji = rankedSkyEmoji(beach);
   const flagClass = beach.bandera ? flagColorClass(beach.bandera) : null;
   const rationale = noForecastReason(beach, readableReason(beach.razonRanking));
@@ -206,11 +206,11 @@ const HeroBeachCard: React.FC<{
 
       <p className="hp-hero-reason">{translateApiText(rationale, language)}</p>
 
-      {/* CUÁNDO ir, no solo si está bien: la mejor franja del resto del día. */}
+      {/* WHEN to go, not just whether it is good: the best slot of the rest of the day. */}
       <BestTime timeWindow={beach.ventanaDia} />
 
-      {/* Lo más accionable de la portada: si la mejor playa de hoy va a peor
-          dentro de dos horas, hay que decirlo aquí y no en el detalle. */}
+      {/* The most actionable thing on the home page: if today's best beach gets
+          worse in two hours, it has to be said here and not in the detail. */}
       <TrendBadge outlook={beach.pronostico} />
 
       {prioritizedByProximity && (
@@ -268,8 +268,8 @@ const AlternativeRow: React.FC<{
   onClick: () => void;
 }> = ({ beach, distKm, isTopScore, onClick }) => {
   const { t, language } = useLanguage();
-  // `iconoClima` es el icono de OpenWeather ('01d'/'01n'): trae su propia
-  // decisión de día o noche, que sigue al ocaso real de esas coordenadas.
+  // `iconoClima` is the OpenWeather icon ('01d'/'01n'): it carries its own
+  // day-or-night decision, which follows the real sunset at those coordinates.
   const emoji = rankedSkyEmoji(beach);
   const flagClass = beach.bandera ? flagColorClass(beach.bandera) : null;
   const rationale = noForecastReason(beach, readableReason(beach.razonRanking));
@@ -349,8 +349,8 @@ const CautionCard: React.FC<{
           {beach.municipio} &middot;{' '}
           {translateApiText(noForecastReason(beach, readableReason(beach.razonRanking)), language)}
         </p>
-        {/* Aquí importa el sentido contrario: una playa ya floja que además va
-            a peor no es lo mismo que una que simplemente está floja. */}
+        {/* The opposite direction matters here: an already weak beach that also
+            gets worse is not the same as one that is simply weak. */}
         <TrendBadge outlook={beach.pronostico} />
       </div>
       <span className="hp-caution-arrow" aria-hidden="true">&#8250;</span>
@@ -414,7 +414,7 @@ const HomePage: React.FC = () => {
     return map;
   }, [featured, userLocation]);
 
-  // 3 nearest beaches — uses featured data (faster than waiting for getPlayas)
+  // 3 nearest beaches — uses featured data (faster than waiting for getBeaches)
   const nearestBeaches = useMemo(() => {
     if (!featured || !userLocation) return [];
     const [uLat, uLon] = userLocation;
@@ -451,11 +451,11 @@ const HomePage: React.FC = () => {
         description={t('seo.descInicio')}
         canonicalPath="/"
       />
-      {/* Recargar al tocar el encabezado, pero SOLO sobre el título: cuando el
-          manejador estaba en el contenedor, el clic en la ⓘ y en el selector
-          de idioma burbujeaba hasta aquí y recargaba la página en vez de
-          abrir el menú. `.header-actions` va en absoluto, así que envolver el
-          texto no mueve nada. */}
+      {/* Reload when tapping the header, but ONLY on the title: when the
+          handler was on the container, a click on the ⓘ and on the language
+          selector bubbled up to here and reloaded the page instead of
+          opening the menu. `.header-actions` is absolutely positioned, so
+          wrapping the text moves nothing. */}
       <div className="hp-sticky-header">
         <div
           className="hp-sticky-brand brand-with-logo"
@@ -578,12 +578,12 @@ const HomePage: React.FC = () => {
                   onViewDetails={() => history.push(beachPath(bestBeach))}
                   onViewOnMap={() => history.push(`/mapa?lat=${bestBeach.lat}&lon=${bestBeach.lon}&codigo=${bestBeach.codigo}`)}
                 />
-                {/* Colgado de la recomendación, no en una fila propia del
-                    grid: ahí abría una banda vacía de ~70 px (margen de
-                    sección + gap) bajo las dos columnas. Aquí además ocupa el
-                    blanco que la columna izquierda ya deja por ser la corta.
-                    Sigue siendo UNO para todo el ranking: alternativas y
-                    "revisar antes" salen del mismo cálculo. */}
+                {/* Hung from the recommendation, not in a row of its own in the
+                    grid: there it opened an empty band of ~70 px (section
+                    margin + gap) under the two columns. Here it also fills the
+                    blank the left column already leaves for being the short one.
+                    It is still ONE for the whole ranking: alternatives and
+                    "revisar antes" come out of the same computation. */}
                 <SafetyNotice kind="ranking" />
               </section>
 

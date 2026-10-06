@@ -98,7 +98,7 @@ type GetBeachesOptions = {
    */
   onFallback?: () => void;
   /**
-   * Called if the local copy cannot be loaded either. `getPlayas` keeps its
+   * Called if the local copy cannot be loaded either. `getBeaches` keeps its
    * contract of not rejecting and returns [], but the UI can distinguish this
    * failure from a legitimately empty search.
    */
@@ -141,7 +141,7 @@ export async function getBeaches(options: GetBeachesOptions = {}): Promise<Beach
       didReturnFallback = true;
       onFallback?.();
       // The second argument prevents a failure loading the JSON from leaving this
-      // promise hanging forever (infinite spinner): getPlayas resolves
+      // promise hanging forever (infinite spinner): getBeaches resolves
       // ALWAYS, which is the contract the three pages depend on.
       loadFallbackOrEmpty().then(resolve);
     }, timeoutMs);
@@ -200,7 +200,7 @@ export interface Beach {
   /**
    * Operator watching the beach ("Cruz Roja"), null if nobody does. Optional
    * because the local fallback catalog and older backends do not carry it —
-   * resolve it with `operadorVigilancia`, never read it raw.
+   * resolve it with `lifeguardOperator`, never read it raw.
    */
   fuenteBanderas?: string | null;
   alias?: string[];
@@ -414,7 +414,7 @@ export interface BeachWebcam {
 /**
  * Tide table borrowed from the nearest beach that has one, for a beach with
  * no AEMET sheet of its own. `mareas` is indexed by day like
- * `PrediccionCompletaDTO['mareas']` — index 0 is today.
+ * `FullForecastDTO['mareas']` — index 0 is today.
  */
 export interface TideReference {
   playa: string;
@@ -591,7 +591,7 @@ export interface SubScores {
 
 /**
  * Where the next few hours are heading. `causa` says WHY, as a key and not as
- * text: unlike `razonRanking`, it does not go through `traducirTextoApi`.
+ * text: unlike `razonRanking`, it does not go through `translateApiText`.
  *
  * Optional because a backend that predates it (or a response still in cache
  * from one) simply does not send it — the chip then shows the direction alone.

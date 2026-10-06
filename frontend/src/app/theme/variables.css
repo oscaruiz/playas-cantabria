@@ -84,15 +84,15 @@ html, body {
   --ion-background-color: #f3f1ea;
 
   /* Playa design tokens (shared across all pages)
-     Carta náutica: papel de carta, tinta azul-negra, atlántico
-     profundo plano y un acento cálido "óxido de boya". */
+     Nautical chart: chart paper, blue-black ink, flat deep Atlantic
+     and a warm "buoy rust" accent. */
   --beach-sand: #f3f1ea;
   --beach-ocean: #0a7ea4;
   --beach-ocean-light: #e8f4f8;
   --beach-deep: #065a75;
   --beach-ocean-dark: var(--beach-deep);
   --beach-buoy: #b4531f;
-  /* Degradado de cabecera (azul océano original) */
+  /* Header gradient (original ocean blue) */
   --beach-header-grad: linear-gradient(135deg, #0a7ea4 0%, #065a75 100%);
   --beach-foam: #fdfcf9;
   --beach-text: #1b2a32;
@@ -108,7 +108,7 @@ html, body {
   --beach-focus: var(--beach-ocean);
   --beach-header-h: 84px;
 
-  /* Curvas batimétricas para las cabeceras (blanco al 7%) */
+  /* Bathymetric curves for the headers (white at 7%) */
   --beach-chart-lines: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='96' viewBox='0 0 320 96'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='0.07' stroke-width='1'%3E%3Cpath d='M0 22 C60 10 120 36 180 24 240 12 290 32 320 20'/%3E%3Cpath d='M0 48 C70 34 130 60 200 48 260 38 300 56 320 46'/%3E%3Cpath d='M0 74 C60 62 140 86 210 72 270 62 300 80 320 70'/%3E%3C/g%3E%3C/svg%3E");
 }
 
@@ -179,7 +179,7 @@ html, body {
 
     --ion-background-color: #0e171d;
 
-    /* Playa dark mode overrides (noche atlántica) */
+    /* Playa dark mode overrides (Atlantic night) */
     --beach-sand: #0e171d;
     --beach-ocean: #38bdf8;
     --beach-ocean-light: #1b3742;
@@ -279,14 +279,14 @@ ion-page.ion-page {
   to { opacity: 1; }
 }
 
-/* --- Focus visible global (cubre role=link/button con tabIndex) --- */
+/* --- Global focus-visible (covers role=link/button with tabIndex) --- */
 :where(a, button, input, select, textarea,
        [role='button'], [role='link'], [tabindex]:not([tabindex='-1'])):focus-visible {
   outline: 2px solid var(--beach-focus);
   outline-offset: 2px;
 }
 
-/* Sobre las cabeceras azul profundo el ocean no contrasta */
+/* On the deep blue headers the ocean colour has no contrast */
 .hp-sticky-header :focus-visible,
 .home-sticky-header :focus-visible,
 .pd-sticky-header :focus-visible,
@@ -305,7 +305,7 @@ ion-page.ion-page {
   }
 }
 
-/* --- Kicker editorial de sección (compartido por todas las páginas) --- */
+/* --- Editorial section kicker (shared by all pages) --- */
 .section-kicker {
   display: flex;
   align-items: center;
@@ -319,7 +319,7 @@ ion-page.ion-page {
   color: var(--beach-text);
 }
 
-/* Tick de acento: ancla visual de cada sección */
+/* Accent tick: visual anchor of each section */
 .section-kicker::before {
   content: '';
   width: 4px;
@@ -336,14 +336,14 @@ ion-page.ion-page {
   background: var(--beach-border);
 }
 
-/* --- Contenido prerenderizado (scripts/prerender.mjs) ---
-   Cada ruta pública lleva dentro de #root una versión estática y semántica de
-   su contenido: es lo que leen los buscadores y lo que ve una persona con la
-   conexión lenta mientras descarga el bundle. React la sustituye al montar.
-   Sin estas reglas ese instante se veía como una lista con viñetas y enlaces
-   azules subrayados —"sin CSS"— cuando en realidad la hoja ya estaba cargada:
-   lo que faltaba era que alguien la vistiera. No es decoración: es el primer
-   pintado real de la página. */
+/* --- Prerendered content (scripts/prerender.mjs) ---
+   Every public route carries inside #root a static, semantic version of its
+   content: it is what search engines read and what a person on a slow
+   connection sees while the bundle downloads. React replaces it on mount.
+   Without these rules that moment looked like a bulleted list with underlined
+   blue links —"no CSS"— when in fact the stylesheet was already loaded:
+   what was missing was someone to dress it. It is not decoration: it is the
+   first real paint of the page. */
 .prerender {
   color: var(--beach-text);
 }

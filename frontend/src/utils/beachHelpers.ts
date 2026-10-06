@@ -1,5 +1,5 @@
 /**
- * Shared beach helper functions used by HomePage, PlayaDetalle, and other pages.
+ * Shared beach helper functions used by HomePage, BeachDetailPage, and other pages.
  */
 
 import {
@@ -16,12 +16,12 @@ import {
 } from 'ionicons/icons';
 import type { TextKey } from '../shared/i18n/es';
 import { withoutAccents } from '../shared/seo/beachUrls';
-import { madridDate, madridMinutes } from '../../../../../Dev/playas-cantabria/frontend/src/shared/format/time';
-import { classifySky, hasPrecipitation, skyEmoji } from '../../../../../Dev/playas-cantabria/frontend/src/shared/sky/sky';
+import { madridDate, madridMinutes } from '../shared/format/time';
+import { classifySky, hasPrecipitation, skyEmoji } from '../shared/sky/sky';
 
 // Sky classification lives in shared/cielo/sky.ts; the Spanish names remain
 // here as compatibility aliases for the existing call sites.
-export { skyEmoji, skyWord } from '../../../../../Dev/playas-cantabria/frontend/src/shared/sky/sky';
+export { skyEmoji, skyWord } from '../shared/sky/sky';
 
 /** Normalizes for search: lowercase + no accents (Arn\u00EDa \u2192 arnia). */
 export function normalizeSearch(text: string): string {
@@ -77,7 +77,7 @@ function isoFromDDMMYYYY(date?: string | null): string | null {
  * ONE number for both the flag in force and the last recorded one: they are
  * the same question — how old may a colour be and still be painted — and two
  * numbers meant the detail could still show a flag the home page had already
- * dropped. Mirror of `MAX_EDAD_BANDERA_MS` in flagVigencia.ts; keep in sync.
+ * dropped. Mirror of `MAX_FLAG_AGE_MS` in flagVigencia.ts; keep in sync.
  */
 const MAX_FLAG_AGE_MS = 8 * 60 * 60 * 1000; // 8h — mirror of flagVigencia.ts
 
@@ -237,7 +237,7 @@ export function lifeguardAvailable(
  * The absent field is NOT the same as null: the local fallback catalog and the
  * backend deployed before this feature simply do not report the operator, and
  * for them the answer is the one that was always shown. Remove
- * `OPERADOR_LEGADO` once no such client is left.
+ * `LEGACY_OPERATOR` once no such client is left.
  */
 const LEGACY_OPERATOR = 'Cruz Roja';
 

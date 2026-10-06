@@ -1,10 +1,10 @@
 import React from 'react';
 import { IonIcon } from '@ionic/react';
 import { videocamOutline } from 'ionicons/icons';
-import { BeachDetail } from '../../../../../../Dev/playas-cantabria/frontend/src/services/api';
-import { webcamCoverageKey } from '../../../../../../Dev/playas-cantabria/frontend/src/utils/beachHelpers';
-import { useLanguage } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
-import { DataStatus } from '../../../../../../Dev/playas-cantabria/frontend/src/features/provenance/SourceAndFreshness';
+import { BeachDetail } from '../../services/api';
+import { webcamCoverageKey } from '../../utils/beachHelpers';
+import { useLanguage } from '../../shared/i18n/LanguageContext';
+import { DataStatus } from '../../features/provenance/SourceAndFreshness';
 
 /**
  * Beach webcam as an external LINK (never embedded). The title shows the

@@ -1,7 +1,7 @@
 /**
  * CHARACTERIZATION — FROZEN.
  *
- * Pins down the `onFallback` callback of `getPlayas()`, which is the signal for
+ * Pins down the `onFallback` callback of `getBeaches()`, which is the signal for
  * "what I am returning to you does NOT come from the backend". It lives in a
  * file separate from `api.getBeaches.test.ts` so that the latter stays intact:
  * the public signature and the resolved value do not change, `onFallback` is
@@ -36,8 +36,8 @@ afterEach(() => {
   localStorage.clear();
 });
 
-describe('getPlayas — señal de datos locales', () => {
-  it('no avisa cuando el backend gana la carrera', async () => {
+describe('getBeaches — local data signal', () => {
+  it('does not notify when the backend wins the race', async () => {
     installFetchMock([route(BEACHES, { json: beachesResponse })]);
     const { getBeaches } = await loadApi();
     const onFallback = jest.fn();
@@ -47,7 +47,7 @@ describe('getPlayas — señal de datos locales', () => {
     expect(onFallback).not.toHaveBeenCalled();
   });
 
-  it('avisa una vez cuando salta el timeout, y luego llega el backend', async () => {
+  it('notifies once when the timeout fires, and then the backend arrives', async () => {
     installFetchMock([route(BEACHES, { json: beachesResponse, delayMs: 100 })]);
     const { getBeaches } = await loadApi();
     const onFallback = jest.fn();
@@ -64,7 +64,7 @@ describe('getPlayas — señal de datos locales', () => {
     expect(onFallback).toHaveBeenCalledTimes(1);
   });
 
-  it('avisa una vez cuando falla la petición, y el backend ya no llega', async () => {
+  it('notifies once when the request fails, and the backend never arrives', async () => {
     installFetchMock([route(BEACHES, { networkError: true })]);
     const { getBeaches } = await loadApi();
     const onFallback = jest.fn();
@@ -77,7 +77,7 @@ describe('getPlayas — señal de datos locales', () => {
     expect(onBackendData).not.toHaveBeenCalled();
   });
 
-  it('avisa también con un 500 del backend', async () => {
+  it('also notifies on a backend 500', async () => {
     installFetchMock([route(BEACHES, { status: 500 })]);
     const { getBeaches } = await loadApi();
     const onFallback = jest.fn();
@@ -87,14 +87,14 @@ describe('getPlayas — señal de datos locales', () => {
     expect(onFallback).toHaveBeenCalledTimes(1);
   });
 
-  it('sigue funcionando sin pasar el callback', async () => {
+  it('keeps working without passing the callback', async () => {
     installFetchMock([route(BEACHES, { networkError: true })]);
     const { getBeaches } = await loadApi();
 
     await expect(getBeaches({ timeoutMs: 500 })).resolves.toHaveLength(LOCAL_CATALOG_SIZE);
   });
 
-  it('resuelve vacío y avisa si tampoco se puede cargar la copia local', async () => {
+  it('resolves empty and notifies if the local copy cannot be loaded either', async () => {
     jest.doMock('../../data/beaches.json', () => {
       throw new Error('chunk local no disponible');
     });

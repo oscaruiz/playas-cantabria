@@ -39,7 +39,7 @@ afterEach(() => {
   restoreFetch();
 });
 
-it('avisa cuando preside una playa cercana con menos puntos que otra mostrada', async () => {
+it('warns when a nearby beach with fewer points than another shown presides', async () => {
   const { container } = renderWithProviders(<HomePage />, { route: '/' });
   // We wait for the heading, which also confirms that there is already a
   // location: beach names appear twice (hero/alternative and "Cerca de ti").

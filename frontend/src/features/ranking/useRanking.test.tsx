@@ -9,7 +9,7 @@
 import React from 'react';
 import { render, screen, waitFor, act } from '@testing-library/react';
 import { useRanking } from './useRanking';
-import { API_UPDATED_MESSAGE } from '../../../../../../Dev/playas-cantabria/frontend/src/hooks/useServiceWorkerRefresh';
+import { API_UPDATED_MESSAGE } from '../../hooks/useServiceWorkerRefresh';
 import { installFetchMock, restoreFetch, route } from '../../test/http/fakeFetch';
 import { FEATURED_PATH as FEATURED } from '../../test/apiRoutes';
 import type { FeaturedBeachesResponse } from '../../services/api';
@@ -68,7 +68,7 @@ const Probe: React.FC = () => {
 };
 
 describe('useRanking', () => {
-  it('pinta la primera respuesta y no avisa de nada si es de ahora', async () => {
+  it('paints the first answer and warns of nothing if it is current', async () => {
     installFetchMock([route(FEATURED, { json: ranking(0, 'cielo claro') })]);
 
     render(<Probe />);
@@ -77,8 +77,8 @@ describe('useRanking', () => {
     expect(screen.queryByText('de visita anterior')).not.toBeInTheDocument();
   });
 
-  it('dice que lo pintado es de una visita anterior cuando es viejo', async () => {
-    // Un solo reintento sale solo; devuelve lo mismo, así que el aviso se queda.
+  it('says what is painted is from an earlier visit when it is old', async () => {
+    // A single retry goes out on its own; it returns the same, so the notice stays.
     installFetchMock([route(FEATURED, { json: ranking(90, 'cielo de anoche') })]);
 
     render(<Probe />);
@@ -86,7 +86,7 @@ describe('useRanking', () => {
     expect(await screen.findByText('de visita anterior')).toBeInTheDocument();
   });
 
-  it('vuelve a pedir por su cuenta, y el aviso se retira al llegar lo nuevo', async () => {
+  it('asks again on its own, and the notice is withdrawn when the new data arrives', async () => {
     let calls = 0;
     installFetchMock([
       route(FEATURED, () => ({
@@ -103,12 +103,12 @@ describe('useRanking', () => {
     expect(calls).toBe(2);
   });
 
-  it('vuelve a pedir a los diez minutos sin avisar de nada', async () => {
-    // Los dos umbrales son preguntas distintas: a los diez minutos el backend ya
-    // tiene algo más nuevo que dar —su TTL fresco son cinco—, pero sigue siendo
-    // SU respuesta, así que no hay nada que decirle al usuario. Juntarlos otra
-    // vez significa o encender el aviso en un día normal, o dejar de refrescar
-    // una pantalla abierta y quieta durante una hora.
+  it('asks again after ten minutes without warning of anything', async () => {
+    // The two thresholds are different questions: after ten minutes the backend
+    // already has something newer to give —its fresh TTL is five— but it is
+    // still ITS answer, so there is nothing to tell the user. Merging them again
+    // means either lighting the notice on a normal day, or no longer refreshing
+    // a screen left open and idle for an hour.
     let calls = 0;
     installFetchMock([
       route(FEATURED, () => ({
@@ -118,14 +118,15 @@ describe('useRanking', () => {
 
     render(<Probe />);
 
-    // Cielos con nombre propio: el ranking en vigor no se reinicia entre casos,
-    // así que reutilizar el de otro test haría pasar este sin pedir nada.
+    // Skies with their own names: the ranking in force does not reset between
+    // cases, so reusing another test's would make this one pass without asking
+    // for anything.
     expect(await screen.findByText('cielo recién hecho')).toBeInTheDocument();
     expect(calls).toBe(2);
     expect(screen.queryByText('de visita anterior')).not.toBeInTheDocument();
   });
 
-  it('pinta el ranking que el service worker entrega tarde', async () => {
+  it('paints the ranking the service worker delivers late', async () => {
     installFetchMock([route(FEATURED, { json: ranking(0, 'nubes') })]);
 
     render(<Probe />);
@@ -136,7 +137,7 @@ describe('useRanking', () => {
     expect(await screen.findByText('cielo claro')).toBeInTheDocument();
   });
 
-  it('ignora otros endpoints y cuerpos que no son un ranking', async () => {
+  it('ignores other endpoints and bodies that are not a ranking', async () => {
     installFetchMock([route(FEATURED, { json: ranking(0, 'nubes') })]);
 
     render(<Probe />);
@@ -148,9 +149,9 @@ describe('useRanking', () => {
     expect(screen.getByText('nubes')).toBeInTheDocument();
   });
 
-  it('avisa del fallo sin borrar el cielo que ya estaba en vigor', async () => {
-    // El ranking en vigor sobrevive a una petición fallida a propósito: es
-    // exactamente lo que hace útil la app en la playa con mala cobertura.
+  it('reports the failure without erasing the sky already in force', async () => {
+    // The ranking in force survives a failed request on purpose: it is exactly
+    // what makes the app useful on the beach with poor coverage.
     installFetchMock([route(FEATURED, { status: 503 })]);
 
     render(<Probe />);

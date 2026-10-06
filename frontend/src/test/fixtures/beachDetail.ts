@@ -6,10 +6,10 @@ import type { BeachDetail, ForecastDay } from '../../services/api';
  * They are FACTORIES, not constants, because the detail mixes two different clocks and
  * both need to be pinned:
  *
- *  - The flag rules (`estadoBandera`, `ultimaBanderaRegistrada`) use
+ *  - The flag rules (`flagStatus`, `lastRecordedFlag`) use
  *    `Intl` with `Europe/Madrid`, so they are independent of the runner's TZ.
  *    For those, absolute ISO instants are passed.
- *  - `dayTitle`, `isToday`, `getTideStatus` and `ClimaHero` use the device's
+ *  - `dayTitle`, `isToday`, `getTideStatus` and `WeatherHero` use the device's
  *    LOCAL time (`getDate()`, `getHours()`). For those, the dates and
  *    tide times are derived from the local `now` the factory receives, so the
  *    test holds equally in CI (UTC) and on a laptop in Madrid.
@@ -120,8 +120,8 @@ export function buildAemetDetail(now: Date): BeachDetail {
       ],
       previsionHorasFuente: 'Open-Meteo',
     },
-    // Cuándo montó el backend esta respuesta, no cuándo la sirvió: el detalle
-    // sale de una caché stale-while-revalidate y la ficha lo declara.
+    // When the backend assembled this response, not when it served it: the detail
+    // comes from a stale-while-revalidate cache and the sheet declares it.
     generadoEn: now.toISOString(),
     fuenteBanderas: 'Cruz Roja',
     cruzRoja: {
@@ -209,7 +209,7 @@ export function buildAemetDetail(now: Date): BeachDetail {
 
 /**
  * Detail WITHOUT an AEMET sheet (`prediccionCompleta` absent): the page falls back to
- * `ClimaHero` with the `clima` data.
+ * `WeatherHero` with the `clima` data.
  *
  * `manana` is set to null because that is what the backend ALWAYS emits today
  * (`LegacyDetailsMapper.mapClima` sets `manana: null`), even though the

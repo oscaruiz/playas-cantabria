@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { IonIcon } from '@ionic/react';
 import { shareSocialOutline } from 'ionicons/icons';
-import type { FeaturedBeach, HourlyForecast } from '../../../../../../../Dev/playas-cantabria/frontend/src/services/api';
-import { useLanguage } from '../../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
-import { REGION } from '../../../../../../../Dev/playas-cantabria/frontend/src/shared/config/region';
-import { cardSummary } from '../../../../../../../Dev/playas-cantabria/frontend/src/modules/share/domain/cardSummary';
-import { cardAsPng } from '../../../../../../../Dev/playas-cantabria/frontend/src/modules/share/infrastructure/cardCanvas';
-import { shareBeach, cardFileName } from '../../../../../../../Dev/playas-cantabria/frontend/src/modules/share/infrastructure/shareImage';
+import type { FeaturedBeach, HourlyForecast } from '../../../services/api';
+import { useLanguage } from '../../../shared/i18n/LanguageContext';
+import { REGION } from '../../../shared/config/region';
+import { cardSummary } from '../domain/cardSummary';
+import { cardAsPng } from '../infrastructure/cardCanvas';
+import { shareBeach, cardFileName } from '../infrastructure/shareImage';
 
 type Status = 'listo' | 'generando' | 'copiado';
 

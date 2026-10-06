@@ -1,11 +1,11 @@
 import React from 'react';
 import { IonPage, IonContent, IonFooter } from '@ionic/react';
 import { Link } from 'react-router-dom';
-import { useLanguage } from '../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
-import SeoHead from '../../../../../Dev/playas-cantabria/frontend/src/shared/seo/SeoHead';
-import BottomNavBar from '../../../../../Dev/playas-cantabria/frontend/src/shared/ui/BottomNavBar';
-import HeaderActions from '../../../../../Dev/playas-cantabria/frontend/src/shared/ui/HeaderActions';
-import BrandLogo from '../../../../../Dev/playas-cantabria/frontend/src/shared/ui/BrandLogo';
+import { useLanguage } from '../shared/i18n/LanguageContext';
+import SeoHead from '../shared/seo/SeoHead';
+import BottomNavBar from '../shared/ui/BottomNavBar';
+import HeaderActions from '../shared/ui/HeaderActions';
+import BrandLogo from '../shared/ui/BrandLogo';
 import './landings/landings.css';
 
 /**

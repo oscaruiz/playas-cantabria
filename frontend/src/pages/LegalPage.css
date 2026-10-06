@@ -7,21 +7,21 @@
   justify-content: space-between;
   background: var(--beach-header-grad);
 }
-/* Mismo criterio que en portada, listado y mapa: el título y las acciones
-   terminan justo donde termina el texto (760px centrados), no pegados al filo
-   de la ventana. El `max(...)` deja el margen mínimo en pantallas estrechas. */
+/* Same rule as on the home page, list and map: the title and the actions
+   end right where the text ends (760px centred), not stuck to the window
+   edge. `max(...)` leaves the minimum margin on narrow screens. */
 @media (min-width: 800px) {
-  /* El +20px es el padding de `.legal-main`: sin él se alinea con la caja del
-     texto y no con el texto. Mismo truco que el +16px de la portada, que ahí
-     es el padding de `.hp-body`. */
+  /* The +20px is the padding of `.legal-main`: without it, it aligns with the
+     text box and not with the text. Same trick as the +16px on the home page,
+     where it is the padding of `.hp-body`. */
   .legal-header {
     padding-left: max(20px, calc((100% - 760px) / 2 + 20px));
     padding-right: max(20px, calc((100% - 760px) / 2 + 20px));
   }
 }
 .legal-header-left { display: flex; align-items: center; gap: 10px; }
-/* `.pd-back-btn` se define en PlayaDetalle.css, que esta página no carga:
-   se repite aquí el mínimo para que el botón no salga sin estilo. */
+/* `.pd-back-btn` is defined in BeachDetailPage.css, which this page does not load:
+   the minimum is repeated here so the button does not come out unstyled. */
 .legal-header .pd-back-btn {
   width: 38px; height: 38px; flex: none;
   display: inline-flex; align-items: center; justify-content: center;

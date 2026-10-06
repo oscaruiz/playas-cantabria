@@ -4,7 +4,7 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L, { Map as LeafletMap, DivIcon } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Beach, FeaturedBeach } from '../../../../../../Dev/playas-cantabria/frontend/src/services/api';
+import { Beach, FeaturedBeach } from '../../services/api';
 import {
   rankedSkyEmoji,
   isNightAt,
@@ -13,24 +13,24 @@ import {
   webcamAvailable,
   lifeguardAvailable,
   lifeguardOperator,
-} from '../../../../../../Dev/playas-cantabria/frontend/src/utils/beachHelpers';
-import { useLanguage } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
+} from '../../utils/beachHelpers';
+import { useLanguage } from '../../shared/i18n/LanguageContext';
 import {
   translateApiText,
   windLevelKey,
   flagKey,
   translateOperator,
   noForecastFragment,
-} from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/apiText';
-import TrendBadge from '../../../../../../Dev/playas-cantabria/frontend/src/components/TrendBadge';
-import { REGION } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/config/region';
-import { useUserLocation } from '../../../../../../Dev/playas-cantabria/frontend/src/hooks/useUserLocation';
+} from '../../shared/i18n/apiText';
+import TrendBadge from '../../components/TrendBadge';
+import { REGION } from '../../shared/config/region';
+import { useUserLocation } from '../../hooks/useUserLocation';
 import { useHistory, useLocation } from 'react-router-dom';
-import { beachPath } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/seo/beachUrls';
+import { beachPath } from '../../shared/seo/beachUrls';
 
 /**
  * Everything Leaflet, split OUT of the initial bundle: this module is
- * loaded with React.lazy from inside MapaPage — the App.tsx rule ("to
+ * loaded with React.lazy from inside MapPage — the App.tsx rule ("to
  * split the bundle, do it INSIDE a page") — because Leaflet is the
  * heaviest dependency in the app and only this route needs it.
  */
@@ -209,8 +209,8 @@ const MapCanvas: React.FC<{
                   </p>
                   {weather && (() => {
                     const status = markerStatus(weather.puntuacion);
-                    // El chip de tendencia dice lo mismo justo debajo, así
-                    // que el fragmento sale del texto (ver `TrendBadge`).
+                    // The trend chip says the same right below, so the
+                    // fragment is removed from the text (see `TrendBadge`).
                     const noRepeat = (text: string) =>
                       weather.pronostico ? noForecastFragment(text) : text;
                     return (
@@ -218,9 +218,9 @@ const MapCanvas: React.FC<{
                         <p className="map-popup-row">
                           {rankedSkyEmoji(weather)}{' '}
                           {weather.temperatura != null ? `${Math.round(weather.temperatura)}°` : ''}{' '}
-                          {/* La palabra de la app: aquí se leía la cadena cruda
-                              del proveedor ("nubes dispersas") mientras la
-                              portada y el detalle decían "Parcialmente soleado". */}
+                          {/* The app's own wording: here the provider's raw string
+                              ("nubes dispersas") used to show while the
+                              home page and the detail said "Parcialmente soleado". */}
                           {translateApiText(
                             skyWord(weather.descripcionClima, isNightAt(weather))
                               ?? weather.descripcionClima,
@@ -242,7 +242,7 @@ const MapCanvas: React.FC<{
                             {translateApiText(noRepeat(weather.motivoBaja), language)}
                           </p>
                         )}
-                        {/* Al abrir la playa: hacia dónde va y por qué. */}
+                        {/* On opening the beach: where it is heading and why. */}
                         <TrendBadge outlook={weather.pronostico} />
                         {weather.bandera && (
                           <p className="map-popup-flag">

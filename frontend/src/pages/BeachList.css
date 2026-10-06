@@ -1,7 +1,7 @@
 /* =============================================
-   PlayasList – Beach List Page Styles
-   Sistema "carta náutica": lista abierta con
-   hairlines, sin cards ni gradientes.
+   BeachList – Beach List Page Styles
+   "Nautical chart" system: open list with
+   hairlines, no cards or gradients.
    ============================================= */
 
 /* --- Page --- */
@@ -26,8 +26,8 @@
   gap: 10px;
 }
 
-/* Igual que en la portada: la marca se queda con lo que dejan las acciones, y
-   el `min-width: 0` es lo que le permite encoger en vez de empujarlas fuera. */
+/* Same as on the home page: the brand takes what the actions leave, and
+   `min-width: 0` is what lets it shrink instead of pushing them out. */
 .home-sticky-brand {
   flex: 1;
   min-width: 0;
@@ -61,12 +61,12 @@
 /* The 430px title override (1.4rem) is gone: it dated from the "Playas de
    Cantabria" brand and made this page's title visibly smaller than the home
    page's on phones. "Playucas.es" at 1.6rem fits next to the header logo even
-   at 360px; the subtitle cedes size instead (see LogoMarca.css). */
+   at 360px; the subtitle cedes size instead (see BrandLogo.css). */
 @media (max-width: 480px) {
   .home-sticky-subtitle { font-size: clamp(0.6rem, 3vw - 0.05rem, 0.72rem); }
 }
 
-/* --- Header hero area (banda bajo el header fijo) --- */
+/* --- Header hero area (band under the fixed header) --- */
 .home-hero {
   background-image: var(--beach-chart-lines), var(--beach-header-grad);
   background-size: 320px 96px, auto;
@@ -189,7 +189,7 @@
   }
 }
 
-/* --- Autocomplete suggestions (flotante: única sombra permitida) --- */
+/* --- Autocomplete suggestions (floating: the only shadow allowed) --- */
 .search-suggestions {
   margin: 4px 0 0;
   padding: 4px 0;
@@ -227,7 +227,7 @@
   color: var(--beach-text-muted);
 }
 
-/* --- Beach count (kicker editorial) --- */
+/* --- Beach count (editorial kicker) --- */
 .beach-count {
   padding: 18px 20px 0;
   max-width: 640px;
@@ -258,7 +258,7 @@
   background: var(--beach-border);
 }
 
-/* --- Beach list (filas abiertas) --- */
+/* --- Beach list (open rows) --- */
 .beach-list {
   padding: 4px 16px 16px;
   max-width: 640px;
@@ -438,7 +438,7 @@
 }
 
 /* --- Error state --- */
-/* Aviso, no error: el listado se ve igual, solo que desde la copia local. */
+/* A notice, not an error: the list looks the same, only from the local copy. */
 .home-fallback {
   margin: 20px auto;
   max-width: 640px;
@@ -460,17 +460,17 @@
   font-size: 0.9rem;
 }
 
-/* --- Desktop layout (coherente con HomePage) --- */
+/* --- Desktop layout (consistent with HomePage) --- */
 @media (min-width: 720px) {
-  /* Alinea el contenido del header/hero a sangre con el cuerpo limitado */
+  /* Aligns the header/hero content flush with the constrained body */
   .home-sticky-header,
   .home-hero {
     padding-left: max(20px, calc((100% - 1080px) / 2 + 20px));
     padding-right: max(20px, calc((100% - 1080px) / 2 + 20px));
   }
 
-  /* Las acciones ya terminan donde termina el `padding-right` de arriba: van
-     en el flujo y no tienen un `right:` propio que mantener a juego. */
+  /* The actions already end where the `padding-right` above ends: they sit
+     in the flow and have no `right:` of their own to keep in step. */
 }
 
 @media (min-width: 900px) {
@@ -482,7 +482,7 @@
     max-width: 1080px;
   }
 
-  /* Evita filas estiradas de borde a borde en pantallas anchas */
+  /* Avoids rows stretched edge to edge on wide screens */
   .beach-list {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));

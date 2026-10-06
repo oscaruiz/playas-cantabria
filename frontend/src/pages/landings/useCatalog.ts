@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Beach, FeaturedBeach, getBeaches } from '../../../../../../Dev/playas-cantabria/frontend/src/services/api';
-import { useRanking } from '../../../../../../Dev/playas-cantabria/frontend/src/features/ranking/useRanking';
+import { Beach, FeaturedBeach, getBeaches } from '../../services/api';
+import { useRanking } from '../../features/ranking/useRanking';
 
 /**
- * Catalog + current conditions for the landing pages. `getPlayas` never
+ * Catalog + current conditions for the landing pages. `getBeaches` never
  * rejects (backend → saved copy → bundled JSON); conditions are optional
  * enrichment and their failure only means plainer rows.
  */

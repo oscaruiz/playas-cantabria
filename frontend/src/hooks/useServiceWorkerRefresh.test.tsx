@@ -4,7 +4,7 @@ import {
   useServiceWorkerRefresh,
   API_UPDATED_MESSAGE,
   FreshResponse,
-} from '../../../../../Dev/playas-cantabria/frontend/src/hooks/useServiceWorkerRefresh';
+} from './useServiceWorkerRefresh';
 
 /**
  * jsdom has no `navigator.serviceWorker`, so the container is faked with a plain
@@ -38,8 +38,8 @@ const Probe: React.FC<{ onArrive: (f: FreshResponse) => void }> = ({ onArrive })
   return null;
 };
 
-describe('useRefrescoDelServiceWorker', () => {
-  it('entrega url y datos de la respuesta que llegó tarde', () => {
+describe('useServiceWorkerRefresh', () => {
+  it('delivers url and data of the response that arrived late', () => {
     const onArrive = jest.fn();
     render(<Probe onArrive={onArrive} />);
 
@@ -49,20 +49,20 @@ describe('useRefrescoDelServiceWorker', () => {
     expect(onArrive).toHaveBeenCalledWith({ url: FRESH.url, datos: FRESH.datos });
   });
 
-  it('ignora otros mensajes y los que vienen incompletos', () => {
+  it('ignores other messages and incomplete ones', () => {
     const onArrive = jest.fn();
     render(<Probe onArrive={onArrive} />);
 
     emit({ type: 'SKIP_WAITING' });
     emit(undefined);
-    // Sin cuerpo no hay nada que pintar, y pedirlo sería el bucle que esto evita.
+    // Without a body there is nothing to paint, and asking for it would be the loop this avoids.
     emit({ type: API_UPDATED_MESSAGE, url: FRESH.url });
     emit({ type: API_UPDATED_MESSAGE, datos: {} });
 
     expect(onArrive).not.toHaveBeenCalled();
   });
 
-  it('llama a la ÚLTIMA función recibida, sin resuscribirse en cada render', () => {
+  it('calls the LAST function received, without resubscribing on every render', () => {
     const old = jest.fn();
     const newValue = jest.fn();
     const { rerender } = render(<Probe onArrive={old} />);
@@ -74,7 +74,7 @@ describe('useRefrescoDelServiceWorker', () => {
     expect(newValue).toHaveBeenCalledTimes(1);
   });
 
-  it('deja de escuchar al desmontar', () => {
+  it('stops listening on unmount', () => {
     const onArrive = jest.fn();
     const { unmount } = render(<Probe onArrive={onArrive} />);
     unmount();

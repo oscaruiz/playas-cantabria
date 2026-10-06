@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { LanguageProvider, useLanguage, detectInitialLanguage } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
+import { LanguageProvider, useLanguage, detectInitialLanguage } from './LanguageContext';
 
 const Probe: React.FC = () => {
   const { language, setLanguage, t, tPlural } = useLanguage();
@@ -16,12 +16,12 @@ const Probe: React.FC = () => {
   );
 };
 
-describe('IdiomaContext', () => {
+describe('LanguageContext', () => {
   beforeEach(() => {
     localStorage.clear();
   });
 
-  it('arranca en español si está guardado y traduce con interpolación y plurales', () => {
+  it('starts in Spanish if saved and translates with interpolation and plurals', () => {
     localStorage.setItem('app_idioma', 'es');
     render(
       <LanguageProvider>
@@ -35,7 +35,7 @@ describe('IdiomaContext', () => {
     expect(screen.getByTestId('plural-varios').textContent).toBe('7 playas');
   });
 
-  it('cambia a inglés, actualiza document.lang y persiste en localStorage', () => {
+  it('switches to English, updates document.lang and persists in localStorage', () => {
     localStorage.setItem('app_idioma', 'es');
     render(
       <LanguageProvider>
@@ -50,7 +50,7 @@ describe('IdiomaContext', () => {
     expect(localStorage.getItem('app_idioma')).toBe('en');
   });
 
-  it('sin idioma guardado arranca en español aunque el navegador esté en inglés', () => {
+  it('with no saved language starts in Spanish even if the browser is in English', () => {
     // jsdom exposes navigator.language = 'en-US'; detection must ignore it so
     // that Googlebot (en-US, no localStorage) indexes the Spanish metadata.
     expect(detectInitialLanguage()).toBe('es');

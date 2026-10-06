@@ -1,7 +1,7 @@
 /* =============================================
-   PlayaDetalle – Beach Detail Page
-   Sistema "carta náutica": secciones abiertas con
-   hairlines; una sola card (panel de previsión).
+   BeachDetailPage – Beach Detail Page
+   "Nautical chart" system: open sections with
+   hairlines; a single card (forecast panel).
    ============================================= */
 
 /* --- Page --- */
@@ -140,7 +140,7 @@
   font-size: 0.9rem;
 }
 
-/* --- Hero band (bajo el header fijo) --- */
+/* --- Hero band (under the fixed header) --- */
 .hero-section {
   background-image: var(--beach-chart-lines), var(--beach-header-grad);
   background-size: 320px 96px, auto;
@@ -161,7 +161,7 @@
   margin-bottom: 14px;
 }
 
-/* Tarjeta de puntuación (valoración del ranking) — clara sobre el hero oscuro */
+/* Score card (ranking rating) — light on the dark hero */
 .pd-score-block {
   margin-top: 12px;
 }
@@ -176,7 +176,7 @@
   border-radius: 14px;
 }
 
-/* La tarjeta es un botón que despliega la explicación */
+/* The card is a button that expands the explanation */
 .pd-score-card--btn {
   width: 100%;
   text-align: left;
@@ -203,9 +203,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  /* La insignia se come ~120px del ancho, así que en móvil el rótulo y "Cómo se
-     calcula" no caben en la misma línea y este último se salía de la tarjeta.
-     Con el salto permitido baja a su propia línea en vez de desbordar. */
+  /* The badge eats ~120px of width, so on mobile the label and "Cómo se
+     calcula" do not fit on the same line and the latter overflowed the card.
+     With wrapping allowed it drops to its own line instead of overflowing. */
   flex-wrap: wrap;
   gap: 2px 8px;
   font-size: 0.72rem;
@@ -225,8 +225,8 @@
   letter-spacing: normal;
   font-weight: 600;
   font-size: 0.72rem;
-  /* Sin `nowrap` a propósito: en pantallas muy estrechas (Fold cerrado, ~280px)
-     no cabe entero ni en su propia línea. Dejándolo partir siempre queda dentro. */
+  /* No `nowrap` on purpose: on very narrow screens (closed Fold, ~280px) it
+     does not fit whole even on its own line. Letting it break always keeps it inside. */
 }
 
 .pd-score-chevron {
@@ -237,7 +237,7 @@
   transform: rotate(180deg);
 }
 
-/* Panel explicativo desplegable */
+/* Expandable explanation panel */
 .pd-score-info {
   margin-top: 8px;
   padding: 14px 16px;
@@ -253,8 +253,8 @@
   margin: 0 0 10px;
 }
 
-/* Las filas usan el mismo patrón etiqueta/valor de "Información de la playa"
-   (.beach-info-grid / .beach-info-row) para verse idénticas al resto del detalle. */
+/* The rows use the same label/value pattern as "Información de la playa"
+   (.beach-info-grid / .beach-info-row) to look identical to the rest of the detail. */
 
 .pd-score-info-closing {
   font-size: 0.8rem;
@@ -322,7 +322,7 @@
   font-size: 0.95rem;
 }
 
-/* --- Webcam (enlace externo a la cámara; nunca embebido) --- */
+/* --- Webcam (external link to the camera; never embedded) --- */
 .webcam-open-link {
   display: inline-flex;
   align-items: center;
@@ -355,7 +355,7 @@
   font-size: 1.05rem;
 }
 
-/* --- Flag banner (banderín de señalización de playa) --- */
+/* --- Flag banner (beach signalling pennant) --- */
 .flag-banner {
   display: flex;
   align-items: center;
@@ -365,7 +365,7 @@
   padding: 12px 14px;
 }
 
-/* Mástil + banderín cola de golondrina */
+/* Mast + swallow-tail pennant */
 .flag-pennant {
   position: relative;
   width: 28px;
@@ -401,8 +401,8 @@
   background: #111827;
 }
 
-/* Última bandera registrada (fuera de horario): su color real, pero atenuado
-   para que no se confunda con una bandera ondeando ahora. */
+/* Last recorded flag (outside service hours): its real colour, but dimmed
+   so it is not mistaken for a flag flying right now. */
 .flag-pennant.dimmed::after {
   opacity: 0.6;
 }
@@ -439,7 +439,7 @@
   margin: 0 auto;
 }
 
-/* --- Paneles planos: cada sección es una región delimitada --- */
+/* --- Flat panels: each section is a delimited region --- */
 .detail-card,
 .tides-section,
 .next-hours-section,
@@ -460,7 +460,7 @@
   padding: 14px 16px;
 }
 
-/* --- Day selector (tabs con subrayado) --- */
+/* --- Day selector (underlined tabs) --- */
 .day-selector {
   display: flex;
   border-bottom: 1px solid var(--beach-border);
@@ -511,14 +511,14 @@
   }
 }
 
-/* --- Panel de previsión (única card) --- */
+/* --- Forecast panel (the only card) --- */
 .forecast-panel {
   padding: 18px 20px;
 }
 
 .forecast-hero {
-  /* Sin border-bottom: el kicker "Previsión (AEMET)" que va justo debajo
-     ya aporta su propia línea (::after) — dos líneas juntas se veían rotas. */
+  /* No border-bottom: the "Previsión (AEMET)" kicker right below
+     already brings its own line (::after) — two lines together looked broken. */
   padding-bottom: 16px;
 }
 
@@ -563,8 +563,8 @@
   margin-top: 4px;
 }
 
-/* Badge "Lloviendo ahora" (señal multi-fuente). Colores del theme →
-   se adapta solo a dark mode. */
+/* "Lloviendo ahora" badge (multi-source signal). Theme colours →
+   adapts to dark mode on its own. */
 .forecast-hero-rain {
   display: inline-block;
   margin-top: 6px;
@@ -578,7 +578,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Variante "lluvia prevista" (aún no llueve): más suave, borde discontinuo. */
+/* "Rain expected" variant (not raining yet): softer, dashed border. */
 .forecast-hero-rain-expected {
   background: transparent;
   border-style: dashed;
@@ -592,7 +592,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Indicadores animados de viento/oleaje (distintivos, se conservan) */
+/* Animated wind/wave indicators (distinctive, kept) */
 @keyframes spin-blades {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
@@ -662,7 +662,7 @@
   line-height: 1.25;
 }
 
-/* --- Mañana / tarde (columnas con hairline) --- */
+/* --- Morning / afternoon (columns with a hairline) --- */
 .halfday-detail {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -730,7 +730,7 @@
   min-width: 44px;
 }
 
-/* --- Daily stats (sensación / UV / aviso) --- */
+/* --- Daily stats (feels-like / UV / warning) --- */
 .daily-stats-body {
   display: flex;
   flex-direction: column;
@@ -767,7 +767,7 @@
   gap: 7px;
 }
 
-/* UV: swatch cuadrado por nivel + texto tinta */
+/* UV: square swatch per level + ink text */
 .uv-swatch {
   width: 10px;
   height: 10px;
@@ -781,13 +781,13 @@
 .uv-value.uv-high .uv-swatch { background: var(--beach-buoy); }
 .uv-value.uv-very-high .uv-swatch { background: var(--beach-flag-red); }
 
-/* Aviso litoral: color de texto por nivel */
+/* Coastal warning: text colour per level */
 .daily-stat-value.warning-red { color: var(--beach-flag-red); }
 .daily-stat-value.warning-orange,
 .daily-stat-value.warning-yellow { color: var(--beach-buoy); }
 .daily-stat-value.warning-green { color: var(--beach-flag-green); }
 
-/* --- Mareas --- */
+/* --- Tides --- */
 .tide-status {
   font-size: 0.8rem;
   font-weight: 600;
@@ -849,7 +849,7 @@
   margin-top: 8px;
 }
 
-/* --- Disclosures (Cruz Roja / clima legacy) --- */
+/* --- Disclosures (Cruz Roja / legacy weather) --- */
 .card-header {
   display: flex;
   align-items: center;
@@ -899,7 +899,7 @@
   padding: 0 0 2px;
 }
 
-/* "Actualizado hace X" al pie de la tarjeta Cruz Roja */
+/* "Actualizado hace X" at the foot of the Cruz Roja card */
 .redcross-updated {
   margin: 8px 0 0;
   font-size: 0.75rem;
@@ -922,7 +922,7 @@
   animation: slideDown 0.2s ease-out;
 }
 
-/* Filas label/valor (Cruz Roja y clima legacy) */
+/* Label/value rows (Cruz Roja and legacy weather) */
 .info-rows,
 .weather-rows {
   display: flex;
@@ -971,7 +971,7 @@
   font-weight: 400;
 }
 
-/* --- Secciones info playa / servicios --- */
+/* --- Beach info / services sections --- */
 .beach-info-grid {
   display: flex;
   flex-direction: column;
@@ -1005,7 +1005,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Servicios: grid de 2 columnas icono + texto */
+/* Services: 2-column grid of icon + text */
 .attr-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1022,7 +1022,7 @@
   color: var(--beach-text);
 }
 
-/* La primera fila del grid de 2 columnas no lleva línea superior */
+/* The first row of the 2-column grid has no top line */
 .attr-item:nth-child(-n+2) {
   border-top: none;
 }
@@ -1033,7 +1033,7 @@
   flex-shrink: 0;
 }
 
-/* --- Metadata / fuente --- */
+/* --- Metadata / source --- */
 .forecast-metadata {
   margin: 10px 0 6px;
 }
@@ -1044,8 +1044,8 @@
   margin: 0;
 }
 
-/* El aviso encabeza la explicación de la nota: es lo primero que se lee al
-   abrir "cómo se calcula", no una nota al pie. */
+/* The warning heads the score explanation: it is the first thing read when
+   opening "cómo se calcula", not a footnote. */
 .pd-score-warning {
   margin: 0 0 10px;
   padding-bottom: 8px;
@@ -1093,23 +1093,23 @@
     min-width: 0;
   }
 
-  /* `.forecast-metadata` ya no está aquí: vive dentro de la columna de la
-     previsión, pegado a los datos que acredita. */
+  /* `.forecast-metadata` is no longer here: it lives inside the forecast
+     column, next to the data it credits. */
   .source-label {
     grid-column: 1 / -1;
   }
 }
 
 /* ---------------------------------------------------------------------------
-   Desglose de la puntuación y previsión de las próximas horas.
-   Mismo lenguaje visual que "Información de la playa": etiqueta a la izquierda,
-   valor a la derecha y regla fina entre filas.
+   Score breakdown and forecast for the next hours.
+   Same visual language as "Información de la playa": label on the left,
+   value on the right and a thin rule between rows.
    --------------------------------------------------------------------------- */
 
-/* Hacia dónde va el día, visible sin desplegar nada. */
-/* El chip de tendencia vive ahora en components/TrendBadge.css: lo pintan
-   también la lista, el mapa y la portada, y una copia por pantalla acabaría
-   con cuatro verdes distintos. */
+/* Where the day is heading, visible without expanding anything. */
+/* The trend chip now lives in components/TrendBadge.css: the list, the map
+   and the home page also render it, and a copy per screen would end up
+   with four different greens. */
 
 .pd-score-info-sub {
   font-size: 0.8rem;
@@ -1122,7 +1122,7 @@
 
 .pd-score-info-sub:first-of-type { margin-top: 4px; }
 
-/* Cada factor: nombre y valor arriba, puntos a la derecha, barra debajo. */
+/* Each factor: name and value on top, points on the right, bar below. */
 .pd-factor {
   display: grid;
   grid-template-columns: 1fr auto;
@@ -1178,7 +1178,7 @@
   color: var(--beach-text-muted);
 }
 
-/* Por qué los factores no suman la nota. */
+/* Why the factors do not add up to the score. */
 .pd-score-cap {
   display: flex;
   align-items: center;
@@ -1189,7 +1189,7 @@
   color: var(--beach-flag-red);
 }
 
-/* Tira horaria: una fila por hora, scroll horizontal si no cabe. */
+/* Hourly strip: one row per hour, horizontal scroll if it does not fit. */
 /* The rail's frame: the edge fades live here, OVER the scroller, so they
    never move with the content. Painted only on the side that still hides
    hours — a fade over the true end would claim more content than there is. */
@@ -1338,7 +1338,7 @@
   color: var(--beach-text);
 }
 
-/* Causa del fallo de carga: secundaria, pero es lo primero que hace falta. */
+/* Cause of the load failure: secondary, but it is the first thing needed. */
 .error-cause {
   margin: 4px 0 0;
   font-size: 0.75rem;

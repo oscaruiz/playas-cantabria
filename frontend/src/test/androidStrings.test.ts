@@ -15,27 +15,27 @@ const { escapeAndroidString } = require('../../scripts/android-strings.mjs');
 export {};
 
 describe('escapeAndroidString', () => {
-  it('escapa el apóstrofo, que es lo que rompe la compilación', () => {
+  it('escapes the apostrophe, which is what breaks the build', () => {
     expect(escapeAndroidString("Platges de L'Hospitalet")).toBe("Platges de L\\'Hospitalet");
   });
 
-  it('escapa comillas y barra invertida', () => {
+  it('escapes quotes and backslash', () => {
     expect(escapeAndroidString('Playas "del Norte"')).toBe('Playas \\"del Norte\\"');
     expect(escapeAndroidString('a\\b')).toBe('a\\\\b');
   });
 
-  it('no duplica las barras que introduce el propio escapado', () => {
+  it('does not double the backslashes that the escaping itself introduces', () => {
     // If the backslash rule ran last it would turn \' into \\', which Android
     // reads as a literal backslash followed by an unescaped apostrophe.
     expect(escapeAndroidString("L'A")).toBe("L\\'A");
   });
 
-  it('sigue escapando las entidades XML', () => {
+  it('still escapes XML entities', () => {
     expect(escapeAndroidString('Playas & Rías')).toBe('Playas &amp; Rías');
     expect(escapeAndroidString('a<b>c')).toBe('a&lt;b&gt;c');
   });
 
-  it('deja intacto un nombre corriente', () => {
+  it('leaves an ordinary name intact', () => {
     expect(escapeAndroidString('Playas de Cantabria')).toBe('Playas de Cantabria');
   });
 });

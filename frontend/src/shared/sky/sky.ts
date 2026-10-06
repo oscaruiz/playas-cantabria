@@ -7,7 +7,7 @@
  *
  * Emoji, wording and rain detection all derive from `classifySky`, so a new
  * provider phrasing lands here once instead of in three diverging regexes
- * (the old emojiCielo / palabraCielo / esLluviaActiva trio in
+ * (the old skyEmoji / skyWord / isRainActive trio in
  * utils/beachHelpers.ts, which now just re-exports these).
  */
 
@@ -59,7 +59,7 @@ export function classifySky(text: string | null | undefined): SkyCode {
 
 /**
  * Does this sky mean it is (or may be) actively raining? Snow deliberately
- * does not count — mirrors the historical `esLluviaActiva` fallback, which
+ * does not count — mirrors the historical `isRainActive` fallback, which
  * the rain badges rely on.
  */
 export function hasPrecipitation(code: SkyCode): boolean {
@@ -114,7 +114,7 @@ export function skyEmoji(sky: string | null, isNight = false): string {
  * at presentation.
  *
  * The words are Spanish UI text (product, not identifiers); English comes
- * from the caller via traducirTextoApi, as always.
+ * from the caller via translateApiText, as always.
  *
  * Returns null for a sky it does not recognize, so the caller shows the raw
  * text rather than dropping information.

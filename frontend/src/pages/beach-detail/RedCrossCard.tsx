@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { BeachDetail } from '../../../../../../Dev/playas-cantabria/frontend/src/services/api';
-import { flagStatus, lifeguardOperator } from '../../../../../../Dev/playas-cantabria/frontend/src/utils/beachHelpers';
-import { AttributionNote, FreshnessLabel } from '../../../../../../Dev/playas-cantabria/frontend/src/features/provenance/SourceAndFreshness';
-import DataInfo from '../../../../../../Dev/playas-cantabria/frontend/src/features/provenance/DataInfo';
-import { normalizeInstant } from '../../../../../../Dev/playas-cantabria/frontend/src/features/provenance/provenance';
-import { useLanguage, TranslateFn } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
-import { translateApiText, translateOperator } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/apiText';
+import { BeachDetail } from '../../services/api';
+import { flagStatus, lifeguardOperator } from '../../utils/beachHelpers';
+import { AttributionNote, FreshnessLabel } from '../../features/provenance/SourceAndFreshness';
+import DataInfo from '../../features/provenance/DataInfo';
+import { normalizeInstant } from '../../features/provenance/provenance';
+import { useLanguage, TranslateFn } from '../../shared/i18n/LanguageContext';
+import { translateApiText, translateOperator } from '../../shared/i18n/apiText';
 
 function redCrossField(value: string | undefined, t: TranslateFn): string {
   if (!value || value.trim() === '' || value === 'N/A') return t('comun.noDisponible');

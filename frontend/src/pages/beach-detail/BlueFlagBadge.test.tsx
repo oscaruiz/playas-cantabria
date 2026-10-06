@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import { LanguageProvider } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
-import { BlueFlagBadge } from '../../../../../../Dev/playas-cantabria/frontend/src/pages/beach-detail/BlueFlagBadge';
+import { LanguageProvider } from '../../shared/i18n/LanguageContext';
+import { BlueFlagBadge } from './BlueFlagBadge';
 
 const renderBadge = (year?: number | null) =>
   render(
@@ -11,7 +11,7 @@ const renderBadge = (year?: number | null) =>
   );
 
 describe('BlueFlagBadge', () => {
-  it('pinta la frase con el año y el enlace a ADEAC', () => {
+  it('paints the phrase with the year and the link to ADEAC', () => {
     renderBadge(2026);
     expect(
       screen.getByText('Esta playa ha recibido la Bandera Azul 2026.')
@@ -22,7 +22,7 @@ describe('BlueFlagBadge', () => {
     );
   });
 
-  it('no renderiza nada sin concesión registrada', () => {
+  it('renders nothing without a registered award', () => {
     expect(renderBadge(null).container).toBeEmptyDOMElement();
     expect(renderBadge(undefined).container).toBeEmptyDOMElement();
   });

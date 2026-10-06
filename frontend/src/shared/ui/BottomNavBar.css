@@ -16,7 +16,7 @@
   font-family: 'Poppins', sans-serif;
 }
 
-/* Contenedor interior: agrupa los botones en una franja centrada */
+/* Inner container: groups the buttons in a centered strip */
 .bottom-nav-inner {
   display: flex;
   width: 100%;
@@ -75,7 +75,7 @@
   border-radius: 4px;
 }
 
-/* --- Hover (solo dispositivos con ratón) --- */
+/* --- Hover (mouse devices only) --- */
 @media (hover: hover) {
   .bottom-nav-tab:hover:not(.active) {
     color: var(--beach-text);

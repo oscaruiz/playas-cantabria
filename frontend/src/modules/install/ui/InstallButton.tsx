@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { IonIcon } from '@ionic/react';
 import { downloadOutline, openOutline, shareOutline } from 'ionicons/icons';
-import { useLanguage } from '../../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
-import { useInstall } from '../../../../../../../Dev/playas-cantabria/frontend/src/modules/install/application/useInstall';
+import { useLanguage } from '../../../shared/i18n/LanguageContext';
+import { useInstall } from '../application/useInstall';
 import './install.css';
 
 /**

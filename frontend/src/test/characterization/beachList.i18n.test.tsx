@@ -2,12 +2,12 @@
  * CHARACTERIZATION — FROZEN.
  *
  * This file used to live in `known-issues/`, pinning down two translation leaks
- * in `PlayasList`. It stays here now inverted, with the fix applied:
+ * in `BeachList`. It stays here now inverted, with the fix applied:
  *
  *  1. The distance was written by hand (`· a {km} km`) instead of using
- *     `t('comun.aKm')`, which is what HomePage and PlayaDetalle do.
+ *     `t('comun.aKm')`, which is what HomePage and BeachDetailPage do.
  *  2. The attributes' tooltip used `ATTR_CONFIG.label`, written in raw Spanish.
- *     PlayaDetalle was already doing the right thing with `t('attr.' + key)`.
+ *     BeachDetailPage was already doing the right thing with `t('attr.' + key)`.
  *
  * Both languages are checked: the fix had to translate without breaking the
  * Spanish, which was what looked right before.
@@ -15,7 +15,7 @@
 
 import React from 'react';
 import { screen } from '@testing-library/react';
-import BeachList from '../../../../../../Dev/playas-cantabria/frontend/src/pages/BeachList';
+import BeachList from '../../pages/BeachList';
 import { renderWithProviders } from '../render';
 import { installFetchMock, restoreFetch, route } from '../http/fakeFetch';
 import { beachesResponse } from '../fixtures/beaches';
@@ -50,8 +50,8 @@ afterEach(() => {
   restoreFetch();
 });
 
-describe('PlayasList — distancia de la tarjeta', () => {
-  it('en español', async () => {
+describe('BeachList — card distance', () => {
+  it('in Spanish', async () => {
     const { container } = renderWithProviders(<BeachList />, { route: '/playas' });
     await screen.findByText('La Concha');
 
@@ -60,7 +60,7 @@ describe('PlayasList — distancia de la tarjeta', () => {
     );
   });
 
-  it('en inglés usa la misma clave que el resto de la app', async () => {
+  it('in English uses the same key as the rest of the app', async () => {
     const { container } = renderWithProviders(<BeachList />, {
       route: '/playas',
       language: 'en',
@@ -73,8 +73,8 @@ describe('PlayasList — distancia de la tarjeta', () => {
   });
 });
 
-describe('PlayasList — tooltips de atributos', () => {
-  it('en español', async () => {
+describe('BeachList — attribute tooltips', () => {
+  it('in Spanish', async () => {
     const { container } = renderWithProviders(<BeachList />, { route: '/playas' });
     await screen.findByText('La Concha');
 
@@ -85,7 +85,7 @@ describe('PlayasList — tooltips de atributos', () => {
     expect(titles).toContain('Duchas');
   });
 
-  it('en inglés', async () => {
+  it('in English', async () => {
     const { container } = renderWithProviders(<BeachList />, {
       route: '/playas',
       language: 'en',

@@ -1,11 +1,11 @@
 /**
  * CHARACTERIZATION — FROZEN.
  *
- * Pins down the CURRENT behaviour of `getPlayas()`: the 2.5 s race against the
+ * Pins down the CURRENT behaviour of `getBeaches()`: the 2.5 s race against the
  * local JSON, the 5 min cache, the deduplication of in-flight requests and the
  * guarantee that it NEVER rejects.
  *
- * It is written against the public signature (`getPlayas(options)`) on purpose:
+ * It is written against the public signature (`getBeaches(options)`) on purpose:
  * in F2 the implementation moves to `core/application/use-cases/getBeaches.ts`
  * and `services/api.ts` is left as a shim, and this file must keep passing
  * WITHOUT TOUCHING IT. If it has to be edited, the refactor changed behaviour.
@@ -29,7 +29,7 @@ async function loadApi() {
   return import('../../services/api');
 }
 
-// Isolation between tests: `getPlayas` saves the last REAL backend listing in
+// Isolation between tests: `getBeaches` saves the last REAL backend listing in
 // localStorage and prefers it over the build's JSON as a fallback. Without
 // clearing, the listing one test leaves behind contaminates the next one's
 // fallback. What these tests pin down is the "there is no saved copy" path →
@@ -45,8 +45,8 @@ afterEach(() => {
   localStorage.clear();
 });
 
-describe('getPlayas — carrera contra el fallback local', () => {
-  it('devuelve los datos del backend cuando responde antes del timeout', async () => {
+describe('getBeaches — race against the local fallback', () => {
+  it('returns the backend data when it responds before the timeout', async () => {
     installFetchMock([route(BEACHES, { json: beachesResponse })]);
     const { getBeaches } = await loadApi();
     const onBackendData = jest.fn();
@@ -59,7 +59,7 @@ describe('getPlayas — carrera contra el fallback local', () => {
     expect(onBackendData).not.toHaveBeenCalled();
   });
 
-  it('devuelve el JSON local cuando el backend tarda más que el timeout', async () => {
+  it('returns the local JSON when the backend takes longer than the timeout', async () => {
     installFetchMock([route(BEACHES, { json: beachesResponse, delayMs: 200 })]);
     const { getBeaches } = await loadApi();
     const onBackendData = jest.fn();
@@ -71,7 +71,7 @@ describe('getPlayas — carrera contra el fallback local', () => {
     expect(result[0]).toHaveProperty('codigo');
   });
 
-  it('avisa por `onBackendData` exactamente una vez cuando el backend llega tarde', async () => {
+  it('notifies via `onBackendData` exactly once when the backend arrives late', async () => {
     installFetchMock([route(BEACHES, { json: beachesResponse, delayMs: 100 })]);
     const { getBeaches } = await loadApi();
     const onBackendData = jest.fn();
@@ -82,7 +82,7 @@ describe('getPlayas — carrera contra el fallback local', () => {
     expect(onBackendData).toHaveBeenCalledWith(beachesResponse);
   });
 
-  it('usa 2500 ms como timeout por defecto', async () => {
+  it('uses 2500 ms as the default timeout', async () => {
     jest.useFakeTimers();
     // The backend never answers within the observed window.
     installFetchMock([route(BEACHES, { json: beachesResponse, delayMs: 60_000 })]);
@@ -105,15 +105,15 @@ describe('getPlayas — carrera contra el fallback local', () => {
   });
 });
 
-describe('getPlayas — nunca rechaza', () => {
-  it('cae al JSON local si el backend responde 500', async () => {
+describe('getBeaches — never rejects', () => {
+  it('falls back to the local JSON if the backend answers 500', async () => {
     installFetchMock([route(BEACHES, { status: 500 })]);
     const { getBeaches } = await loadApi();
 
     await expect(getBeaches({ timeoutMs: 50 })).resolves.toHaveLength(LOCAL_CATALOG_SIZE);
   });
 
-  it('cae al JSON local si falla la red', async () => {
+  it('falls back to the local JSON if the network fails', async () => {
     installFetchMock([route(BEACHES, { networkError: true })]);
     const { getBeaches } = await loadApi();
 
@@ -121,8 +121,8 @@ describe('getPlayas — nunca rechaza', () => {
   });
 });
 
-describe('getPlayas — caché y deduplicación', () => {
-  it('reutiliza la caché dentro de los 5 min (una sola petición)', async () => {
+describe('getBeaches — cache and deduplication', () => {
+  it('reuses the cache within 5 min (a single request)', async () => {
     jest.useFakeTimers();
     const fetchMock = installFetchMock([route(BEACHES, { json: beachesResponse })]);
     const { getBeaches } = await loadApi();
@@ -133,7 +133,7 @@ describe('getPlayas — caché y deduplicación', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  it('vuelve a pedir cuando la caché ha caducado', async () => {
+  it('requests again when the cache has expired', async () => {
     jest.useFakeTimers();
     const fetchMock = installFetchMock([route(BEACHES, { json: beachesResponse })]);
     const { getBeaches } = await loadApi();
@@ -145,7 +145,7 @@ describe('getPlayas — caché y deduplicación', () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
-  it('deduplica dos llamadas concurrentes en una sola petición', async () => {
+  it('deduplicates two concurrent calls into a single request', async () => {
     const fetchMock = installFetchMock([route(BEACHES, { json: beachesResponse, delayMs: 10 })]);
     const { getBeaches } = await loadApi();
 

@@ -1,8 +1,8 @@
 import React from 'react';
-import { ForecastDayDTO } from '../../../../../../Dev/playas-cantabria/frontend/src/services/api';
-import { capitalize } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/format/text';
-import { useLanguage } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
-import { translateApiText } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/apiText';
+import { ForecastDayDTO } from '../../services/api';
+import { capitalize } from '../../shared/format/text';
+import { useLanguage } from '../../shared/i18n/LanguageContext';
+import { translateApiText } from '../../shared/i18n/apiText';
 
 function warningLevelClass(level: number | null): string {
   if (level === 1) return 'warning-red';

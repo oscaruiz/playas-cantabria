@@ -13,40 +13,40 @@ import {
   getBeaches,
   DetailError,
   BeachDetail as PlayaDetalleData,
-} from '../../../../../Dev/playas-cantabria/frontend/src/services/api';
-import { beachPath, findBySlugs } from '../../../../../Dev/playas-cantabria/frontend/src/shared/seo/beachUrls';
-import SeoHead, { canonicalUrl } from '../../../../../Dev/playas-cantabria/frontend/src/shared/seo/SeoHead';
-import BottomNavBar from '../../../../../Dev/playas-cantabria/frontend/src/shared/ui/BottomNavBar';
-import HeaderActions from '../../../../../Dev/playas-cantabria/frontend/src/shared/ui/HeaderActions';
-import { ShareButton } from '../../../../../Dev/playas-cantabria/frontend/src/modules/share';
+} from '../services/api';
+import { beachPath, findBySlugs } from '../shared/seo/beachUrls';
+import SeoHead, { canonicalUrl } from '../shared/seo/SeoHead';
+import BottomNavBar from '../shared/ui/BottomNavBar';
+import HeaderActions from '../shared/ui/HeaderActions';
+import { ShareButton } from '../modules/share';
 import './BeachDetailPage.css';
-import { useLanguage } from '../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
-import { isToday } from '../../../../../Dev/playas-cantabria/frontend/src/pages/beach-detail/dates';
-import FlagBanner from '../../../../../Dev/playas-cantabria/frontend/src/pages/beach-detail/FlagBanner';
-import ScoreCard from '../../../../../Dev/playas-cantabria/frontend/src/pages/beach-detail/ScoreCard';
-import DaySelector from '../../../../../Dev/playas-cantabria/frontend/src/pages/beach-detail/DaySelector';
-import ForecastHero from '../../../../../Dev/playas-cantabria/frontend/src/pages/beach-detail/ForecastHero';
-import HalfDayDetail from '../../../../../Dev/playas-cantabria/frontend/src/pages/beach-detail/HalfDayDetail';
-import DailyStats from '../../../../../Dev/playas-cantabria/frontend/src/pages/beach-detail/DailyStats';
-import TidesSection from '../../../../../Dev/playas-cantabria/frontend/src/pages/beach-detail/TidesSection';
-import NextHours from '../../../../../Dev/playas-cantabria/frontend/src/pages/beach-detail/NextHours';
-import WeatherHero from '../../../../../Dev/playas-cantabria/frontend/src/pages/beach-detail/WeatherHero';
-import MetadataFooter from '../../../../../Dev/playas-cantabria/frontend/src/pages/beach-detail/MetadataFooter';
-import RedCrossCard from '../../../../../Dev/playas-cantabria/frontend/src/pages/beach-detail/RedCrossCard';
-import { BeachInfoSection, BeachAttributesSection } from '../../../../../Dev/playas-cantabria/frontend/src/pages/beach-detail/BeachInfoSection';
-import { WebcamCard } from '../../../../../Dev/playas-cantabria/frontend/src/pages/beach-detail/WebcamCard';
-import { BlueFlagBadge } from '../../../../../Dev/playas-cantabria/frontend/src/pages/beach-detail/BlueFlagBadge';
-import { ComputedAt } from '../../../../../Dev/playas-cantabria/frontend/src/features/provenance/SourceAndFreshness';
-import { useServiceWorkerRefresh } from '../../../../../Dev/playas-cantabria/frontend/src/hooks/useServiceWorkerRefresh';
-import { useRanking } from '../../../../../Dev/playas-cantabria/frontend/src/features/ranking/useRanking';
-import DataInfo from '../../../../../Dev/playas-cantabria/frontend/src/features/provenance/DataInfo';
-import { municipalityPath } from '../../../../../Dev/playas-cantabria/frontend/src/shared/seo/landings';
-import { FavoriteButton } from '../../../../../Dev/playas-cantabria/frontend/src/modules/favorites';
+import { useLanguage } from '../shared/i18n/LanguageContext';
+import { isToday } from './beach-detail/dates';
+import FlagBanner from './beach-detail/FlagBanner';
+import ScoreCard from './beach-detail/ScoreCard';
+import DaySelector from './beach-detail/DaySelector';
+import ForecastHero from './beach-detail/ForecastHero';
+import HalfDayDetail from './beach-detail/HalfDayDetail';
+import DailyStats from './beach-detail/DailyStats';
+import TidesSection from './beach-detail/TidesSection';
+import NextHours from './beach-detail/NextHours';
+import WeatherHero from './beach-detail/WeatherHero';
+import MetadataFooter from './beach-detail/MetadataFooter';
+import RedCrossCard from './beach-detail/RedCrossCard';
+import { BeachInfoSection, BeachAttributesSection } from './beach-detail/BeachInfoSection';
+import { WebcamCard } from './beach-detail/WebcamCard';
+import { BlueFlagBadge } from './beach-detail/BlueFlagBadge';
+import { ComputedAt } from '../features/provenance/SourceAndFreshness';
+import { useServiceWorkerRefresh } from '../hooks/useServiceWorkerRefresh';
+import { useRanking } from '../features/ranking/useRanking';
+import DataInfo from '../features/provenance/DataInfo';
+import { municipalityPath } from '../shared/seo/landings';
+import { FavoriteButton } from '../modules/favorites';
 
 const BeachDetailPage: React.FC = () => {
   // Two routes land here: canonical /playas/:municipio/:playa and legacy
   // /playas/:codigo. The canonical one is resolved to a codigo against the
-  // catalog (getPlayas never rejects: backend, saved copy or bundled JSON).
+  // catalog (getBeaches never rejects: backend, saved copy or bundled JSON).
   const { codigo: code, municipio: municipality, playa: beach } = useParams<{
     codigo?: string;
     municipio?: string;
@@ -63,19 +63,19 @@ const BeachDetailPage: React.FC = () => {
   const [loaded, setLoaded] = useState<{ ruta: string; detalle: PlayaDetalleData } | null>(null);
   const data = loaded && loaded.ruta === routeIdentity ? loaded.detalle : null;
   const [error, setError] = useState(false);
-  /** Estado HTTP del fallo; null = la petición no volvió (red, CORS, SW). */
+  /** HTTP status of the failure; null = the request never came back (network, CORS, SW). */
   const [statusError, setStatusError] = useState<number | null>(null);
 
   /**
-   * El error se ENCIENDE y se APAGA. Antes solo se encendía: cualquier fallo
-   * pasajero —un intento que se cruza con otro, una petición que muere al
-   * navegar, un 429 suelto— dejaba el aviso rojo clavado para siempre, y como
-   * el segundo intento sí traía los datos, la ficha se pintaba entera CON el
-   * cartel de "no se pudo cargar" encima. Con StrictMode el efecto corre dos
-   * veces en desarrollo, así que pasaba a diario.
+   * The error is turned ON and OFF. It used to be only turned on: any
+   * transient failure —an attempt crossing with another, a request that dies
+   * on navigation, a stray 429— left the red notice stuck forever, and since
+   * the second attempt did bring the data, the whole page was painted WITH
+   * the "no se pudo cargar" banner on top. With StrictMode the effect runs
+   * twice in development, so it happened daily.
    *
-   * El guardia `activo` es el mismo que ya usaba el efecto de la puntuación:
-   * el resultado de una petición que ya no interesa no toca el estado.
+   * The `activo` guard is the same one the score effect already used:
+   * the result of a request nobody cares about any more does not touch the state.
    */
   // Canonical route: slugs → codigo. The legacy route resolves synchronously.
   // On EVERY route identity change the beach-specific state is cleared first:
@@ -126,10 +126,10 @@ const BeachDetailPage: React.FC = () => {
     return () => { active = false; };
   }, [resolvedCode]);
 
-  // `ComputedAt` ya dice que lo pintado es viejo, pero decirlo no es arreglarlo:
-  // cuando el service worker entrega la respuesta que llegó tarde, se pinta. Se
-  // usa el cuerpo del mensaje, nunca una petición nueva — eso realimentaría la
-  // caché y volvería a disparar el mensaje.
+  // `ComputedAt` already says that what is painted is old, but saying it is not
+  // fixing it: when the service worker delivers the response that arrived late,
+  // it gets painted. The message body is used, never a new request — that would
+  // feed the cache back and fire the message again.
   useServiceWorkerRefresh(({ url, datos: data }) => {
     if (!resolvedCode) return;
     if (url.endsWith(`/beaches/${resolvedCode}/details`)) {
@@ -201,13 +201,13 @@ const BeachDetailPage: React.FC = () => {
       </div>
 
       <IonContent>
-        {/* Nunca junto a los datos: un cartel de "no se pudo cargar" encima de
-            una ficha cargada es, simplemente, falso. */}
+        {/* Never alongside the data: a "no se pudo cargar" banner on top of
+            a loaded page is simply false. */}
         {error && !data && (
           <div className="error-container">
             <p style={{ margin: 0 }}>{t('detalle.errorCarga')}</p>
-            {/* La causa, que es lo primero que hace falta: el estado HTTP no
-                necesita traducción y el fallo de red sí. */}
+            {/* The cause, which is the first thing needed: the HTTP status needs
+                no translation and the network failure does. */}
             <p className="error-cause">
               {statusError != null ? `HTTP ${statusError}` : t('detalle.sinRespuesta')}
             </p>
@@ -241,16 +241,16 @@ const BeachDetailPage: React.FC = () => {
                   >
                     <IonIcon icon={mapOutline} aria-hidden="true" /> {t('detalle.verEnMapa')}
                   </button>
-                  {/* Un solo compartir: manda la tarjeta del día CON el enlace
-                      en el pie, y va degradando solo (enlace suelto, enlace al
-                      portapapeles) según lo que admita el aparato.
+                  {/* A single share: it sends the day's card WITH the link
+                      in the footer, and degrades on its own (bare link, link
+                      to the clipboard) according to what the device supports.
 
-                      `prevision` sigue la misma cascada que pinta la ficha: la
-                      hoja de AEMET cuando la hay y, cuando no, el día de
-                      `clima` con el que `ClimaHero` arma el panel. Sin ese
-                      segundo tramo, una playa sin hoja compartía "Sin dato"
-                      mientras su propia ficha decía "Tranquilo" dos dedos más
-                      abajo. */}
+                      `prevision` follows the same cascade the page paints: the
+                      AEMET sheet when there is one and, when not, the day from
+                      `clima` that `WeatherHero` builds the panel with. Without
+                      that second leg, a beach without a sheet shared "Sin dato"
+                      while its own page said "Tranquilo" two fingers
+                      below. */}
                   <ShareButton
                     beach={data}
                     scored={scored}
@@ -300,8 +300,8 @@ const BeachDetailPage: React.FC = () => {
                     />
                     <DailyStats day={pred.dias[safeDayIndex]} embedded />
                   </div>
-                  {/* Solo tiene sentido junto al día de hoy: la previsión
-                      horaria es de las próximas horas, no del día elegido. */}
+                  {/* Only makes sense alongside today: the hourly forecast
+                      covers the next hours, not the chosen day. */}
                   {safeDayIndex === 0 && (
                     <NextHours
                       hours={data.tiempoActual?.previsionHoras}
@@ -316,9 +316,9 @@ const BeachDetailPage: React.FC = () => {
                       isToday={safeDayIndex === 0}
                     />
                   )}
-                  {/* Cierra la columna de AEMET, no la página: la atribución
-                      tiene que acompañar a la información que elabora, y su
-                      hora de elaboración con ella. */}
+                  {/* It closes the AEMET column, not the page: the attribution
+                      has to accompany the information it covers, and its
+                      issue time with it. */}
                   <MetadataFooter
                     warningZone={pred.zonaAvisos}
                     issued={pred.elaboracion}
@@ -333,16 +333,16 @@ const BeachDetailPage: React.FC = () => {
                     currentTemperature={data.temperaturaActual}
                     currentConditions={data.tiempoActual}
                   />
-                  {/* La previsión horaria es de Open-Meteo, así que las playas
-                      sin ficha de AEMET también la tienen. */}
+                  {/* The hourly forecast comes from Open-Meteo, so beaches
+                      without an AEMET sheet have it too. */}
                   <NextHours
                     hours={data.tiempoActual?.previsionHoras}
                     source={data.tiempoActual?.previsionHorasFuente}
                     timeWindow={data.tiempoActual?.ventanaDia}
                   />
-                  {/* Tampoco tienen tabla de mareas propia: se presta la de
-                      la playa con ficha AEMET más cercana (índice 0 = hoy,
-                      igual que prediccionCompleta.mareas). */}
+                  {/* Nor do they have their own tide table: the one from the
+                      nearest beach with an AEMET sheet is lent (index 0 = today,
+                      like prediccionCompleta.mareas). */}
                   {data.mareaReferencia?.mareas[0] && (
                     <TidesSection
                       tide={data.mareaReferencia.mareas[0]}
@@ -380,11 +380,11 @@ const BeachDetailPage: React.FC = () => {
               </div>
               </div>
 
-              {/* Lo que es de la ficha entera y no de un bloque: cuándo se
-                  calculó de verdad (el backend responde desde una caché
-                  stale-while-revalidate, así que "acabo de abrir la página" no
-                  dice nada de la edad de los números) y que acreditar a estas
-                  fuentes no es decir que colaboren. */}
+              {/* What belongs to the whole page and not to one block: when it
+                  was really computed (the backend answers from a
+                  stale-while-revalidate cache, so "I just opened the page" says
+                  nothing about the age of the numbers) and that crediting these
+                  sources does not mean they collaborate. */}
               <DataInfo label="info.sobreDatos" aria="info.aria.ficha" className="pd-info-ficha">
                 <ComputedAt generatedAt={data.generadoEn} />
                 <p className="provenance-static">{t('atribucion.independiente')}</p>

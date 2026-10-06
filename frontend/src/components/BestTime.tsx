@@ -1,8 +1,8 @@
 import React from 'react';
-import { DayWindow, OutlookCause, WindowReason } from '../../../../../Dev/playas-cantabria/frontend/src/services/api';
-import { useLanguage } from '../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
-import { TextKey } from '../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/es';
-import { madridLocalHour } from '../../../../../Dev/playas-cantabria/frontend/src/shared/format/time';
+import { DayWindow, OutlookCause, WindowReason } from '../services/api';
+import { useLanguage } from '../shared/i18n/LanguageContext';
+import { TextKey } from '../shared/i18n/es';
+import { madridLocalHour } from '../shared/format/time';
 import './BestTime.css';
 
 const CHANGE: Record<OutlookCause, TextKey> = {

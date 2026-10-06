@@ -1,10 +1,10 @@
-import type { Language } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
+import type { Language } from './LanguageContext';
 import type { TextKey } from './es';
 // KNOWN TEMPORARY EDGE (shared → domain), the only one left after Phase 1.
-// `claveEstadoBandera` is a conditions-specific mapper that has not moved yet;
-// Phase 4 takes it (with `claveBandera`, `claveNivelVientoMs`, `razonLegible`,
-// `traducirOperador` and `sinFragmentoDePronostico`) to modules/conditions/ui,
-// leaving only `traducirTextoApi` + TABLAS_API here. The disable goes with it.
+// `flagStatusKey` is a conditions-specific mapper that has not moved yet;
+// Phase 4 takes it (with `flagKey`, `windLevelKey`, `readableReason`,
+// `translateOperator` and `noForecastFragment`) to modules/conditions/ui,
+// leaving only `translateApiText` + API_TABLES here. The disable goes with it.
 // eslint-disable-next-line no-restricted-imports
 import type { FlagStatus } from '../../utils/beachHelpers';
 
@@ -26,7 +26,7 @@ const SKY_MAP: Record<string, string> = {
   'sol': 'sun',
   'parcialmente soleado': 'partly sunny',
   // Their night counterparts: after sunset there is no sun to name, so the
-  // same sky is "Despejado" (`palabraCielo` in utils/beachHelpers).
+  // same sky is "Despejado" (`skyWord` in utils/beachHelpers).
   'parcialmente despejado': 'partly clear',
   'poco nuboso': 'partly cloudy',
   'intervalos nubosos': 'cloudy intervals',
@@ -98,7 +98,7 @@ const WIND_MAP: Record<string, string> = {
   'viento flojo': 'light wind',
   'viento moderado': 'moderate wind',
   // `BeachScorer` emits this literal in `razonRanking`. The standalone form
-  // ('fresco') is NOT added here: `MAPA_SENSACION` overrides it (see note at the merge).
+  // ('fresco') is NOT added here: `FEELS_LIKE_MAP` overrides it (see note at the merge).
   'viento fresco': 'fresh wind',
   'viento fuerte': 'strong wind',
   'sin viento': 'no wind',
@@ -124,7 +124,7 @@ const WAVES_MAP: Record<string, string> = {
   'agitado': 'choppy',
   'tranquilo': 'calm',
   // Rest of AEMET's Douglas scale. Careful: standalone 'moderado' and
-  // 'fuerte' are NOT added, they already resolve via MAPA_VIENTO — adding them here
+  // 'fuerte' are NOT added, they already resolve via WIND_MAP — adding them here
   // would override them due to the spread order.
   'llana': 'calm sea',
   'gruesa': 'rough sea',
@@ -161,12 +161,12 @@ const UV_MAP: Record<string, string> = {
   'bajo': 'low',
   'medio': 'moderate',
   // 'moderado' (AEMET's wording for the 3-5 band) is NOT added here: it already
-  // resolves through MAPA_VIENTO, and repeating it would shadow that entry.
+  // resolves through WIND_MAP, and repeating it would shadow that entry.
   // The collision test in apiText.test.ts is what caught the attempt.
   'alto': 'high',
   'muy alto': 'very high',
   'extremo': 'extreme',
-  // The variants with the full prefix have been removed: `PlayaDetalle`
+  // The variants with the full prefix have been removed: `BeachDetailPage`
   // trims it before translating, so they were never actually looked up.
 };
 
@@ -272,14 +272,14 @@ const API_MAP: Record<string, string> = {
 
 /** Tables exposed only for the test that watches for collisions. */
 export const API_TABLES = {
-  MAPA_CIELO: SKY_MAP,
-  MAPA_VIENTO: WIND_MAP,
-  MAPA_OLEAJE: WAVES_MAP,
-  MAPA_SENSACION: FEELS_LIKE_MAP,
-  MAPA_UV: UV_MAP,
-  MAPA_RANKING: RANKING_MAP,
-  MAPA_COLORES: COLOR_MAP,
-  MAPA_INFO: INFO_MAP,
+  SKY_MAP,
+  WIND_MAP,
+  WAVES_MAP,
+  FEELS_LIKE_MAP,
+  UV_MAP,
+  RANKING_MAP,
+  COLOR_MAP,
+  INFO_MAP,
 };
 
 /** Preserves the initial capitalization of the original text. */
@@ -345,7 +345,7 @@ function translateFragment(fragment: string): string {
   // any future region readable instead of leaving the whole phrase in Spanish.
   const coverage = fragment.match(/^sin cobertura (.+)$/i);
   if (coverage) {
-    // Only reachable in English: traducirTextoApi returns early for Spanish.
+    // Only reachable in English: translateApiText returns early for Spanish.
     return keepCapital(fragment, `no ${translateOperator(coverage[1], 'en')} coverage`);
   }
 
@@ -370,7 +370,7 @@ export function translateApiText(text: string | null | undefined, language: Lang
 /**
  * Prepends "viento" to "flojo/fuerte" in the raw ranking reason, so it reads
  * "viento flojo" instead of "flojo". Operates on the API's Spanish, ALWAYS before
- * translating with traducirTextoApi.
+ * translating with translateApiText.
  */
 export function readableReason(rankingReason: string): string {
   return rankingReason.replace(/(?<!viento )\b(flojo|fuerte)\b/i, 'viento $1');
@@ -384,7 +384,7 @@ export function readableReason(rankingReason: string): string {
  * "Sol, 22°, mejora en las próximas horas" with "Mejora · se despeja" right
  * underneath. It is removed HERE and not in the API because that text is a
  * contract other clients read. Always applied to the API's Spanish, BEFORE
- * `traducirTextoApi`.
+ * `translateApiText`.
  */
 export function noForecastFragment(rationale: string): string {
   return rationale

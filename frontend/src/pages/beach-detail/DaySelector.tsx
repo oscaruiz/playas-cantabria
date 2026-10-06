@@ -1,6 +1,6 @@
 import React from 'react';
-import { useLanguage } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
-import { dayTitle, daySubtitle } from '../../../../../../Dev/playas-cantabria/frontend/src/pages/beach-detail/dates';
+import { useLanguage } from '../../shared/i18n/LanguageContext';
+import { dayTitle, daySubtitle } from './dates';
 
 /** Editorial tabs with underline: Today / Tomorrow / Day after tomorrow. */
 const DaySelector: React.FC<{

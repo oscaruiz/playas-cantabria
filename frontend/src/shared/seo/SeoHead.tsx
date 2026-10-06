@@ -6,7 +6,7 @@ import React, { useEffect } from 'react';
  * budget measured in single digits, to do this). Each page renders one
  * SeoHead; tags are upserted in place, so navigating simply overwrites them.
  *
- * Title ownership moved HERE from IdiomaContext: parent effects run after
+ * Title ownership moved HERE from LanguageContext: parent effects run after
  * child effects, so a provider-level title would overwrite the page's on
  * every language switch. Pages re-render on idioma change (their texts come
  * from t()), which re-runs this effect with the translated title.

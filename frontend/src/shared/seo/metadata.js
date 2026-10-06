@@ -60,7 +60,7 @@ const ATTR_LABELS = {
 };
 
 /**
- * Same `{placeholder}` syntax as IdiomaContext's interpolar: unknown
+ * Same `{placeholder}` syntax as LanguageContext's interpolar: unknown
  * placeholders are left as-is, never emptied.
  * @param {string} template
  * @param {Record<string, string | number>} vars
