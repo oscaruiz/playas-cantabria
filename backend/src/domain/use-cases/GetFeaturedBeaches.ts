@@ -3,9 +3,6 @@ import { Weather } from '../entities/Weather';
 import { FlagStatus, FlagRef } from '../entities/Flag';
 import { RainNowcast } from '../entities/RainNowcast';
 import { GetRainNowcast } from './GetRainNowcast';
-import { buildRainForecastSignal } from './RainForecast';
-import { buildWeatherOutlook, resolvePublishedOutlook } from './WeatherOutlook';
-import { buildDayWindow } from './BeachWindowScorer';
 import { BeachRepository } from '../ports/BeachRepository';
 import { WeatherProvider } from '../ports/WeatherProvider';
 import { FlagProvider } from '../ports/FlagProvider';
@@ -17,26 +14,10 @@ import { corregirCieloObservado } from '../../application/services/skyCorrection
 import { InMemoryCache, CacheKeys } from '../../infrastructure/cache/InMemoryCache';
 import { Config, skyCorrectionMode } from '../../infrastructure/config/config';
 import { AemetBeachForecastProvider, AemetBeachForecast } from '../../infrastructure/providers/AemetBeachForecastProvider';
-import {
-  ForecastEnrichment,
-  computeBeachScore,
-  buildRankingReason,
-  buildCautionReason,
-  buildDowngradeFactors,
-  buildExclusionReason,
-  isExcluded,
-} from './BeachScorer';
+import { ForecastEnrichment } from './BeachScorer';
+import { assessBeach, MIN_SCORE } from './BeachAssessment';
 import type { FeaturedBeachResult } from '../../application/mappers/FeaturedBeachMapper';
 
-/**
- * Is this beach watched, according to the catalog? A station with a pending id
- * counts: the beach has lifeguards, what we lack is a way to query them.
- */
-function hasFlagStation(beach: Beach): boolean {
-  return beach.flagRef != null || (beach.flagStations?.length ?? 0) > 0;
-}
-
-const MIN_SCORE = 30;
 const MIN_BEACHES = 2;
 const CAUTION_COUNT = 3;
 const ENRICHMENT_CONCURRENCY = 6;
@@ -131,83 +112,9 @@ export class GetFeaturedBeaches {
 
     for (const result of enriched) {
       if (!result) continue;
-      const { beach, weather, flag, enrichment, rain } = result;
-
-      // Excluded beaches go directly to caution with specific reason
-      if (isExcluded(weather, flag, enrichment)) {
-        const reason = buildExclusionReason(weather, flag, enrichment);
-        const entry = { beach, weather, flag, score: 0, reason, downgradeReason: reason, enrichment, rain };
-        caution.push(entry);
-        all.push(entry);
-        continue;
-      }
-
-      // Forecast rain: Open-Meteo numeric forecast (next 6h, comes in the
-      // nowcast) ∪ AEMET's text for the day ("Chubascos"...).
-      const rainForecast = buildRainForecastSignal(rain, [enrichment?.summary ?? null]);
-
-      // Is it about to get better or worse? Bounded correction from the next
-      // 4h of sky, temperature and wind — it rides on the nowcast's own
-      // request, so it costs nothing and it is null whenever Open-Meteo fails.
-      const outlook = buildWeatherOutlook(weather, rain?.outlook);
-
-      // WHEN to go: best stretch of the remaining beach window, from the same
-      // slots. Open-Meteo only, symmetric with the outlook above: when it is
-      // down the field is null and the interface shows nothing. The nowcast
-      // rides along so rain falling NOW vetoes the next hour, whatever the
-      // forecast claims.
-      const ventanaDia = buildDayWindow(rain?.outlook, new Date(), rain);
-
-      const { score, subScores, tope, topeValor } = computeBeachScore(
-        weather,
-        flag,
-        enrichment,
-        beach.attributes,
-        rain,
-        rainForecast,
-        this.flagOperators,
-        outlook,
-      );
-
-      const downgradeReason = buildDowngradeFactors(
-        subScores,
-        flag,
-        rain,
-        rainForecast,
-        this.flagOperators,
-        outlook,
-        hasFlagStation(beach),
-      );
-
-      // The breakdown travels with the entry so the API can publish WHY the
-      // beach scored what it scored, instead of the app explaining the model
-      // in the abstract and leaving the actual question unanswered.
-      //
-      // The PUBLISHED outlook lets forecast rain take over the reason; the raw
-      // one above is what scored and what the reason builders read. Keeping
-      // them apart is not a detail: hand the resolved one to
-      // `buildDowngradeFactors` and its `direccion: 'empeora'` appends "empeora
-      // en las próximas horas" right next to the "lluvia prevista" that same
-      // function already adds — the same fact, twice, in one line.
-      const desglose = {
-        subScores,
-        outlook: resolvePublishedOutlook(outlook, rainForecast),
-        tope,
-        topeValor,
-        ventanaDia,
-      };
-
-      if (score >= MIN_SCORE) {
-        const reason = buildRankingReason(subScores, weather, flag, enrichment, rain, rainForecast, outlook);
-        const entry = { beach, weather, flag, score, reason, downgradeReason, enrichment, rain, ...desglose };
-        good.push(entry);
-        all.push(entry);
-      } else {
-        const reason = buildCautionReason(subScores, weather, flag, enrichment, rain, rainForecast, outlook);
-        const entry = { beach, weather, flag, score, reason, downgradeReason, enrichment, rain, ...desglose };
-        caution.push(entry);
-        all.push(entry);
-      }
+      const entry = assessBeach(result, this.flagOperators);
+      (entry.score >= MIN_SCORE ? good : caution).push(entry);
+      all.push(entry);
     }
 
     // Sort good by score desc
