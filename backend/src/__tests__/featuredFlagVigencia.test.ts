@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { GetFeaturedBeaches } from '../domain/use-cases/GetFeaturedBeaches';
 import { InMemoryCache } from '../infrastructure/cache/InMemoryCache';
 import type { Beach } from '../domain/entities/Beach';
@@ -69,6 +69,13 @@ function construir(flag: FlagStatus | null) {
  */
 const MEDIANOCHE = new Date('2026-08-01T21:00:00Z'); // 23:00 Madrid
 
+/**
+ * The rest of the cases freeze a midday INSIDE the season: on the real clock
+ * they began failing on 1 October, when the coverage dates had expired.
+ */
+const MEDIODIA = new Date('2026-08-01T10:00:00Z'); // 12:00 Madrid
+
+beforeEach(() => vi.setSystemTime(MEDIODIA));
 afterEach(() => vi.useRealTimers());
 
 describe('GetFeaturedBeaches — banderas fuera de horario', () => {
