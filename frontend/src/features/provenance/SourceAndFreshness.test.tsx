@@ -5,8 +5,8 @@ import {
   FreshnessLabel,
   SourceAndFreshness,
 } from './SourceAndFreshness';
-import { formatAbsoluteInstant } from './procedencia';
-import ForecastHero from '../../pages/playa-detalle/ForecastHero';
+import { formatAbsoluteInstant } from '../../../../../../Dev/playas-cantabria/frontend/src/features/provenance/provenance';
+import ForecastHero from '../../../../../../Dev/playas-cantabria/frontend/src/pages/beach-detail/ForecastHero';
 import type { ForecastDayDTO, CurrentConditions } from '../../services/api';
 
 const sevenMinAgo = () => Date.now() - 7 * 60000;

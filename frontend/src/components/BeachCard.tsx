@@ -10,7 +10,7 @@ import {
   lifeguardOperator,
   webcamAvailable,
 } from '../utils/beachHelpers';
-import { useLanguage } from '../shared/i18n/IdiomaContext';
+import { useLanguage } from '../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
 import { TextKey } from '../shared/i18n/es';
 import {
   translateApiText,

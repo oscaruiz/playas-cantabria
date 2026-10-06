@@ -16,12 +16,12 @@ import {
 } from 'ionicons/icons';
 import type { TextKey } from '../shared/i18n/es';
 import { withoutAccents } from '../shared/seo/beachUrls';
-import { madridDate, madridMinutes } from '../shared/format/tiempo';
-import { classifySky, hasPrecipitation, skyEmoji } from '../shared/cielo/sky';
+import { madridDate, madridMinutes } from '../../../../../Dev/playas-cantabria/frontend/src/shared/format/time';
+import { classifySky, hasPrecipitation, skyEmoji } from '../../../../../Dev/playas-cantabria/frontend/src/shared/sky/sky';
 
 // Sky classification lives in shared/cielo/sky.ts; the Spanish names remain
 // here as compatibility aliases for the existing call sites.
-export { skyEmoji, skyWord } from '../shared/cielo/sky';
+export { skyEmoji, skyWord } from '../../../../../Dev/playas-cantabria/frontend/src/shared/sky/sky';
 
 /** Normalizes for search: lowercase + no accents (Arn\u00EDa \u2192 arnia). */
 export function normalizeSearch(text: string): string {

@@ -5,8 +5,8 @@ import { Link, useHistory } from 'react-router-dom';
 import BottomNavBar from '../shared/ui/BottomNavBar';
 import HeaderActions from '../shared/ui/HeaderActions';
 import SeoHead from '../shared/seo/SeoHead';
-import { useLanguage } from '../shared/i18n/IdiomaContext';
-import { AUTHOR, AUTHOR_GITHUB, GITHUB, EMAIL } from '../shared/config/contacto';
+import { useLanguage } from '../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
+import { AUTHOR, AUTHOR_GITHUB, GITHUB, EMAIL } from '../../../../../Dev/playas-cantabria/frontend/src/shared/config/contact';
 import { REGION } from '../shared/config/region';
 import './LegalPage.css';
 

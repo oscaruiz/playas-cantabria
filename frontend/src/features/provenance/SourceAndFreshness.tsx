@@ -1,16 +1,16 @@
 import React from 'react';
-import { useLanguage } from '../../shared/i18n/IdiomaContext';
+import { useLanguage } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
 import type { TextKey } from '../../shared/i18n/es';
 import type { EstimatedField } from '../../services/api';
-import { formatTimeAgo } from '../../shared/format/tiempo';
-import { capitalize } from '../../shared/format/texto';
+import { formatTimeAgo } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/format/time';
+import { capitalize } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/format/text';
 import {
   Provenance,
   normalizeInstant,
   formatAbsoluteInstant,
   STALE_DATA_THRESHOLD_MS,
-} from './procedencia';
-import { sourceAttribution } from './atribuciones';
+} from '../../../../../../Dev/playas-cantabria/frontend/src/features/provenance/provenance';
+import { sourceAttribution } from '../../../../../../Dev/playas-cantabria/frontend/src/features/provenance/attributions';
 import './provenance.css';
 
 /**

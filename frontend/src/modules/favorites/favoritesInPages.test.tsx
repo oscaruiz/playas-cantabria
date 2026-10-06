@@ -6,8 +6,8 @@
 
 import React from 'react';
 import { fireEvent, screen, waitFor } from '@testing-library/react';
-import BeachList from '../../pages/PlayasList';
-import BeachDetailPage from '../../pages/PlayaDetalle';
+import BeachList from '../../../../../../Dev/playas-cantabria/frontend/src/pages/BeachList';
+import BeachDetailPage from '../../../../../../Dev/playas-cantabria/frontend/src/pages/BeachDetailPage';
 import HomePage from '../../pages/HomePage';
 import { renderWithProviders } from '../../test/render';
 import { installFetchMock, restoreFetch, route } from '../../test/http/fakeFetch';

@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, RenderResult } from '@testing-library/react';
 import { MemoryRouter, Route } from 'react-router-dom';
-import { LanguageProvider, Language } from '../shared/i18n/IdiomaContext';
+import { LanguageProvider, Language } from '../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
 
 interface RenderOptions {
   /**

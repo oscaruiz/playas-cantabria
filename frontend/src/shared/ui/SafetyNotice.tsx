@@ -1,7 +1,7 @@
 import React from 'react';
 import { IonIcon } from '@ionic/react';
 import { informationCircleOutline } from 'ionicons/icons';
-import { useLanguage } from '../i18n/IdiomaContext';
+import { useLanguage } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
 import './SafetyNotice.css';
 
 const SafetyNotice: React.FC<{ kind: 'banderas' | 'ranking'; onDark?: boolean }> = ({

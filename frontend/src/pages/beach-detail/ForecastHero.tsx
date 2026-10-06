@@ -1,0 +1,195 @@
+import React from 'react';
+import { BeachDetail, ForecastDayDTO } from '../../../../../../Dev/playas-cantabria/frontend/src/services/api';
+import {
+  skyEmoji,
+  isRainActive,
+  expectedRain,
+  skyWord,
+} from '../../../../../../Dev/playas-cantabria/frontend/src/utils/beachHelpers';
+import { madridLocalHour } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/format/time';
+import { capitalize } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/format/text';
+import { useLanguage } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
+import { translateApiText } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/apiText';
+import { observationProvenance, currentObservation } from '../../../../../../Dev/playas-cantabria/frontend/src/features/provenance/provenance';
+import {
+  FreshnessLabel,
+  SourceAndFreshness,
+} from '../../../../../../Dev/playas-cantabria/frontend/src/features/provenance/SourceAndFreshness';
+
+/** Map wind description text to a speed level 0–4 for animation. */
+function windSpeedLevel(text: string): number {
+  const t = text.toLowerCase();
+  if (/calma|en calma/.test(t)) return 0;
+  if (/flojo|d[eé]bil|ligero|suave/.test(t)) return 1;
+  if (/moderado|variable/.test(t)) return 2;
+  if (/fresco/.test(t)) return 3;
+  if (/fuerte|muy fuerte|intenso/.test(t)) return 4;
+  return 1; // default: light animation
+}
+
+/**
+ * Duration (seconds) of the animation per wind level. Level 0 (calm) does not
+ * stop entirely: it spins very slowly so the turbine looks "alive" and not broken.
+ */
+const WIND_DURATIONS = [7, 4, 2, 1, 0.5];
+
+const WindTurbine: React.FC<{ level: number; label: string }> = ({ level, label }) => {
+  const { t } = useLanguage();
+  const duration = WIND_DURATIONS[level] ?? 2;
+  const paused = false;
+
+  return (
+    <div className="wind-turbine-wrap">
+      <div className="wind-turbine-icon">
+        <svg viewBox="0 0 40 44" className="wind-turbine-svg">
+          {/* Pole */}
+          <line x1="20" y1="18" x2="20" y2="43" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          {/* Hub */}
+          <circle cx="20" cy="18" r="2" fill="currentColor" />
+          {/* Blades */}
+          <g
+            className="wind-turbine-blades"
+            style={{
+              transformOrigin: '20px 18px',
+              animationDuration: `${duration}s`,
+              animationPlayState: paused ? 'paused' : 'running',
+            }}
+          >
+            <path d="M20,18 L18.5,3 Q20,1 21.5,3 Z" fill="currentColor" opacity="0.85" />
+            <path d="M20,18 L31,25.5 Q31.5,23 29.5,22 Z" fill="currentColor" opacity="0.85" />
+            <path d="M20,18 L9,25.5 Q8.5,23 10.5,22 Z" fill="currentColor" opacity="0.85" />
+          </g>
+        </svg>
+      </div>
+      <span className="forecast-indicator-title">{t('detalle.viento')}</span>
+      <span className="forecast-indicator-label">{label}</span>
+    </div>
+  );
+};
+
+const WavesIndicator: React.FC<{ label: string }> = ({ label }) => {
+  const { t } = useLanguage();
+  return (
+  <div className="waves-indicator-wrap">
+    <div className="waves-indicator-icon">
+      <svg viewBox="0 0 40 28" className="waves-indicator-svg">
+        <g className="waves-anim">
+          <path d="M-10,14 Q-5,8 0,14 Q5,20 10,14 Q15,8 20,14 Q25,20 30,14 Q35,8 40,14 Q45,20 50,14"
+            fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+          <path d="M-10,22 Q-5,16 0,22 Q5,28 10,22 Q15,16 20,22 Q25,28 30,22 Q35,16 40,22 Q45,28 50,22"
+            fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" opacity="0.5" />
+        </g>
+      </svg>
+    </div>
+    <span className="forecast-indicator-title">{t('detalle.oleaje')}</span>
+    <span className="forecast-indicator-label">{label}</span>
+  </div>
+  );
+};
+
+/** Big icon + temperature + rain badges for the selected day. */
+const ForecastHero: React.FC<{
+  day: ForecastDayDTO;
+  currentWeather?: number | null;
+  currentConditions?: BeachDetail['tiempoActual'];
+}> = ({ day, currentWeather, currentConditions: received }) => {
+  const { t, language } = useLanguage();
+  // An observation older than the limit is NOT "now": it is dropped here, at
+  // the single point where it enters the headline, so no downstream line
+  // (sky, temperature, rain badges, freshness) can keep presenting it as
+  // current. What it was is reported below, in its own line.
+  const inForce = currentObservation(received);
+  const currentConditions = inForce ? received : undefined;
+  const expired = received != null && !inForce;
+  // skyText/viento/oleaje are the raw Spanish from the API: emojiCielo and
+  // windSpeedLevel run regexes over it — translate only when displaying.
+  // For TODAY we prioritize the real observation ("now") over the afternoon
+  // forecast; that way the headline stops contradicting the morning/afternoon breakdown.
+  const skyText = capitalize(currentConditions?.cielo ?? day.tarde.cielo ?? day.manana.cielo ?? '');
+  const wind = capitalize(day.tarde.viento ?? day.manana.viento ?? '');
+  const waves = capitalize(day.tarde.oleaje ?? day.manana.oleaje ?? '');
+  // Solo la observación de HOY sabe si es de noche; una previsión de pasado
+  // mañana no describe un instante concreto, así que se pinta como día.
+  const isNight = currentConditions?.esNoche === true;
+  const skyGlyph = skyEmoji(skyText || null, isNight);
+
+  // The headline temperature is part of the same "right now" reading: if that
+  // reading is too old, it falls back to the forecast maximum, and where there
+  // is none (beaches with no AEMET sheet) it simply is not shown.
+  const observedTemp = inForce ? currentWeather : null;
+  const mainTemp = observedTemp ?? day.temperaturaMaxima;
+  const showMax = observedTemp != null && day.temperaturaMaxima != null && observedTemp <= day.temperaturaMaxima;
+  const wLevel = wind ? windSpeedLevel(wind) : 1;
+
+  // Rain detected NOW (multi-source signal from the backend). `tiempoActual`
+  // only arrives when the selected day is TODAY, so the badge is not
+  // shown on future days.
+  const raining = isRainActive(currentConditions);
+  const rainMm = currentConditions?.lluvia?.mm ?? currentConditions?.precipitacionMm ?? null;
+  // FORECAST rain (next few hours). Null if it is already raining: never two badges.
+  const expected = expectedRain(currentConditions);
+  const expectedHour = madridLocalHour(expected?.desdeIso);
+
+  return (
+    <div className="forecast-hero">
+      <div className="forecast-hero-main">
+        <div className="forecast-hero-col">
+          <span className="forecast-hero-icon-emoji">{raining ? '\u{1F327}\uFE0F' : skyGlyph}</span>
+          {mainTemp != null && (
+            <span className="forecast-hero-temp">{Math.round(mainTemp)}&deg;</span>
+          )}
+          {showMax && (
+            <span className="forecast-hero-max">{t('detalle.max')} {day.temperaturaMaxima}&deg;</span>
+          )}
+          {raining && (
+            <span className="forecast-hero-lluvia" role="status">
+              {currentConditions?.lluvia?.ultimaHora ? t('detalle.lluviaUltimaHora') : t('detalle.lloviendoAhora')}
+              {rainMm != null && rainMm > 0 && ` · ${rainMm.toFixed(1)} mm`}
+            </span>
+          )}
+          {expected && (
+            <span className="forecast-hero-lluvia forecast-hero-lluvia-prevista" role="status">
+              {expectedHour
+                ? t('detalle.lluviaPrevistaHora', { hora: expectedHour })
+                : t('detalle.lluviaPrevistaHoy')}
+            </span>
+          )}
+          {/* La palabra de la app, no la del proveedor: la tarjeta de
+              puntuación de esta MISMA pantalla dice "Sol" y aquí se leía
+              "Cielo claro" para el mismo cielo. Si no la reconocemos, se
+              enseña el texto crudo antes que perder el dato. */}
+          {skyText && (
+            <span className="forecast-hero-sky">
+              {translateApiText(skyWord(skyText, isNight) ?? skyText, language)}
+            </span>
+          )}
+          {day.temperaturaAgua != null && (
+            <span className="forecast-hero-agua">{t('detalle.aguaGrados', { temp: day.temperaturaAgua })}</span>
+          )}
+        </div>
+        {wind && <WindTurbine level={wLevel} label={translateApiText(wind, language)} />}
+        {waves && <WavesIndicator label={translateApiText(waves, language)} />}
+      </div>
+      {/* The headline mixes observation over forecast (skyText above): say
+          who observed it and when, or the freshest value has no face. */}
+      {expired ? (
+        /* Se dice que falta, y desde cuándo: callarlo dejaría la previsión
+           pasando por observación sin que nadie pueda notarlo. */
+        <p className="procedencia-linea procedencia-caducada">
+          {t('datos.noDisponible')}{' '}
+          <FreshnessLabel instant={received?.timestamp} />
+        </p>
+      ) : (
+        <SourceAndFreshness
+          provenance={observationProvenance(currentConditions)}
+          sourceKey="datos.enDirectoFuente"
+        />
+      )}
+      {/* La nota de licencia del observador ya no se pinta aquí: viaja con el
+          resto de lo que declara esta columna, bajo la ⓘ que la cierra. Lo
+          que queda es la frescura, que no es letra pequeña sino el dato. */}
+    </div>
+  );
+};
+
+export default ForecastHero;

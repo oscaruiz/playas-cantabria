@@ -2,7 +2,7 @@ import React from 'react';
 import { IonIcon } from '@ionic/react';
 import { homeOutline, listOutline, mapOutline } from 'ionicons/icons';
 import { useHistory, useLocation } from 'react-router-dom';
-import { useLanguage } from '../i18n/IdiomaContext';
+import { useLanguage } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
 import './BottomNavBar.css';
 
 /**

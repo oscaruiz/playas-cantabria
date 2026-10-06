@@ -7,7 +7,7 @@ import {
   API_TABLES,
   translateOperator,
 } from './apiText';
-import { translateApiDayName, formatShortDate } from './fechas';
+import { translateApiDayName, formatShortDate } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/dates';
 
 describe('traducirTextoApi', () => {
   it('en español devuelve el texto original', () => {

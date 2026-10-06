@@ -21,7 +21,7 @@ import { fireEvent, screen, within } from '@testing-library/react';
 import type { Beach, FeaturedBeach, FeaturedBeachesResponse } from '../../services/api';
 import { renderWithProviders } from '../render';
 import { installFetchMock, restoreFetch, route } from '../http/fakeFetch';
-import MapPage from '../../pages/MapaPage';
+import MapPage from '../../../../../../Dev/playas-cantabria/frontend/src/pages/MapPage';
 import { FEATURED_PATH as FEATURED, BEACHES_PATH as BEACHES } from '../apiRoutes';
 
 

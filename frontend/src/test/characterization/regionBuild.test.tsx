@@ -18,7 +18,7 @@ import { installFetchMock, restoreFetch, route } from '../http/fakeFetch';
 import { BEACHES_PATH, FEATURED_PATH } from '../apiRoutes';
 import { beachesResponse } from '../fixtures/beaches';
 import { featuredResponse } from '../fixtures/featured';
-import BeachList from '../../pages/PlayasList';
+import BeachList from '../../../../../../Dev/playas-cantabria/frontend/src/pages/BeachList';
 
 // The `mock` prefix is what lets jest.mock's factory reference them.
 const mockMapCenter: Array<[number, number]> = [];
@@ -104,7 +104,7 @@ describe('el mapa arranca donde dice la región', () => {
       route(BEACHES_PATH, { json: beachesResponse }),
     ]);
     // Imported here so the react-leaflet mock is in place before the module loads.
-    const MapPage = (await import('../../pages/MapaPage')).default;
+    const MapPage = (await import('../../../../../../Dev/playas-cantabria/frontend/src/pages/MapPage')).default;
     renderWithProviders(<MapPage />, { route: '/mapa' });
     await screen.findByText(beachesResponse[0].nombre);
 

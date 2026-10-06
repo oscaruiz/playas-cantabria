@@ -8,7 +8,7 @@
 import React from 'react';
 import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { useHistory } from 'react-router-dom';
-import BeachDetailPage from '../../pages/PlayaDetalle';
+import BeachDetailPage from '../../../../../../Dev/playas-cantabria/frontend/src/pages/BeachDetailPage';
 import { renderWithProviders } from '../../test/render';
 import { installFetchMock, restoreFetch, route, deferred, RouteSpec } from '../../test/http/fakeFetch';
 import { beachesResponse } from '../../test/fixtures/beaches';

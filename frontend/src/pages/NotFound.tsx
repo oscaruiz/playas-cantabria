@@ -1,0 +1,46 @@
+import React from 'react';
+import { IonPage, IonContent, IonFooter } from '@ionic/react';
+import { Link } from 'react-router-dom';
+import { useLanguage } from '../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
+import SeoHead from '../../../../../Dev/playas-cantabria/frontend/src/shared/seo/SeoHead';
+import BottomNavBar from '../../../../../Dev/playas-cantabria/frontend/src/shared/ui/BottomNavBar';
+import HeaderActions from '../../../../../Dev/playas-cantabria/frontend/src/shared/ui/HeaderActions';
+import BrandLogo from '../../../../../Dev/playas-cantabria/frontend/src/shared/ui/BrandLogo';
+import './landings/landings.css';
+
+/**
+ * Catch-all for URLs matching no route shape at all. noindex and no
+ * canonical: a soft-404 must not present itself to crawlers as a page.
+ */
+const NotFound: React.FC = () => {
+  const { t } = useLanguage();
+  return (
+    <IonPage className="home-page">
+      <SeoHead
+        title={t('seo.tituloNoEncontrada')}
+        description={t('seo.descNoEncontrada')}
+        canonicalPath=""
+        noindex
+      />
+      <div className="home-sticky-header">
+        <div className="home-sticky-marca marca-con-logo">
+          <BrandLogo />
+          <div className="marca-texto">
+            <p className="home-sticky-title">{t('app.titulo')}</p>
+          </div>
+        </div>
+        <HeaderActions />
+      </div>
+      <IonContent fullscreen>
+        <div className="home-hero"><div className="home-hero-spacer" /></div>
+        <div className="home-empty">
+          <p className="home-empty-text">{t('noEncontrada.texto')}</p>
+          <Link className="ld-enlace" to="/playas">{t('nav.playas')}</Link>
+        </div>
+      </IonContent>
+      <IonFooter className="ion-no-border"><BottomNavBar /></IonFooter>
+    </IonPage>
+  );
+};
+
+export default NotFound;

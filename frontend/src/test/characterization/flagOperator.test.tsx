@@ -15,8 +15,8 @@
 import React from 'react';
 import { screen } from '@testing-library/react';
 import type { Beach, BeachDetail } from '../../services/api';
-import BeachList from '../../pages/PlayasList';
-import BeachDetailPage from '../../pages/PlayaDetalle';
+import BeachList from '../../../../../../Dev/playas-cantabria/frontend/src/pages/BeachList';
+import BeachDetailPage from '../../../../../../Dev/playas-cantabria/frontend/src/pages/BeachDetailPage';
 import { renderWithProviders } from '../render';
 import { installFetchMock, restoreFetch, route } from '../http/fakeFetch';
 import { beachesResponse } from '../fixtures/beaches';

@@ -9,7 +9,7 @@
 import React from 'react';
 import { render, screen, waitFor, act } from '@testing-library/react';
 import { useRanking } from './useRanking';
-import { API_UPDATED_MESSAGE } from '../../hooks/useRefrescoDelServiceWorker';
+import { API_UPDATED_MESSAGE } from '../../../../../../Dev/playas-cantabria/frontend/src/hooks/useServiceWorkerRefresh';
 import { installFetchMock, restoreFetch, route } from '../../test/http/fakeFetch';
 import { FEATURED_PATH as FEATURED } from '../../test/apiRoutes';
 import type { FeaturedBeachesResponse } from '../../services/api';

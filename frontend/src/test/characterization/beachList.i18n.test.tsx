@@ -15,7 +15,7 @@
 
 import React from 'react';
 import { screen } from '@testing-library/react';
-import BeachList from '../../pages/PlayasList';
+import BeachList from '../../../../../../Dev/playas-cantabria/frontend/src/pages/BeachList';
 import { renderWithProviders } from '../render';
 import { installFetchMock, restoreFetch, route } from '../http/fakeFetch';
 import { beachesResponse } from '../fixtures/beaches';

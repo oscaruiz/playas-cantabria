@@ -15,7 +15,7 @@
 import React from 'react';
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { Route } from 'react-router-dom';
-import BeachList from '../../pages/PlayasList';
+import BeachList from '../../../../../../Dev/playas-cantabria/frontend/src/pages/BeachList';
 import { renderWithProviders } from '../render';
 import { installFetchMock, restoreFetch, route } from '../http/fakeFetch';
 import { beachesResponse } from '../fixtures/beaches';

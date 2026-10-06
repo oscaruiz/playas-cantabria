@@ -1,9 +1,9 @@
 import React from 'react';
 import { screen, waitFor } from '@testing-library/react';
-import MunicipalityPage from './MunicipioPage';
-import MunicipalitiesIndex from './MunicipiosIndex';
-import BeachLanding from './LandingPlayas';
-import BeachList from '../PlayasList';
+import MunicipalityPage from '../../../../../../Dev/playas-cantabria/frontend/src/pages/landings/MunicipalityPage';
+import MunicipalitiesIndex from '../../../../../../Dev/playas-cantabria/frontend/src/pages/landings/MunicipalitiesIndex';
+import BeachLanding from '../../../../../../Dev/playas-cantabria/frontend/src/pages/landings/BeachLanding';
+import BeachList from '../../../../../../Dev/playas-cantabria/frontend/src/pages/BeachList';
 import { renderWithProviders } from '../../test/render';
 import { installFetchMock, restoreFetch, route } from '../../test/http/fakeFetch';
 import { beachesResponse } from '../../test/fixtures/beaches';

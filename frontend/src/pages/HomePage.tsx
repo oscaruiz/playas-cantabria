@@ -8,7 +8,7 @@ import {
   getBeaches,
 } from '../services/api';
 import { rankedSkyEmoji, flagColorClass } from '../utils/beachHelpers';
-import { formatTimeAgo, madridLocalHour } from '../shared/format/tiempo';
+import { formatTimeAgo, madridLocalHour } from '../../../../../Dev/playas-cantabria/frontend/src/shared/format/time';
 import { FreshnessLabel } from '../features/provenance/SourceAndFreshness';
 import { rankBeaches, topScoreCodeNoHero } from '../utils/beachRanking';
 import { haversineKm } from '../shared/geo/haversine';
@@ -16,8 +16,8 @@ import { useUserLocation } from '../hooks/useUserLocation';
 import { useRanking } from '../features/ranking/useRanking';
 import BottomNavBar from '../shared/ui/BottomNavBar';
 import HeaderActions from '../shared/ui/HeaderActions';
-import BrandLogo from '../shared/ui/LogoMarca';
-import { useLanguage } from '../shared/i18n/IdiomaContext';
+import BrandLogo from '../../../../../Dev/playas-cantabria/frontend/src/shared/ui/BrandLogo';
+import { useLanguage } from '../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
 import {
   translateApiText,
   readableReason,
@@ -27,13 +27,13 @@ import {
 } from '../shared/i18n/apiText';
 import ScoreBadge from '../components/ScoreBadge';
 import TrendBadge from '../components/TrendBadge';
-import BestTime from '../components/MejorMomento';
+import BestTime from '../../../../../Dev/playas-cantabria/frontend/src/components/BestTime';
 import type { TextKey } from '../shared/i18n/es';
 import SafetyNotice from '../shared/ui/SafetyNotice';
 import { beachPath } from '../shared/seo/beachUrls';
 import SeoHead from '../shared/seo/SeoHead';
 import { useFavoriteCodes } from '../modules/favorites';
-import { InstallButton } from '../modules/instalacion';
+import { InstallButton } from '../../../../../Dev/playas-cantabria/frontend/src/modules/install';
 import './HomePage.css';
 
 /**

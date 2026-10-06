@@ -1,4 +1,4 @@
-import type { Language } from './IdiomaContext';
+import type { Language } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
 import type { TextKey } from './es';
 // KNOWN TEMPORARY EDGE (shared → domain), the only one left after Phase 1.
 // `claveEstadoBandera` is a conditions-specific mapper that has not moved yet;

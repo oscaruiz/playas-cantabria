@@ -18,7 +18,7 @@
 
 import React from 'react';
 import { screen, waitFor } from '@testing-library/react';
-import BeachList from '../../pages/PlayasList';
+import BeachList from '../../../../../../Dev/playas-cantabria/frontend/src/pages/BeachList';
 import { renderWithProviders } from '../render';
 import { installFetchMock, restoreFetch, route, deferred, RouteSpec } from '../http/fakeFetch';
 import { FEATURED_PATH as FEATURED, BEACHES_PATH as BEACHES } from '../apiRoutes';

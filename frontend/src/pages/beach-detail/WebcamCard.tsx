@@ -1,0 +1,36 @@
+import React from 'react';
+import { IonIcon } from '@ionic/react';
+import { videocamOutline } from 'ionicons/icons';
+import { BeachDetail } from '../../../../../../Dev/playas-cantabria/frontend/src/services/api';
+import { webcamCoverageKey } from '../../../../../../Dev/playas-cantabria/frontend/src/utils/beachHelpers';
+import { useLanguage } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
+import { DataStatus } from '../../../../../../Dev/playas-cantabria/frontend/src/features/provenance/SourceAndFreshness';
+
+/**
+ * Beach webcam as an external LINK (never embedded). The title shows the
+ * coverage (exact / shared panoramic / nearby) so as not to mislead.
+ * Hidden entirely if there is no webcam or it is disabled.
+ */
+export const WebcamCard: React.FC<{ webcam?: BeachDetail['webcam'] }> = ({ webcam }) => {
+  const { t } = useLanguage();
+  if (!webcam || webcam.estado === 'desactivada') return null;
+
+  return (
+    <section className="detail-section webcam-section">
+      <h3 className="section-kicker">{t(webcamCoverageKey(webcam.cobertura))}</h3>
+      <a
+        className="webcam-open-link"
+        href={webcam.url}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <IonIcon icon={videocamOutline} aria-hidden="true" /> {t('webcam.abrir')}
+      </a>
+      {/* The link is editorial data; whether the camera is broadcasting is
+          not something this app knows — so it says exactly that. */}
+      <DataStatus labelKey="datos.webcamExterna" />
+    </section>
+  );
+};
+
+export default WebcamCard;

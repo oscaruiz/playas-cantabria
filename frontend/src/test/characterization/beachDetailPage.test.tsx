@@ -22,7 +22,7 @@
 import React from 'react';
 import { fireEvent, screen, waitFor } from '@testing-library/react';
 import type { BeachDetail, CurrentRain } from '../../services/api';
-import BeachDetailPage from '../../pages/PlayaDetalle';
+import BeachDetailPage from '../../../../../../Dev/playas-cantabria/frontend/src/pages/BeachDetailPage';
 import { renderWithProviders } from '../render';
 import { installFetchMock, restoreFetch, route, deferred, RouteSpec } from '../http/fakeFetch';
 import { featuredResponse } from '../fixtures/featured';
