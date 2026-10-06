@@ -47,8 +47,8 @@ TypeScript config for build is at `backend/config/tsconfig.json` (rootDir=`../sr
 ```
 backend/src/
   domain/
-    entities/       — Beach, Weather, Flag, Tides
-    ports/          — Interfaces (BeachRepository, WeatherProvider, FlagProvider, TidesProvider)
+    entities/       — Beach, Weather, Flag, BeachForecast
+    ports/          — Interfaces (BeachRepository, WeatherProvider, FlagProvider, SunshineProvider, PrecipitationNowProvider)
     use-cases/      — GetAllBeaches, GetBeachById, GetBeachDetails
   application/
     dtos/           — BeachDTO, BeachDetailsDTO

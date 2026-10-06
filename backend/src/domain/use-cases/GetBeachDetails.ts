@@ -1,18 +1,15 @@
 import { Beach } from '../entities/Beach';
 import { Weather } from '../entities/Weather';
 import { FlagStatus, FlagRef } from '../entities/Flag';
-import { Tides } from '../entities/Tides';
 import { BeachRepository } from '../ports/BeachRepository';
 import { WeatherProvider } from '../ports/WeatherProvider';
 import { FlagProvider } from '../ports/FlagProvider';
-import { TidesProvider } from '../ports/TidesProvider';
 import { resolveFlagForStations } from '../services/flagAggregation';
 
 export interface BeachDetails {
   beach: Beach;
   weather: Weather | null;
   flag: FlagStatus | null;
-  tides: Tides | null;
 }
 
 export class DetailsError extends Error {
@@ -34,7 +31,6 @@ export class GetBeachDetails {
     private readonly aemet: WeatherProvider,
     private readonly openWeather: WeatherProvider,
     private readonly flags: FlagProvider,
-    private readonly tides: TidesProvider | null
   ) {}
 
   async execute(id: string): Promise<BeachDetails> {
@@ -43,13 +39,12 @@ export class GetBeachDetails {
       throw new DetailsError(`Beach with id '${id}' not found`);
     }
 
-    const [weather, flag, tideInfo] = await Promise.all([
+    const [weather, flag] = await Promise.all([
       this.getWeatherConsistent(beach.latitude, beach.longitude),
       this.getFlagForBeach(beach),
-      this.getTidesSafe(beach.latitude, beach.longitude),
     ]);
 
-    return { beach, weather, flag, tides: tideInfo };
+    return { beach, weather, flag };
   }
 
   /**
@@ -84,15 +79,6 @@ export class GetBeachDetails {
     if (!ref) return null;
     try {
       return await this.flags.getFlag(ref);
-    } catch {
-      return null;
-    }
-  }
-
-  private async getTidesSafe(lat: number, lon: number): Promise<Tides | null> {
-    if (!this.tides) return null;
-    try {
-      return await this.tides.getTidesByCoords(lat, lon);
     } catch {
       return null;
     }

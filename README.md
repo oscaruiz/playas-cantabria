@@ -78,8 +78,8 @@ El backend sigue una **Arquitectura Hexagonal** (Puertos y Adaptadores). Las dep
 ### Capas
 
 1. **`Domain` (Núcleo)**
-   * Entidades: `Beach`, `Weather`, `Flag`, `Tides`, `BeachForecast`, `RainNowcast`, `Sunshine`.
-   * Puertos (interfaces): `BeachRepository`, `WeatherProvider`, `FlagProvider`, `TidesProvider`.
+   * Entidades: `Beach`, `Weather`, `Flag`, `BeachForecast`, `RainNowcast`, `Sunshine`.
+   * Puertos (interfaces): `BeachRepository`, `WeatherProvider`, `FlagProvider`, `SunshineProvider`, `PrecipitationNowProvider`.
    * Casos de uso: `GetAllBeaches`, `GetBeachById`, `GetBeachDetails`, `GetFeaturedBeaches` (con `BeachScorer`), `GetRainNowcast`.
    * **Sin dependencias** de otras capas.
 

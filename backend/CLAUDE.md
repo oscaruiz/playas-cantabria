@@ -26,8 +26,8 @@ infrastructure/ → application/ → domain/
 
 ### Layers
 
-- **domain/entities/**: pure types (Beach, Weather, Flag, Tides, BeachForecast). No infra imports.
-- **domain/ports/**: interfaces (BeachRepository, WeatherProvider, FlagProvider, TidesProvider). Adapters implement these.
+- **domain/entities/**: pure types (Beach, Weather, Flag, BeachForecast). No infra imports.
+- **domain/ports/**: interfaces (BeachRepository, WeatherProvider, FlagProvider, SunshineProvider, PrecipitationNowProvider). Adapters implement these.
 - **domain/use-cases/**: business logic (GetAllBeaches, GetBeachById, GetBeachDetails with AEMET→OpenWeather hedging).
 - **application/dtos/**: public API shapes (BeachDTO, BeachDetailsDTO).
 - **application/mappers/**: entity → DTO (BeachMapper, LegacyDetailsMapper).
@@ -47,7 +47,6 @@ Everything is registered in `infrastructure/di/dependencies.ts`. No DI framework
 To add a new service:
 1. Create the class in the appropriate layer.
 2. Register in `dependencies.ts` with `container.registerSingleton()` or `container.register()`.
-3. Update `SERVICES` in `di/index.ts` to expose by name.
 
 ## Data providers — Fallback chain
 

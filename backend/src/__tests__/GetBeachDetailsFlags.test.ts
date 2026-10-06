@@ -44,7 +44,7 @@ describe('GetBeachDetails — banderas multi-puesto', () => {
     });
     const spy = vi.spyOn(flags, 'getFlag');
 
-    const uc = new GetBeachDetails(repoWith(beach), weatherStub, weatherStub, flags, null);
+    const uc = new GetBeachDetails(repoWith(beach), weatherStub, weatherStub, flags);
     const details = await uc.execute(beach.id);
 
     expect(spy).toHaveBeenCalledTimes(3); // queries ALL the stations
@@ -57,7 +57,7 @@ describe('GetBeachDetails — banderas multi-puesto', () => {
       flagStations: [{ sourceName: 'PENDIENTE' }, { ref: cr(200), sourceName: 'CON ID' }],
     };
     const flags = flagProviderFrom({ 200: { color: 'yellow', timestamp: 1 } });
-    const uc = new GetBeachDetails(repoWith(beach), weatherStub, weatherStub, flags, null);
+    const uc = new GetBeachDetails(repoWith(beach), weatherStub, weatherStub, flags);
 
     const details = await uc.execute(beach.id);
     expect(details.flag?.color).toBe('yellow');
@@ -66,7 +66,7 @@ describe('GetBeachDetails — banderas multi-puesto', () => {
   it('sin puestos con referencia devuelve bandera null (sin cobertura)', async () => {
     const beach: Beach = { ...base, flagStations: [{ sourceName: 'SOLO NOMBRE' }] };
     const flags = flagProviderFrom({});
-    const uc = new GetBeachDetails(repoWith(beach), weatherStub, weatherStub, flags, null);
+    const uc = new GetBeachDetails(repoWith(beach), weatherStub, weatherStub, flags);
 
     const details = await uc.execute(beach.id);
     expect(details.flag).toBeNull();
@@ -75,7 +75,7 @@ describe('GetBeachDetails — banderas multi-puesto', () => {
   it('cae a la referencia única cuando no hay flagStations (compatibilidad)', async () => {
     const beach: Beach = { ...base, flagRef: cr(373) };
     const flags = flagProviderFrom({ 373: { color: 'green', timestamp: 1 } });
-    const uc = new GetBeachDetails(repoWith(beach), weatherStub, weatherStub, flags, null);
+    const uc = new GetBeachDetails(repoWith(beach), weatherStub, weatherStub, flags);
 
     const details = await uc.execute(beach.id);
     expect(details.flag?.color).toBe('green');

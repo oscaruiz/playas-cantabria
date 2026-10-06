@@ -121,7 +121,6 @@ export function configureDependencies(
       c.get('aemetWeatherProvider'),
       c.get('openWeatherProvider'),
       c.get('flagProvider'),
-      null // tides provider - not implemented yet
     )
   );
 

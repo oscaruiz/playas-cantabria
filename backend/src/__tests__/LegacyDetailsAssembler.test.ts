@@ -131,7 +131,7 @@ function buildAssembler(opts: {
 describe('LegacyDetailsAssembler — coherencia resumen vs desglose y "ahora" real', () => {
   it('reproduce la discrepancia mañana/tarde en la previsión (origen único, no bug de caché)', async () => {
     const assembler = buildAssembler({
-      details: { beach: COBRECES, weather: makeOwCurrent(), flag: null, tides: null },
+      details: { beach: COBRECES, weather: makeOwCurrent(), flag: null },
       forecast: makeForecast(),
       owCurrent: makeOwCurrent(),
     });
@@ -148,7 +148,7 @@ describe('LegacyDetailsAssembler — coherencia resumen vs desglose y "ahora" re
 
   it('puebla tiempoActual desde OpenWeather current (observación real con prioridad)', async () => {
     const assembler = buildAssembler({
-      details: { beach: COBRECES, weather: makeOwCurrent(), flag: null, tides: null },
+      details: { beach: COBRECES, weather: makeOwCurrent(), flag: null },
       forecast: makeForecast(),
       owCurrent: makeOwCurrent({ description: 'lluvia ligera', icon: '10d', precipitationMm: 0.5 }),
     });
@@ -177,7 +177,7 @@ describe('LegacyDetailsAssembler — coherencia resumen vs desglose y "ahora" re
       timestamp: 1750000000000,
     };
     const assembler = buildAssembler({
-      details: { beach: COBRECES, weather: makeOwCurrent(), flag: null, tides: null },
+      details: { beach: COBRECES, weather: makeOwCurrent(), flag: null },
       forecast: makeForecast(),
       owCurrent: makeOwCurrent(),
       rain,
@@ -197,7 +197,7 @@ describe('LegacyDetailsAssembler — coherencia resumen vs desglose y "ahora" re
 
   it('si el nowcast de lluvia falla, el endpoint sigue intacto y tiempoActual va sin lluvia', async () => {
     const assembler = buildAssembler({
-      details: { beach: COBRECES, weather: makeOwCurrent(), flag: null, tides: null },
+      details: { beach: COBRECES, weather: makeOwCurrent(), flag: null },
       forecast: makeForecast(),
       owCurrent: makeOwCurrent(),
       // no opts.rain → the fake throws, like a downed provider
@@ -223,7 +223,7 @@ describe('LegacyDetailsAssembler — coherencia resumen vs desglose y "ahora" re
       upcoming: { expected: true, firstAt: 1750003600000, mmMax: 0.6 },
     };
     const assembler = buildAssembler({
-      details: { beach: COBRECES, weather: makeOwCurrent(), flag: null, tides: null },
+      details: { beach: COBRECES, weather: makeOwCurrent(), flag: null },
       forecast: makeForecast(), // no rain text: only Open-Meteo triggers
       owCurrent: makeOwCurrent(),
       rain,
@@ -243,7 +243,7 @@ describe('LegacyDetailsAssembler — coherencia resumen vs desglose y "ahora" re
     const forecast = makeForecast();
     forecast.days[0].afternoon.skyDescription = 'Chubascos tormentosos';
     const assembler = buildAssembler({
-      details: { beach: COBRECES, weather: makeOwCurrent(), flag: null, tides: null },
+      details: { beach: COBRECES, weather: makeOwCurrent(), flag: null },
       forecast,
       owCurrent: makeOwCurrent(),
       // no opts.rain → the nowcast throws; only the AEMET text remains
@@ -269,7 +269,7 @@ describe('LegacyDetailsAssembler — coherencia resumen vs desglose y "ahora" re
       upcoming: { expected: false, firstAt: null, mmMax: null },
     };
     const assembler = buildAssembler({
-      details: { beach: COBRECES, weather: makeOwCurrent(), flag: null, tides: null },
+      details: { beach: COBRECES, weather: makeOwCurrent(), flag: null },
       forecast: makeForecast(),
       owCurrent: makeOwCurrent(),
       rain,
@@ -286,7 +286,7 @@ describe('LegacyDetailsAssembler — coherencia resumen vs desglose y "ahora" re
     const beachSinAemet: Beach = { ...COBRECES, id: '3907595', aemetCode: '3907595', sinAemet: true };
 
     const getDetails = {
-      execute: async () => ({ beach: beachSinAemet, weather: makeOwCurrent(), flag: null, tides: null }),
+      execute: async () => ({ beach: beachSinAemet, weather: makeOwCurrent(), flag: null }),
     } as unknown as GetBeachDetails;
     const aemetScraper = {
       // getBeachForecast is the network request that must NOT fire for sinAemet.
@@ -318,7 +318,7 @@ describe('LegacyDetailsAssembler — coherencia resumen vs desglose y "ahora" re
   it('no confía en cielo sintético de AEMET: tiempoActual = null si OpenWeather falla y el hedge es AEMET', async () => {
     const aemetSynthetic = makeOwCurrent({ source: 'AEMET', description: 'Templado y húmedo' });
     const assembler = buildAssembler({
-      details: { beach: COBRECES, weather: aemetSynthetic, flag: null, tides: null },
+      details: { beach: COBRECES, weather: aemetSynthetic, flag: null },
       forecast: makeForecast(),
       owCurrent: async () => {
         throw new Error('OpenWeather down');
@@ -353,7 +353,7 @@ describe('LegacyDetailsAssembler — coherencia resumen vs desglose y "ahora" re
       tidesSource: null,
     };
     const assembler = buildAssembler({
-      details: { beach: COBRECES, weather: makeOwCurrent(), flag: null, tides: null },
+      details: { beach: COBRECES, weather: makeOwCurrent(), flag: null },
       forecast,
       owCurrent: makeOwCurrent(),
       owHalfDays: [
@@ -430,7 +430,7 @@ describe('LegacyDetailsAssembler — marea de referencia', () => {
     withRepo?: boolean;
   }) {
     const getDetails = {
-      execute: async () => ({ beach: opts.beach, weather: makeOwCurrent(), flag: null, tides: null }),
+      execute: async () => ({ beach: opts.beach, weather: makeOwCurrent(), flag: null }),
     } as unknown as GetBeachDetails;
 
     const aemetScraper = {
@@ -562,7 +562,7 @@ describe('LegacyDetailsAssembler — previsión horaria en tiempoActual', () => 
   it('publica la franja restante completa: la tira es la evidencia de la ventana del día', async () => {
     vi.setSystemTime(MEDIODIA);
     const assembler = buildAssembler({
-      details: { beach: COBRECES, weather: makeOwCurrent(), flag: null, tides: null },
+      details: { beach: COBRECES, weather: makeOwCurrent(), flag: null },
       forecast: makeForecast(),
       owCurrent: makeOwCurrent(),
       rain: rainCon(8), // ocho tramos, todos dentro de la franja (14:00–21:00 Madrid)
@@ -584,7 +584,7 @@ describe('LegacyDetailsAssembler — previsión horaria en tiempoActual', () => 
     const medianoche = new Date('2026-08-01T22:00:00Z'); // 00:00 Madrid
     vi.setSystemTime(medianoche);
     const assembler = buildAssembler({
-      details: { beach: COBRECES, weather: makeOwCurrent(), flag: null, tides: null },
+      details: { beach: COBRECES, weather: makeOwCurrent(), flag: null },
       forecast: makeForecast(),
       owCurrent: makeOwCurrent(),
       rain: {
@@ -606,7 +606,7 @@ describe('LegacyDetailsAssembler — previsión horaria en tiempoActual', () => 
   it('sin Open-Meteo NI suplente el resto del endpoint no se entera', async () => {
     vi.setSystemTime(MEDIODIA);
     const assembler = buildAssembler({
-      details: { beach: COBRECES, weather: makeOwCurrent(), flag: null, tides: null },
+      details: { beach: COBRECES, weather: makeOwCurrent(), flag: null },
       forecast: makeForecast(),
       owCurrent: makeOwCurrent(),
       rain: { ...rainCon(0), outlook: null },
@@ -627,7 +627,7 @@ describe('LegacyDetailsAssembler — previsión horaria en tiempoActual', () => 
     // bloque entero de la ficha.
     vi.setSystemTime(MEDIODIA);
     const assembler = buildAssembler({
-      details: { beach: COBRECES, weather: makeOwCurrent(), flag: null, tides: null },
+      details: { beach: COBRECES, weather: makeOwCurrent(), flag: null },
       forecast: makeForecast(),
       owCurrent: makeOwCurrent(),
       rain: { ...rainCon(0), outlook: null },
@@ -648,7 +648,7 @@ describe('LegacyDetailsAssembler — previsión horaria en tiempoActual', () => 
   it('mientras Open-Meteo responda, manda Open-Meteo: el suplente no se toca', async () => {
     vi.setSystemTime(MEDIODIA);
     const assembler = buildAssembler({
-      details: { beach: COBRECES, weather: makeOwCurrent(), flag: null, tides: null },
+      details: { beach: COBRECES, weather: makeOwCurrent(), flag: null },
       forecast: makeForecast(),
       owCurrent: makeOwCurrent(),
       rain: rainCon(4),
@@ -688,7 +688,7 @@ describe('LegacyDetailsAssembler — ventana del día en tiempoActual', () => {
   it('publica la mejor franja del resto del día, recortada a la franja de playa', async () => {
     vi.setSystemTime(MEDIODIA);
     const assembler = buildAssembler({
-      details: { beach: COBRECES, weather: makeOwCurrent(), flag: null, tides: null },
+      details: { beach: COBRECES, weather: makeOwCurrent(), flag: null },
       forecast: makeForecast(),
       owCurrent: makeOwCurrent(),
       rain: rainCon(8), // buenas hasta las 19:00 UTC (21:00 Madrid)
@@ -711,7 +711,7 @@ describe('LegacyDetailsAssembler — ventana del día en tiempoActual', () => {
   it('si Open-Meteo calla, la ventana la sirve OpenWeather con su paso de 3 h', async () => {
     vi.setSystemTime(MEDIODIA);
     const assembler = buildAssembler({
-      details: { beach: COBRECES, weather: makeOwCurrent(), flag: null, tides: null },
+      details: { beach: COBRECES, weather: makeOwCurrent(), flag: null },
       forecast: makeForecast(),
       owCurrent: makeOwCurrent(),
       rain: { ...rainCon(0), outlook: null },
@@ -734,7 +734,7 @@ describe('LegacyDetailsAssembler — ventana del día en tiempoActual', () => {
   it('si Open-Meteo respondió y el veredicto es "no hay franja buena", el suplente no opina', async () => {
     vi.setSystemTime(MEDIODIA);
     const assembler = buildAssembler({
-      details: { beach: COBRECES, weather: makeOwCurrent(), flag: null, tides: null },
+      details: { beach: COBRECES, weather: makeOwCurrent(), flag: null },
       forecast: makeForecast(),
       owCurrent: makeOwCurrent(),
       // Día gris de verdad: ninguna hora llega al suelo absoluto.

@@ -150,7 +150,7 @@ function buildApp() {
     },
   } as unknown as GetRainNowcast;
 
-  const getBeachDetails = new GetBeachDetails(repo, aemetWeather, openWeatherPort, flagProvider, null);
+  const getBeachDetails = new GetBeachDetails(repo, aemetWeather, openWeatherPort, flagProvider);
   // No cache, no sunshine provider: assembleFresh on every request, no sky correction.
   const assembler = new LegacyDetailsAssembler(
     getBeachDetails,
