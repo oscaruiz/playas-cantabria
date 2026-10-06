@@ -65,7 +65,7 @@ export function isFlagAvailable(redCross?: { bandera?: string }): boolean {
 export type FlagStatus = 'color' | 'fueraDeHorario' | 'sinDatos';
 
 /** Converts "DD-MM-YYYY" (Cruz Roja format) to "YYYY-MM-DD"; null if it doesn't parse. */
-function isoDesdeDDMMYYYY(date?: string | null): string | null {
+function isoFromDDMMYYYY(date?: string | null): string | null {
   if (!date) return null;
   const m = date.match(/(\d{2})-(\d{2})-(\d{4})/);
   return m ? `${m[3]}-${m[2]}-${m[1]}` : null;
@@ -105,8 +105,8 @@ export function withinHours(
 
   // Out of season (coverage) → no service even if it's mid-afternoon.
   const today = madridDate(now);
-  const from = isoDesdeDDMMYYYY(redCross.coberturaDesde);
-  const until = isoDesdeDDMMYYYY(redCross.coberturaHasta);
+  const from = isoFromDDMMYYYY(redCross.coberturaDesde);
+  const until = isoFromDDMMYYYY(redCross.coberturaHasta);
   if (from && today < from) return false;
   if (until && today > until) return false;
 
@@ -175,19 +175,19 @@ export function lastRecordedFlag(
 
   // Clamp the capture to the closing of the lifeguard day it belongs to.
   const captureMin = madridMinutes(capture);
-  let registrada = capture.getTime();
-  if (captureMin > end) registrada -= (captureMin - end) * 60000; // closed that same day
-  else if (captureMin < start) registrada -= (captureMin + 1440 - end) * 60000; // closed the previous day
+  let recorded = capture.getTime();
+  if (captureMin > end) recorded -= (captureMin - end) * 60000; // closed that same day
+  else if (captureMin < start) recorded -= (captureMin + 1440 - end) * 60000; // closed the previous day
 
-  if (now.getTime() - registrada > MAX_FLAG_AGE_MS) return null;
+  if (now.getTime() - recorded > MAX_FLAG_AGE_MS) return null;
 
   // A record outside the coverage season does not correspond to real lifeguarding.
-  const day = madridDate(new Date(registrada));
-  const from = isoDesdeDDMMYYYY(redCross?.coberturaDesde);
-  const until = isoDesdeDDMMYYYY(redCross?.coberturaHasta);
+  const day = madridDate(new Date(recorded));
+  const from = isoFromDDMMYYYY(redCross?.coberturaDesde);
+  const until = isoFromDDMMYYYY(redCross?.coberturaHasta);
   if ((from && day < from) || (until && day > until)) return null;
 
-  return { bandera: redCross!.bandera!, registradaIso: new Date(registrada).toISOString() };
+  return { bandera: redCross!.bandera!, registradaIso: new Date(recorded).toISOString() };
 }
 
 /** Does the beach have a showable webcam? (it exists and is not deactivated). */

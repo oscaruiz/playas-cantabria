@@ -19,7 +19,7 @@ import { AttributionNote, SourceAndFreshness } from '../../../../../../Dev/playa
 import DataInfo from '../../../../../../Dev/playas-cantabria/frontend/src/features/provenance/DataInfo';
 
 /** Cloud cover → the same three states the score uses (clear / scattered / broken). */
-function iconoDeNubes(pct: number | null): string {
+function cloudIcon(pct: number | null): string {
   if (pct == null) return partlySunnyOutline;
   if (pct <= 25) return sunnyOutline;
   if (pct <= 50) return partlySunnyOutline;
@@ -154,7 +154,7 @@ const NextHours: React.FC<{
                 explains the recommendation. */}
             <IonIcon
               className={`pd-hour-icon${wet ? ' pd-hour-icon--rain' : ''}`}
-              icon={wet ? rainyOutline : iconoDeNubes(h.nubesPct)}
+              icon={wet ? rainyOutline : cloudIcon(h.nubesPct)}
               aria-hidden="true"
             />
             <span className="pd-hour-temp" aria-hidden="true">

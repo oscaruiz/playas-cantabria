@@ -10,13 +10,13 @@ import { haversineKm } from '../shared/geo/haversine';
 // Calibration: a nearby beach can lead over another with more points
 // (78@15km beats 84@33km), but the cap prevents distance from dominating:
 // from 62.5 km on they all get penalized equally and the raw score decides.
-export const PENALIZACION_PTS_POR_KM = 0.4;
-export const PENALIZACION_MAX_PTS = 25;
+export const PENALTY_PTS_PER_KM = 0.4;
+export const MAX_PENALTY_PTS = 25;
 
 /** Internal sort score. NEVER shown in the UI (the UI always displays the raw score). */
 export function adjustedScore(score: number, distKm: number): number {
   if (!Number.isFinite(distKm)) return score;
-  return score - Math.min(distKm * PENALIZACION_PTS_POR_KM, PENALIZACION_MAX_PTS);
+  return score - Math.min(distKm * PENALTY_PTS_PER_KM, MAX_PENALTY_PTS);
 }
 
 /** Structural subset of FeaturedBeach — the minimum the ranking needs. */

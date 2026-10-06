@@ -3,8 +3,8 @@ import {
   adjustedScore,
   rankBeaches,
   topScoreCodeNoHero,
-  PENALIZACION_PTS_POR_KM,
-  PENALIZACION_MAX_PTS,
+  PENALTY_PTS_PER_KM,
+  MAX_PENALTY_PTS,
   RankableBeach,
 } from './beachRanking';
 
@@ -31,14 +31,14 @@ describe('haversineKm', () => {
 
 describe('scoreAjustado', () => {
   it('reproduce la tabla de calibración', () => {
-    expect(adjustedScore(78, 15)).toBeCloseTo(78 - 15 * PENALIZACION_PTS_POR_KM);
-    expect(adjustedScore(84, 33)).toBeCloseTo(84 - 33 * PENALIZACION_PTS_POR_KM);
-    expect(adjustedScore(82, 30)).toBeCloseTo(82 - 30 * PENALIZACION_PTS_POR_KM);
-    expect(adjustedScore(83, 44)).toBeCloseTo(83 - 44 * PENALIZACION_PTS_POR_KM);
+    expect(adjustedScore(78, 15)).toBeCloseTo(78 - 15 * PENALTY_PTS_PER_KM);
+    expect(adjustedScore(84, 33)).toBeCloseTo(84 - 33 * PENALTY_PTS_PER_KM);
+    expect(adjustedScore(82, 30)).toBeCloseTo(82 - 30 * PENALTY_PTS_PER_KM);
+    expect(adjustedScore(83, 44)).toBeCloseTo(83 - 44 * PENALTY_PTS_PER_KM);
   });
 
   it('aplica el tope de penalización', () => {
-    expect(adjustedScore(95, 200)).toBe(95 - PENALIZACION_MAX_PTS);
+    expect(adjustedScore(95, 200)).toBe(95 - MAX_PENALTY_PTS);
   });
 
   it('con distancia no finita devuelve la puntuación cruda', () => {

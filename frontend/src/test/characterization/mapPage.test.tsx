@@ -116,7 +116,7 @@ const withRedFlag = featured('BanderaRoja', 'C-BR', 70, { bandera: 'Roja' });
 const withStrongWind = featured('VientoFuerte', 'C-VF', 72, { vientoMs: 11.2 });
 const best = featured('LaMejor', 'C-MAX', 95, { bandera: 'Verde' });
 
-const featuredMapa: FeaturedBeachesResponse = {
+const featuredMap: FeaturedBeachesResponse = {
   timestamp: Date.parse('2026-07-27T10:00:00.000Z'),
   playas: [best],
   revisar: [bad],
@@ -177,7 +177,7 @@ beforeEach(() => {
   localStorage.removeItem('user_location');
   Object.defineProperty(navigator, 'geolocation', { configurable: true, value: undefined });
   installFetchMock([
-    route(FEATURED, { json: featuredMapa }),
+    route(FEATURED, { json: featuredMap }),
     route(BEACHES, { json: mapBeaches }),
   ]);
 });

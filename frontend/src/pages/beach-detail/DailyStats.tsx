@@ -4,7 +4,7 @@ import { capitalize } from '../../../../../../Dev/playas-cantabria/frontend/src/
 import { useLanguage } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/LanguageContext';
 import { translateApiText } from '../../../../../../Dev/playas-cantabria/frontend/src/shared/i18n/apiText';
 
-function avisoLevelClass(level: number | null): string {
+function warningLevelClass(level: number | null): string {
   if (level === 1) return 'warning-red';
   if (level === 2) return 'warning-orange';
   if (level === 3) return 'warning-yellow';
@@ -47,7 +47,7 @@ const DailyStats: React.FC<{ day: ForecastDayDTO; embedded?: boolean }> = ({ day
         {day.aviso && day.aviso.descripcion && (
           <div className="daily-stat-row">
             <span className="daily-stat-label">{t('detalle.avisoLitoral')}</span>
-            <span className={`daily-stat-value ${avisoLevelClass(day.aviso.nivel)}`}>
+            <span className={`daily-stat-value ${warningLevelClass(day.aviso.nivel)}`}>
               {translateApiText(capitalize(day.aviso.descripcion), language)}
             </span>
           </div>

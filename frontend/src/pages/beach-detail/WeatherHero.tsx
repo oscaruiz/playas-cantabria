@@ -67,15 +67,15 @@ const WeatherHero: React.FC<{
   const [chosenDay, setChosenDay] = useState(0);
 
   const today = new Date();
-  const isoConOffset = (days: number): string => {
+  const isoWithOffset = (days: number): string => {
     const d = new Date(today);
     d.setDate(today.getDate() + days);
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   };
 
   const days = [
-    { clima: weather.hoy, fecha: isoConOffset(0), esHoy: true },
-    ...(weather.manana ? [{ clima: weather.manana, fecha: isoConOffset(1), esHoy: false }] : []),
+    { clima: weather.hoy, fecha: isoWithOffset(0), esHoy: true },
+    ...(weather.manana ? [{ clima: weather.manana, fecha: isoWithOffset(1), esHoy: false }] : []),
   ];
   const sel = Math.min(chosenDay, days.length - 1);
   const current = days[sel];
