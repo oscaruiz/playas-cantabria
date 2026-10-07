@@ -27,7 +27,7 @@ infrastructure/ → application/ → domain/
 ### Layers
 
 - **domain/entities/**: pure types (Beach, Weather, Flag, BeachForecast). No infra imports.
-- **domain/ports/**: interfaces (BeachRepository, WeatherProvider, FlagProvider, SunshineProvider, PrecipitationNowProvider). Adapters implement these.
+- **domain/ports/**: interfaces (BeachRepository, WeatherProvider, FlagProvider, SunshineProvider, PrecipitationNowProvider, BeachForecastProvider, Cache). Adapters implement these.
 - **domain/use-cases/**: business logic (GetAllBeaches, GetBeachById, GetBeachDetails with AEMET→OpenWeather hedging).
 - **application/dtos/**: public API shapes (BeachDTO, BeachDetailsDTO).
 - **application/mappers/**: entity → DTO (BeachMapper, LegacyDetailsMapper).

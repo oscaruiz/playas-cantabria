@@ -80,7 +80,7 @@ function build(opts: {
   const ow = fakeWeatherProvider(opts.ow ?? FAIL);
   const aemet = fakeWeatherProvider(opts.aemet ?? FAIL);
   const om = fakeOmProvider(opts.om ?? FAIL);
-  const useCase = new GetRainNowcast(ow, aemet, om, new InMemoryCache());
+  const useCase = new GetRainNowcast(ow, aemet, om, new InMemoryCache(), () => 1800);
   return { useCase, ow, aemet, om };
 }
 

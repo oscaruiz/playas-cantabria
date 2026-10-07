@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { GetFeaturedBeaches, type FeaturedBeachesFullResult } from '../domain/use-cases/GetFeaturedBeaches';
 import { CacheKeys, InMemoryCache } from '../infrastructure/cache/InMemoryCache';
+import { Config, skyCorrectionMode } from '../infrastructure/config/config';
+import { corregirCieloObservado } from '../application/services/skyCorrectionRunner';
 import type { Beach } from '../domain/entities/Beach';
 
 const BEACH: Beach = {
@@ -27,8 +29,15 @@ function useCase(cache: InMemoryCache) {
     cache,
     unused as never,
     unavailableSunshine,
-    'cantabria',
     [],
+    {
+      cacheKey: CacheKeys.featuredBeaches('cantabria'),
+      freshTtlSeconds: () => Config.featuredFreshTtlSeconds(),
+      staleTtlSeconds: () => Config.featuredStaleTtlSeconds(),
+      skyCorrectionEnabled: () => skyCorrectionMode() !== 'off',
+    },
+    (name, weather, sunshine, raining, now, outlook) =>
+      corregirCieloObservado(name, weather, sunshine, raining, now, outlook, cache, 'cantabria'),
   );
 }
 

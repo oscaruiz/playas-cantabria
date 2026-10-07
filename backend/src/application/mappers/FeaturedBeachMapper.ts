@@ -1,37 +1,11 @@
-import { Beach } from '../../domain/entities/Beach';
-import { Weather } from '../../domain/entities/Weather';
-import { FlagStatus } from '../../domain/entities/Flag';
-import {
-  ForecastEnrichment,
-  ScoreCap,
-  SubScores,
-  SUBSCORE_MAX,
-} from '../../domain/use-cases/BeachScorer';
-import type { OutlookSignal } from '../../domain/use-cases/WeatherOutlook';
+import { SUBSCORE_MAX } from '../../domain/use-cases/BeachScorer';
 import type { DayWindowSignal } from '../../domain/use-cases/BeachWindowScorer';
+import type { FeaturedBeachResult } from '../../domain/use-cases/BeachAssessment';
 import { FeaturedBeachDTO, FeaturedBeachesResponseDTO, VentanaDiaDTO } from '../dtos/FeaturedBeachDTO';
 import { esBanderaVigente } from '../../domain/services/flagVigencia';
-import { RainNowcast } from '../../domain/entities/RainNowcast';
 import { LegacyDetailsMapper } from './LegacyDetailsMapper';
 
-export interface FeaturedBeachResult {
-  beach: Beach;
-  weather: Weather | null;
-  flag: FlagStatus | null;
-  score: number;
-  reason: string;
-  downgradeReason: string | null;
-  enrichment: ForecastEnrichment | null;
-  /** Breakdown behind `score`. Absent on the excluded path, which never scores. */
-  subScores?: SubScores | null;
-  outlook?: OutlookSignal | null;
-  tope?: ScoreCap | null;
-  topeValor?: number | null;
-  /** Best stretch of the remaining beach window. Absent on the excluded path. */
-  ventanaDia?: DayWindowSignal | null;
-  /** Aggregated rain nowcast; the score already reads it, the DTO publishes it. */
-  rain?: RainNowcast | null;
-}
+export type { FeaturedBeachResult };
 
 /** Epoch ms → ISO, the shape every instant already travels in the API. */
 export function mapVentanaDia(ventana: DayWindowSignal | null | undefined): VentanaDiaDTO | null {

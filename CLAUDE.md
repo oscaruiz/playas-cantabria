@@ -48,7 +48,7 @@ TypeScript config for build is at `backend/config/tsconfig.json` (rootDir=`../sr
 backend/src/
   domain/
     entities/       — Beach, Weather, Flag, BeachForecast
-    ports/          — Interfaces (BeachRepository, WeatherProvider, FlagProvider, SunshineProvider, PrecipitationNowProvider)
+    ports/          — Interfaces (BeachRepository, WeatherProvider, FlagProvider, SunshineProvider, PrecipitationNowProvider, BeachForecastProvider, Cache)
     use-cases/      — GetAllBeaches, GetBeachById, GetBeachDetails
   application/
     dtos/           — BeachDTO, BeachDetailsDTO
@@ -65,7 +65,7 @@ backend/src/
   regions/          — Region config (bboxes, catalog rules, data paths, flag operators)
 ```
 
-Dependencies flow inward: infrastructure -> application -> domain. Domain has no imports from other layers.
+Dependencies flow inward: infrastructure -> application -> domain. Domain has no imports from other layers (enforced by `backend/src/__tests__/domainLayering.test.ts`).
 
 DI is manual (no framework) — see `infrastructure/di/dependencies.ts` for the full wiring.
 

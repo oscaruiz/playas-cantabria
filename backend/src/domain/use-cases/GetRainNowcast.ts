@@ -7,8 +7,7 @@ import {
 } from '../entities/RainNowcast';
 import { WeatherProvider } from '../ports/WeatherProvider';
 import { PrecipitationNowProvider } from '../ports/PrecipitationNowProvider';
-import { InMemoryCache } from '../../infrastructure/cache/InMemoryCache';
-import { Config } from '../../infrastructure/config/config';
+import { Cache } from '../ports/Cache';
 
 // ---------------------------------------------------------------------------
 // Per-source detection (pure helpers, exported for test)
@@ -91,11 +90,13 @@ export class GetRainNowcast {
     private readonly openWeather: WeatherProvider,
     private readonly aemet: WeatherProvider,
     private readonly openMeteo: PrecipitationNowProvider,
-    private readonly cache: InMemoryCache,
+    private readonly cache: Cache,
+    /** Read on every call: the TTL comes from runtime config. */
+    private readonly ttlSeconds: () => number,
   ) {}
 
   async execute(lat: number, lon: number): Promise<RainNowcast> {
-    const ttl = Config.cacheTtlSeconds();
+    const ttl = this.ttlSeconds();
     const cacheKey = `rain:now:${lat.toFixed(4)},${lon.toFixed(4)}`;
 
     return this.cache.getOrSet(cacheKey, ttl, async () => {

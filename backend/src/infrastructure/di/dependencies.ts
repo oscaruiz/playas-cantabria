@@ -1,5 +1,7 @@
 import { DIContainer } from './DIContainer';
-import { InMemoryCache } from '../cache/InMemoryCache';
+import { InMemoryCache, CacheKeys } from '../cache/InMemoryCache';
+import { Config, skyCorrectionMode } from '../config/config';
+import { corregirCieloObservado } from '../../application/services/skyCorrectionRunner';
 import { TieredCache } from '../cache/TieredCache';
 import { UpstashRedisStore } from '../cache/UpstashRedisStore';
 import { JsonBeachRepository } from '../repositories/JsonBeachRepository';
@@ -130,6 +132,7 @@ export function configureDependencies(
       c.get('aemetWeatherProvider'),
       c.get('openMeteoPrecipitationProvider'),
       c.get('cache'),
+      () => Config.cacheTtlSeconds(),
     )
   );
 
@@ -144,8 +147,16 @@ export function configureDependencies(
       c.get('getRainNowcast'),
       // Same object as 'aemetWeatherProvider': it also implements SunshineProvider.
       c.get('aemetWeatherProvider'),
-      region.id,
       region.flagProviders.map((id) => FLAG_OPERATOR_NAMES[id]),
+      {
+        cacheKey: CacheKeys.featuredBeaches(region.id),
+        freshTtlSeconds: () => Config.featuredFreshTtlSeconds(),
+        staleTtlSeconds: () => Config.featuredStaleTtlSeconds(),
+        skyCorrectionEnabled: () => skyCorrectionMode() !== 'off',
+      },
+      // Same decision memory as the detail, so both screens show one sky.
+      (name, weather, sunshine, raining, now, outlook) =>
+        corregirCieloObservado(name, weather, sunshine, raining, now, outlook, c.get('cache'), region.id),
     )
   );
 

@@ -10,13 +10,35 @@ import { resolveFlagForStations } from '../services/flagAggregation';
 import { esColorRestrictivo, vigenciaBandera } from '../services/flagVigencia';
 import { SunshineProvider } from '../ports/SunshineProvider';
 import { SunshineObservation } from '../entities/Sunshine';
-import { corregirCieloObservado } from '../../application/services/skyCorrectionRunner';
-import { InMemoryCache, CacheKeys } from '../../infrastructure/cache/InMemoryCache';
-import { Config, skyCorrectionMode } from '../../infrastructure/config/config';
-import { AemetBeachForecastProvider, AemetBeachForecast } from '../../infrastructure/providers/AemetBeachForecastProvider';
+import { HourlyOutlookSlot } from '../entities/RainNowcast';
+import { BeachShortForecast } from '../entities/BeachForecast';
+import { BeachForecastProvider } from '../ports/BeachForecastProvider';
+import { Cache } from '../ports/Cache';
 import { ForecastEnrichment } from './BeachScorer';
-import { assessBeach, MIN_SCORE } from './BeachAssessment';
-import type { FeaturedBeachResult } from '../../application/mappers/FeaturedBeachMapper';
+import { assessBeach, MIN_SCORE, FeaturedBeachResult } from './BeachAssessment';
+
+/**
+ * Corrects the observed sky with sunshine evidence. Injected so the domain
+ * does not depend on the application runner that adds clock, mode, metrics
+ * and the decision memory shared with the detail.
+ */
+export type SkyCorrector = (
+  beachName: string,
+  weather: Weather | null,
+  sunshine: readonly SunshineObservation[],
+  raining: boolean,
+  now: number,
+  outlook: readonly HourlyOutlookSlot[] | null | undefined,
+) => Weather | null;
+
+/** Runtime settings, read on every call (config and env can change underneath). */
+export interface FeaturedBeachesSettings {
+  /** Region-scoped key the ranking is cached under (also seeded from snapshot). */
+  cacheKey: string;
+  freshTtlSeconds(): number;
+  staleTtlSeconds(): number;
+  skyCorrectionEnabled(): boolean;
+}
 
 const MIN_BEACHES = 2;
 const CAUTION_COUNT = 3;
@@ -46,28 +68,29 @@ export class GetFeaturedBeaches {
     private readonly aemet: WeatherProvider,
     private readonly openWeather: WeatherProvider,
     private readonly flags: FlagProvider,
-    private readonly aemetForecast: AemetBeachForecastProvider,
-    private readonly cache: InMemoryCache,
+    private readonly beachForecast: BeachForecastProvider,
+    private readonly cache: Cache,
     private readonly rainNowcast: GetRainNowcast,
     /**
      * Optional on purpose: without it, the sky corrector simply does not run
      * and the listing behaves exactly as before.
      */
     private readonly sunshine: SunshineProvider | undefined,
-    private readonly regionId: string,
     /**
      * Public names of the region's flag operators; empty means the region has
      * no lifeguard-flag service. Required so a new region cannot inherit
      * Cantabria's operator by forgetting to declare its own.
      */
     private readonly flagOperators: readonly string[],
+    private readonly settings: FeaturedBeachesSettings,
+    private readonly correctSky: SkyCorrector,
   ) {}
 
   async execute(topN = 5): Promise<FeaturedBeachesFullResult> {
     return this.cache.getOrSetStale<FeaturedBeachesFullResult>(
-      CacheKeys.featuredBeaches(this.regionId),
-      Config.featuredFreshTtlSeconds(),
-      Config.featuredStaleTtlSeconds(),
+      this.settings.cacheKey,
+      this.settings.freshTtlSeconds(),
+      this.settings.staleTtlSeconds(),
       () => this.compute(topN),
     );
   }
@@ -80,7 +103,7 @@ export class GetFeaturedBeaches {
     // reject this refresh so getOrSetStale keeps serving the last corrected
     // ranking instead of replacing all skies with uncorrected OpenWeather 04d.
     // The observations request is shared by cache, so this adds no HTTP call.
-    if (this.sunshine && skyCorrectionMode() !== 'off' && beaches.length > 0) {
+    if (this.sunshine && this.settings.skyCorrectionEnabled() && beaches.length > 0) {
       await this.sunshine.getSunshineNear(beaches[0].latitude, beaches[0].longitude);
     }
 
@@ -154,17 +177,15 @@ export class GetFeaturedBeaches {
       // The Weather object is corrected at the source and not at render time:
       // description, icon, ranking reason and score all come from here, so by
       // correcting it beforehand they cannot end up contradicting each other.
-      weather: corregirCieloObservado(
+      // The injected corrector shares its decision with the detail: whoever
+      // gets here first decides, and the other screen shows the same sky.
+      weather: this.correctSky(
         beach.name,
         weather,
         sol,
         rain?.status === 'raining',
         Date.now(),
         rain?.outlook,
-        // Shared with the detail: whoever gets here first decides, and the
-        // other screen shows the same sky instead of its own.
-        this.cache,
-        this.regionId,
       ),
       flag,
       enrichment,
@@ -173,7 +194,7 @@ export class GetFeaturedBeaches {
   }
 
   private async getSunshineSafe(lat: number, lon: number): Promise<SunshineObservation[]> {
-    if (!this.sunshine || skyCorrectionMode() === 'off') return [];
+    if (!this.sunshine || !this.settings.skyCorrectionEnabled()) return [];
     try {
       return await this.sunshine.getSunshineNear(lat, lon);
     } catch {
@@ -250,7 +271,7 @@ export class GetFeaturedBeaches {
 
   private async getForecastEnrichment(codigo: string): Promise<ForecastEnrichment | null> {
     try {
-      const forecast: AemetBeachForecast = await this.aemetForecast.getByBeachCode(codigo);
+      const forecast: BeachShortForecast = await this.beachForecast.getByBeachCode(codigo);
       const today = forecast.today;
       return {
         waves: today.waves || null,

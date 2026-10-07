@@ -3,26 +3,13 @@ import iconv from 'iconv-lite';
 import { Config } from '../config/config';
 import { InMemoryCache } from '../cache/InMemoryCache';
 import { debugLog } from '../utils/debug';
+import { BeachForecastDay, BeachShortForecast } from '../../domain/entities/BeachForecast';
+import { BeachForecastProvider } from '../../domain/ports/BeachForecastProvider';
 
-export type AemetBeachDaily = {
-  summary: string;
-  temperature: number | null;
-  waterTemperature: number | null;
-  sensation: string | null;
-  wind: string;
-  waves: string;
-  uvIndex: number | null;
-  icon: number | null;
-};
+export type AemetBeachDaily = BeachForecastDay;
+export type AemetBeachForecast = BeachShortForecast;
 
-export type AemetBeachForecast = {
-  source: 'AEMET';
-  lastUpdatedIso: string;
-  today: AemetBeachDaily;
-  tomorrow: AemetBeachDaily;
-};
-
-export class AemetBeachForecastProvider {
+export class AemetBeachForecastProvider implements BeachForecastProvider {
   constructor(private readonly cache: InMemoryCache) {}
 
   async getByBeachCode(codigo: string): Promise<AemetBeachForecast> {

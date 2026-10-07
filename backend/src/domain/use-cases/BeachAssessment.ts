@@ -3,10 +3,12 @@ import { Weather } from '../entities/Weather';
 import { FlagStatus } from '../entities/Flag';
 import { RainNowcast } from '../entities/RainNowcast';
 import { buildRainForecastSignal } from './RainForecast';
-import { buildWeatherOutlook, resolvePublishedOutlook } from './WeatherOutlook';
-import { buildDayWindow } from './BeachWindowScorer';
+import { buildWeatherOutlook, resolvePublishedOutlook, OutlookSignal } from './WeatherOutlook';
+import { buildDayWindow, DayWindowSignal } from './BeachWindowScorer';
 import {
   ForecastEnrichment,
+  ScoreCap,
+  SubScores,
   computeBeachScore,
   buildRankingReason,
   buildCautionReason,
@@ -14,10 +16,29 @@ import {
   buildExclusionReason,
   isExcluded,
 } from './BeachScorer';
-import type { FeaturedBeachResult } from '../../application/mappers/FeaturedBeachMapper';
 
 /** Score from which a beach is recommended rather than sent to "revisar". */
 export const MIN_SCORE = 30;
+
+/** The judged beach: what the ranking sorts and `FeaturedBeachMapper` publishes. */
+export interface FeaturedBeachResult {
+  beach: Beach;
+  weather: Weather | null;
+  flag: FlagStatus | null;
+  score: number;
+  reason: string;
+  downgradeReason: string | null;
+  enrichment: ForecastEnrichment | null;
+  /** Breakdown behind `score`. Absent on the excluded path, which never scores. */
+  subScores?: SubScores | null;
+  outlook?: OutlookSignal | null;
+  tope?: ScoreCap | null;
+  topeValor?: number | null;
+  /** Best stretch of the remaining beach window. Absent on the excluded path. */
+  ventanaDia?: DayWindowSignal | null;
+  /** Aggregated rain nowcast; the score already reads it, the DTO publishes it. */
+  rain?: RainNowcast | null;
+}
 
 /** Everything observed about one beach, before any judgement. */
 export interface BeachConditions {

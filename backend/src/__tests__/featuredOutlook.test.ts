@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { GetFeaturedBeaches } from '../domain/use-cases/GetFeaturedBeaches';
-import { InMemoryCache } from '../infrastructure/cache/InMemoryCache';
+import { InMemoryCache, CacheKeys } from '../infrastructure/cache/InMemoryCache';
+import { Config, skyCorrectionMode } from '../infrastructure/config/config';
+import { corregirCieloObservado } from '../application/services/skyCorrectionRunner';
 import type { Beach } from '../domain/entities/Beach';
 import type { HourlyOutlookSlot, RainNowcast } from '../domain/entities/RainNowcast';
 
@@ -65,10 +67,19 @@ function construir(rain: RainNowcast) {
   const forecast = { getByBeachCode: async () => { throw new Error('sin ficha'); } };
   const lluvia = { execute: async () => rain };
 
+  const cache = new InMemoryCache();
   return new GetFeaturedBeaches(
     repo as never, clima as never, clima as never, flags as never,
-    forecast as never, new InMemoryCache(), lluvia as never,
-    undefined, 'prueba', ['Cruz Roja'],
+    forecast as never, cache, lluvia as never,
+    undefined, ['Cruz Roja'],
+    {
+      cacheKey: CacheKeys.featuredBeaches('prueba'),
+      freshTtlSeconds: () => Config.featuredFreshTtlSeconds(),
+      staleTtlSeconds: () => Config.featuredStaleTtlSeconds(),
+      skyCorrectionEnabled: () => skyCorrectionMode() !== 'off',
+    },
+    (name, weather, sunshine, raining, now, outlook) =>
+      corregirCieloObservado(name, weather, sunshine, raining, now, outlook, cache, 'prueba'),
   );
 }
 

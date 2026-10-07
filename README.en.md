@@ -79,7 +79,7 @@ The backend follows a **Hexagonal Architecture** (Ports and Adapters). Dependenc
 
 1. **`Domain` (Core)**
    * Entities: `Beach`, `Weather`, `Flag`, `BeachForecast`, `RainNowcast`, `Sunshine`.
-   * Ports (interfaces): `BeachRepository`, `WeatherProvider`, `FlagProvider`, `SunshineProvider`, `PrecipitationNowProvider`.
+   * Ports (interfaces): `BeachRepository`, `WeatherProvider`, `FlagProvider`, `SunshineProvider`, `PrecipitationNowProvider`, `BeachForecastProvider`, `Cache`.
    * Use cases: `GetAllBeaches`, `GetBeachById`, `GetBeachDetails`, `GetFeaturedBeaches` (with `BeachScorer`), `GetRainNowcast`.
    * **No dependencies** on other layers.
 

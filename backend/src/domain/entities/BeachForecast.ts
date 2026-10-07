@@ -34,3 +34,23 @@ export interface BeachFullForecast {
   tides: DayTides[];
   tidesSource: string | null;
 }
+
+/** One day of the short beach forecast (AEMET OpenData's beach endpoint). */
+export type BeachForecastDay = {
+  summary: string;
+  temperature: number | null;
+  waterTemperature: number | null;
+  sensation: string | null;
+  wind: string;
+  waves: string;
+  uvIndex: number | null;
+  icon: number | null;
+};
+
+/** Today/tomorrow forecast served by a `BeachForecastProvider`. */
+export type BeachShortForecast = {
+  source: 'AEMET';
+  lastUpdatedIso: string;
+  today: BeachForecastDay;
+  tomorrow: BeachForecastDay;
+};
