@@ -241,7 +241,8 @@ export function skyCorrectionMode(): ModoCorreccionCielo {
 }
 
 /**
- * TTL multiplier for calls to external providers.
+ * TTL multiplier for FORECAST calls to external providers (`forecastTtlSeconds`).
+ * NOW data (observation, rain) is never scaled: see `providerTtlSeconds`.
  *
  * Free-quota consumption is driven by the clock, not the users: with the
  * per-coordinates cache, 500 visits to the same beach cost the same as one. So
@@ -263,13 +264,20 @@ export const Config = {
   },
   /**
    * TTL for NOW data: current observation and ongoing precipitation. It is
-   * `CACHE_TTL_SECONDS` scaled by `ttlFactor()`.
+   * `CACHE_TTL_SECONDS`, NOT scaled by `ttlFactor()`.
    *
    * It is what drives the freshness of "is it raining?", so it is kept short
-   * on purpose even if it costs quota: a nowcast from half an hour ago is useless.
+   * on purpose even if it costs quota. It used to be scaled like the
+   * forecasts, which out of season meant ×12: a 6 h old observation served as
+   * "now". On 7-oct-2026, in a rainy afternoon, two servers each showed the
+   * sky, wind and rain of whenever they had filled their cache, and the
+   * ranking of half the coast changed colour between them. The cost is
+   * bounded: the cache is per coordinates and fills on demand, so the worst
+   * case is the in-season beach-window rate (which already used this TTL)
+   * extended to every hour with traffic.
    */
   providerTtlSeconds(): number {
-    return loadConfig().cacheTtlSeconds * ttlFactor();
+    return loadConfig().cacheTtlSeconds;
   },
   /** Window during which an expired value keeps being served while it refreshes. */
   providerStaleTtlSeconds(): number {
@@ -285,7 +293,7 @@ export const Config = {
    * takes long to show up.
    */
   forecastTtlSeconds(): number {
-    const escalado = Config.providerTtlSeconds() * 6;
+    const escalado = loadConfig().cacheTtlSeconds * ttlFactor() * 6;
     return Math.min(Math.max(escalado, 1800), 21600);
   },
   /** Stale window for forecasts: survives a long AEMET outage. */

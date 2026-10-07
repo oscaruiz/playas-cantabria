@@ -188,7 +188,7 @@ Environment variables (or `.env`):
 - `CORS_ORIGIN` (default *)
 - `AEMET_API_KEY` — for OpenData API (fallback layer 2)
 - `OPENWEATHER_API_KEY` — for OpenWeather (fallback layer 3)
-- `CACHE_TTL_SECONDS` (default 1800) — TTL BASE de proveedores; se multiplica por `ttlFactor()`
+- `CACHE_TTL_SECONDS` (default 1800) — TTL de los datos de AHORA (observación, lluvia), sin escalar. Las PREVISIONES lo multiplican por `ttlFactor()`
   (×1 en franja de playa de temporada, ×4 el resto del día, ×12 fuera de temporada). Bajarlo a 300
   multiplicaría por 6 el consumo y rompería la cuota diaria de Open-Meteo.
 - `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` — opcionales. Si están, la caché pasa a ser

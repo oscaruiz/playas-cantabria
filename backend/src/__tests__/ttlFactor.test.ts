@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ttlFactor, Config } from '../infrastructure/config/config';
 
 /**
@@ -61,5 +61,28 @@ describe('forecastTtlSeconds — TTL largo para previsiones', () => {
 
   it('deja una ventana stale que aguanta una caída larga de AEMET', () => {
     expect(Config.forecastStaleTtlSeconds()).toBe(Config.forecastTtlSeconds() * 4);
+  });
+});
+
+/**
+ * NOW data must not stretch with the season: out of season ×12 used to serve
+ * a 6 h old observation and rain reading as "now" (7-oct-2026).
+ */
+describe('providerTtlSeconds — tiempo real sin escalar', () => {
+  afterEach(() => vi.useRealTimers());
+
+  it('es CACHE_TTL_SECONDS tanto en franja de temporada como fuera de temporada', () => {
+    vi.setSystemTime(new Date('2026-07-15T10:00:00Z')); // ×1
+    const enTemporada = Config.providerTtlSeconds();
+    vi.setSystemTime(new Date('2026-10-07T13:00:00Z')); // ×12
+    expect(Config.providerTtlSeconds()).toBe(enTemporada);
+    expect(Config.providerTtlSeconds()).toBe(Config.cacheTtlSeconds());
+  });
+
+  it('las previsiones sí se siguen alargando fuera de temporada', () => {
+    vi.setSystemTime(new Date('2026-07-15T10:00:00Z'));
+    const enTemporada = Config.forecastTtlSeconds();
+    vi.setSystemTime(new Date('2026-10-07T13:00:00Z'));
+    expect(Config.forecastTtlSeconds()).toBeGreaterThan(enTemporada);
   });
 });
