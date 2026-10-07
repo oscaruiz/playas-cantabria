@@ -1,5 +1,5 @@
 import { Beach } from '../../domain/entities/Beach';
-import { BeachDTO } from '../dtos/BeachDTO';
+import { BeachDTO } from '../../contract/api';
 import { resolveFlagOperatorName } from '../../domain/services/flagAggregation';
 
 /**

@@ -10,6 +10,7 @@ Ionic React + Capacitor PWA para información de playas. Es un motor **agnóstic
 | Build | `npm run build` |
 | Build de otra región | PowerShell: `$env:REACT_APP_REGION='asturias'; npm run build` |
 | Sincronizar datos de región | `npm run sync-region` |
+| Sincronizar el contrato del API | `npm run sync-contract` (`check-contract` solo compara) |
 | Tests | `npm test` (Jest + React Testing Library) |
 | Lint | `npm run lint` (ESLint sobre `src/`) |
 | Android sync | PowerShell: `$env:REACT_APP_REGION='<id>'; npm run android:sync` |
@@ -72,9 +73,12 @@ Endpoints consumidos: `GET /api/{region}/beaches`, `/{codigo}/details` y `/featu
 
 ## Modelos de Datos
 
-Todas las interfaces están en `src/services/api.ts`. Sus **nombres** están en inglés; sus
-**campos** reproducen el JSON del backend y siguen en español (`codigo`, `nombre`, `cruzRoja`…):
-renombrar un campo rompe el contrato.
+Las formas del JSON **no se escriben aquí**: salen de `backend/src/contract/api.ts`, del que
+`src/contract/api.ts` es una copia generada (`npm run sync-contract`; se versiona y el CI falla con
+`check-contract` si se desincroniza). `src/services/api.ts` solo les pone nombre en inglés y,
+con `Additive<T, K>`, deja opcionales los campos que un backend antiguo o la caché del service
+worker pueden no traer. Sus **campos** siguen en español (`codigo`, `nombre`, `cruzRoja`…):
+renombrar uno rompe el contrato. Nunca edites `src/contract/` a mano.
 
 | Interfaz | Uso |
 |----------|-----|

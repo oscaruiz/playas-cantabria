@@ -7,7 +7,7 @@ import { normalizeInstant } from '../../features/provenance/provenance';
 import { useLanguage, TranslateFn } from '../../shared/i18n/LanguageContext';
 import { translateApiText, translateOperator } from '../../shared/i18n/apiText';
 
-function redCrossField(value: string | undefined, t: TranslateFn): string {
+function redCrossField(value: string | null | undefined, t: TranslateFn): string {
   if (!value || value.trim() === '' || value === 'N/A') return t('comun.noDisponible');
   return value;
 }

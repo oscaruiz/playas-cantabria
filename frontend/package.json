@@ -57,13 +57,15 @@
   "scripts": {
     "sync-region": "node scripts/sync-region.mjs",
     "check-regions": "node scripts/check-regions.mjs",
-    "start": "npm run sync-region && react-scripts start",
-    "build": "npm run sync-region && react-scripts build && node scripts/prerender.mjs && node scripts/generate-sitemap.mjs",
+    "start": "npm run sync-region && npm run sync-contract && react-scripts start",
+    "build": "npm run sync-region && npm run sync-contract && react-scripts build && node scripts/prerender.mjs && node scripts/generate-sitemap.mjs",
     "android:sync": "npm run build && npx cap sync android && node scripts/configure-android.mjs",
     "perf:budget": "node scripts/check-bundle-size.mjs",
     "test": "node scripts/sync-region.mjs --region cantabria && react-scripts test",
     "eject": "react-scripts eject",
-    "lint": "eslint --ext .ts,.tsx src"
+    "lint": "eslint --ext .ts,.tsx src",
+    "sync-contract": "node scripts/sync-contract.mjs",
+    "check-contract": "node scripts/sync-contract.mjs --check"
   },
   "jest": {
     "transformIgnorePatterns": [

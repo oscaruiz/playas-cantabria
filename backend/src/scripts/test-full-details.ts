@@ -8,7 +8,7 @@ import { DetailsAssembler } from '../application/services/DetailsAssembler';
 import { AemetBeachWebScraper } from '../infrastructure/providers/AemetBeachWebScraper';
 import { AemetBeachForecastProvider } from '../infrastructure/providers/AemetBeachForecastProvider';
 import { GetBeachDetails } from '../domain/use-cases/GetBeachDetails';
-import type { DetailsDTO } from '../application/mappers/DetailsMapper';
+import type { DetailsDTO } from '../contract/api';
 import type { BeachFullForecast } from '../domain/entities/BeachForecast';
 import { resolveScriptRegion } from './scriptRegion';
 

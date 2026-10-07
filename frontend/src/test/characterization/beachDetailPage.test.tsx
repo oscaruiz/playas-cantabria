@@ -461,7 +461,8 @@ describe('BeachDetailPage — Cruz Roja flag', () => {
     jest.useFakeTimers().setSystemTime(now);
 
     const detail = buildAemetDetail(now);
-    detail.cruzRoja = { ...detail.cruzRoja, bandera: undefined };
+    // The backend's "no reading" value: what it sends instead of a colour.
+    detail.cruzRoja = { ultimaActualizacion: now.toISOString(), ...detail.cruzRoja, bandera: 'Desconocida' };
     mockDetail(detail);
 
     renderDetail();

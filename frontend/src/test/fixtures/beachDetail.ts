@@ -1,4 +1,4 @@
-import type { BeachDetail, ForecastDay } from '../../services/api';
+import type { BeachDetail } from '../../services/api';
 
 /**
  * Fixtures for `GET /api/beaches/:codigo/details`.
@@ -211,9 +211,8 @@ export function buildAemetDetail(now: Date): BeachDetail {
  * Detail WITHOUT an AEMET sheet (`prediccionCompleta` absent): the page falls back to
  * `WeatherHero` with the `clima` data.
  *
- * `manana` is set to null because that is what the backend ALWAYS emits today
- * (`DetailsMapper.mapClima` sets `manana: null`), even though the
- * frontend type declares it required. Without `manana` the day selector
+ * `manana` is null (`DetailsMapper.mapClima` emits null and the assembler only
+ * fills it when OpenWeather has tomorrow). Without `manana` the day selector
  * must not appear.
  */
 export function buildOpenWeatherDetail(now: Date): BeachDetail {
@@ -251,12 +250,10 @@ export function buildOpenWeatherDetail(now: Date): BeachDetail {
         wind: 'flojo',
         waves: 'rizada',
         uvIndex: 6,
-        icon: '13',
+        icon: 13,
       },
-      // The backend always sends null here; the frontend type declares it
-      // required and non-nullable, hence the cast. It is exactly the contract
-      // drift that F1 fixes in `domain/beach/types.ts`.
-      manana: null as unknown as ForecastDay,
+      // No tomorrow: the backend fills it from OpenWeather when it can, null otherwise.
+      manana: null,
     },
   };
 }

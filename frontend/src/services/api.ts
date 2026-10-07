@@ -1,4 +1,27 @@
 import { buildRegionApiUrl } from '../shared/config/api';
+import type {
+  BeachAttributesDTO,
+  BeachDTO,
+  BeachSectorDTO,
+  CampoEstimado,
+  ClimaDiaDTO,
+  ClimaDTO,
+  CruzRojaDTO,
+  CruzRojaStationDTO,
+  DetailsDTO,
+  FeaturedBeachDTO,
+  FeaturedBeachesResponseDTO,
+  LluviaDTO,
+  LluviaPrevistaDTO,
+  MareaReferenciaDTO,
+  PrediccionCompletaDTO,
+  PrevisionHoraDTO,
+  PronosticoDTO,
+  SubPuntuacionesDTO,
+  TiempoActualDTO,
+  VentanaDiaDTO,
+  WebcamDTO,
+} from '../contract/api';
 
 const BEACHES_FALLBACK_TIMEOUT_MS = 2500;
 /** The catalog: names, coordinates and services. It does not change during a visit. */
@@ -163,321 +186,56 @@ export async function getBeaches(options: GetBeachesOptions = {}): Promise<Beach
 }
 
 // ------------------------------
-// Base models
+// API models
 // ------------------------------
-export interface BeachAttributes {
-  [key: string]: boolean | undefined;
-  accesoBanista?: boolean;
-  accesible?: boolean;
-  mascotas?: boolean;
-  duchas?: boolean;
-  aseos?: boolean;
-  parking?: boolean;
-  chiringuito?: boolean;
-  socorrismo?: boolean;
-  nudista?: boolean;
-  surf?: boolean;
-}
+// The JSON shapes come from the backend contract (`src/contract/api.ts`, a
+// generated copy of `backend/src/contract/`): never write them by hand here.
+// These are the app's English names for them, plus the ONE deliberate
+// difference: `Additive<T, K>` loosens the fields K to optional, because an
+// installed app can be talking to an older backend, or reading a response
+// cached by the service worker, that predates them. K must be a real key of
+// the contract, so a renamed or removed field still fails the type-check.
+type Additive<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 
-export interface RedCrossStation {
-  id?: number;
-  nombreFuente: string;
-}
-
-export interface BeachSector {
-  nombre: string;
-  longitud?: number;
-}
-
-export interface Beach {
-  nombre: string;
-  municipio: string;
-  codigo: string;
-  lat: number;
-  lon: number;
-  idCruzRoja?: number;
-  cruzRojaStations?: RedCrossStation[];
-  /**
-   * Operator watching the beach ("Cruz Roja"), null if nobody does. Optional
-   * because the local fallback catalog and older backends do not carry it —
-   * resolve it with `lifeguardOperator`, never read it raw.
-   */
-  fuenteBanderas?: string | null;
-  alias?: string[];
-  sectores?: BeachSector[];
-  atributos?: BeachAttributes;
-  longitud?: number;
-  anchura?: number;
-  tipoPlaya?: string;
-  arena?: string;
-  acceso?: string[];
-  parkingDescripcion?: string;
-  bus?: string;
-  hospitalDistancia?: number;
-  submarinismo?: boolean;
-  webcam?: BeachWebcam | null;
-  /** Year of the current Blue Flag award (ADEAC); absent/null if none. */
-  banderaAzul?: number | null;
-}
-
-// ------------------------------
-// Cruz Roja data
-// ------------------------------
-export interface RedCrossData {
-  bandera?: string;
-  coberturaDesde?: string;
-  coberturaHasta?: string;
-  horario?: string;
-  ultimaActualizacion?: string;
-}
-
-// ------------------------------
-// AEMET forecast
-// ------------------------------
-export interface AemetForecastDay {
-  estadoCielo: {
-    descripcion1: string;
-    descripcion2?: string;
-  };
-  viento: {
-    descripcion1: string;
-    descripcion2?: string;
-  };
-  oleaje: {
-    descripcion1: string;
-    descripcion2?: string;
-  };
-  tagua: {
-    valor1: number;
-  };
-  tmaxima: {
-    valor1: number;
-  };
-  stermica: {
-    descripcion1: string;
-  };
-  uvMax: {
-    valor1: number;
-  };
-  fecha: number;
-}
-
-export interface AemetData {
-  elaborado: string;
-  prediccion: {
-    dia: AemetForecastDay[];
-  };
-  origen: {
-    productor: string;
-    web: string;
-    notaLegal?: string;
-  };
-}
-
-// ------------------------------
-// Weather forecast
-// ------------------------------
-/**
- * A value of the day nobody measured and no model forecast: the backend
- * derived it (waves from wind, sensation from temperature, UV from
- * cloudiness) or filled it with a default (water). The list travels so the UI
- * can stop showing a guess with the same face as an observation.
- */
-export type EstimatedField = 'sensacion' | 'viento' | 'oleaje' | 'uv' | 'agua';
-
-export interface ForecastDay {
-  summary: string;
-  temperature: number;
-  waterTemperature: number;
-  sensation: string;
-  wind: string;
-  waves: string;
-  uvIndex?: number;
-  icon: string;
-  /** Optional: a backend that predates it simply marks nothing. */
-  estimados?: EstimatedField[] | null;
-}
-
-export interface WeatherData {
-  fuente: 'AEMET' | 'OpenWeatherMap';
-  ultimaActualizacion: string;
-  hoy: ForecastDay;
-  manana: ForecastDay;
-}
-
-// ------------------------------
-// Full forecast (AEMET web scraper)
-// ------------------------------
-export interface HalfDayDTO {
-  cielo: string | null;
-  iconoCielo: number | null;
-  viento: string | null;
-  oleaje: string | null;
-}
-
-export interface ForecastDayDTO {
-  fecha: string;
-  manana: HalfDayDTO;
-  tarde: HalfDayDTO;
-  temperaturaMaxima: number | null;
-  sensacionTermica: string | null;
-  temperaturaAgua: number | null;
-  indiceUV: number | null;
-  nivelUV: string | null;
-  aviso: { nivel: number | null; descripcion: string | null } | null;
-}
-
-export interface FullForecastDTO {
-  fuente: 'AEMET_XML' | 'AEMET_HTML';
-  elaboracion: string | null;
-  zonaAvisos: string | null;
-  dias: ForecastDayDTO[];
-  mareas: Array<{ pleamar: string[]; bajamar: string[] }>;
-  fuenteMareas: string | null;
-}
-
-// ------------------------------
-// Real-time "now" weather (observation, with priority over the forecast)
-// ------------------------------
-/**
- * Aggregated "is it raining now?" signal (multi-source in the backend:
- * OpenWeather + AEMET rain gauge + Open-Meteo). Additive field.
- */
-/** FORECAST rain (next ~6h Open-Meteo ∪ AEMET text for the rest of today). */
-export interface ExpectedRain {
-  /** ISO of the first interval with precipitation; null if the signal is textual only (AEMET). */
-  desdeIso: string | null;
-  mm: number | null;
-  fuentes: string[];
-}
-
-export interface CurrentRain {
-  estado: 'lloviendo' | 'sin_lluvia' | 'desconocido';
-  mm: number | null;
-  /** true = only the AEMET rain gauge triggered the signal (it rained in the last hour). */
-  ultimaHora: boolean;
-  fuentes: string[];
-  timestamp: string;
-  prevista?: ExpectedRain | null;
-}
-
-/** One hour of the outlook the score is judging (already trimmed by the backend). */
-export interface HourlyForecast {
-  horaIso: string;
-  nubesPct: number | null;
-  temperaturaC: number | null;
-  vientoMs: number | null;
-  /** Forecast rain for this hour. Optional: older backends do not send it. */
-  precipitacionMm?: number | null;
-}
-
-export interface CurrentConditions {
-  cielo: string | null;
-  icono: number | null;
-  temperatura: number | null;
-  precipitacionMm: number | null;
-  fuente: string;
-  timestamp: string;
-  lluvia?: CurrentRain | null;
-  /** Next few hours. Absent when Open-Meteo is down or outside the beach window. */
-  previsionHoras?: HourlyForecast[] | null;
-  /** Who forecast those hours, as the API credits it. */
-  previsionHorasFuente?: string | null;
-  /** WHEN to go today. Same shape as the listing's field. */
-  ventanaDia?: DayWindow | null;
-  /** Who forecast the window's hours, as the API credits it. */
-  ventanaDiaFuente?: string | null;
-  /**
-   * Whether the provider considers this observation to be at night. It is its
-   * own day/night call, so it follows the real sunset at these coordinates
-   * instead of an hour threshold that would be wrong for half the year.
-   * Optional: an older backend sends nothing and the UI assumes daytime.
-   */
-  esNoche?: boolean | null;
-}
-
-// ------------------------------
-// Beach detail
-// ------------------------------
+/** Indexable, because the UI iterates over whichever amenities a beach has. */
+export type BeachAttributes = BeachAttributesDTO & Record<string, boolean | undefined>;
+export type RedCrossStation = CruzRojaStationDTO;
+export type BeachSector = BeachSectorDTO;
+export type BeachWebcam = WebcamDTO;
 
 /**
- * A beach's webcam (static editorial data). `cobertura` distinguishes whether it points
- * exactly at this beach, at a shared panorama, or at a nearby beach. It is only
- * offered as an external link (not embedded).
+ * A list beach. `fuenteBanderas` and `idCruzRoja` are optional because the
+ * local fallback catalog (`data/beaches.json`) and older backends do not carry
+ * them — resolve the operator with `lifeguardOperator`, never read it raw.
  */
-export interface BeachWebcam {
-  url: string;
-  cobertura: 'exacta' | 'compartida' | 'cercana';
-  estado?: 'activa' | 'desactivada';
-}
+export type Beach = Additive<BeachDTO, 'fuenteBanderas' | 'idCruzRoja'>;
+
+export type RedCrossData = CruzRojaDTO;
+
+export type EstimatedField = CampoEstimado;
+export type ForecastDay = ClimaDiaDTO;
+export type WeatherData = ClimaDTO;
+
+export type FullForecastDTO = PrediccionCompletaDTO;
+export type ForecastDayDTO = PrediccionCompletaDTO['dias'][number];
+export type HalfDayDTO = ForecastDayDTO['manana'];
+
+export type ExpectedRain = LluviaPrevistaDTO;
+export type CurrentRain = LluviaDTO;
+export type HourlyForecast = PrevisionHoraDTO;
+/** Nested `ventanaDia` uses the tolerant `DayWindow`, like the listing's. */
+export type CurrentConditions = Omit<TiempoActualDTO, 'ventanaDia'> & { ventanaDia?: DayWindow | null };
+export type TideReference = MareaReferenciaDTO;
 
 /**
- * Tide table borrowed from the nearest beach that has one, for a beach with
- * no AEMET sheet of its own. `mareas` is indexed by day like
- * `FullForecastDTO['mareas']` — index 0 is today.
+ * Everything but the identity is optional: the detail renders whatever it got
+ * (an older backend, a service-worker cache, a partial fixture) section by
+ * section. The types of the fields are still the contract's.
  */
-export interface TideReference {
-  playa: string;
-  municipio: string;
-  distanciaKm: number;
-  mareas: Array<{ pleamar: string[]; bajamar: string[] }>;
-  fuenteMareas: string | null;
-}
-
-export interface BeachDetail {
-  nombre: string;
-  municipio: string;
-  codigo: string;
-  lat?: number;
-  lon?: number;
-  atributos?: BeachAttributes;
-  longitud?: number | null;
-  anchura?: number | null;
-  tipoPlaya?: string | null;
-  arena?: string | null;
-  acceso?: string[] | null;
-  parkingDescripcion?: string | null;
-  bus?: string | null;
-  hospitalDistancia?: number | null;
-  submarinismo?: boolean | null;
-  temperaturaActual?: number | null;
-
-  // Real-time observation for TODAY (actual sky/temp/rain)
-  tiempoActual?: CurrentConditions | null;
-
-  // Standardized weather data
-  clima?: WeatherData;
-
-  // Operator watching the beach; null = no lifeguard flag service here.
-  fuenteBanderas?: string | null;
-
-  // May be absent
-  cruzRoja?: RedCrossData;
-
-  // Enriched forecast (3 days, tides, warnings)
-  prediccionCompleta?: FullForecastDTO;
-
-  // Beach webcam (may be absent). External link only.
-  webcam?: BeachWebcam | null;
-
-  /** Year of the current Blue Flag award (ADEAC); absent/null if none. */
-  banderaAzul?: number | null;
-
-  /**
-   * Present only when this beach has no AEMET sheet of its own
-   * (`prediccionCompleta` is then null).
-   */
-  mareaReferencia?: TideReference | null;
-
-  /**
-   * When the backend ASSEMBLED this payload, not when it answered. The details
-   * endpoint serves from a stale-while-revalidate cache, so a response can be
-   * much older than the request that got it — this is the only way to tell the
-   * user which of the two they are looking at. Optional: an older backend
-   * sends nothing and the UI simply says nothing.
-   */
-  generadoEn?: string | null;
-}
+export type BeachDetail = Omit<
+  Additive<DetailsDTO, Exclude<keyof DetailsDTO, 'nombre' | 'municipio' | 'codigo'>>,
+  'tiempoActual'
+> & { tiempoActual?: CurrentConditions | null };
 
 /**
  * Why the detail could not be loaded. It exists because the same sentence was
@@ -520,112 +278,32 @@ export async function getBeachDetail(code: string): Promise<BeachDetail> {
 // ------------------------------
 // Featured beaches
 // ------------------------------
-export interface FeaturedBeach {
-  nombre: string;
-  municipio: string;
-  codigo: string;
-  lat: number;
-  lon: number;
-  temperatura: number | null;
-  descripcionClima: string | null;
-  iconoClima: string | null;
-  vientoMs: number | null;
-  bandera: 'Verde' | 'Amarilla' | 'Roja' | null;
-  puntuacion: number;
-  razonRanking: string;
-  motivoBaja: string | null;
-  atributos: Record<string, boolean> | null;
-  /**
-   * Score breakdown and outlook. Optional in the type, not in the API: an
-   * installed app talking to an older backend simply shows no breakdown.
-   */
-  subpuntuaciones?: SubScores | null;
+export type SubScores = SubPuntuacionesDTO;
+export type OutlookCause = NonNullable<PronosticoDTO['causa']>;
+export type Outlook = Additive<PronosticoDTO, 'causa'>;
+export type WindowReason = NonNullable<VentanaDiaDTO['motivo']>;
+export type DayWindow = Additive<VentanaDiaDTO, 'cambio'>;
+
+/** Nested `pronostico`/`ventanaDia` use the tolerant `Outlook`/`DayWindow` too. */
+export type FeaturedBeach = Omit<
+  Additive<
+    FeaturedBeachDTO,
+    'subpuntuaciones' | 'pronostico' | 'topeAplicado' | 'topeValor' | 'oleaje' | 'ventanaDia' | 'lluvia'
+  >,
+  'pronostico' | 'ventanaDia'
+> & {
   pronostico?: Outlook | null;
-  topeAplicado?: 'lluvia' | 'lluvia_prevista' | null;
-  /** The cap value behind `topeAplicado`. Older backends do not send it. */
-  topeValor?: number | null;
-  oleaje?: string | null;
   ventanaDia?: DayWindow | null;
-  /**
-   * Live rain signal, same aggregated nowcast the detail carries in
-   * `tiempoActual.lluvia`. Optional for the usual backward-compatibility
-   * reason: without it the icon falls back to the sky description alone.
-   */
-  lluvia?: CurrentRain | null;
-}
+};
 
-/**
- * WHEN to go today: best stretch of the remaining beach window, plus the first
- * turn for the worse after it. Instants come as ISO and the cause as a key
- * (the `CausaPronostico` vocabulary): the client composes and localizes
- * "Mejor momento: 11:00–14:00 · a partir de las 17:00 aumenta el viento".
- * Optional for the same backward-compatibility reason as `pronostico`.
- */
-export interface DayWindow {
-  inicio: string;
-  fin: string;
-  cambio?: { desde: string; causa: OutlookCause | null } | null;
-  /**
-   * Why this stretch beats the rejected hours. Optional for the usual
-   * backward-compatibility reason: without it only the time range is shown.
-   */
-  motivo?: WindowReason | null;
-  /** Forecast hours the verdict is built on. Optional, same reason. */
-  horasConsideradas?: number;
-}
-
-export type WindowReason = 'sin_lluvia' | 'despeja' | 'sube_temperatura' | 'amaina_viento';
-
-/**
- * Points scored on each factor, before caps and outlook. There is no UV factor:
- * a high index is a reason to bring sunscreen, not to rate the beach worse.
- */
-export interface SubScores {
-  cielo: number;
-  temperatura: number;
-  bandera: number;
-  viento: number;
-  oleaje: number;
-  datos: number;
-}
-
-/**
- * Where the next few hours are heading. `causa` says WHY, as a key and not as
- * text: unlike `razonRanking`, it does not go through `translateApiText`.
- *
- * Optional because a backend that predates it (or a response still in cache
- * from one) simply does not send it — the chip then shows the direction alone.
- */
-export interface Outlook {
-  direccion: 'mejora' | 'empeora' | 'estable';
-  delta: number;
-  causa?: OutlookCause | null;
-}
-
-export type OutlookCause =
-  | 'despeja'
-  | 'nubla'
-  | 'sube_temperatura'
-  | 'baja_temperatura'
-  | 'amaina_viento'
-  | 'arrecia_viento'
-  | 'lluvia_prevista';
-
-export interface FeaturedBeachesResponse {
-  timestamp: number;
-  /**
-   * When the backend built THIS response, as opposed to when it assembled the
-   * ranking. Breaks the tie between two responses carrying the same ranking
-   * with the flags judged at different moments. Optional: an older backend
-   * does not send it.
-   */
-  servidoEn?: number;
+export type FeaturedBeachesResponse = Omit<
+  Additive<FeaturedBeachesResponseDTO, 'servidoEn' | 'maximos'>,
+  'playas' | 'revisar' | 'resumenTodas'
+> & {
   playas: FeaturedBeach[];
   revisar: FeaturedBeach[];
   resumenTodas: FeaturedBeach[];
-  /** Reachable maximum of each factor, so the bars cannot drift from the model. */
-  maximos?: SubScores | null;
-}
+};
 
 let featuredRequest: Promise<FeaturedBeachesResponse> | null = null;
 let featuredCache: { value: FeaturedBeachesResponse; expiresAt: number } | null = null;

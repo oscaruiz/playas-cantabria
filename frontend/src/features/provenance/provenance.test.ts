@@ -83,7 +83,7 @@ describe('observationProvenance', () => {
     expect(observationProvenance(null)).toBeNull();
     expect(observationProvenance(undefined)).toBeNull();
     expect(
-      observationProvenance({ ...OBSERVATION, fuente: '', timestamp: 'basura' })
+      observationProvenance({ ...OBSERVATION, fuente: '' as never, timestamp: 'basura' })
     ).toBeNull();
   });
 });

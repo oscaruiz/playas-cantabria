@@ -1,13 +1,13 @@
 import { GetBeachDetails } from '../../domain/use-cases/GetBeachDetails';
-import {
+import { DetailsMapper } from '../mappers/DetailsMapper';
+import type {
   DetailsDTO,
-  DetailsMapper,
   ClimaDTO,
   ClimaDiaDTO,
   CampoEstimado,
   LluviaDTO,
   PrediccionCompletaDTO,
-} from '../mappers/DetailsMapper';
+} from '../../contract/api';
 import { BeachRepository } from '../../domain/ports/BeachRepository';
 import { findTideReference } from '../../domain/services/tideReference';
 import { OpenWeatherWeatherProvider } from '../../infrastructure/providers/OpenWeatherWeatherProvider';

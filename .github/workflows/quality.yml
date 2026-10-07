@@ -38,6 +38,10 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
       - run: npm run check-regions
+      # The API types are a copy of backend/src/contract: fail if it drifted,
+      # then type-check the app against it (jest does not type-check).
+      - run: npm run check-contract
+      - run: npx tsc --noEmit
       - run: npm run lint
       - run: npm test -- --watchAll=false
         env:

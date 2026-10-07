@@ -1,7 +1,7 @@
 import { SUBSCORE_MAX } from '../../domain/use-cases/BeachScorer';
 import type { DayWindowSignal } from '../../domain/use-cases/BeachWindowScorer';
 import type { FeaturedBeachResult } from '../../domain/use-cases/BeachAssessment';
-import { FeaturedBeachDTO, FeaturedBeachesResponseDTO, VentanaDiaDTO } from '../dtos/FeaturedBeachDTO';
+import { FeaturedBeachDTO, FeaturedBeachesResponseDTO, VentanaDiaDTO } from '../../contract/api';
 import { esBanderaVigente } from '../../domain/services/flagVigencia';
 import { DetailsMapper } from './DetailsMapper';
 

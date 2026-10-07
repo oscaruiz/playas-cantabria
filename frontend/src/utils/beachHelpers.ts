@@ -56,7 +56,7 @@ export function flagColorClass(flag?: string): string {
   return 'unknown';
 }
 
-export function isFlagAvailable(redCross?: { bandera?: string }): boolean {
+export function isFlagAvailable(redCross?: { bandera?: string } | null): boolean {
   if (!redCross) return false;
   const b = redCross.bandera?.toLowerCase() || '';
   return b.includes('negra') || b.includes('roja') || b.includes('amarilla') || b.includes('verde');
@@ -96,7 +96,7 @@ export function isRecentInfo(iso: string, now: Date = new Date()): boolean {
  * Returns null if there is no schedule data to decide.
  */
 export function withinHours(
-  redCross?: { horario?: string | null; coberturaDesde?: string | null; coberturaHasta?: string | null },
+  redCross?: { horario?: string | null; coberturaDesde?: string | null; coberturaHasta?: string | null } | null,
   now: Date = new Date()
 ): boolean | null {
   if (!redCross?.horario) return null;
@@ -130,7 +130,7 @@ export function withinHours(
  * `vigenciaBandera` draws the same three states ('sin-servicio' / 'caducada').
  */
 export function flagStatus(
-  redCross?: { bandera?: string; horario?: string | null; coberturaDesde?: string | null; coberturaHasta?: string | null; ultimaActualizacion?: string | null },
+  redCross?: { bandera?: string; horario?: string | null; coberturaDesde?: string | null; coberturaHasta?: string | null; ultimaActualizacion?: string | null } | null,
   now: Date = new Date()
 ): FlagStatus {
   if (withinHours(redCross, now) === false) return 'fueraDeHorario';
@@ -160,7 +160,7 @@ export function lastRecordedFlag(
     coberturaDesde?: string | null;
     coberturaHasta?: string | null;
     ultimaActualizacion?: string | null;
-  },
+  } | null,
   now: Date = new Date()
 ): { bandera: string; registradaIso: string } | null {
   if (!isFlagAvailable(redCross) || withinHours(redCross, now) !== false) return null;

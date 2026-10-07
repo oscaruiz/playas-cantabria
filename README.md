@@ -84,7 +84,7 @@ El backend sigue una **Arquitectura Hexagonal** (Puertos y Adaptadores). Las dep
    * **Sin dependencias** de otras capas.
 
 2. **`Application` (Orquestación)**
-   * DTOs: `BeachDTO`, `FeaturedBeachDTO`.
+   * Contrato del API: `backend/src/contract/api.ts` (`BeachDTO`, `DetailsDTO`, `FeaturedBeachesResponseDTO`).
    * Mappers: `BeachMapper`, `FeaturedBeachMapper`, `DetailsMapper`.
    * Servicios: `DetailsAssembler` (orquesta la cadena de fallback del detalle).
    * Validación: Esquemas Zod para parámetros de ruta.
@@ -145,7 +145,8 @@ playas-cantabria/
 ├── backend/
 │   └── src/
 │       ├── domain/           # Entidades, puertos, servicios de dominio, casos de uso
-│       ├── application/      # DTOs, mappers, servicios, validación
+│       ├── contract/         # Tipos del JSON del API (copiados al frontend)
+│       ├── application/      # mappers, servicios, validación
 │       ├── infrastructure/   # Express, proveedores, caché, DI, repositorios, config
 │       └── regions/          # Registro y validación de regiones en runtime
 ├── frontend/

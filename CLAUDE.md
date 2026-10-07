@@ -51,7 +51,6 @@ backend/src/
     ports/          — Interfaces (BeachRepository, WeatherProvider, FlagProvider, SunshineProvider, PrecipitationNowProvider, BeachForecastProvider, Cache)
     use-cases/      — GetAllBeaches, GetBeachById, GetBeachDetails
   application/
-    dtos/           — BeachDTO, FeaturedBeachDTO
     mappers/        — BeachMapper, FeaturedBeachMapper, DetailsMapper
     services/       — DetailsAssembler (serves /details), skyCorrectionRunner
     validation/     — Zod schemas for request params
@@ -62,10 +61,13 @@ backend/src/
     repositories/   — JsonBeachRepository (reads from JSON file)
     cache/          — InMemoryCache
     config/         — Config loading (env vars + Firebase runtime config, validated with Zod)
+  contract/         — Public API JSON types (BeachDTO, DetailsDTO, FeaturedBeachesResponseDTO)
   regions/          — Region config (bboxes, catalog rules, data paths, flag operators)
 ```
 
 Dependencies flow inward: infrastructure -> application -> domain. Domain has no imports from other layers (enforced by `backend/src/__tests__/domainLayering.test.ts`).
+
+**API contract**: the JSON shapes live ONLY in `backend/src/contract/api.ts`; the mappers return those types and the frontend types are aliases of a generated copy (`frontend/src/contract/`). After changing the contract run `npm run sync-contract` and then `npx tsc --noEmit` in `frontend/`, and fix what the type-check reports; CI (`check-contract`) fails if the copy drifts.
 
 DI is manual (no framework) — see `infrastructure/di/dependencies.ts` for the full wiring.
 

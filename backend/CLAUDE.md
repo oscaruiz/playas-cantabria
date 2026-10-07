@@ -29,7 +29,7 @@ infrastructure/ → application/ → domain/
 - **domain/entities/**: pure types (Beach, Weather, Flag, BeachForecast). No infra imports.
 - **domain/ports/**: interfaces (BeachRepository, WeatherProvider, FlagProvider, SunshineProvider, PrecipitationNowProvider, BeachForecastProvider, Cache). Adapters implement these.
 - **domain/use-cases/**: business logic (GetAllBeaches, GetBeachById, GetBeachDetails with AEMET→OpenWeather hedging).
-- **application/dtos/**: public API shapes (BeachDTO, FeaturedBeachDTO).
+- **contract/**: public API JSON shapes (`api.ts`). Pure types, no imports: the frontend gets a generated copy (same content plus a header).
 - **application/mappers/**: entity → DTO (BeachMapper, FeaturedBeachMapper, DetailsMapper).
 - **application/services/**: orchestration (DetailsAssembler — data fallback chain).
 - **application/validation/**: Zod schemas for route params.
@@ -244,6 +244,8 @@ sembrado, el primer `/featured` tras arrancar cuesta **0 peticiones** y responde
   figure does not fail loudly: the rejection is swallowed by the stale cache path and AEMET stops
   feeding both the observation and the sky corrector's sunshine, silently.
 - **Never change HTTP endpoint signatures.** Existing response fields are backward compatible.
+  The shapes live in `src/contract/api.ts`: add fields there (optional when older clients or
+  caches may lack them), then `npm run sync-contract` and `npx tsc --noEmit` in `frontend/`.
 - **Defensive parsing**: every field from external APIs can be null. Never assume a field exists.
 - **Cache everything**: never make an uncached external request, y elige el TTL según la
   naturaleza del dato:
