@@ -4,7 +4,6 @@ import type { GetBeachDetails, BeachDetails } from '../domain/use-cases/GetBeach
 import type { AemetBeachWebScraper } from '../infrastructure/providers/AemetBeachWebScraper';
 import type { AemetBeachForecastProvider } from '../infrastructure/providers/AemetBeachForecastProvider';
 import type { OpenWeatherWeatherProvider } from '../infrastructure/providers/OpenWeatherWeatherProvider';
-import type { GetRainNowcast } from '../domain/use-cases/GetRainNowcast';
 import type { Beach } from '../domain/entities/Beach';
 import type { Weather } from '../domain/entities/Weather';
 import type { RainNowcast } from '../domain/entities/RainNowcast';
@@ -74,7 +73,8 @@ function makeOwCurrent(over: Partial<Weather> = {}): Weather {
 }
 
 function buildAssembler(opts: {
-  details: BeachDetails;
+  /** `weather` is what the conditions fall back to when `owCurrent` fails (AEMET). */
+  details: Omit<BeachDetails, 'rain'>;
   forecast: BeachFullForecast | null;
   owCurrent: Weather | (() => Promise<Weather>);
   rain?: RainNowcast | (() => Promise<RainNowcast>);
@@ -82,8 +82,17 @@ function buildAssembler(opts: {
   /** OpenWeather's own slots — the source that stands in when Open-Meteo is silent. */
   owOutlook?: any[] | (() => Promise<any[]>);
 }) {
+  // Stands in for BeachConditions: OpenWeather current first, the details'
+  // own weather as the fallback, and the rain nowcast fail-safe to null.
   const getDetails = {
-    execute: async () => opts.details,
+    execute: async (): Promise<BeachDetails> => {
+      const weather = await (typeof opts.owCurrent === 'function' ? opts.owCurrent() : Promise.resolve(opts.owCurrent))
+        .catch(() => opts.details.weather);
+      const rain = opts.rain
+        ? await (typeof opts.rain === 'function' ? opts.rain() : Promise.resolve(opts.rain)).catch(() => null)
+        : null;
+      return { ...opts.details, weather, rain };
+    },
   } as unknown as GetBeachDetails;
 
   const aemetScraper = {
@@ -101,8 +110,6 @@ function buildAssembler(opts: {
   } as unknown as AemetBeachForecastProvider;
 
   const openWeather = {
-    getCurrentByCoords: async () =>
-      typeof opts.owCurrent === 'function' ? opts.owCurrent() : opts.owCurrent,
     // The later enrichments are not relevant for this test: they fail softly.
     getTomorrowByCoords: async () => {
       throw new Error('skip');
@@ -118,14 +125,7 @@ function buildAssembler(opts: {
       typeof opts.owOutlook === 'function' ? opts.owOutlook() : opts.owOutlook ?? [],
   } as unknown as OpenWeatherWeatherProvider;
 
-  const rainNowcast = {
-    execute: async () => {
-      if (!opts.rain) throw new Error('rain nowcast unavailable');
-      return typeof opts.rain === 'function' ? opts.rain() : opts.rain;
-    },
-  } as unknown as GetRainNowcast;
-
-  return new DetailsAssembler(getDetails, aemetScraper, aemetPlayas, openWeather, rainNowcast);
+  return new DetailsAssembler(getDetails, aemetScraper, aemetPlayas, openWeather);
 }
 
 describe('DetailsAssembler — coherencia resumen vs desglose y "ahora" real', () => {
@@ -286,7 +286,7 @@ describe('DetailsAssembler — coherencia resumen vs desglose y "ahora" real', (
     const beachSinAemet: Beach = { ...COBRECES, id: '3907595', aemetCode: '3907595', sinAemet: true };
 
     const getDetails = {
-      execute: async () => ({ beach: beachSinAemet, weather: makeOwCurrent(), flag: null }),
+      execute: async () => ({ beach: beachSinAemet, weather: makeOwCurrent(), flag: null, rain: null }),
     } as unknown as GetBeachDetails;
     const aemetScraper = {
       // getBeachForecast is the network request that must NOT fire for sinAemet.
@@ -303,9 +303,7 @@ describe('DetailsAssembler — coherencia resumen vs desglose y "ahora" real', (
       getDailyUVIndex: async () => { throw new Error('skip'); },
       getCloudinessTodayAndTomorrow: async () => { throw new Error('skip'); },
     } as unknown as OpenWeatherWeatherProvider;
-    const rainNowcast = { execute: async () => { throw new Error('skip'); } } as unknown as GetRainNowcast;
-
-    const assembler = new DetailsAssembler(getDetails, aemetScraper, aemetPlayas, openWeather, rainNowcast);
+    const assembler = new DetailsAssembler(getDetails, aemetScraper, aemetPlayas, openWeather);
     const result = await assembler.assemble(beachSinAemet.id);
 
     expect(scraperCalls).toBe(0);
@@ -430,7 +428,7 @@ describe('DetailsAssembler — marea de referencia', () => {
     withRepo?: boolean;
   }) {
     const getDetails = {
-      execute: async () => ({ beach: opts.beach, weather: makeOwCurrent(), flag: null }),
+      execute: async () => ({ beach: opts.beach, weather: makeOwCurrent(), flag: null, rain: null }),
     } as unknown as GetBeachDetails;
 
     const aemetScraper = {
@@ -457,12 +455,8 @@ describe('DetailsAssembler — marea de referencia', () => {
       getOutlookSlots: async () => [],
     } as unknown as OpenWeatherWeatherProvider;
 
-    const rainNowcast = {
-      execute: async () => { throw new Error('skip'); },
-    } as unknown as GetRainNowcast;
-
     if (opts.withRepo === false) {
-      return new DetailsAssembler(getDetails, aemetScraper, aemetPlayas, openWeather, rainNowcast);
+      return new DetailsAssembler(getDetails, aemetScraper, aemetPlayas, openWeather);
     }
 
     const beachRepo = {
@@ -471,8 +465,8 @@ describe('DetailsAssembler — marea de referencia', () => {
     } as unknown as BeachRepository;
 
     return new DetailsAssembler(
-      getDetails, aemetScraper, aemetPlayas, openWeather, rainNowcast,
-      undefined, undefined, 'cantabria', beachRepo,
+      getDetails, aemetScraper, aemetPlayas, openWeather,
+      undefined, 'cantabria', beachRepo,
     );
   }
 

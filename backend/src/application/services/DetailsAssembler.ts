@@ -14,7 +14,6 @@ import { OpenWeatherWeatherProvider } from '../../infrastructure/providers/OpenW
 import { OPEN_METEO_NOMBRE } from '../../infrastructure/providers/OpenMeteoPrecipitationProvider';
 import { AemetBeachForecastProvider } from '../../infrastructure/providers/AemetBeachForecastProvider';
 import { AemetBeachWebScraper } from '../../infrastructure/providers/AemetBeachWebScraper';
-import { GetRainNowcast } from '../../domain/use-cases/GetRainNowcast';
 import { buildRainForecastSignal, textosRestantesHoy } from '../../domain/use-cases/RainForecast';
 import {
   buildDayWindow,
@@ -25,10 +24,7 @@ import { mapVentanaDia } from '../mappers/FeaturedBeachMapper';
 import type { HourlyOutlookSlot, RainNowcast } from '../../domain/entities/RainNowcast';
 import type { BeachFullForecast } from '../../domain/entities/BeachForecast';
 import { CacheKeys, InMemoryCache } from '../../infrastructure/cache/InMemoryCache';
-import { Config, skyCorrectionMode } from '../../infrastructure/config/config';
-import type { SunshineObservation } from '../../domain/entities/Sunshine';
-import { SunshineProvider } from '../../domain/ports/SunshineProvider';
-import { corregirCieloObservado } from './skyCorrectionRunner';
+import { Config } from '../../infrastructure/config/config';
 
 /**
  * Details assembler (serves /:id/details) — fallback chain:
@@ -43,10 +39,7 @@ export class DetailsAssembler {
     private readonly aemetScraper: AemetBeachWebScraper,
     private readonly aemetPlayas: AemetBeachForecastProvider,
     private readonly openWeather: OpenWeatherWeatherProvider,
-    private readonly rainNowcast: GetRainNowcast,
     private readonly cache?: InMemoryCache,
-    /** Optional: without it the sky corrector does not run and the detail does not change. */
-    private readonly sunshine?: SunshineProvider,
     private readonly regionId = 'cantabria',
     /** Optional: without it a beach with no AEMET sheet gets no reference tide. */
     private readonly beachRepo?: BeachRepository,
@@ -328,15 +321,10 @@ export class DetailsAssembler {
   }
 
   private async assembleFresh(beachId: string): Promise<DetailsDTO> {
-    // Step 1: Base data from use-case (hedged weather + Cruz Roja flag)
+    // Step 1: Base data from use-case: weather (sky already corrected), raw
+    // flag and rain nowcast, from the same module the ranking uses.
     const details = await this.getDetails.execute(beachId);
     const base = DetailsMapper.toDTO(details);
-    const currentPromise = this.openWeather
-      .getCurrentByCoords(details.beach.latitude, details.beach.longitude)
-      .catch(() => null);
-    const rainPromise = this.rainNowcast
-      .execute(details.beach.latitude, details.beach.longitude)
-      .catch(() => null);
     const forecastPromise = details.beach.sinAemet
       ? Promise.resolve(null)
       : this.aemetScraper
@@ -345,50 +333,20 @@ export class DetailsAssembler {
     const tomorrowPromise = this.openWeather
       .getTomorrowByCoords(details.beach.latitude, details.beach.longitude)
       .catch(() => null);
-    const solPromise =
-      this.sunshine && skyCorrectionMode() !== 'off'
-        ? this.sunshine
-            .getSunshineNear(details.beach.latitude, details.beach.longitude)
-            .catch(() => [] as SunshineObservation[])
-        : Promise.resolve([] as SunshineObservation[]);
 
-    // Step 1.5: Real-time "now" for TODAY (observation, not forecast).
-    // The sky must come from OpenWeather current (real); `details.weather` may
-    // be an AEMET observation, whose sky description is synthetic (temp/humidity).
-    // The call is cached (same key as the hedge) → no extra cost.
-    try {
-      const now = await currentPromise;
-      if (!now) throw new Error('Current weather unavailable');
-      // Sky correction from observed sunshine. Goes BEFORE the mapper so the
-      // detail headline and the listing headline come from the same criterion.
-      const [sol, lluvia] = await Promise.all([solPromise, rainPromise]);
-      const conCieloReal =
-        corregirCieloObservado(
-          details.beach.name,
-          now,
-          sol,
-          lluvia?.status === 'raining',
-          Date.now(),
-          lluvia?.outlook,
-          // Shared with the listing: whoever gets here first decides, and the
-          // other screen shows the same sky instead of its own.
-          this.cache,
-          this.regionId,
-        ) ?? now;
-      base.tiempoActual = DetailsMapper.mapTiempoActual(conCieloReal);
-    } catch {
-      base.tiempoActual =
-        details.weather && details.weather.source === 'OpenWeather'
-          ? DetailsMapper.mapTiempoActual(details.weather)
-          : null;
-    }
+    // Step 1.5: Real-time "now" for TODAY. Only an OpenWeather observation
+    // qualifies: an AEMET observation's sky description is synthetic
+    // (temp/humidity), so with OpenWeather down the block stays empty.
+    base.tiempoActual =
+      details.weather?.source === 'OpenWeather'
+        ? DetailsMapper.mapTiempoActual(details.weather)
+        : null;
 
     // Step 1.6: Aggregated rain signal (multi-source: OpenWeather + AEMET
     // rain gauge + Open-Meteo). Single-provider models miss hyperlocal
     // coastal drizzle; it is cross-checked with more sources. Additive field.
-    let rainSignal: RainNowcast | null = null;
+    const rainSignal: RainNowcast | null = details.rain;
     try {
-      rainSignal = await rainPromise;
       if (rainSignal && base.tiempoActual) {
         // The slots are trimmed with the very function the score uses, so the
         // strip shown and the adjustment applied cannot describe different

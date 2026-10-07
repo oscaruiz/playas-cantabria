@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { BeachConditions } from '../domain/use-cases/BeachConditions';
 import { GetFeaturedBeaches, type FeaturedBeachesFullResult } from '../domain/use-cases/GetFeaturedBeaches';
 import { CacheKeys, InMemoryCache } from '../infrastructure/cache/InMemoryCache';
 import { Config, skyCorrectionMode } from '../infrastructure/config/config';
@@ -21,23 +22,19 @@ function useCase(cache: InMemoryCache) {
   };
   const unused = {};
   return new GetFeaturedBeaches(
-    repo as never,
-    unused as never,
-    unused as never,
-    unused as never,
-    unused as never,
-    cache,
-    unused as never,
-    unavailableSunshine,
+    repo as never, unused as never, cache,
+    new BeachConditions(
+      unused as never, unused as never, unused as never, unused as never, unavailableSunshine,
+      () => skyCorrectionMode() !== 'off',
+      (name, weather, sunshine, raining, now, outlook) =>
+        corregirCieloObservado(name, weather, sunshine, raining, now, outlook, cache, 'cantabria'),
+    ),
     [],
     {
       cacheKey: CacheKeys.featuredBeaches('cantabria'),
       freshTtlSeconds: () => Config.featuredFreshTtlSeconds(),
       staleTtlSeconds: () => Config.featuredStaleTtlSeconds(),
-      skyCorrectionEnabled: () => skyCorrectionMode() !== 'off',
     },
-    (name, weather, sunshine, raining, now, outlook) =>
-      corregirCieloObservado(name, weather, sunshine, raining, now, outlook, cache, 'cantabria'),
   );
 }
 

@@ -62,7 +62,7 @@ Layer 3: OpenWeatherWeatherProvider  → OpenWeather API (temp, wind, descriptio
 
 Orchestration lives in `DetailsAssembler.assemble()`.
 
-### Hedged weather (inside GetBeachDetails use-case)
+### Hedged weather (inside BeachConditions, shared by the detail and the ranking)
 
 ```
 AEMET observation API (AemetWeatherProvider) ←→ OpenWeather (hedged — first to respond wins)

@@ -1,15 +1,9 @@
 import { Beach } from '../entities/Beach';
-import { Weather } from '../entities/Weather';
-import { FlagStatus, FlagRef } from '../entities/Flag';
 import { BeachRepository } from '../ports/BeachRepository';
-import { WeatherProvider } from '../ports/WeatherProvider';
-import { FlagProvider } from '../ports/FlagProvider';
-import { resolveFlagForStations } from '../services/flagAggregation';
+import { BeachConditions, BeachConditionsNow } from './BeachConditions';
 
-export interface BeachDetails {
+export interface BeachDetails extends BeachConditionsNow {
   beach: Beach;
-  weather: Weather | null;
-  flag: FlagStatus | null;
 }
 
 export class DetailsError extends Error {
@@ -20,17 +14,15 @@ export class DetailsError extends Error {
 }
 
 /**
- * Fallback policy for weather (hedged):
- * - Start AEMET immediately.
- * - Start OpenWeather after a small delay, or immediately if AEMET fails fast.
- * - Return the first successful response. If both fail, return null.
+ * A beach plus its conditions right now, from the same module the ranking
+ * uses, so the card and the header of one beach are built the same way. The
+ * flag is the RAW reading: the detail shows the schedule and the last
+ * recorded colour outside lifeguard hours, so it is not filtered here.
  */
 export class GetBeachDetails {
   constructor(
     private readonly beachRepo: BeachRepository,
-    private readonly aemet: WeatherProvider,
-    private readonly openWeather: WeatherProvider,
-    private readonly flags: FlagProvider,
+    private readonly conditions: BeachConditions,
   ) {}
 
   async execute(id: string): Promise<BeachDetails> {
@@ -38,49 +30,6 @@ export class GetBeachDetails {
     if (!beach) {
       throw new DetailsError(`Beach with id '${id}' not found`);
     }
-
-    const [weather, flag] = await Promise.all([
-      this.getWeatherConsistent(beach.latitude, beach.longitude),
-      this.getFlagForBeach(beach),
-    ]);
-
-    return { beach, weather, flag };
-  }
-
-  /**
-   * OpenWeather first (reliable, consistent with featured endpoint).
-   * AEMET as fallback only if OpenWeather fails.
-   */
-  private async getWeatherConsistent(lat: number, lon: number): Promise<Weather | null> {
-    try {
-      return await this.openWeather.getCurrentByCoords(lat, lon);
-    } catch {
-      try {
-        return await this.aemet.getCurrentByCoords(lat, lon);
-      } catch {
-        return null;
-      }
-    }
-  }
-
-  /**
-   * Beach flag. If it has several stations (with a known reference), it
-   * queries them all in parallel and aggregates with the conservative rule
-   * (the most restrictive). Otherwise, it uses the single reference (path of
-   * the 20 legacy beaches).
-   */
-  private getFlagForBeach(beach: Beach): Promise<FlagStatus | null> {
-    return resolveFlagForStations(beach.flagRef, beach.flagStations, (ref) =>
-      this.getFlagSafe(ref),
-    );
-  }
-
-  private async getFlagSafe(ref?: FlagRef): Promise<FlagStatus | null> {
-    if (!ref) return null;
-    try {
-      return await this.flags.getFlag(ref);
-    } catch {
-      return null;
-    }
+    return { beach, ...(await this.conditions.now(beach)) };
   }
 }

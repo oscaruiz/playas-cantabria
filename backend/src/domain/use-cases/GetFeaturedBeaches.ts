@@ -1,35 +1,15 @@
 import { Beach } from '../entities/Beach';
 import { Weather } from '../entities/Weather';
-import { FlagStatus, FlagRef } from '../entities/Flag';
+import { FlagStatus } from '../entities/Flag';
 import { RainNowcast } from '../entities/RainNowcast';
-import { GetRainNowcast } from './GetRainNowcast';
 import { BeachRepository } from '../ports/BeachRepository';
-import { WeatherProvider } from '../ports/WeatherProvider';
-import { FlagProvider } from '../ports/FlagProvider';
-import { resolveFlagForStations } from '../services/flagAggregation';
 import { esColorRestrictivo, vigenciaBandera } from '../services/flagVigencia';
-import { SunshineProvider } from '../ports/SunshineProvider';
-import { SunshineObservation } from '../entities/Sunshine';
-import { HourlyOutlookSlot } from '../entities/RainNowcast';
 import { BeachShortForecast } from '../entities/BeachForecast';
 import { BeachForecastProvider } from '../ports/BeachForecastProvider';
 import { Cache } from '../ports/Cache';
 import { ForecastEnrichment } from './BeachScorer';
 import { assessBeach, MIN_SCORE, FeaturedBeachResult } from './BeachAssessment';
-
-/**
- * Corrects the observed sky with sunshine evidence. Injected so the domain
- * does not depend on the application runner that adds clock, mode, metrics
- * and the decision memory shared with the detail.
- */
-export type SkyCorrector = (
-  beachName: string,
-  weather: Weather | null,
-  sunshine: readonly SunshineObservation[],
-  raining: boolean,
-  now: number,
-  outlook: readonly HourlyOutlookSlot[] | null | undefined,
-) => Weather | null;
+import { BeachConditions } from './BeachConditions';
 
 /** Runtime settings, read on every call (config and env can change underneath). */
 export interface FeaturedBeachesSettings {
@@ -37,7 +17,6 @@ export interface FeaturedBeachesSettings {
   cacheKey: string;
   freshTtlSeconds(): number;
   staleTtlSeconds(): number;
-  skyCorrectionEnabled(): boolean;
 }
 
 const MIN_BEACHES = 2;
@@ -65,17 +44,9 @@ export interface FeaturedBeachesFullResult {
 export class GetFeaturedBeaches {
   constructor(
     private readonly beachRepo: BeachRepository,
-    private readonly aemet: WeatherProvider,
-    private readonly openWeather: WeatherProvider,
-    private readonly flags: FlagProvider,
     private readonly beachForecast: BeachForecastProvider,
     private readonly cache: Cache,
-    private readonly rainNowcast: GetRainNowcast,
-    /**
-     * Optional on purpose: without it, the sky corrector simply does not run
-     * and the listing behaves exactly as before.
-     */
-    private readonly sunshine: SunshineProvider | undefined,
+    private readonly conditions: BeachConditions,
     /**
      * Public names of the region's flag operators; empty means the region has
      * no lifeguard-flag service. Required so a new region cannot inherit
@@ -83,7 +54,6 @@ export class GetFeaturedBeaches {
      */
     private readonly flagOperators: readonly string[],
     private readonly settings: FeaturedBeachesSettings,
-    private readonly correctSky: SkyCorrector,
   ) {}
 
   async execute(topN = 5): Promise<FeaturedBeachesFullResult> {
@@ -98,14 +68,10 @@ export class GetFeaturedBeaches {
   private async compute(topN: number): Promise<FeaturedBeachesFullResult> {
     const beaches = await this.beachRepo.getAll();
 
-    // A provider outage is not the same as a valid response without a nearby
-    // sunshine station. Probe once before the fan-out: if AEMET is unavailable,
-    // reject this refresh so getOrSetStale keeps serving the last corrected
-    // ranking instead of replacing all skies with uncorrected OpenWeather 04d.
-    // The observations request is shared by cache, so this adds no HTTP call.
-    if (this.sunshine && this.settings.skyCorrectionEnabled() && beaches.length > 0) {
-      await this.sunshine.getSunshineNear(beaches[0].latitude, beaches[0].longitude);
-    }
+    // If AEMET sunshine is down, reject this refresh so getOrSetStale keeps
+    // serving the last corrected ranking instead of replacing all skies with
+    // uncorrected OpenWeather 04d.
+    if (beaches.length > 0) await this.conditions.probeSunshine(beaches[0]);
 
     const enriched: Array<Awaited<ReturnType<GetFeaturedBeaches['enrichBeach']>> | null> =
       new Array(beaches.length).fill(null);
@@ -162,111 +128,13 @@ export class GetFeaturedBeaches {
     enrichment: ForecastEnrichment | null;
     rain: RainNowcast | null;
   }> {
-    const [weather, flag, enrichment, rain, sol] = await Promise.all([
-      this.getWeatherRace(beach.latitude, beach.longitude),
-      this.getFlagForBeach(beach),
+    const [now, enrichment] = await Promise.all([
+      this.conditions.now(beach),
       // Beaches without an AEMET page (synthetic code) must not trigger an
       // AEMET call that would always 404: the enrichment one is skipped.
       beach.sinAemet ? Promise.resolve(null) : this.getForecastEnrichment(beach.aemetCode),
-      this.getRainSafe(beach.latitude, beach.longitude),
-      this.getSunshineSafe(beach.latitude, beach.longitude),
     ]);
-
-    return {
-      beach,
-      // The Weather object is corrected at the source and not at render time:
-      // description, icon, ranking reason and score all come from here, so by
-      // correcting it beforehand they cannot end up contradicting each other.
-      // The injected corrector shares its decision with the detail: whoever
-      // gets here first decides, and the other screen shows the same sky.
-      weather: this.correctSky(
-        beach.name,
-        weather,
-        sol,
-        rain?.status === 'raining',
-        Date.now(),
-        rain?.outlook,
-      ),
-      flag,
-      enrichment,
-      rain,
-    };
-  }
-
-  private async getSunshineSafe(lat: number, lon: number): Promise<SunshineObservation[]> {
-    if (!this.sunshine || !this.settings.skyCorrectionEnabled()) return [];
-    try {
-      return await this.sunshine.getSunshineNear(lat, lon);
-    } catch {
-      return [];
-    }
-  }
-
-
-  private async getRainSafe(lat: number, lon: number): Promise<RainNowcast | null> {
-    try {
-      return await this.rainNowcast.execute(lat, lon);
-    } catch {
-      return null;
-    }
-  }
-
-  /**
-   * OpenWeather first (reliable, consistent across beaches).
-   * AEMET as fallback only if OpenWeather fails.
-   */
-  private async getWeatherRace(lat: number, lon: number): Promise<Weather | null> {
-    try {
-      return await this.openWeather.getCurrentByCoords(lat, lon);
-    } catch {
-      try {
-        return await this.aemet.getCurrentByCoords(lat, lon);
-      } catch {
-        return null;
-      }
-    }
-  }
-
-  /**
-   * Beach flag: aggregates several stations if present, or uses the single
-   * reference — and DISCARDS it if it is no longer current.
-   *
-   * That last part is the point. Outside lifeguard hours the interface already
-   * refuses to paint a colour, but the score and the ranking reason were still
-   * built from the raw flag: at midnight the app published `bandera: null` and,
-   * in the same object, "bandera verde" worth 10 points. It contradicted
-   * itself, and it inflated the rating with a flag captured hours earlier.
-   *
-   * Discarding is only right when there is NO service. A reading that goes
-   * stale during the watch means the delivery broke, not that the beach was
-   * cleared: turning it into `null` there let a lost black flag score as
-   * "no coverage" (neutral 5/10) and re-enter the ranking. So a restrictive
-   * colour survives its own staleness — it keeps excluding until something
-   * tells us it was taken down — and any other stale colour degrades to
-   * `unknown`, which neither publishes a colour nor scores as good.
-   */
-  private async getFlagForBeach(beach: Beach): Promise<FlagStatus | null> {
-    const flag = await resolveFlagForStations(beach.flagRef, beach.flagStations, (ref) =>
-      this.getFlagSafe(ref),
-    );
-    if (!flag) return null;
-    switch (vigenciaBandera(flag)) {
-      case 'vigente':
-        return flag;
-      case 'sin-servicio':
-        return null;
-      case 'caducada':
-        return esColorRestrictivo(flag.color) ? flag : { ...flag, color: 'unknown' };
-    }
-  }
-
-  private async getFlagSafe(ref?: FlagRef): Promise<FlagStatus | null> {
-    if (!ref) return null;
-    try {
-      return await this.flags.getFlag(ref);
-    } catch {
-      return null;
-    }
+    return { beach, weather: now.weather, flag: flagForRanking(now.flag), enrichment, rain: now.rain };
   }
 
   private async getForecastEnrichment(codigo: string): Promise<ForecastEnrichment | null> {
@@ -284,5 +152,38 @@ export class GetFeaturedBeaches {
     } catch {
       return null;
     }
+  }
+}
+
+/**
+ * The flag the ranking judges by: the raw reading, DISCARDED if it is no
+ * longer current.
+ *
+ * That last part is the point. Outside lifeguard hours the interface already
+ * refuses to paint a colour, but the score and the ranking reason were still
+ * built from the raw flag: at midnight the app published `bandera: null` and,
+ * in the same object, "bandera verde" worth 10 points. It contradicted
+ * itself, and it inflated the rating with a flag captured hours earlier.
+ *
+ * Discarding is only right when there is NO service. A reading that goes
+ * stale during the watch means the delivery broke, not that the beach was
+ * cleared: turning it into `null` there let a lost black flag score as
+ * "no coverage" (neutral 5/10) and re-enter the ranking. So a restrictive
+ * colour survives its own staleness — it keeps excluding until something
+ * tells us it was taken down — and any other stale colour degrades to
+ * `unknown`, which neither publishes a colour nor scores as good.
+ *
+ * Ranking-only on purpose: the detail keeps the raw reading because it shows
+ * the schedule and the last recorded colour outside lifeguard hours.
+ */
+function flagForRanking(flag: FlagStatus | null): FlagStatus | null {
+  if (!flag) return null;
+  switch (vigenciaBandera(flag)) {
+    case 'vigente':
+      return flag;
+    case 'sin-servicio':
+      return null;
+    case 'caducada':
+      return esColorRestrictivo(flag.color) ? flag : { ...flag, color: 'unknown' };
   }
 }

@@ -8,6 +8,7 @@ import { createBeachesRouter } from '../infrastructure/express/routes/beachesRou
 import { GetAllBeaches } from '../domain/use-cases/GetAllBeaches';
 import { GetBeachById } from '../domain/use-cases/GetBeachById';
 import { GetBeachDetails } from '../domain/use-cases/GetBeachDetails';
+import { BeachConditions } from '../domain/use-cases/BeachConditions';
 import { DetailsAssembler } from '../application/services/DetailsAssembler';
 import type { Beach } from '../domain/entities/Beach';
 import type { Weather } from '../domain/entities/Weather';
@@ -150,15 +151,13 @@ function buildApp() {
     },
   } as unknown as GetRainNowcast;
 
-  const getBeachDetails = new GetBeachDetails(repo, aemetWeather, openWeatherPort, flagProvider);
-  // No cache, no sunshine provider: assembleFresh on every request, no sky correction.
-  const assembler = new DetailsAssembler(
-    getBeachDetails,
-    scraper,
-    aemetPlayas,
-    openWeatherProvider,
-    rainNowcast,
+  // No sunshine provider and an identity corrector: no sky correction.
+  const conditions = new BeachConditions(
+    aemetWeather, openWeatherPort, flagProvider, rainNowcast, undefined, () => false, (_name, weather) => weather,
   );
+  const getBeachDetails = new GetBeachDetails(repo, conditions);
+  // No cache: assembleFresh on every request.
+  const assembler = new DetailsAssembler(getBeachDetails, scraper, aemetPlayas, openWeatherProvider);
 
   const app = express();
   app.use(

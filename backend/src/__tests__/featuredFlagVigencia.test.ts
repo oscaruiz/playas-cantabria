@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { BeachConditions } from '../domain/use-cases/BeachConditions';
 import { GetFeaturedBeaches } from '../domain/use-cases/GetFeaturedBeaches';
 import { InMemoryCache, CacheKeys } from '../infrastructure/cache/InMemoryCache';
 import { Config, skyCorrectionMode } from '../infrastructure/config/config';
@@ -59,17 +60,19 @@ function construir(flag: FlagStatus | null) {
 
   const cache = new InMemoryCache();
   return new GetFeaturedBeaches(
-    repo as never, clima as never, clima as never, flags as never,
-    forecast as never, cache, lluvia as never,
-    undefined, ['Cruz Roja'],
+    repo as never, forecast as never, cache,
+    new BeachConditions(
+      clima as never, clima as never, flags as never, lluvia as never, undefined,
+      () => skyCorrectionMode() !== 'off',
+      (name, weather, sunshine, raining, now, outlook) =>
+        corregirCieloObservado(name, weather, sunshine, raining, now, outlook, cache, 'prueba'),
+    ),
+    ['Cruz Roja'],
     {
       cacheKey: CacheKeys.featuredBeaches('prueba'),
       freshTtlSeconds: () => Config.featuredFreshTtlSeconds(),
       staleTtlSeconds: () => Config.featuredStaleTtlSeconds(),
-      skyCorrectionEnabled: () => skyCorrectionMode() !== 'off',
     },
-    (name, weather, sunshine, raining, now, outlook) =>
-      corregirCieloObservado(name, weather, sunshine, raining, now, outlook, cache, 'prueba'),
   );
 }
 

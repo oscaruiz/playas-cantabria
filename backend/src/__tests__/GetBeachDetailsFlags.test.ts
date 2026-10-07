@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { GetBeachDetails } from '../domain/use-cases/GetBeachDetails';
+import { BeachConditions } from '../domain/use-cases/BeachConditions';
 import { Beach } from '../domain/entities/Beach';
 import { FlagStatus, FlagRef } from '../domain/entities/Flag';
 import { BeachRepository } from '../domain/ports/BeachRepository';
@@ -18,6 +19,11 @@ function repoWith(beach: Beach): BeachRepository {
 
 function flagProviderFrom(byId: Record<number, FlagStatus>): FlagProvider {
   return { getFlag: async (ref) => byId[ref.ref] ?? null };
+}
+
+function conditionsWith(flags: FlagProvider): BeachConditions {
+  const noRain = { execute: async () => null } as never;
+  return new BeachConditions(weatherStub, weatherStub, flags, noRain, undefined, () => false, (_n, w) => w);
 }
 
 const cr = (id: number): FlagRef => ({ provider: 'cruzroja', ref: id });
@@ -44,7 +50,7 @@ describe('GetBeachDetails — banderas multi-puesto', () => {
     });
     const spy = vi.spyOn(flags, 'getFlag');
 
-    const uc = new GetBeachDetails(repoWith(beach), weatherStub, weatherStub, flags);
+    const uc = new GetBeachDetails(repoWith(beach), conditionsWith(flags));
     const details = await uc.execute(beach.id);
 
     expect(spy).toHaveBeenCalledTimes(3); // queries ALL the stations
@@ -57,7 +63,7 @@ describe('GetBeachDetails — banderas multi-puesto', () => {
       flagStations: [{ sourceName: 'PENDIENTE' }, { ref: cr(200), sourceName: 'CON ID' }],
     };
     const flags = flagProviderFrom({ 200: { color: 'yellow', timestamp: 1 } });
-    const uc = new GetBeachDetails(repoWith(beach), weatherStub, weatherStub, flags);
+    const uc = new GetBeachDetails(repoWith(beach), conditionsWith(flags));
 
     const details = await uc.execute(beach.id);
     expect(details.flag?.color).toBe('yellow');
@@ -66,7 +72,7 @@ describe('GetBeachDetails — banderas multi-puesto', () => {
   it('sin puestos con referencia devuelve bandera null (sin cobertura)', async () => {
     const beach: Beach = { ...base, flagStations: [{ sourceName: 'SOLO NOMBRE' }] };
     const flags = flagProviderFrom({});
-    const uc = new GetBeachDetails(repoWith(beach), weatherStub, weatherStub, flags);
+    const uc = new GetBeachDetails(repoWith(beach), conditionsWith(flags));
 
     const details = await uc.execute(beach.id);
     expect(details.flag).toBeNull();
@@ -75,7 +81,7 @@ describe('GetBeachDetails — banderas multi-puesto', () => {
   it('cae a la referencia única cuando no hay flagStations (compatibilidad)', async () => {
     const beach: Beach = { ...base, flagRef: cr(373) };
     const flags = flagProviderFrom({ 373: { color: 'green', timestamp: 1 } });
-    const uc = new GetBeachDetails(repoWith(beach), weatherStub, weatherStub, flags);
+    const uc = new GetBeachDetails(repoWith(beach), conditionsWith(flags));
 
     const details = await uc.execute(beach.id);
     expect(details.flag?.color).toBe('green');

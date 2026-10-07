@@ -15,6 +15,7 @@ import { regionRegistry, RegionConfig } from '../../regions';
 import { GetAllBeaches } from '../../domain/use-cases/GetAllBeaches';
 import { GetBeachById } from '../../domain/use-cases/GetBeachById';
 import { GetBeachDetails } from '../../domain/use-cases/GetBeachDetails';
+import { BeachConditions } from '../../domain/use-cases/BeachConditions';
 import { DetailsAssembler } from '../../application/services/DetailsAssembler';
 import { GetFeaturedBeaches } from '../../domain/use-cases/GetFeaturedBeaches';
 import { GetRainNowcast } from '../../domain/use-cases/GetRainNowcast';
@@ -117,15 +118,6 @@ export function configureDependencies(
     new GetBeachById(c.get('beachRepository'))
   );
   
-  container.register('getBeachDetails', (c) => 
-    new GetBeachDetails(
-      c.get('beachRepository'),
-      c.get('aemetWeatherProvider'),
-      c.get('openWeatherProvider'),
-      c.get('flagProvider'),
-    )
-  );
-
   container.register('getRainNowcast', (c) =>
     new GetRainNowcast(
       c.get('openWeatherProvider'),
@@ -136,27 +128,39 @@ export function configureDependencies(
     )
   );
 
-  container.register('getFeaturedBeaches', (c) =>
-    new GetFeaturedBeaches(
-      c.get('beachRepository'),
+  // Conditions at a beach right now, shared by the ranking and the detail.
+  container.register('beachConditions', (c) =>
+    new BeachConditions(
       c.get('aemetWeatherProvider'),
       c.get('openWeatherProvider'),
       c.get('flagProvider'),
-      c.get('aemetBeachForecastProvider'),
-      c.get('cache'),
       c.get('getRainNowcast'),
       // Same object as 'aemetWeatherProvider': it also implements SunshineProvider.
       c.get('aemetWeatherProvider'),
+      () => skyCorrectionMode() !== 'off',
+      // Shared decision memory: whichever screen gets there first decides the
+      // sky, and the other one shows the same.
+      (name, weather, sunshine, raining, now, outlook) =>
+        corregirCieloObservado(name, weather, sunshine, raining, now, outlook, c.get('cache'), region.id),
+    )
+  );
+
+  container.register('getBeachDetails', (c) =>
+    new GetBeachDetails(c.get('beachRepository'), c.get('beachConditions'))
+  );
+
+  container.register('getFeaturedBeaches', (c) =>
+    new GetFeaturedBeaches(
+      c.get('beachRepository'),
+      c.get('aemetBeachForecastProvider'),
+      c.get('cache'),
+      c.get('beachConditions'),
       region.flagProviders.map((id) => FLAG_OPERATOR_NAMES[id]),
       {
         cacheKey: CacheKeys.featuredBeaches(region.id),
         freshTtlSeconds: () => Config.featuredFreshTtlSeconds(),
         staleTtlSeconds: () => Config.featuredStaleTtlSeconds(),
-        skyCorrectionEnabled: () => skyCorrectionMode() !== 'off',
       },
-      // Same decision memory as the detail, so both screens show one sky.
-      (name, weather, sunshine, raining, now, outlook) =>
-        corregirCieloObservado(name, weather, sunshine, raining, now, outlook, c.get('cache'), region.id),
     )
   );
 
@@ -167,9 +171,7 @@ export function configureDependencies(
       c.get('aemetBeachWebScraper'),
       c.get('aemetBeachForecastProvider'),
       c.get('openWeatherProvider'),
-      c.get('getRainNowcast'),
       c.get('cache'),
-      c.get('aemetWeatherProvider'),
       region.id,
       c.get('beachRepository'),
     )
