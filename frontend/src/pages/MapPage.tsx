@@ -1,7 +1,7 @@
 import { IonPage, IonContent, IonFooter, IonSpinner } from '@ionic/react';
-import React, { Suspense, useEffect, useMemo, useState } from 'react';
-import { Beach, getBeaches } from '../services/api';
+import React, { Suspense, useMemo } from 'react';
 import { useRanking } from '../features/ranking/useRanking';
+import { useBeaches } from '../features/catalog/useBeaches';
 import { useLanguage } from '../shared/i18n/LanguageContext';
 import BottomNavBar from '../shared/ui/BottomNavBar';
 import HeaderActions from '../shared/ui/HeaderActions';
@@ -16,7 +16,7 @@ import './MapPage.css';
 const MapCanvas = React.lazy(() => import('./map/MapCanvas'));
 
 const MapPage: React.FC = () => {
-  const [beaches, setBeaches] = useState<Beach[]>([]);
+  const catalog = useBeaches();
   const { t } = useLanguage();
 
   // The markers read the ranking in force, so they repaint with every screen
@@ -28,22 +28,22 @@ const MapPage: React.FC = () => {
     [ranking],
   );
 
-  useEffect(() => {
-    const handleBeaches = (data: Beach[]) => {
-      const valid = data
-        .filter(
-          (p) =>
-            typeof p.lat === 'number' &&
-            typeof p.lon === 'number' &&
-            p.lat !== 0 &&
-            p.lon !== 0
-        )
-        .sort((a, b) => a.lon - b.lon);
-      setBeaches(valid);
-    };
-
-    getBeaches({ onBackendData: handleBeaches }).then(handleBeaches);
-  }, []);
+  // Only beaches with real coordinates get a marker, west to east.
+  const beaches = useMemo(
+    () =>
+      catalog.status === 'ready'
+        ? catalog.beaches
+            .filter(
+              (p) =>
+                typeof p.lat === 'number' &&
+                typeof p.lon === 'number' &&
+                p.lat !== 0 &&
+                p.lon !== 0
+            )
+            .sort((a, b) => a.lon - b.lon)
+        : [],
+    [catalog],
+  );
 
   return (
     <IonPage className="map-page">

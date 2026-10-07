@@ -34,6 +34,8 @@ const CLIENT_CACHE_TTL_MS = 5 * 60 * 1000;
  * beach, one tap later, showed the current one.
  */
 const FEATURED_CACHE_TTL_MS = 60 * 1000;
+/** Same 60 s window, for the same reason: detail and ranking must show the same sky. */
+const DETAIL_CACHE_TTL_MS = 60 * 1000;
 
 const SAVED_BEACHES_KEY = 'playas:ultimoListado';
 /** After a day, the saved copy stops being better than the build's JSON. */
@@ -251,7 +253,26 @@ export class DetailError extends Error {
   }
 }
 
+const detailCache = new Map<string, { value: BeachDetail; expiresAt: number }>();
+
+/**
+ * Keeps a detail as the one in force for `code`. Also the way in for the copy
+ * the service worker delivers late: without it, coming back to the beach would
+ * paint the older body the page had already replaced.
+ */
+export function storeBeachDetail(code: string, value: BeachDetail): void {
+  detailCache.set(code, { value, expiresAt: Date.now() + DETAIL_CACHE_TTL_MS });
+}
+
+/** Tests render several beaches with the same code; each starts from no copy. */
+export function clearBeachDetailCacheForTests(): void {
+  detailCache.clear();
+}
+
 export async function getBeachDetail(code: string): Promise<BeachDetail> {
+  const cached = detailCache.get(code);
+  if (cached && cached.expiresAt > Date.now()) return cached.value;
+
   const url = buildRegionApiUrl(`/beaches/${code}/details`);
 
   let res: Response;
@@ -272,7 +293,9 @@ export async function getBeachDetail(code: string): Promise<BeachDetail> {
     throw new DetailError(res.status, url);
   }
 
-  return res.json();
+  const detail: BeachDetail = await res.json();
+  storeBeachDetail(code, detail);
+  return detail;
 }
 
 // ------------------------------

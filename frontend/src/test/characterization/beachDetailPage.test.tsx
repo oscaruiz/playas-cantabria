@@ -22,6 +22,7 @@
 import React from 'react';
 import { fireEvent, screen, waitFor } from '@testing-library/react';
 import type { BeachDetail, CurrentRain } from '../../services/api';
+import { clearBeachDetailCacheForTests } from '../../services/api';
 import BeachDetailPage from '../../pages/BeachDetailPage';
 import { renderWithProviders } from '../render';
 import { installFetchMock, restoreFetch, route, deferred, RouteSpec } from '../http/fakeFetch';
@@ -68,6 +69,8 @@ function openInfo(accessibleName: string): HTMLElement {
 afterEach(() => {
   restoreFetch();
   jest.useRealTimers();
+  // The detail is cached for 60 s in a module variable; each test brings its own.
+  clearBeachDetailCacheForTests();
 });
 
 // ---------------------------------------------------------------------------

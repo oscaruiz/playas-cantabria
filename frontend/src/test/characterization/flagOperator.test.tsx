@@ -15,6 +15,7 @@
 import React from 'react';
 import { screen } from '@testing-library/react';
 import type { Beach, BeachDetail } from '../../services/api';
+import { clearBeachDetailCacheForTests } from '../../services/api';
 import BeachList from '../../pages/BeachList';
 import BeachDetailPage from '../../pages/BeachDetailPage';
 import { renderWithProviders } from '../render';
@@ -42,6 +43,8 @@ beforeEach(() => {
 afterEach(() => {
   restoreFetch();
   jest.useRealTimers();
+  // The detail is cached for 60 s in a module variable; each test brings its own.
+  clearBeachDetailCacheForTests();
 });
 
 describe('the list names the operator the backend reports', () => {

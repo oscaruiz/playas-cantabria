@@ -11,8 +11,9 @@ import { useHistory, useParams, Link } from 'react-router-dom';
 import {
   getBeachDetail,
   getBeaches,
+  storeBeachDetail,
   DetailError,
-  BeachDetail as PlayaDetalleData,
+  BeachDetail,
 } from '../services/api';
 import { beachPath, findBySlugs } from '../shared/seo/beachUrls';
 import SeoHead, { canonicalUrl } from '../shared/seo/SeoHead';
@@ -43,6 +44,15 @@ import DataInfo from '../features/provenance/DataInfo';
 import { municipalityPath } from '../shared/seo/landings';
 import { FavoriteButton } from '../modules/favorites';
 
+/** One request, one state: data and error can no longer be on screen together. */
+type DetailState =
+  | { status: 'loading' }
+  | { status: 'ready'; detail: BeachDetail }
+  /** `httpStatus` null = the request never came back (network, CORS, SW). */
+  | { status: 'error'; httpStatus: number | null };
+
+const LOADING: DetailState = { status: 'loading' };
+
 const BeachDetailPage: React.FC = () => {
   // Two routes land here: canonical /playas/:municipio/:playa and legacy
   // /playas/:codigo. The canonical one is resolved to a codigo against the
@@ -55,38 +65,28 @@ const BeachDetailPage: React.FC = () => {
   const [resolvedCode, setResolvedCode] = useState<string | null>(code ?? null);
   const history = useHistory();
   const { t } = useLanguage();
-  // Loaded detail TAGGED with the route it belongs to. `datos` derives from
+  // Detail state TAGGED with the route it belongs to. `current` derives from
   // it: the instant the route identity changes, the previous beach vanishes
   // SYNCHRONOUSLY — no frame where the old beach (or its canonical URL and
   // star) shows under the new route while effects catch up.
+  //
+  // One discriminated state instead of data + error flags: separate flags let
+  // a transient failure leave the "no se pudo cargar" banner painted on top of
+  // data a second attempt did bring. The `active` guards below keep the result
+  // of a request nobody cares about any more out of the state.
   const routeIdentity = code ?? `${municipality ?? ''}/${beach ?? ''}`;
-  const [loaded, setLoaded] = useState<{ ruta: string; detalle: PlayaDetalleData } | null>(null);
-  const data = loaded && loaded.ruta === routeIdentity ? loaded.detalle : null;
-  const [error, setError] = useState(false);
-  /** HTTP status of the failure; null = the request never came back (network, CORS, SW). */
-  const [statusError, setStatusError] = useState<number | null>(null);
+  const [state, setState] = useState<{ route: string; value: DetailState } | null>(null);
+  const current = state && state.route === routeIdentity ? state.value : LOADING;
+  const data = current.status === 'ready' ? current.detail : null;
 
-  /**
-   * The error is turned ON and OFF. It used to be only turned on: any
-   * transient failure —an attempt crossing with another, a request that dies
-   * on navigation, a stray 429— left the red notice stuck forever, and since
-   * the second attempt did bring the data, the whole page was painted WITH
-   * the "no se pudo cargar" banner on top. With StrictMode the effect runs
-   * twice in development, so it happened daily.
-   *
-   * The `activo` guard is the same one the score effect already used:
-   * the result of a request nobody cares about any more does not touch the state.
-   */
   // Canonical route: slugs → codigo. The legacy route resolves synchronously.
   // On EVERY route identity change the beach-specific state is cleared first:
   // Ionic reuses the mounted view when only the params change, and without
   // this reset the previous beach would stay on screen (with its canonical
   // URL and favorite star) while — or even after — the new one fails to load.
   useEffect(() => {
-    setLoaded(null);
+    setState(null);
     setSelectedDay(0);
-    setError(false);
-    setStatusError(null);
     if (code) {
       setResolvedCode(code);
       return;
@@ -100,8 +100,7 @@ const BeachDetailPage: React.FC = () => {
         setResolvedCode(found.codigo);
       } else {
         // Same shape as a backend 404: unknown beach.
-        setError(true);
-        setStatusError(404);
+        setState({ route: routeIdentity, value: { status: 'error', httpStatus: 404 } });
       }
     });
     return () => { active = false; };
@@ -110,18 +109,15 @@ const BeachDetailPage: React.FC = () => {
   useEffect(() => {
     if (!resolvedCode) return;
     let active = true;
-    setError(false);
-    setStatusError(null);
     getBeachDetail(resolvedCode)
       .then((detail) => {
         if (!active) return;
-        setLoaded({ ruta: routeIdentity, detalle: detail });
-        setError(false);
+        setState({ route: routeIdentity, value: { status: 'ready', detail } });
       })
       .catch((e) => {
         if (!active) return;
-        setError(true);
-        setStatusError(e instanceof DetailError ? e.status : null);
+        const httpStatus = e instanceof DetailError ? e.status : null;
+        setState({ route: routeIdentity, value: { status: 'error', httpStatus } });
       });
     return () => { active = false; };
   }, [resolvedCode]);
@@ -133,7 +129,9 @@ const BeachDetailPage: React.FC = () => {
   useServiceWorkerRefresh(({ url, datos: data }) => {
     if (!resolvedCode) return;
     if (url.endsWith(`/beaches/${resolvedCode}/details`)) {
-      setLoaded({ ruta: routeIdentity, detalle: data as PlayaDetalleData });
+      const detail = data as BeachDetail;
+      storeBeachDetail(resolvedCode, detail);
+      setState({ route: routeIdentity, value: { status: 'ready', detail } });
     }
   });
 
@@ -180,7 +178,7 @@ const BeachDetailPage: React.FC = () => {
       )}
       {/* Unknown beach: noindex and no inherited canonical — this URL must
           not present itself to crawlers as some other page. */}
-      {error && !data && statusError === 404 && (
+      {current.status === 'error' && current.httpStatus === 404 && (
         <SeoHead
           title={t('seo.tituloNoEncontrada')}
           description={t('seo.descNoEncontrada')}
@@ -203,18 +201,18 @@ const BeachDetailPage: React.FC = () => {
       <IonContent>
         {/* Never alongside the data: a "no se pudo cargar" banner on top of
             a loaded page is simply false. */}
-        {error && !data && (
+        {current.status === 'error' && (
           <div className="error-container">
             <p style={{ margin: 0 }}>{t('detalle.errorCarga')}</p>
             {/* The cause, which is the first thing needed: the HTTP status needs
                 no translation and the network failure does. */}
             <p className="error-cause">
-              {statusError != null ? `HTTP ${statusError}` : t('detalle.sinRespuesta')}
+              {current.httpStatus != null ? `HTTP ${current.httpStatus}` : t('detalle.sinRespuesta')}
             </p>
           </div>
         )}
 
-        {!data && !error && (
+        {current.status === 'loading' && (
           <div className="loading-container">
             <IonSpinner name="crescent" />
             <span className="loading-text">{t('detalle.cargando')}</span>

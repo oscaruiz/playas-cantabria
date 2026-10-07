@@ -1,12 +1,8 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { IonPage, IonContent, IonFooter, IonSpinner, IonIcon } from '@ionic/react';
 import { locationOutline, warningOutline } from 'ionicons/icons';
 import { useHistory, Link } from 'react-router-dom';
-import {
-  Beach,
-  FeaturedBeach,
-  getBeaches,
-} from '../services/api';
+import { FeaturedBeach } from '../services/api';
 import { rankedSkyEmoji, flagColorClass } from '../utils/beachHelpers';
 import { formatTimeAgo, madridLocalHour } from '../shared/format/time';
 import { FreshnessLabel } from '../features/provenance/SourceAndFreshness';
@@ -14,6 +10,7 @@ import { rankBeaches, topScoreCodeNoHero } from '../utils/beachRanking';
 import { haversineKm } from '../shared/geo/haversine';
 import { useUserLocation } from '../hooks/useUserLocation';
 import { useRanking } from '../features/ranking/useRanking';
+import { useBeaches } from '../features/catalog/useBeaches';
 import BottomNavBar from '../shared/ui/BottomNavBar';
 import HeaderActions from '../shared/ui/HeaderActions';
 import BrandLogo from '../shared/ui/BrandLogo';
@@ -370,21 +367,11 @@ const HomePage: React.FC = () => {
     retrying,
     retry,
   } = useRanking();
-  const [allBeaches, setAllBeaches] = useState<Beach[] | null>(null);
+  const catalog = useBeaches();
+  const allBeaches = catalog.status === 'ready' ? catalog.beaches : null;
   const { userLocation, locationLoading, locationDenied, locationBlocked, retryLocation } = useUserLocation();
   const history = useHistory();
   const { t } = useLanguage();
-
-  useEffect(() => {
-    let mounted = true;
-
-    getBeaches({ onBackendData: (data) => { if (mounted) setAllBeaches(data); } })
-      .then((data) => {
-        if (mounted) setAllBeaches(data);
-      });
-
-    return () => { mounted = false; };
-  }, []);
 
   const cautionBeaches = featured?.revisar ?? [];
 

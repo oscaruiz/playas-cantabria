@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
+import React, { useState, useMemo, useCallback, useRef } from 'react';
 import {
   IonPage,
   IonContent,
@@ -7,11 +7,9 @@ import {
   IonIcon,
 } from '@ionic/react';
 import { searchOutline, locateOutline, starOutline, videocamOutline } from 'ionicons/icons';
-import {
-  Beach,
-  getBeaches,
-} from '../services/api';
+import { Beach } from '../services/api';
 import { useRanking } from '../features/ranking/useRanking';
+import { useBeaches } from '../features/catalog/useBeaches';
 import { matchesBeach, normalizeSearch, webcamAvailable } from '../utils/beachHelpers';
 import { haversineKm } from '../shared/geo/haversine';
 import { useUserLocation } from '../hooks/useUserLocation';
@@ -33,8 +31,14 @@ type Suggestion =
 
 type SortMode = 'az' | 'cerca';
 
+const NO_BEACHES: Beach[] = [];
+
 const BeachList: React.FC = () => {
-  const [beaches, setBeaches] = useState<Beach[] | null>(null);
+  const catalog = useBeaches();
+  const dataUnavailable = catalog.status === 'unavailable';
+  const isFallback = catalog.status === 'ready' && catalog.source === 'fallback';
+  // Unavailable is an empty catalog, not a spinner: there is nothing left to wait for.
+  const beaches = catalog.status === 'ready' ? catalog.beaches : dataUnavailable ? NO_BEACHES : null;
   const [filter, setFilter] = useState('');
   const [order, setOrder] = useState<SortMode>('az');
   const [onlyFavorites, setOnlyFavorites] = useState(false);
@@ -42,8 +46,6 @@ const BeachList: React.FC = () => {
   const { favorites } = useFavoriteCodes();
   // There is no error state: `getBeaches` never rejects, it always falls back to the local
   // JSON. What does need to be conveyed is that the data is not fresh.
-  const [isFallback, setIsFallback] = useState(false);
-  const [dataUnavailable, setDataUnavailable] = useState(false);
   const { t, tPlural } = useLanguage();
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeIdx, setActiveIdx] = useState(-1);
@@ -58,21 +60,6 @@ const BeachList: React.FC = () => {
     () => new Map((ranking?.resumenTodas ?? []).map((b) => [b.codigo, b])),
     [ranking],
   );
-
-  useEffect(() => {
-    getBeaches({
-      onFallback: () => setIsFallback(true),
-      onFallbackUnavailable: () => {
-        setIsFallback(false);
-        setDataUnavailable(true);
-      },
-      onBackendData: (data) => {
-        setBeaches(data);
-        setIsFallback(false);
-        setDataUnavailable(false);
-      },
-    }).then(setBeaches);
-  }, []);
 
   // No toggle needed — two separate buttons
 
