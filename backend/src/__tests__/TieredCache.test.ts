@@ -30,7 +30,7 @@ const esperarVaciadoDeCola = () => new Promise((r) => setTimeout(r, 0));
 
 describe('TieredCache', () => {
   it('en arranque en frío sirve el valor del L2 sin llamar al proveedor', async () => {
-    let ahora = 1_000_000;
+    const ahora = 1_000_000;
     const l2 = new L2Falso(() => ahora);
     l2.sembrar('featured:beaches', { mejores: ['Berria'] }, ahora - 60_000); // 1 min
     const cache = new TieredCache(l2, () => ahora);
@@ -46,7 +46,7 @@ describe('TieredCache', () => {
   });
 
   it('un valor de L2 más viejo que la ventana fresca entra como stale y se refresca detrás', async () => {
-    let ahora = 1_000_000;
+    const ahora = 1_000_000;
     const l2 = new L2Falso(() => ahora);
     l2.sembrar('featured:beaches', { v: 'viejo' }, ahora - 600_000); // 10 min > fresh 5 min
     const cache = new TieredCache(l2, () => ahora);
@@ -65,7 +65,7 @@ describe('TieredCache', () => {
   });
 
   it('descarta un valor de L2 más viejo que la ventana stale', async () => {
-    let ahora = 1_000_000;
+    const ahora = 1_000_000;
     const l2 = new L2Falso(() => ahora);
     l2.sembrar('featured:beaches', { v: 'caducado' }, ahora - 7_200_000); // 2 h > stale 1 h
     const cache = new TieredCache(l2, () => ahora);

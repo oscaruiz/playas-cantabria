@@ -6,7 +6,7 @@ import { http, BROWSER_HEADERS } from '../http/axiosClient';
 
 // https-proxy-agent exposes its types via "exports" map, incompatible with the
 // moduleResolution:node of this tsconfig. Loaded via require (any) + type shim.
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const { HttpsProxyAgent } = require('https-proxy-agent') as {
   HttpsProxyAgent: new (url: string) => Agent;
 };
@@ -15,7 +15,6 @@ import { FlagProvider } from '../../domain/ports/FlagProvider';
 import { FlagStatus, FlagColor, FlagRef } from '../../domain/entities/Flag';
 import { readFlagsFile } from '../../regions/flagsFileSchema';
 import { MAX_EDAD_BANDERA_MS, vigenciaBandera } from '../../domain/services/flagVigencia';
-import { Config } from '../config/config';
 
 /**
  * Red Cross (Cruz Roja) flag scraper.

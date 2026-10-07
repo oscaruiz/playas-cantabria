@@ -41,7 +41,7 @@ describe('HostLimiter — techo de concurrencia por proveedor', () => {
   });
 
   it('un 429 sin Retry-After usa un enfriamiento por defecto de 60s', () => {
-    let ahora = 1_000_000;
+    const ahora = 1_000_000;
     const limiter = new HostLimiter({}, () => ahora);
 
     limiter.registrar429('opendata.aemet.es', undefined);
@@ -50,7 +50,7 @@ describe('HostLimiter — techo de concurrencia por proveedor', () => {
   });
 
   it('acota el enfriamiento aunque el proveedor pida horas', () => {
-    let ahora = 1_000_000;
+    const ahora = 1_000_000;
     const limiter = new HostLimiter({}, () => ahora);
 
     limiter.registrar429('opendata.aemet.es', '86400');

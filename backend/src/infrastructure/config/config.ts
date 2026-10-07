@@ -23,6 +23,8 @@ function readFirebaseRuntimeConfig():
     }
   | undefined {
   try {
+    // Lazy on purpose: firebase-functions only exists in the Functions runtime.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const functions = require('firebase-functions') as any;
 
     const cfg = functions.config?.() ?? {};
@@ -127,6 +129,8 @@ export function loadConfig(): AppConfig {
   if (cachedConfig) return cachedConfig;
 
   if (!isFirebaseEnv()) {
+    // Lazy on purpose: only read .env outside Firebase.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     require('dotenv').config();
   }
 

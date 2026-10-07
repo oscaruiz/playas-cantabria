@@ -330,7 +330,7 @@ export class DetailsAssembler {
   private async assembleFresh(beachId: string): Promise<DetailsDTO> {
     // Step 1: Base data from use-case (hedged weather + Cruz Roja flag)
     const details = await this.getDetails.execute(beachId);
-    let base = DetailsMapper.toDTO(details);
+    const base = DetailsMapper.toDTO(details);
     const currentPromise = this.openWeather
       .getCurrentByCoords(details.beach.latitude, details.beach.longitude)
       .catch(() => null);
@@ -565,7 +565,10 @@ export class DetailsAssembler {
             mananaUvEstimado = true;
           }
           mananaUv = base.clima.manana ? mananaUv : null;
-        } catch {}
+        } catch {
+          // Optional enrichment: without OpenWeather cloudiness the UV keeps
+          // whatever it already had (possibly null).
+        }
       }
 
       let hoy: ClimaDiaDTO = { ...base.clima.hoy, uvIndex: hoyUv };
@@ -586,7 +589,9 @@ export class DetailsAssembler {
           };
         }
       }
-    } catch {}
+    } catch {
+      // Optional enrichment: the waves just stay empty.
+    }
 
     // Step 7: Water temperature fallback. The default is not a measurement of
     // anything: it is a plausible summer number so the row is not empty, and
@@ -609,7 +614,9 @@ export class DetailsAssembler {
           manana: manana && mananaPorDefecto ? this.marcarEstimado(manana, 'agua') : manana,
         };
       }
-    } catch {}
+    } catch {
+      // Optional enrichment: the water temperature just stays empty.
+    }
 
     // Step 8: prediccionCompleta (only when scraper succeeded)
     base.prediccionCompleta = forecast ? this.mapForecastToDTO(forecast) : null;

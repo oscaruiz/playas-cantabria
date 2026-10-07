@@ -11,7 +11,6 @@ import type { HourlyOutlookSlot } from '../domain/entities/RainNowcast';
 // 10:00 Madrid.
 const MEDIA_MANANA = new Date('2026-07-15T08:00:00Z');
 
-const HORA = 3_600_000;
 const utc = (hora: number) => Date.UTC(2026, 6, 15, hora);
 
 /** cielo 25 + temperatura 23 + viento 15 = 63/65 → calidad 97. */

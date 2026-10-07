@@ -27,7 +27,7 @@ Each has its own `package.json`, `node_modules`, and tsconfig. There is no root-
 | Build | `npm run build` (tsc, outputs to `dist/`) |
 | Start production | `npm start` |
 | Tests | `npm test` (vitest) |
-| Lint | Use eslint config in `config/.eslintrc.cjs` |
+| Lint | `npm run lint` (ESLint 9 flat config, `eslint.config.mjs`) |
 
 TypeScript config for build is at `backend/config/tsconfig.json` (rootDir=`../src`, outDir=`../dist`).
 
