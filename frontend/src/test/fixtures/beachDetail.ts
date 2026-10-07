@@ -212,7 +212,7 @@ export function buildAemetDetail(now: Date): BeachDetail {
  * `WeatherHero` with the `clima` data.
  *
  * `manana` is set to null because that is what the backend ALWAYS emits today
- * (`LegacyDetailsMapper.mapClima` sets `manana: null`), even though the
+ * (`DetailsMapper.mapClima` sets `manana: null`), even though the
  * frontend type declares it required. Without `manana` the day selector
  * must not appear.
  */

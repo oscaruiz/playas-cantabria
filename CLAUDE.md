@@ -51,9 +51,9 @@ backend/src/
     ports/          — Interfaces (BeachRepository, WeatherProvider, FlagProvider, SunshineProvider, PrecipitationNowProvider, BeachForecastProvider, Cache)
     use-cases/      — GetAllBeaches, GetBeachById, GetBeachDetails
   application/
-    dtos/           — BeachDTO, BeachDetailsDTO
-    mappers/        — BeachMapper, BeachDetailsMapper, LegacyDetailsMapper
-    services/       — DetailsAssembler, LegacyDetailsAssembler
+    dtos/           — BeachDTO, FeaturedBeachDTO
+    mappers/        — BeachMapper, FeaturedBeachMapper, DetailsMapper
+    services/       — DetailsAssembler (serves /details), skyCorrectionRunner
     validation/     — Zod schemas for request params
   infrastructure/
     di/             — DIContainer + dependency wiring (dependencies.ts)

@@ -3,7 +3,7 @@ import type { DayWindowSignal } from '../../domain/use-cases/BeachWindowScorer';
 import type { FeaturedBeachResult } from '../../domain/use-cases/BeachAssessment';
 import { FeaturedBeachDTO, FeaturedBeachesResponseDTO, VentanaDiaDTO } from '../dtos/FeaturedBeachDTO';
 import { esBanderaVigente } from '../../domain/services/flagVigencia';
-import { LegacyDetailsMapper } from './LegacyDetailsMapper';
+import { DetailsMapper } from './DetailsMapper';
 
 export type { FeaturedBeachResult };
 
@@ -113,7 +113,7 @@ export class FeaturedBeachMapper {
       topeValor: r.topeValor ?? null,
       ventanaDia: mapVentanaDia(r.ventanaDia),
       oleaje: r.enrichment?.waves ?? null,
-      lluvia: r.rain ? LegacyDetailsMapper.mapLluvia(r.rain) : null,
+      lluvia: r.rain ? DetailsMapper.mapLluvia(r.rain) : null,
     };
   }
 }

@@ -1,5 +1,5 @@
 import { BeachAttributesDTO } from './BeachDTO';
-import type { LluviaDTO } from '../mappers/LegacyDetailsMapper';
+import type { LluviaDTO } from '../mappers/DetailsMapper';
 
 /**
  * Points this beach scored on each factor, BEFORE the caps and the outlook

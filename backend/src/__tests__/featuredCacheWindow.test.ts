@@ -6,7 +6,7 @@ import { createBeachesRouter } from '../infrastructure/express/routes/beachesRou
 import type { GetAllBeaches } from '../domain/use-cases/GetAllBeaches';
 import type { GetBeachById } from '../domain/use-cases/GetBeachById';
 import type { GetFeaturedBeaches } from '../domain/use-cases/GetFeaturedBeaches';
-import type { LegacyDetailsAssembler } from '../application/services/LegacyDetailsAssembler';
+import type { DetailsAssembler } from '../application/services/DetailsAssembler';
 
 /**
  * The listing and the detail paint THE SAME SKY on two screens one tap apart,
@@ -31,7 +31,7 @@ const deps = {
   getAllBeaches: { execute: async () => [] } as unknown as GetAllBeaches,
   getBeachById: { execute: async () => undefined } as unknown as GetBeachById,
   getFeaturedBeaches: { execute: async () => vacio } as unknown as GetFeaturedBeaches,
-  legacyDetailsAssembler: { assemble: async () => ({}) } as unknown as LegacyDetailsAssembler,
+  detailsAssembler: { assemble: async () => ({}) } as unknown as DetailsAssembler,
 };
 
 async function cabeceras(): Promise<{

@@ -158,7 +158,7 @@ export type MareaReferenciaDTO = {
   fuenteMareas: string | null;
 };
 
-export type LegacyDetailsDTO = {
+export type DetailsDTO = {
   nombre: string;
   municipio: string;
   codigo: string;
@@ -201,19 +201,19 @@ export type LegacyDetailsDTO = {
   generadoEn?: string;
 };
 
-export class LegacyDetailsMapper {
-  static toDTO(details: BeachDetails): LegacyDetailsDTO {
+export class DetailsMapper {
+  static toDTO(details: BeachDetails): DetailsDTO {
     const { beach, weather, flag } = details;
 
     return {
       ...this.mapBeach(beach),
       temperaturaActual: weather?.temperatureC ?? null,
-      tiempoActual: null, // populated by LegacyDetailsAssembler from OpenWeather current
+      tiempoActual: null, // populated by DetailsAssembler from OpenWeather current
       clima: weather ? this.mapClima(weather) : null,
       fuenteBanderas: resolveFlagOperatorName(beach.flagRef, beach.flagStations),
       cruzRoja: flag ? this.mapCruzRoja(flag) : null,
       prediccionCompleta: null,
-      mareaReferencia: null, // populated by LegacyDetailsAssembler when the beach has no AEMET sheet
+      mareaReferencia: null, // populated by DetailsAssembler when the beach has no AEMET sheet
     };
   }
 

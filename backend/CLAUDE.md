@@ -29,9 +29,9 @@ infrastructure/ → application/ → domain/
 - **domain/entities/**: pure types (Beach, Weather, Flag, BeachForecast). No infra imports.
 - **domain/ports/**: interfaces (BeachRepository, WeatherProvider, FlagProvider, SunshineProvider, PrecipitationNowProvider, BeachForecastProvider, Cache). Adapters implement these.
 - **domain/use-cases/**: business logic (GetAllBeaches, GetBeachById, GetBeachDetails with AEMET→OpenWeather hedging).
-- **application/dtos/**: public API shapes (BeachDTO, BeachDetailsDTO).
-- **application/mappers/**: entity → DTO (BeachMapper, LegacyDetailsMapper).
-- **application/services/**: orchestration (LegacyDetailsAssembler — data fallback chain).
+- **application/dtos/**: public API shapes (BeachDTO, FeaturedBeachDTO).
+- **application/mappers/**: entity → DTO (BeachMapper, FeaturedBeachMapper, DetailsMapper).
+- **application/services/**: orchestration (DetailsAssembler — data fallback chain).
 - **application/validation/**: Zod schemas for route params.
 - **infrastructure/providers/**: external data adapters (AEMET API, OpenWeather, Red Cross scraping, AEMET web scraping).
 - **infrastructure/repositories/**: JsonBeachRepository (reads data/beaches.json).
@@ -60,7 +60,7 @@ Layer 2: AemetBeachForecastProvider  → OpenData API with API key (2 days, inco
 Layer 3: OpenWeatherWeatherProvider  → OpenWeather API (temp, wind, description)
 ```
 
-Orchestration lives in `LegacyDetailsAssembler.assemble()`.
+Orchestration lives in `DetailsAssembler.assemble()`.
 
 ### Hedged weather (inside GetBeachDetails use-case)
 
@@ -131,7 +131,7 @@ Two-step response: first returns a data URL, then you download the actual JSON.
 ### Webcams
 
 Optional `webcam` object per beach in `data/beaches.json` (propagated through `Beach` →
-`LegacyDetailsDTO` like `atributos`):
+`DetailsDTO` like `atributos`):
 
 ```jsonc
 "webcam": {

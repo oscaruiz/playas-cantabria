@@ -84,9 +84,9 @@ El backend sigue una **Arquitectura Hexagonal** (Puertos y Adaptadores). Las dep
    * **Sin dependencias** de otras capas.
 
 2. **`Application` (Orquestación)**
-   * DTOs: `BeachDTO`, `BeachDetailsDTO`.
-   * Mappers: `BeachMapper`, `BeachDetailsMapper`, `FeaturedBeachMapper`, `LegacyDetailsMapper`.
-   * Servicios: `DetailsAssembler` y `LegacyDetailsAssembler` (orquestan la cadena de fallback).
+   * DTOs: `BeachDTO`, `FeaturedBeachDTO`.
+   * Mappers: `BeachMapper`, `FeaturedBeachMapper`, `DetailsMapper`.
+   * Servicios: `DetailsAssembler` (orquesta la cadena de fallback del detalle).
    * Validación: Esquemas Zod para parámetros de ruta.
 
 3. **`Infrastructure` (Exterior)**

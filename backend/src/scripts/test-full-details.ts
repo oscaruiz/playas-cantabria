@@ -4,11 +4,11 @@ process.env.DEBUG_WEATHER = '1';
 
 import fs from 'fs';
 import { createContainer } from '../infrastructure/di';
-import { LegacyDetailsAssembler } from '../application/services/LegacyDetailsAssembler';
+import { DetailsAssembler } from '../application/services/DetailsAssembler';
 import { AemetBeachWebScraper } from '../infrastructure/providers/AemetBeachWebScraper';
 import { AemetBeachForecastProvider } from '../infrastructure/providers/AemetBeachForecastProvider';
 import { GetBeachDetails } from '../domain/use-cases/GetBeachDetails';
-import type { LegacyDetailsDTO } from '../application/mappers/LegacyDetailsMapper';
+import type { DetailsDTO } from '../application/mappers/DetailsMapper';
 import type { BeachFullForecast } from '../domain/entities/BeachForecast';
 import { resolveScriptRegion } from './scriptRegion';
 
@@ -40,7 +40,7 @@ type BeachResult = {
 function printDiagnostic(
   nombre: string,
   codigo: string,
-  result: LegacyDetailsDTO,
+  result: DetailsDTO,
   scraperResult: BeachFullForecast | null,
   scraperError: string | null,
   aemetApiError: string | null,
@@ -167,7 +167,7 @@ async function main() {
       }
 
       // Full assembler
-      const assembler = container.get<LegacyDetailsAssembler>('legacyDetailsAssembler');
+      const assembler = container.get<DetailsAssembler>('detailsAssembler');
       const result = await assembler.assemble(codigo);
 
       printDiagnostic(nombre, codigo, result, scraperResult, scraperError, aemetApiError, owResult, owError);

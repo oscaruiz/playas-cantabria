@@ -8,7 +8,7 @@ import { createBeachesRouter } from '../infrastructure/express/routes/beachesRou
 import { GetAllBeaches } from '../domain/use-cases/GetAllBeaches';
 import { GetBeachById } from '../domain/use-cases/GetBeachById';
 import { GetBeachDetails } from '../domain/use-cases/GetBeachDetails';
-import { LegacyDetailsAssembler } from '../application/services/LegacyDetailsAssembler';
+import { DetailsAssembler } from '../application/services/DetailsAssembler';
 import type { Beach } from '../domain/entities/Beach';
 import type { Weather } from '../domain/entities/Weather';
 import type { FlagStatus } from '../domain/entities/Flag';
@@ -152,7 +152,7 @@ function buildApp() {
 
   const getBeachDetails = new GetBeachDetails(repo, aemetWeather, openWeatherPort, flagProvider);
   // No cache, no sunshine provider: assembleFresh on every request, no sky correction.
-  const assembler = new LegacyDetailsAssembler(
+  const assembler = new DetailsAssembler(
     getBeachDetails,
     scraper,
     aemetPlayas,
@@ -166,7 +166,7 @@ function buildApp() {
     createBeachesRouter({
       getAllBeaches: new GetAllBeaches(repo),
       getBeachById: new GetBeachById(repo),
-      legacyDetailsAssembler: assembler,
+      detailsAssembler: assembler,
     }),
   );
   return app;

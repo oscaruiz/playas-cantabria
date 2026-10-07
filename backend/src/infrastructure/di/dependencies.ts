@@ -15,7 +15,7 @@ import { regionRegistry, RegionConfig } from '../../regions';
 import { GetAllBeaches } from '../../domain/use-cases/GetAllBeaches';
 import { GetBeachById } from '../../domain/use-cases/GetBeachById';
 import { GetBeachDetails } from '../../domain/use-cases/GetBeachDetails';
-import { LegacyDetailsAssembler } from '../../application/services/LegacyDetailsAssembler';
+import { DetailsAssembler } from '../../application/services/DetailsAssembler';
 import { GetFeaturedBeaches } from '../../domain/use-cases/GetFeaturedBeaches';
 import { GetRainNowcast } from '../../domain/use-cases/GetRainNowcast';
 import { AemetBeachForecastProvider } from '../providers/AemetBeachForecastProvider';
@@ -161,8 +161,8 @@ export function configureDependencies(
   );
 
   // Application Layer - Services
-  container.register('legacyDetailsAssembler', (c) =>
-    new LegacyDetailsAssembler(
+  container.register('detailsAssembler', (c) =>
+    new DetailsAssembler(
       c.get('getBeachDetails'),
       c.get('aemetBeachWebScraper'),
       c.get('aemetBeachForecastProvider'),

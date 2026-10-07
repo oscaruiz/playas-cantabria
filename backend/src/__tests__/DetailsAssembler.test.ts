@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { LegacyDetailsAssembler } from '../application/services/LegacyDetailsAssembler';
+import { DetailsAssembler } from '../application/services/DetailsAssembler';
 import type { GetBeachDetails, BeachDetails } from '../domain/use-cases/GetBeachDetails';
 import type { AemetBeachWebScraper } from '../infrastructure/providers/AemetBeachWebScraper';
 import type { AemetBeachForecastProvider } from '../infrastructure/providers/AemetBeachForecastProvider';
@@ -125,10 +125,10 @@ function buildAssembler(opts: {
     },
   } as unknown as GetRainNowcast;
 
-  return new LegacyDetailsAssembler(getDetails, aemetScraper, aemetPlayas, openWeather, rainNowcast);
+  return new DetailsAssembler(getDetails, aemetScraper, aemetPlayas, openWeather, rainNowcast);
 }
 
-describe('LegacyDetailsAssembler — coherencia resumen vs desglose y "ahora" real', () => {
+describe('DetailsAssembler — coherencia resumen vs desglose y "ahora" real', () => {
   it('reproduce la discrepancia mañana/tarde en la previsión (origen único, no bug de caché)', async () => {
     const assembler = buildAssembler({
       details: { beach: COBRECES, weather: makeOwCurrent(), flag: null },
@@ -305,7 +305,7 @@ describe('LegacyDetailsAssembler — coherencia resumen vs desglose y "ahora" re
     } as unknown as OpenWeatherWeatherProvider;
     const rainNowcast = { execute: async () => { throw new Error('skip'); } } as unknown as GetRainNowcast;
 
-    const assembler = new LegacyDetailsAssembler(getDetails, aemetScraper, aemetPlayas, openWeather, rainNowcast);
+    const assembler = new DetailsAssembler(getDetails, aemetScraper, aemetPlayas, openWeather, rainNowcast);
     const result = await assembler.assemble(beachSinAemet.id);
 
     expect(scraperCalls).toBe(0);
@@ -384,7 +384,7 @@ describe('LegacyDetailsAssembler — coherencia resumen vs desglose y "ahora" re
 // distances on this stretch of coast.
 // ---------------------------------------------------------------------------
 
-describe('LegacyDetailsAssembler — marea de referencia', () => {
+describe('DetailsAssembler — marea de referencia', () => {
   const DONOR: Beach = {
     id: 'donor-1',
     name: 'Somo',
@@ -462,7 +462,7 @@ describe('LegacyDetailsAssembler — marea de referencia', () => {
     } as unknown as GetRainNowcast;
 
     if (opts.withRepo === false) {
-      return new LegacyDetailsAssembler(getDetails, aemetScraper, aemetPlayas, openWeather, rainNowcast);
+      return new DetailsAssembler(getDetails, aemetScraper, aemetPlayas, openWeather, rainNowcast);
     }
 
     const beachRepo = {
@@ -470,7 +470,7 @@ describe('LegacyDetailsAssembler — marea de referencia', () => {
       getById: async () => null,
     } as unknown as BeachRepository;
 
-    return new LegacyDetailsAssembler(
+    return new DetailsAssembler(
       getDetails, aemetScraper, aemetPlayas, openWeather, rainNowcast,
       undefined, undefined, 'cantabria', beachRepo,
     );
@@ -540,7 +540,7 @@ describe('LegacyDetailsAssembler — marea de referencia', () => {
 // respaldan, y esas horas ya viajan en el nowcast (misma petición, coste 0).
 // ---------------------------------------------------------------------------
 
-describe('LegacyDetailsAssembler — previsión horaria en tiempoActual', () => {
+describe('DetailsAssembler — previsión horaria en tiempoActual', () => {
   const MEDIODIA = new Date('2026-08-01T11:00:00Z'); // 13:00 Madrid
 
   const rainCon = (horas: number): RainNowcast => ({
@@ -666,7 +666,7 @@ describe('LegacyDetailsAssembler — previsión horaria en tiempoActual', () => 
 // Ventana del día: CUÁNDO ir, publicada junto a la tira que la respalda.
 // ---------------------------------------------------------------------------
 
-describe('LegacyDetailsAssembler — ventana del día en tiempoActual', () => {
+describe('DetailsAssembler — ventana del día en tiempoActual', () => {
   const MEDIODIA = new Date('2026-08-01T11:00:00Z'); // 13:00 Madrid
 
   const rainCon = (horas: number): RainNowcast => ({

@@ -11,7 +11,7 @@ import { configureDependencies, createSharedDependencies } from '../di/dependenc
 import { GetAllBeaches } from '../../domain/use-cases/GetAllBeaches';
 import { GetBeachById } from '../../domain/use-cases/GetBeachById';
 import { GetFeaturedBeaches } from '../../domain/use-cases/GetFeaturedBeaches';
-import { LegacyDetailsAssembler } from '../../application/services/LegacyDetailsAssembler';
+import { DetailsAssembler } from '../../application/services/DetailsAssembler';
 import { createBeachesRouter } from './routes/beachesRouter';
 import { createDebugRouter } from './routes/debugRouter';
 import { createDiagRouter } from './routes/diagRouter';
@@ -83,7 +83,7 @@ export function buildExpressApp({
     getAllBeaches: container.get<GetAllBeaches>('getAllBeaches'),
     getBeachById: container.get<GetBeachById>('getBeachById'),
     getFeaturedBeaches: container.get<GetFeaturedBeaches>('getFeaturedBeaches'),
-    legacyDetailsAssembler: container.get<LegacyDetailsAssembler>('legacyDetailsAssembler'),
+    detailsAssembler: container.get<DetailsAssembler>('detailsAssembler'),
   });
 
   for (const region of regions) {

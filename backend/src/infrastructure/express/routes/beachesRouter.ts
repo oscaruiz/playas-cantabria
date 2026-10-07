@@ -2,7 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { GetAllBeaches } from '../../../domain/use-cases/GetAllBeaches';
 import { GetBeachById } from '../../../domain/use-cases/GetBeachById';
 import { GetFeaturedBeaches } from '../../../domain/use-cases/GetFeaturedBeaches';
-import { LegacyDetailsAssembler } from '../../../application/services/LegacyDetailsAssembler';
+import { DetailsAssembler } from '../../../application/services/DetailsAssembler';
 import { BeachMapper } from '../../../application/mappers/BeachMapper';
 import { FeaturedBeachMapper } from '../../../application/mappers/FeaturedBeachMapper';
 import { BeachIdSchema } from '../../../application/validation/params';
@@ -11,7 +11,7 @@ export interface BeachesRoutesDeps {
   getAllBeaches: GetAllBeaches;
   getBeachById: GetBeachById;
   getFeaturedBeaches?: GetFeaturedBeaches;
-  legacyDetailsAssembler?: LegacyDetailsAssembler;
+  detailsAssembler?: DetailsAssembler;
 }
 
 export function createBeachesRouter(deps: BeachesRoutesDeps): Router {
@@ -125,10 +125,10 @@ export function createBeachesRouter(deps: BeachesRoutesDeps): Router {
       if (!parsed.success) {
         return res.status(400).json({ error: 'Invalid beach id' });
       }
-      if (!deps.legacyDetailsAssembler) {
+      if (!deps.detailsAssembler) {
         return res.status(500).json({ error: 'Details assembler not configured' });
       }
-      const detailsDto = await deps.legacyDetailsAssembler.assemble(parsed.data.id);
+      const detailsDto = await deps.detailsAssembler.assemble(parsed.data.id);
       // Same policy as `/featured`, and it has to stay the same: these two
       // paint the same sky on two screens one tap apart, so any window one of
       // them tolerates and the other does not shows up as the screens

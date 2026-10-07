@@ -28,7 +28,7 @@ describe('DI container', () => {
       'getBeachDetails',
       'getRainNowcast',
       'getFeaturedBeaches',
-      'legacyDetailsAssembler',
+      'detailsAssembler',
     ];
     for (const name of services) {
       expect(container.get(name), name).toBeTruthy();
