@@ -57,17 +57,18 @@ export interface RankingInUse {
   retry: () => void;
 }
 
+/** How often a ranking past its revalidation age is asked for again. */
+const AUTO_RETRY_EVERY_MS = 60 * 1000;
+
 /**
- * Instant of the ranking the automatic refetch has already been spent on.
+ * When the last automatic refetch went out.
  *
  * Module-level and not a ref per screen, because every mounted screen would
- * otherwise spend its own retry on the same old body, and each attempt wakes a
- * sleeping Render instance. Keyed by the instant rather than a plain boolean so
- * that a ranking that is newer but still old — a different body, a different
- * question — gets its own attempt. What the attempt brings back reaches every
- * screen, so whichever one spends it, all of them are served.
+ * otherwise send its own request for the same old body, and each attempt wakes
+ * a sleeping Render instance. What the attempt brings back reaches every
+ * screen, so whichever one sends it, all of them are served.
  */
-let retriedFor: number | null = null;
+let lastAutoRetryMs = 0;
 
 export function useRanking(): RankingInUse {
   const ranking = useSyncExternalStore(
@@ -151,17 +152,26 @@ export function useRanking(): RankingInUse {
     return () => clearTimeout(timer);
   }, [updatedMs, shouldRevalidate]);
 
-  // One automatic refetch per ranking: the response the service worker gave up
-  // on may never arrive (backend asleep, bad network, or the same old ranking
-  // again), and without this the screen kept that copy until someone reloaded by
-  // hand. It hangs on `convieneRevalidar` and NOT on the notice: the day the two
-  // thresholds were one, raising the notice to something honest would have
-  // silently turned this into an hourly refresh.
+  // Automatic refetch, once a minute for as long as the ranking stays old: the
+  // response the service worker gave up on may never arrive (backend asleep,
+  // bad network, or the same old ranking again). It used to be ONE attempt per
+  // ranking, and on 9-oct-2026 a phone tab resumed after three hours spent it in
+  // the second the radio was still waking up: the worker served its stored
+  // copy, the attempt was gone, and the screen sat on "actualizado hace 3h"
+  // with the backend answering fine. It hangs on `shouldRevalidate` and NOT on
+  // the notice: the day the two thresholds were one, raising the notice to
+  // something honest would have silently turned this into an hourly refresh.
   useEffect(() => {
-    if (!shouldRevalidate || updatedMs === retriedFor) return;
-    retriedFor = updatedMs;
-    void retry();
-  }, [shouldRevalidate, updatedMs, retry]);
+    if (!shouldRevalidate) return;
+    const tick = () => {
+      if (Date.now() - lastAutoRetryMs < AUTO_RETRY_EVERY_MS) return;
+      lastAutoRetryMs = Date.now();
+      void retry();
+    };
+    tick();
+    const timer = setInterval(tick, AUTO_RETRY_EVERY_MS);
+    return () => clearInterval(timer);
+  }, [shouldRevalidate, retry]);
 
   return {
     ranking,

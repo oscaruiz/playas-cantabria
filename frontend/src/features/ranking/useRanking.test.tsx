@@ -126,6 +126,35 @@ describe('useRanking', () => {
     expect(screen.queryByText('de visita anterior')).not.toBeInTheDocument();
   });
 
+  it('keeps asking every minute while the first attempts bring back the same old ranking', async () => {
+    // A tab resumed after hours: the radio is still waking up, so the load and
+    // the first retry both get the worker's stored copy. One attempt per ranking
+    // left the screen on "hace 3h" with the backend answering fine (9-oct-2026).
+    jest.useFakeTimers('modern');
+    // Fake timers bring their own clock: put back the one every case moves by hand.
+    jest.spyOn(Date, 'now').mockImplementation(() => now);
+    try {
+      let calls = 0;
+      installFetchMock([
+        route(FEATURED, () => ({
+          json: calls++ < 2 ? ranking(180, 'cielo de hace tres horas') : ranking(0, 'cielo al volver'),
+        })),
+      ]);
+
+      render(<Probe />);
+      expect(await screen.findByText('cielo de hace tres horas')).toBeInTheDocument();
+      await waitFor(() => expect(calls).toBe(2));
+
+      now += 61 * 1000;
+      await act(async () => { jest.advanceTimersByTime(61 * 1000); });
+
+      expect(await screen.findByText('cielo al volver')).toBeInTheDocument();
+      expect(calls).toBe(3);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('paints the ranking the service worker delivers late', async () => {
     installFetchMock([route(FEATURED, { json: ranking(0, 'nubes') })]);
 
