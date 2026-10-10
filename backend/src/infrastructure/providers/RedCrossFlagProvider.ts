@@ -3,6 +3,7 @@ import path from 'path';
 import { load } from 'cheerio';
 import type { Agent } from 'http';
 import { http, BROWSER_HEADERS } from '../http/axiosClient';
+import { runInBackground } from '../http/priority';
 
 // https-proxy-agent exposes its types via "exports" map, incompatible with the
 // moduleResolution:node of this tsconfig. Loaded via require (any) + type shim.
@@ -249,7 +250,8 @@ export class RedCrossFlagProvider implements FlagProvider {
     // Se estampa ANTES de empezar: un barrido que revienta tiene que esperar su
     // turno igual que uno que termina, o la siguiente peticion lo relanza en bucle.
     this.proximoBarrido = ahora + RedCrossFlagProvider.REINTENTO_SIN_COLOR_MS;
-    this.barridoEnCurso = this.barrerEstaciones()
+    // Background work: a /details reading a station live goes before the sweep.
+    this.barridoEnCurso = runInBackground(() => this.barrerEstaciones())
       .catch(() => undefined)
       .finally(() => {
         this.barridoEnCurso = null;

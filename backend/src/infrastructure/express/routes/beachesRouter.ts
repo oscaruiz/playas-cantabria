@@ -6,6 +6,7 @@ import { DetailsAssembler } from '../../../application/services/DetailsAssembler
 import { BeachMapper } from '../../../application/mappers/BeachMapper';
 import { FeaturedBeachMapper } from '../../../application/mappers/FeaturedBeachMapper';
 import { BeachIdSchema } from '../../../application/validation/params';
+import { runInBackground } from '../../http/priority';
 
 export interface BeachesRoutesDeps {
   getAllBeaches: GetAllBeaches;
@@ -22,6 +23,8 @@ export function createBeachesRouter(deps: BeachesRoutesDeps): Router {
     cacheControl: string,
     body: unknown,
   ) => {
+    // The request timeout already answered 504; the work finished anyway.
+    if (res.headersSent) return;
     res.setHeader('Cache-Control', cacheControl);
     res.setHeader('Server-Timing', `app;dur=${(performance.now() - startedAt).toFixed(1)}`);
     return res.json(body);
@@ -46,8 +49,14 @@ export function createBeachesRouter(deps: BeachesRoutesDeps): Router {
       if (!deps.getFeaturedBeaches) {
         return res.status(500).json({ error: 'Featured beaches not configured' });
       }
+      // Background priority even with this user waiting: a cold ranking is a
+      // call per beach, more than OpenWeather's per-minute cap, so it cannot
+      // fit in the request timeout anyway, and at full priority it used up the
+      // cap that the /details opened meanwhile needed (504s, 10-oct-2026).
+      // A /details that needs a key this fan-out is fetching promotes that key.
+      const featured = deps.getFeaturedBeaches;
       const { mejores, revisar, resumenTodas, generadoEn } =
-        await deps.getFeaturedBeaches.execute(5);
+        await runInBackground(() => featured.execute(5));
       // `generadoEn` and not the instant of this response: the cache answers
       // from a stale entry, so what is being sent can be much older than the
       // request that got it, and stamping it now was telling the app the

@@ -9,6 +9,11 @@ export interface ApiError extends Error {
  * Central error handler that keeps response shapes consistent.
  */
 export function errorHandler(err: unknown, _req: Request, res: Response, _next: NextFunction) {
+  // Already answered (the 504 of the request timeout). Writing again throws, and
+  // Express's fallback for that CLOSES the connection, dropping whatever other
+  // request was reusing it.
+  if (res.headersSent) return;
+
   // Handle specific error types
   if (err instanceof Error && err.message.includes('not found')) {
     return res.status(404).json({ error: err.message });

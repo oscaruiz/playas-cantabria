@@ -1,3 +1,5 @@
+import { currentTicket, inBackground, runWithTicket, Ticket } from '../http/priority';
+
 type CacheRecord<V> = {
   value: V;
   freshUntil: number;
@@ -11,6 +13,8 @@ export type CacheStats = Record<CacheState, number>;
 export class InMemoryCache {
   private store = new Map<string, CacheRecord<unknown>>();
   private inFlight = new Map<string, Promise<unknown>>();
+  /** Priority of the in-flight computes that started as background work. */
+  private inFlightTickets = new Map<string, Ticket>();
   /**
    * Hits/misses per key family (the prefix up to the first ':').
    * Only counted from getOrSet/getOrSetStale, which are the decisions
@@ -85,20 +89,7 @@ export class InMemoryCache {
     this.track(key, existing !== undefined ? 'fresh' : 'miss');
     if (existing !== undefined) return existing;
 
-    const pending = this.inFlight.get(key);
-    if (pending) return pending as Promise<T>;
-
-    const promise = compute()
-      .then((value) => {
-        this.set(key, value, ttlSeconds);
-        return value;
-      })
-      .finally(() => {
-        this.inFlight.delete(key);
-      });
-
-    this.inFlight.set(key, promise);
-    return promise as Promise<T>;
+    return this.shared(key, compute, (value) => this.set(key, value, ttlSeconds));
   }
 
   /**
@@ -117,34 +108,67 @@ export class InMemoryCache {
 
     if (state === 'fresh' && rec) return rec.value;
 
-    const startCompute = (): Promise<T> => {
-      const pending = this.inFlight.get(key);
-      if (pending) return pending as Promise<T>;
-
-      const promise = compute()
-        .then((value) => {
-          const now = this.now();
-          this.store.set(key, {
-            value,
-            freshUntil: now + freshTtlSeconds * 1000,
-            staleUntil: now + staleTtlSeconds * 1000,
-          });
-          return value;
-        })
-        .finally(() => {
-          this.inFlight.delete(key);
-        });
-
-      this.inFlight.set(key, promise);
-      return promise;
+    const store = (value: T) => {
+      const now = this.now();
+      this.store.set(key, {
+        value,
+        freshUntil: now + freshTtlSeconds * 1000,
+        staleUntil: now + staleTtlSeconds * 1000,
+      });
     };
 
     if (state === 'stale' && rec) {
-      void startCompute().catch(() => undefined);
+      void this.shared(key, compute, store, true).catch(() => undefined);
       return rec.value;
     }
 
-    return startCompute();
+    return this.shared(key, compute, store);
+  }
+
+  /**
+   * Joins the in-flight compute of `key` or starts it (singleflight).
+   *
+   * `detached`: nobody waits for the result (the stale refresh), so its outgoing
+   * calls yield to the ones a user is waiting on. A compute started from such
+   * work inherits that, and a caller that ends up WAITING on one, a miss joining
+   * a refresh already in flight, promotes it: otherwise a /details would sit
+   * behind the very ranking refresh that happened to be fetching its beach.
+   */
+  private shared<T>(
+    key: string,
+    compute: () => Promise<T>,
+    store: (value: T) => void,
+    detached = false,
+  ): Promise<T> {
+    const pending = this.inFlight.get(key);
+    if (pending) {
+      const running = this.inFlightTickets.get(key);
+      if (running && !detached) {
+        // A user waiting promotes it now; background work waiting on it is
+        // recorded, so promoting that work later reaches this compute too.
+        const waiter = currentTicket();
+        if (waiter) waiter.waitOn(running);
+        else running.promote();
+      }
+      return pending as Promise<T>;
+    }
+
+    const ticket = detached
+      ? new Ticket()
+      : inBackground() ? new Ticket(currentTicket()) : undefined;
+    const promise = (ticket ? runWithTicket(ticket, compute) : compute())
+      .then((value) => {
+        store(value);
+        return value;
+      })
+      .finally(() => {
+        this.inFlight.delete(key);
+        this.inFlightTickets.delete(key);
+      });
+
+    this.inFlight.set(key, promise);
+    if (ticket) this.inFlightTickets.set(key, ticket);
+    return promise;
   }
 }
 

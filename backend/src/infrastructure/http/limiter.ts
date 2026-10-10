@@ -16,6 +16,8 @@
  * 7/9-oct-2026 that was ~4 real 429s a minute, prolonging the block.
  */
 
+import { currentTicket, type Ticket } from './priority';
+
 const LIMITES: Record<string, number> = {
   'api.openweathermap.org': 4,
   // AEMET OpenData limits PER KEY, not per IP, and with little tolerance for bursts:
@@ -43,13 +45,43 @@ export const RATE_PER_MINUTE: Record<string, number> = {
 
 const MINUTE_MS = 60_000;
 
+/**
+ * Share of a per-minute cap that background work may use. The rest is held for
+ * the calls a user is waiting on: a cold /details costs two OpenWeather calls,
+ * so the 20 left out of 50 cover ~10 beaches opened in the same minute as a
+ * full ranking refresh, which then takes ~2 min instead of ~1 (served stale).
+ *
+ * Reserved, not a wait budget: a call that gave up on a full window would send
+ * the detail out with AEMET's sky while the ranking, which waits, shows
+ * OpenWeather's, and a ranking refresh joining that call would inherit the
+ * failure. Measured on 10-oct-2026; the detail and the ranking must agree.
+ */
+const BACKGROUND_RATE_SHARE = 0.6;
+// ponytail: the background threshold counts every send, so a sustained 30+
+// waited-for calls a minute (15+ beaches opened cold per minute, far above the
+// real traffic) holds background work back until it eases; meanwhile the
+// ranking is served stale. Per-lane accounting if that traffic ever shows up.
+
+/**
+ * How often a call waiting for room in the rate window looks again. A short poll
+ * and not one long sleep until the oldest send ages out, because a background
+ * call can be promoted while it waits and must not sleep through it.
+ * ponytail: polling; a wake-up per promotion if hosts with caps multiply.
+ */
+const RATE_POLL_MS = 1000;
+
 /** Default cooldown if the 429 carries no Retry-After; doubles per consecutive 429. */
 const ENFRIAMIENTO_POR_DEFECTO_MS = 60_000;
 const ENFRIAMIENTO_MAXIMO_MS = 600_000;
 
+interface EnCola {
+  resolve: () => void;
+  ticket?: Ticket;
+}
+
 export class HostLimiter {
   private activos = new Map<string, number>();
-  private colas = new Map<string, Array<() => void>>();
+  private colas = new Map<string, EnCola[]>();
   private enfriadoHasta = new Map<string, number>();
   private sent = new Map<string, number[]>();
   /** Consecutive 429s per host; a success resets it. */
@@ -61,21 +93,45 @@ export class HostLimiter {
     private readonly ratePerMinute: Record<string, number> = RATE_PER_MINUTE,
   ) {}
 
-  /** Waits until sending one more request keeps the host under its per-minute cap. */
-  private async waitForRate(host: string): Promise<void> {
+  /** Sends in the last minute, oldest first. */
+  private recentSends(host: string): number[] {
+    const now = this.now();
+    const recent = (this.sent.get(host) ?? []).filter((t) => t > now - MINUTE_MS);
+    this.sent.set(host, recent);
+    return recent;
+  }
+
+  /** Whether one more send fits under the host's per-minute cap for this lane. */
+  private rateRoom(host: string, ticket?: Ticket): boolean {
     const cap = this.ratePerMinute[host];
-    if (cap == null) return;
-    for (;;) {
-      const now = this.now();
-      const recent = (this.sent.get(host) ?? []).filter((t) => t > now - MINUTE_MS);
-      if (recent.length < cap) {
-        recent.push(now);
-        this.sent.set(host, recent);
-        return;
-      }
-      this.sent.set(host, recent);
-      await new Promise((r) => setTimeout(r, recent[0] + MINUTE_MS - now));
+    if (cap == null) return true;
+    const laneCap = ticket?.background ? Math.floor(cap * BACKGROUND_RATE_SHARE) : cap;
+    return this.recentSends(host).length < laneCap;
+  }
+
+  /** Waits, WITHOUT holding a slot, until the rate window has room for this lane. */
+  private async waitForRate(host: string, ticket?: Ticket): Promise<void> {
+    while (!this.rateRoom(host, ticket)) {
+      const untilFree = this.recentSends(host)[0] + MINUTE_MS - this.now();
+      await new Promise((r) => setTimeout(r, Math.max(1, Math.min(untilFree, RATE_POLL_MS))));
     }
+  }
+
+  private async takeSlot(host: string, ticket?: Ticket): Promise<void> {
+    const limite = this.limite(host);
+    if (!Number.isFinite(limite)) return;
+    const enUso = this.activos.get(host) ?? 0;
+    if (enUso < limite) {
+      this.activos.set(host, enUso + 1);
+      return;
+    }
+    // The slot is handed over by `liberar` without ever being counted free, so
+    // nothing arriving in between can take it.
+    await new Promise<void>((resolve) => {
+      const cola = this.colas.get(host) ?? [];
+      cola.push({ resolve, ticket });
+      this.colas.set(host, cola);
+    });
   }
 
   private limite(host: string): number {
@@ -115,34 +171,45 @@ export class HostLimiter {
     this.rachas429.delete(host);
   }
 
-  async adquirir(host: string): Promise<void> {
-    const limite = this.limite(host);
-    if (Number.isFinite(limite)) {
-      const enUso = this.activos.get(host) ?? 0;
-      if (enUso < limite) {
-        this.activos.set(host, enUso + 1);
-      } else {
-        await new Promise<void>((resolve) => {
-          const cola = this.colas.get(host) ?? [];
-          cola.push(resolve);
-          this.colas.set(host, cola);
-        });
-        this.activos.set(host, (this.activos.get(host) ?? 0) + 1);
+  /**
+   * A turn to send to `host`. Calls a user waits on (no ticket, or a promoted
+   * one) go before background ones, both for a slot and for the rate window.
+   *
+   * The rate is waited for WITHOUT a slot. Sleeping on the window while holding
+   * one is what let a ranking refresh park all four OpenWeather slots for a
+   * minute, with every /details queued behind them (10-oct-2026). The send is
+   * still recorded once the slot is taken, so the timestamp is the send time:
+   * counted earlier, requests queued for a slot would leave in a burst.
+   */
+  async adquirir(host: string, ticket: Ticket | undefined = currentTicket()): Promise<void> {
+    for (;;) {
+      await this.waitForRate(host, ticket);
+      await this.takeSlot(host, ticket);
+      if (this.rateRoom(host, ticket)) {
+        if (this.ratePerMinute[host] != null) this.recentSends(host).push(this.now());
+        return;
       }
+      // Someone else used the room while this one waited for a slot.
+      this.liberar(host);
     }
-    // After the slot, not before: the timestamp must be the send time, or
-    // requests queued for a slot would be counted early and then leave in a burst.
-    await this.waitForRate(host);
   }
 
   liberar(host: string): void {
     const limite = this.limite(host);
     if (!Number.isFinite(limite)) return;
 
-    this.activos.set(host, Math.max(0, (this.activos.get(host) ?? 1) - 1));
     const cola = this.colas.get(host);
-    const siguiente = cola?.shift();
-    if (siguiente) siguiente();
+    if (!cola?.length) {
+      this.activos.set(host, Math.max(0, (this.activos.get(host) ?? 1) - 1));
+      return;
+    }
+    // Handed straight to the next in line: `activos` stays as it is. Freeing it
+    // first and letting the waiter take it back after an await left a gap where
+    // a new request took it too, 2 in flight with a limit of 1 (found by Codex).
+    // Read at release time, not at enqueue time: a ticket may have been promoted.
+    const i = cola.findIndex((e) => !e.ticket?.background);
+    const [siguiente] = cola.splice(i === -1 ? 0 : i, 1);
+    siguiente.resolve();
   }
 
   snapshot(): Record<string, { activos: number; encolados: number; enfriamientoMs: number; racha429: number }> {

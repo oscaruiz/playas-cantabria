@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { HostLimiter } from '../infrastructure/http/limiter';
+import { Ticket } from '../infrastructure/http/priority';
 
 describe('HostLimiter — techo de concurrencia por proveedor', () => {
   it('no deja pasar más peticiones simultáneas que el límite del host', async () => {
@@ -116,6 +117,100 @@ describe('HostLimiter — techo de concurrencia por proveedor', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  describe('background work yields to calls a user waits on (504 on 10-oct-2026)', () => {
+    const host = 'api.openweathermap.org';
+
+    it('serves a waited-for call before background ones already queued for a slot', async () => {
+      const limiter = new HostLimiter({ [host]: 1 }, () => 0, {});
+      await limiter.adquirir(host, new Ticket());
+      const order: string[] = [];
+      const queue = (name: string, ticket?: Ticket) =>
+        limiter.adquirir(host, ticket).then(() => { order.push(name); limiter.liberar(host); });
+
+      const all = Promise.all([queue('bg1', new Ticket()), queue('bg2', new Ticket()), queue('user')]);
+      await new Promise((r) => setTimeout(r, 0)); // let the three reach the slot queue
+      limiter.liberar(host);
+      await all;
+
+      expect(order).toEqual(['user', 'bg1', 'bg2']);
+    });
+
+    it('keeps part of the rate cap out of the background reach', async () => {
+      vi.useFakeTimers();
+      try {
+        const limiter = new HostLimiter({}, () => Date.now(), { [host]: 5 });
+        let background = 0;
+        for (let i = 0; i < 6; i++) void limiter.adquirir(host, new Ticket()).then(() => background++);
+        await vi.advanceTimersByTimeAsync(0);
+        expect(background).toBe(3);
+
+        let user = false;
+        void limiter.adquirir(host).then(() => { user = true; });
+        await vi.advanceTimersByTimeAsync(0);
+        expect(user).toBe(true);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('does not hold a slot while waiting for the rate window', async () => {
+      vi.useFakeTimers();
+      try {
+        const limiter = new HostLimiter({ [host]: 1 }, () => Date.now(), { [host]: 5 });
+        for (let i = 0; i < 3; i++) {
+          await limiter.adquirir(host, new Ticket());
+          limiter.liberar(host);
+        }
+        // The background lane is full: this one waits for the window...
+        void limiter.adquirir(host, new Ticket());
+        await vi.advanceTimersByTimeAsync(0);
+
+        // ...and the only slot stays free for a user.
+        let user = false;
+        void limiter.adquirir(host).then(() => { user = true; });
+        await vi.advanceTimersByTimeAsync(0);
+        expect(user).toBe(true);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('a promoted ticket stops yielding while it waits', async () => {
+      vi.useFakeTimers();
+      try {
+        const limiter = new HostLimiter({}, () => Date.now(), { [host]: 5 });
+        for (let i = 0; i < 3; i++) await limiter.adquirir(host, new Ticket());
+
+        const ticket = new Ticket();
+        let sent = false;
+        void limiter.adquirir(host, ticket).then(() => { sent = true; });
+        await vi.advanceTimersByTimeAsync(5_000);
+        expect(sent).toBe(false);
+
+        ticket.promote();
+        await vi.advanceTimersByTimeAsync(1_000);
+        expect(sent).toBe(true);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+  });
+
+  it('hands the slot straight to the next in line, never counting it free in between', async () => {
+    // Freed first and taken back after an await, the slot was up for grabs in
+    // between: Codex got 2 in flight with a limit of 1.
+    const host = 'api.openweathermap.org';
+    const limiter = new HostLimiter({ [host]: 1 }, () => 0, {});
+    await limiter.adquirir(host);
+    const waiting = limiter.adquirir(host);
+    await new Promise((r) => setTimeout(r, 0)); // queued for the slot
+
+    limiter.liberar(host);
+    expect(limiter.snapshot()[host].activos).toBe(1);
+    await waiting;
+    expect(limiter.snapshot()[host].activos).toBe(1);
   });
 
   it('libera el turno al siguiente en cola sin perder huecos', async () => {

@@ -17,6 +17,7 @@ import { createDebugRouter } from './routes/debugRouter';
 import { createDiagRouter } from './routes/diagRouter';
 import { RedCrossFlagProvider } from '../providers/RedCrossFlagProvider';
 import { DEBUG_WEATHER } from '../utils/debug';
+import { runInBackground } from '../http/priority';
 import { regionRegistry, RegionConfig } from '../../regions';
 
 export interface BuildDeps {
@@ -118,10 +119,8 @@ export function buildExpressApp({
       // provider fan-out by every region after each cron-triggered deployment.
       // Other regions revalidate their stale snapshot on their first read.
       if (cantabriaContainer) {
-        void cantabriaContainer
-          .get<GetFeaturedBeaches>('getFeaturedBeaches')
-          .execute(5)
-          .catch(() => undefined);
+        const featured = cantabriaContainer.get<GetFeaturedBeaches>('getFeaturedBeaches');
+        void runInBackground(() => featured.execute(5)).catch(() => undefined);
       }
     }, 250);
   }
