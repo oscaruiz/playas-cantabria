@@ -225,7 +225,7 @@ const MapCanvas: React.FC<{
                             skyWord(weather.descripcionClima, isNightAt(weather))
                               ?? weather.descripcionClima,
                             language,
-                          )}{weather.vientoMs != null ? `, ${t(windLevelKey(weather.vientoMs))}` : ''}
+                          )}{weather.climaPrevisto ? ` · ${t('cielo.previsto')}` : ''}{weather.vientoMs != null ? `, ${t(windLevelKey(weather.vientoMs))}` : ''}
                         </p>
                         {status === 'good' && (
                           <p className="map-popup-status map-popup-status--good">

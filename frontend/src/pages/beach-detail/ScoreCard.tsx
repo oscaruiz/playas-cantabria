@@ -93,7 +93,9 @@ const ScoreCard: React.FC<{
         if (isRainActive({ cielo: scored.descripcionClima, lluvia: scored.lluvia ?? null })) {
           return translateApiText('Lluvia', language);
         }
-        return translateApiText(scored.descripcionClima, language) || t('detalle.scoreInfo.sinDato');
+        if (!scored.descripcionClima) return t('detalle.scoreInfo.sinDato');
+        return translateApiText(scored.descripcionClima, language)
+          + (scored.climaPrevisto ? ` · ${t('cielo.previsto')}` : '');
       case 'temperatura':
         return scored.temperatura != null
           ? `${Math.round(scored.temperatura)}°`

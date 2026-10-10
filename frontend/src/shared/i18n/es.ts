@@ -37,6 +37,8 @@ export const es = {
   'comun.verDetalleDe': 'Ver detalle de {nombre}',
   'comun.aKm': 'a {km} km',
   'comun.noDisponible': 'No disponible',
+  'cielo.previsto': 'previsto',
+  'cielo.noDisponible': 'Cielo no disponible',
 
   // ---- Relative time ----
   'tiempo.ahoraMismo': 'actualizado ahora mismo',

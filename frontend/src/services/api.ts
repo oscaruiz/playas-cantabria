@@ -269,15 +269,23 @@ export function clearBeachDetailCacheForTests(): void {
   detailCache.clear();
 }
 
-export async function getBeachDetail(code: string): Promise<BeachDetail> {
+/**
+ * `force`: skip this module's copy AND the browser's http cache (the response
+ * carries `max-age=60`): asked because the copy at hand is known to be the
+ * wrong picture, so it must come from the server.
+ */
+export async function getBeachDetail(
+  code: string,
+  options: { force?: boolean } = {},
+): Promise<BeachDetail> {
   const cached = detailCache.get(code);
-  if (cached && cached.expiresAt > Date.now()) return cached.value;
+  if (!options.force && cached && cached.expiresAt > Date.now()) return cached.value;
 
   const url = buildRegionApiUrl(`/beaches/${code}/details`);
 
   let res: Response;
   try {
-    res = await fetch(url);
+    res = await fetch(url, options.force ? { cache: 'no-cache' } : undefined);
   } catch (e) {
     // A rejected fetch has no status: the request never made it back. Network
     // down, CORS, or something intercepting it (a service worker, a proxy).
@@ -343,7 +351,12 @@ export async function getFeaturedBeaches(
   // ordinary callers.
   if (!options.force && featuredRequest) return featuredRequest;
 
-  featuredRequest = fetch(buildRegionApiUrl('/beaches/featured'))
+  // `no-cache` on a forced request: within the response's `max-age=60` the
+  // browser would otherwise hand back the very body being escaped from.
+  featuredRequest = fetch(
+    buildRegionApiUrl('/beaches/featured'),
+    options.force ? { cache: 'no-cache' } : undefined,
+  )
     .then((res) => {
       if (!res.ok) throw new Error('No se pudieron cargar las playas destacadas');
       return res.json() as Promise<FeaturedBeachesResponse>;

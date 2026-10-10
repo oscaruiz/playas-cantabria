@@ -40,6 +40,7 @@ import { BlueFlagBadge } from './beach-detail/BlueFlagBadge';
 import { ComputedAt } from '../features/provenance/SourceAndFreshness';
 import { useServiceWorkerRefresh } from '../hooks/useServiceWorkerRefresh';
 import { useRanking } from '../features/ranking/useRanking';
+import { reconcile } from '../features/ranking/samePicture';
 import DataInfo from '../features/provenance/DataInfo';
 import { municipalityPath } from '../shared/seo/landings';
 import { FavoriteButton } from '../modules/favorites';
@@ -138,7 +139,29 @@ const BeachDetailPage: React.FC = () => {
   // The score card is built from the ranking, not from the detail, so it reads
   // the ranking in force: otherwise it kept the score of the sky the service
   // worker had cached while the headline right above it showed the current one.
-  const { ranking } = useRanking();
+  const { ranking, updatedMs: rankingMs, retry: retryRanking } = useRanking();
+
+  // One picture per beach: if the detail and the painted ranking come from
+  // different generations, fetch the older one again (`samePicture.ts`).
+  // Once per pair of stamps (the dependencies), so two answers that keep
+  // disagreeing cannot loop.
+  const detailRanking = data?.rankingGeneradoEn;
+  useEffect(() => {
+    if (!resolvedCode) return;
+    const action = reconcile(detailRanking, rankingMs);
+    if (action === 'none') return;
+    if (action === 'ranking') {
+      retryRanking();
+      return;
+    }
+    let active = true;
+    getBeachDetail(resolvedCode, { force: true })
+      .then((detail) => {
+        if (active) setState({ route: routeIdentity, value: { status: 'ready', detail } });
+      })
+      .catch(() => { /* what is painted still stands; the next pair of stamps tries again */ });
+    return () => { active = false; };
+  }, [resolvedCode, detailRanking, rankingMs]);
   // Ranking score (featured endpoint). Optional and derived, never stored: the
   // detail is painted without waiting for it, and a route change cannot leave
   // the previous beach's score on screen because there is nothing to clear.

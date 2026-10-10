@@ -106,6 +106,11 @@ const ForecastHero: React.FC<{
   // For TODAY we prioritize the real observation ("now") over the afternoon
   // forecast; that way the headline stops contradicting the morning/afternoon breakdown.
   const skyText = capitalize(currentConditions?.cielo ?? day.tarde.cielo ?? day.manana.cielo ?? '');
+  // TODAY's headline is read as "now", so a sky that is not observed says so:
+  // AEMET's forecast standing in (`previsto`) or the half-day forecast below
+  // it. On the other days every value is a forecast and the panel says it.
+  const isToday = received !== undefined;
+  const skyIsForecast = isToday && !!skyText && !(currentConditions?.cielo && !currentConditions.previsto);
   const wind = capitalize(day.tarde.viento ?? day.manana.viento ?? '');
   const waves = capitalize(day.tarde.oleaje ?? day.manana.oleaje ?? '');
   // Only TODAY's observation knows whether it is night; a forecast for the day
@@ -158,10 +163,13 @@ const ForecastHero: React.FC<{
               screen says "Sol" and here it read "Cielo claro" for the same
               sky. If we do not recognise it, the raw text is shown rather
               than losing the data. */}
-          {skyText && (
+          {skyText ? (
             <span className="forecast-hero-sky">
               {translateApiText(skyWord(skyText, isNight) ?? skyText, language)}
+              {skyIsForecast && ` · ${t('cielo.previsto')}`}
             </span>
+          ) : isToday && (
+            <span className="forecast-hero-sky">{t('cielo.noDisponible')}</span>
           )}
           {day.temperaturaAgua != null && (
             <span className="forecast-hero-water">{t('detalle.aguaGrados', { temp: day.temperaturaAgua })}</span>

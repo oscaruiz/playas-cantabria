@@ -29,6 +29,8 @@ export const en = {
   'comun.verDetalleDe': 'View details for {nombre}',
   'comun.aKm': '{km} km away',
   'comun.noDisponible': 'Not available',
+  'cielo.previsto': 'forecast',
+  'cielo.noDisponible': 'Sky not available',
 
   // ---- Relative time ----
   'tiempo.ahoraMismo': 'updated just now',
