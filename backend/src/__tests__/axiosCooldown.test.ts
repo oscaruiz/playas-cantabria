@@ -62,4 +62,24 @@ describe('cliente HTTP — enfriamiento tras un 429', () => {
     expect(estado.activos).toBe(0);
     expect(estado.encolados).toBe(0);
   });
+
+  it('un 401 (clave rechazada) enfría el host igual: la ráfaga encolada no sale a la red', async () => {
+    let enviadas = 0;
+    const adapter = vi.fn(async (config: any) => {
+      enviadas++;
+      await new Promise((r) => setTimeout(r, 5));
+      const error: any = new Error('Unauthorized');
+      error.config = config;
+      error.response = { status: 401, headers: {} };
+      throw error;
+    });
+
+    const resultados = await Promise.allSettled(
+      Array.from({ length: 20 }, () => http.get('https://www.cruzroja.es/prueba-401', { adapter } as any)),
+    );
+
+    expect(resultados.every((r) => r.status === 'rejected')).toBe(true);
+    expect(enviadas).toBeLessThan(20);
+    expect(hostLimiter.enfriamientoRestanteMs('www.cruzroja.es')).toBeGreaterThan(0);
+  });
 });

@@ -116,7 +116,14 @@ http.interceptors.response.use(
     const cfg = error?.config;
     const host = hostOf(cfg?.url, cfg?.baseURL);
     const status = error?.response?.status ?? null;
-    if (status === 429) hostLimiter.registrar429(host, error?.response?.headers?.['retry-after']);
+    // A refusal to serve us at all (401/403: bad or blocked key, a WAF) is
+    // handled like a 429: asking again will not help, and every doomed call
+    // still took its place in the per-minute window. With OpenWeather's key
+    // refused, the ranking's calls filled it and a /details queued behind them
+    // for 56 s instead of moving on to Open-Meteo (found testing, 10-oct-2026).
+    if (status === 429 || status === 401 || status === 403) {
+      hostLimiter.registrar429(host, error?.response?.headers?.['retry-after']);
+    }
     // A rejection from the request interceptor itself never took a turn.
     if (error?.code !== 'HOST_COOLDOWN') httpMetrics.record(host, status);
     liberar(cfg);
