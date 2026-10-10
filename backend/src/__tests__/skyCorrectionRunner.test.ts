@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { corregirCieloObservado } from '../application/services/skyCorrectionRunner';
+import { corregirCieloObservado } from '../infrastructure/di/skyCorrectionRunner';
 import { skyCorrectionMetrics } from '../infrastructure/observability/skyCorrectionMetrics';
 import { Weather } from '../domain/entities/Weather';
 import { SunshineObservation } from '../domain/entities/Sunshine';

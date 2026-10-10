@@ -9,14 +9,11 @@ import { debugLog } from '../utils/debug';
 /**
  * Current precipitation from Open-Meteo (https://open-meteo.com):
  * free, no API key (free tier ~10k calls/day; 46 beaches × TTL 1800s
- * ≈ 2.2k/day, and even less outside the beach window thanks to the `ttlFactor`).
+ * ≈ 2.2k/day at most; real-time data is NOT scaled by `ttlFactor`, so that ceiling holds all year).
  * WARNING: lowering CACHE_TTL_SECONDS to 300 would shoot consumption up to ~13k/day and
  * break the quota. Complements OpenWeather to detect rain that
  * single-provider models miss (hyperlocal coastal drizzle).
  */
-/** Public name of this provider, as it must be credited in the interface. */
-export const OPEN_METEO_NOMBRE = 'Open-Meteo';
-
 export class OpenMeteoPrecipitationProvider implements PrecipitationNowProvider {
   private lastRaw: unknown = null;
 

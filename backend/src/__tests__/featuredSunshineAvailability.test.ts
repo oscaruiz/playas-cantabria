@@ -3,7 +3,7 @@ import { BeachConditions } from '../domain/use-cases/BeachConditions';
 import { GetFeaturedBeaches, type FeaturedBeachesFullResult } from '../domain/use-cases/GetFeaturedBeaches';
 import { CacheKeys, InMemoryCache } from '../infrastructure/cache/InMemoryCache';
 import { Config, skyCorrectionMode } from '../infrastructure/config/config';
-import { corregirCieloObservado } from '../application/services/skyCorrectionRunner';
+import { corregirCieloObservado } from '../infrastructure/di/skyCorrectionRunner';
 import type { Beach } from '../domain/entities/Beach';
 
 const BEACH: Beach = {

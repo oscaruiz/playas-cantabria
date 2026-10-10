@@ -6,9 +6,9 @@ import {
   aplicarCorreccionCielo,
   DecisionCielo,
 } from '../../domain/services/skyCorrection';
-import { Config, enFranjaDePlaya, skyCorrectionMode } from '../../infrastructure/config/config';
-import { CacheKeys } from '../../infrastructure/cache/InMemoryCache';
-import { skyCorrectionMetrics } from '../../infrastructure/observability/skyCorrectionMetrics';
+import { Config, enFranjaDePlaya, skyCorrectionMode } from '../config/config';
+import { CacheKeys } from '../cache/InMemoryCache';
+import { skyCorrectionMetrics } from '../observability/skyCorrectionMetrics';
 
 /**
  * Where a taken decision is remembered so every caller reuses it. Structural,

@@ -10,10 +10,10 @@ import type {
 } from '../../contract/api';
 import { BeachRepository } from '../../domain/ports/BeachRepository';
 import { findTideReference } from '../../domain/services/tideReference';
-import { OpenWeatherWeatherProvider } from '../../infrastructure/providers/OpenWeatherWeatherProvider';
-import { OPEN_METEO_NOMBRE } from '../../infrastructure/providers/OpenMeteoPrecipitationProvider';
-import { AemetBeachForecastProvider } from '../../infrastructure/providers/AemetBeachForecastProvider';
-import { AemetBeachWebScraper } from '../../infrastructure/providers/AemetBeachWebScraper';
+import type { ForecastWeatherSource } from '../../domain/ports/ForecastWeatherSource';
+import type { BeachFullForecastSource } from '../../domain/ports/BeachFullForecastSource';
+import type { BeachForecastProvider } from '../../domain/ports/BeachForecastProvider';
+import type { Cache } from '../../domain/ports/Cache';
 import { buildRainForecastSignal, textosRestantesHoy } from '../../domain/use-cases/RainForecast';
 import {
   buildDayWindow,
@@ -21,10 +21,15 @@ import {
   type DayWindowSignal,
 } from '../../domain/use-cases/BeachWindowScorer';
 import { mapVentanaDia } from '../mappers/FeaturedBeachMapper';
-import type { HourlyOutlookSlot, RainNowcast } from '../../domain/entities/RainNowcast';
-import type { BeachFullForecast } from '../../domain/entities/BeachForecast';
-import { CacheKeys, InMemoryCache } from '../../infrastructure/cache/InMemoryCache';
-import { Config } from '../../infrastructure/config/config';
+import { OPEN_METEO_NOMBRE, type HourlyOutlookSlot, type RainNowcast } from '../../domain/entities/RainNowcast';
+import type { BeachFullForecast, BeachShortForecast } from '../../domain/entities/BeachForecast';
+
+/** Cache key and TTLs of the assembled detail, decided by the wiring. */
+export interface DetailsCacheSettings {
+  cacheKey(beachId: string): string;
+  freshTtlSeconds(): number;
+  staleTtlSeconds(): number;
+}
 
 /**
  * Details assembler (serves /:id/details) — fallback chain:
@@ -36,11 +41,12 @@ import { Config } from '../../infrastructure/config/config';
 export class DetailsAssembler {
   constructor(
     private readonly getDetails: GetBeachDetails,
-    private readonly aemetScraper: AemetBeachWebScraper,
-    private readonly aemetPlayas: AemetBeachForecastProvider,
-    private readonly openWeather: OpenWeatherWeatherProvider,
-    private readonly cache?: InMemoryCache,
-    private readonly regionId = 'cantabria',
+    private readonly aemetScraper: BeachFullForecastSource,
+    private readonly aemetPlayas: BeachForecastProvider,
+    private readonly openWeather: ForecastWeatherSource,
+    /** Optional pair: without both, every request assembles fresh. */
+    private readonly cache?: Cache,
+    private readonly cacheSettings?: DetailsCacheSettings,
     /** Optional: without it a beach with no AEMET sheet gets no reference tide. */
     private readonly beachRepo?: BeachRepository,
   ) {}
@@ -232,7 +238,7 @@ export class DetailsAssembler {
   // -----------------------------------------------------------------------
 
   private buildClimaFromAemetPlayas(
-    playa: Awaited<ReturnType<AemetBeachForecastProvider['getByBeachCode']>>,
+    playa: BeachShortForecast,
     base: ClimaDTO | null,
   ): ClimaDTO {
     const hoy = playa.today;
@@ -310,12 +316,12 @@ export class DetailsAssembler {
   // -----------------------------------------------------------------------
 
   async assemble(beachId: string): Promise<DetailsDTO> {
-    if (!this.cache) return this.assembleFresh(beachId);
+    if (!this.cache || !this.cacheSettings) return this.assembleFresh(beachId);
 
     return this.cache.getOrSetStale(
-      CacheKeys.detailsByBeachId(this.regionId, beachId),
-      Config.detailsFreshTtlSeconds(),
-      Config.detailsStaleTtlSeconds(),
+      this.cacheSettings.cacheKey(beachId),
+      this.cacheSettings.freshTtlSeconds(),
+      this.cacheSettings.staleTtlSeconds(),
       () => this.assembleFresh(beachId),
     );
   }

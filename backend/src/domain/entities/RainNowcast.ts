@@ -103,3 +103,6 @@ export interface UvIndexMax {
   today: number | null;
   tomorrow: number | null;
 }
+
+/** Public name of Open-Meteo, as it must be credited in the interface. */
+export const OPEN_METEO_NOMBRE = 'Open-Meteo';

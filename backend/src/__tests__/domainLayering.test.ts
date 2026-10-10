@@ -3,6 +3,7 @@ import { readdirSync, readFileSync } from 'fs';
 import { join } from 'path';
 
 const DOMAIN = join(__dirname, '..', 'domain');
+const APPLICATION = join(__dirname, '..', 'application');
 const CONTRACT = join(__dirname, '..', 'contract');
 // Statement-anchored so prose in comments ("… from "x"") does not match:
 // `import/export … from '…'`, side-effect `import '…'`, `import('…')`, `require('…')`.
@@ -23,6 +24,15 @@ describe('domain layering', () => {
       specifiers(file)
         .filter((spec) => /\/(application|infrastructure)\//.test(spec))
         .map((spec) => `${file.slice(DOMAIN.length + 1)} -> ${spec}`),
+    );
+    expect(offenders).toEqual([]);
+  });
+
+  it('application/ imports nothing from infrastructure/', () => {
+    const offenders = tsFiles(APPLICATION).flatMap((file) =>
+      specifiers(file)
+        .filter((spec) => /\/infrastructure\//.test(spec))
+        .map((spec) => `${file.slice(APPLICATION.length + 1)} -> ${spec}`),
     );
     expect(offenders).toEqual([]);
   });

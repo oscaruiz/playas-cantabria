@@ -52,10 +52,10 @@ backend/src/
     use-cases/      — GetAllBeaches, GetBeachById, GetBeachDetails
   application/
     mappers/        — BeachMapper, FeaturedBeachMapper, DetailsMapper
-    services/       — DetailsAssembler (serves /details), skyCorrectionRunner
+    services/       — DetailsAssembler (serves /details); imports domain ports only (layering test)
     validation/     — Zod schemas for request params
   infrastructure/
-    di/             — DIContainer + dependency wiring (dependencies.ts)
+    di/             — DIContainer + dependency wiring (dependencies.ts), skyCorrectionRunner
     express/        — Server setup, routes, middlewares
     providers/      — AEMET, OpenWeather, RedCross implementations
     repositories/   — JsonBeachRepository (reads from JSON file)

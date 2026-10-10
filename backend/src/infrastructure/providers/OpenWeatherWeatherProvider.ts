@@ -1,17 +1,11 @@
 import { Weather } from '../../domain/entities/Weather';
 import type { HourlyOutlookSlot } from '../../domain/entities/RainNowcast';
+import type { OwHalf } from '../../domain/entities/BeachForecast';
 import { ProviderError, WeatherProvider } from '../../domain/ports/WeatherProvider';
 import { http } from '../http/axiosClient';
 import { InMemoryCache, CacheKeys } from '../cache/InMemoryCache';
 import { Config } from '../config/config';
 import { debugLog } from '../utils/debug';
-
-/** Half day (morning or afternoon) of the OpenWeather forecast, to fill AEMET gaps. */
-export type OwHalf = {
-  descripcion: string | null;
-  iconOw: string | null;
-  vientoMs: number | null;
-};
 
 export class OpenWeatherWeatherProvider implements WeatherProvider {
   private lastRaw: unknown = null;

@@ -1,7 +1,7 @@
 import { DIContainer } from './DIContainer';
 import { InMemoryCache, CacheKeys } from '../cache/InMemoryCache';
 import { Config, skyCorrectionMode } from '../config/config';
-import { corregirCieloObservado } from '../../application/services/skyCorrectionRunner';
+import { corregirCieloObservado } from './skyCorrectionRunner';
 import { TieredCache } from '../cache/TieredCache';
 import { UpstashRedisStore } from '../cache/UpstashRedisStore';
 import { JsonBeachRepository } from '../repositories/JsonBeachRepository';
@@ -172,7 +172,11 @@ export function configureDependencies(
       c.get('aemetBeachForecastProvider'),
       c.get('openWeatherProvider'),
       c.get('cache'),
-      region.id,
+      {
+        cacheKey: (beachId) => CacheKeys.detailsByBeachId(region.id, beachId),
+        freshTtlSeconds: () => Config.detailsFreshTtlSeconds(),
+        staleTtlSeconds: () => Config.detailsStaleTtlSeconds(),
+      },
       c.get('beachRepository'),
     )
   );

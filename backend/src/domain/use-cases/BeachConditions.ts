@@ -11,7 +11,7 @@ import { GetRainNowcast } from './GetRainNowcast';
 
 /**
  * Corrects the observed sky with sunshine evidence. Injected so the domain
- * does not depend on the application runner that adds clock, mode, metrics
+ * does not depend on the runner in infrastructure/di that adds clock, mode, metrics
  * and the decision memory shared between the listing and the detail.
  */
 export type SkyCorrector = (

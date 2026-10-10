@@ -54,3 +54,10 @@ export type BeachShortForecast = {
   today: BeachForecastDay;
   tomorrow: BeachForecastDay;
 };
+
+/** Half day (morning or afternoon) of the OpenWeather forecast, to fill AEMET gaps. */
+export type OwHalf = {
+  descripcion: string | null;
+  iconOw: string | null;
+  vientoMs: number | null;
+};

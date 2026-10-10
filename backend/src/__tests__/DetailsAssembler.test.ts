@@ -466,7 +466,7 @@ describe('DetailsAssembler — marea de referencia', () => {
 
     return new DetailsAssembler(
       getDetails, aemetScraper, aemetPlayas, openWeather,
-      undefined, 'cantabria', beachRepo,
+      undefined, undefined, beachRepo,
     );
   }
 
