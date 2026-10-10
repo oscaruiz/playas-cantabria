@@ -1,4 +1,4 @@
-import { GetBeachDetails } from '../../domain/use-cases/GetBeachDetails';
+import { GetBeachDetails, type BeachDetails } from '../../domain/use-cases/GetBeachDetails';
 import { DetailsMapper } from '../mappers/DetailsMapper';
 import type {
   DetailsDTO,
@@ -90,35 +90,19 @@ export class DetailsAssembler {
   }
 
   /**
-   * The day window ("mejor momento"), with the same two sources standing one
-   * behind the other as the strip above. The fallback only steps in when
-   * Open-Meteo brought NO slots at all: when it answered and the verdict was
-   * "no stretch good enough", asking a coarser source for a second opinion
-   * would publish whichever of the two is more optimistic.
+   * The day window ("mejor momento"): the ranking's own when the detail is
+   * built from the ranking's entry, and otherwise the SAME rule the ranking
+   * applies (`assessBeach`): Open-Meteo's slots only. The detail used to fall
+   * back to OpenWeather's slots, so with Open-Meteo down the card said nothing
+   * and the detail one tap away said "best from 12:00" (10-oct-2026).
    */
-  private async resolverVentanaDia(
-    lat: number,
-    lon: number,
-    nowcast: RainNowcast | null,
-  ): Promise<{ ventana: DayWindowSignal; fuente: string } | null> {
-    // The nowcast rides into the verdict on BOTH branches: rain falling now
-    // must veto the next hour even when the slots come from the OpenWeather
-    // fallback — its status can be valid while the Open-Meteo slots are not.
-    const delNowcast = nowcast?.outlook;
-    if ((delNowcast?.length ?? 0) > 0) {
-      const ventana = buildDayWindow(delNowcast, new Date(), nowcast);
-      return ventana ? { ventana, fuente: OPEN_METEO_NOMBRE } : null;
-    }
-    try {
-      const ventana = buildDayWindow(
-        await this.openWeather.getOutlookSlots(lat, lon),
-        new Date(),
-        nowcast,
-      );
-      return ventana ? { ventana, fuente: 'OpenWeather' } : null;
-    } catch {
-      return null;
-    }
+  private resolverVentanaDia(
+    details: BeachDetails,
+  ): { ventana: DayWindowSignal; fuente: string } | null {
+    const ventana = details.ventanaDia !== undefined
+      ? details.ventanaDia
+      : buildDayWindow(details.rain?.outlook, new Date(), details.rain);
+    return ventana ? { ventana, fuente: OPEN_METEO_NOMBRE } : null;
   }
 
   // -----------------------------------------------------------------------
@@ -340,13 +324,11 @@ export class DetailsAssembler {
       .getTomorrowByCoords(details.beach.latitude, details.beach.longitude)
       .catch(() => null);
 
-    // Step 1.5: Real-time "now" for TODAY. Only an OpenWeather observation
-    // qualifies: an AEMET observation's sky description is synthetic
-    // (temp/humidity), so with OpenWeather down the block stays empty.
-    base.tiempoActual =
-      details.weather?.source === 'OpenWeather'
-        ? DetailsMapper.mapTiempoActual(details.weather)
-        : null;
+    // Step 1.5: Real-time "now" for TODAY, from whichever source the chain in
+    // `BeachConditions` settled on. AEMET's station used to be left out
+    // because its sky was made up; it now carries the day's forecast sky
+    // labelled `previsto`, or none, and the temperature is a real reading.
+    base.tiempoActual = details.weather ? DetailsMapper.mapTiempoActual(details.weather) : null;
 
     // Step 1.6: Aggregated rain signal (multi-source: OpenWeather + AEMET
     // rain gauge + Open-Meteo). Single-provider models miss hyperlocal
@@ -373,11 +355,7 @@ export class DetailsAssembler {
       // WHEN to go today. Outside the `rainSignal` guard on purpose: with the
       // nowcast down the window still has OpenWeather's slots to stand on.
       if (base.tiempoActual) {
-        const ventana = await this.resolverVentanaDia(
-          details.beach.latitude,
-          details.beach.longitude,
-          rainSignal,
-        );
+        const ventana = this.resolverVentanaDia(details);
         base.tiempoActual = {
           ...base.tiempoActual,
           ventanaDia: ventana ? mapVentanaDia(ventana.ventana) : null,
@@ -685,6 +663,11 @@ export class DetailsAssembler {
     // this is the difference between "computed just now" and "served from a
     // copy made two hours ago" — which the client cannot deduce on its own.
     base.generadoEn = new Date().toISOString();
+    // The ranking this detail's conditions come from, so the client can tell
+    // whether the card it shows for this beach is the same picture.
+    base.rankingGeneradoEn = details.rankingGeneradoEn != null
+      ? new Date(details.rankingGeneradoEn).toISOString()
+      : null;
 
     return base;
   }

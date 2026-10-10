@@ -313,10 +313,12 @@ describe('DetailsAssembler — coherencia resumen vs desglose y "ahora" real', (
     expect(result.prediccionCompleta).toBeNull();
   });
 
-  it('no confía en cielo sintético de AEMET: tiempoActual = null si OpenWeather falla y el hedge es AEMET', async () => {
-    const aemetSynthetic = makeOwCurrent({ source: 'AEMET', description: 'Templado y húmedo' });
+  it('AEMET con el cielo previsto: tiempoActual lo lleva etiquetado como previsto, nunca como observado', async () => {
+    // What BeachConditions hands over when OpenWeather and Open-Meteo both
+    // failed: the station's real temperature with today's forecast sky.
+    const aemetPrevisto = makeOwCurrent({ source: 'AEMET', description: 'Nuboso', icon: '03d', previsto: true });
     const assembler = buildAssembler({
-      details: { beach: COBRECES, weather: aemetSynthetic, flag: null },
+      details: { beach: COBRECES, weather: aemetPrevisto, flag: null },
       forecast: makeForecast(),
       owCurrent: async () => {
         throw new Error('OpenWeather down');
@@ -325,7 +327,23 @@ describe('DetailsAssembler — coherencia resumen vs desglose y "ahora" real', (
 
     const result = await assembler.assemble(COBRECES.id);
 
-    expect(result.tiempoActual).toBeNull();
+    expect(result.tiempoActual).toMatchObject({ cielo: 'Nuboso', fuente: 'AEMET', previsto: true });
+  });
+
+  it('AEMET sin cielo: tiempoActual da la temperatura real y el cielo como no disponible', async () => {
+    const aemetSinCielo = makeOwCurrent({ source: 'AEMET', description: null, icon: null, temperatureC: 19 });
+    const assembler = buildAssembler({
+      details: { beach: COBRECES, weather: aemetSinCielo, flag: null },
+      forecast: makeForecast(),
+      owCurrent: async () => {
+        throw new Error('OpenWeather down');
+      },
+    });
+
+    const result = await assembler.assemble(COBRECES.id);
+
+    expect(result.tiempoActual).toMatchObject({ cielo: null, icono: null, temperatura: 19, fuente: 'AEMET' });
+    expect(result.tiempoActual?.previsto).toBeUndefined();
   });
 
   it('rellena cielo/viento/oleaje vacíos de AEMET ("nd") con OpenWeather, sin pisar lo que AEMET sí trae', async () => {
@@ -702,7 +720,10 @@ describe('DetailsAssembler — ventana del día en tiempoActual', () => {
     expect(dto.tiempoActual?.ventanaDiaFuente).toBe('Open-Meteo');
   });
 
-  it('si Open-Meteo calla, la ventana la sirve OpenWeather con su paso de 3 h', async () => {
+  it('si Open-Meteo calla no hay ventana, como en el ranking: OpenWeather no hace de suplente', async () => {
+    // The ranking judges the window from Open-Meteo only. The detail used to
+    // fall back to OpenWeather's slots, so the card said nothing and the
+    // detail said "best from 13:00" (10-oct-2026).
     vi.setSystemTime(MEDIODIA);
     const assembler = buildAssembler({
       details: { beach: COBRECES, weather: makeOwCurrent(), flag: null },
@@ -719,10 +740,8 @@ describe('DetailsAssembler — ventana del día en tiempoActual', () => {
 
     const dto = await assembler.assemble('3902401');
 
-    expect(dto.tiempoActual?.ventanaDia?.inicio).toBe(
-      new Date(MEDIODIA.getTime() + 3_600_000).toISOString(),
-    );
-    expect(dto.tiempoActual?.ventanaDiaFuente).toBe('OpenWeather');
+    expect(dto.tiempoActual?.ventanaDia).toBeNull();
+    expect(dto.tiempoActual?.ventanaDiaFuente).toBeNull();
   });
 
   it('si Open-Meteo respondió y el veredicto es "no hay franja buena", el suplente no opina', async () => {

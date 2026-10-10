@@ -6,6 +6,7 @@ import { RainForecastSignal } from './RainForecast';
 // Type-only: `WeatherOutlook` imports the scoring functions from here, and a
 // value import would close the cycle at runtime.
 import type { OutlookSignal } from './WeatherOutlook';
+import { observedSky } from '../services/skySources';
 
 /**
  * Score cap when rain is detected now: <60 so the beach is never "good"
@@ -551,10 +552,9 @@ export function buildRankingReason(
   // still say "nuboso" even though it is raining).
   const rainPart = rainReasonFragment(rain);
 
-  // Prefer the real observation (OpenWeather current) over the AEMET forecast,
-  // so the "reason" matches the current sky (and the detail view).
-  const skyDesc =
-    (weather?.source === 'OpenWeather' ? weather.description : null) ?? enrichment?.summary ?? null;
+  // Prefer the sky observed now (OpenWeather, or Open-Meteo standing in) over
+  // the AEMET forecast, so the "reason" matches the current sky (and the detail view).
+  const skyDesc = observedSky(weather) ?? enrichment?.summary ?? null;
   // The provider's own day/night call (the `d`/`n` suffix on its icon), which
   // follows the real sunset at these coordinates.
   const esNoche = weather?.icon?.endsWith('n') === true;

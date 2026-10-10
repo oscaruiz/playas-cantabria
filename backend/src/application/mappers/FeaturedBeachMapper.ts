@@ -1,6 +1,7 @@
 import { SUBSCORE_MAX } from '../../domain/use-cases/BeachScorer';
 import type { DayWindowSignal } from '../../domain/use-cases/BeachWindowScorer';
 import type { FeaturedBeachResult } from '../../domain/use-cases/BeachAssessment';
+import { observedSky } from '../../domain/services/skySources';
 import { FeaturedBeachDTO, FeaturedBeachesResponseDTO, VentanaDiaDTO } from '../../contract/api';
 import { esBanderaVigente } from '../../domain/services/flagVigencia';
 import { DetailsMapper } from './DetailsMapper';
@@ -26,6 +27,11 @@ const FLAG_COLOR_ES: Record<string, 'Verde' | 'Amarilla' | 'Roja'> = {
   yellow: 'Amarilla',
   red: 'Roja',
 };
+
+/** The flag as flying at `ahora`, judged when served and not when assembled. */
+function flagShown(flag: FeaturedBeachResult['flag'] | undefined, ahora: Date): FeaturedBeachDTO['bandera'] {
+  return flag?.color && esBanderaVigente(flag, ahora) ? (FLAG_COLOR_ES[flag.color] ?? null) : null;
+}
 
 export class FeaturedBeachMapper {
   /**
@@ -59,6 +65,7 @@ export class FeaturedBeachMapper {
   }
 
   private static mapOne(r: FeaturedBeachResult, ahora: Date): FeaturedBeachDTO {
+    const sky = observedSky(r.weather) ?? r.enrichment?.summary ?? r.weather?.description ?? null;
     return {
       nombre: r.beach.name,
       municipio: r.beach.municipality,
@@ -66,25 +73,17 @@ export class FeaturedBeachMapper {
       lat: r.beach.latitude,
       lon: r.beach.longitude,
       temperatura: r.weather?.temperatureC ?? r.enrichment?.temperatureC ?? null,
-      // Prefer the real observation (OpenWeather current) over the AEMET
-      // forecast, so the text matches the icon/temperature (also observation)
-      // and the `tiempoActual` of the detail. The AEMET observation description
-      // is synthetic (temp/humidity), which is why only OpenWeather is trusted;
-      // otherwise it falls back to the forecast.
-      descripcionClima:
-        (r.weather?.source === 'OpenWeather' ? r.weather.description : null) ??
-        r.enrichment?.summary ??
-        r.weather?.description ??
-        null,
+      // The sky observed now (OpenWeather, or Open-Meteo standing in) over
+      // AEMET's forecast, so the text matches the icon/temperature and the
+      // `tiempoActual` of the detail; otherwise the forecast, labelled as one.
+      descripcionClima: sky,
+      ...(sky != null && observedSky(r.weather) == null ? { climaPrevisto: true } : {}),
       iconoClima: r.weather?.icon ?? null,
       vientoMs: r.weather?.windSpeedMs ?? null,
       // The flag is only shown if it is still current (within schedule/season
       // and with today's data); otherwise the stored color does not reflect
       // what is actually flying.
-      bandera:
-        r.flag?.color && esBanderaVigente(r.flag, ahora)
-          ? (FLAG_COLOR_ES[r.flag.color] ?? null)
-          : null,
+      bandera: flagShown(r.rawFlag !== undefined ? r.rawFlag : r.flag, ahora),
       puntuacion: r.score,
       razonRanking: r.reason,
       motivoBaja: r.downgradeReason ?? null,

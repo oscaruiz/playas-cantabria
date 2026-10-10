@@ -89,6 +89,18 @@ export interface PrecipitationNow {
   showersMm: number | null;
   /** WMO code of the current condition (51-67, 80-82, 95-99 = precipitation). */
   weatherCode: number | null;
+  /**
+   * The rest of the current reading, same request: what lets Open-Meteo stand
+   * in for OpenWeather's current weather. Absent in entries cached before it.
+   */
+  current?: {
+    temperatureC: number | null;
+    cloudCoverPct: number | null;
+    windSpeedMs: number | null;
+    windDirectionDeg: number | null;
+    humidityPct: number | null;
+    isDay: boolean | null;
+  };
   /** 15-min slots for the next ~6h (minutely_15). Empty if the API does not return them. */
   upcomingSlots?: PrecipitationSlot[];
   /** Hourly sky/temperature/wind, same request. Empty if the API omits them. */

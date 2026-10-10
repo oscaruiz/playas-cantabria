@@ -50,6 +50,11 @@ export class InMemoryCache {
     return rec.value as T;
   }
 
+  peek<T>(key: string): T | undefined {
+    if (this.state(key) === 'miss') return undefined;
+    return this.store.get(key)?.value as T | undefined;
+  }
+
   set<T>(key: string, value: T, ttlSeconds: number): void {
     const expiresAt = this.now() + ttlSeconds * 1000;
     this.store.set(key, { value, freshUntil: expiresAt, staleUntil: expiresAt });

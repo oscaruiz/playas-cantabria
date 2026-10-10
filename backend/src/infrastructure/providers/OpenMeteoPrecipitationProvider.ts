@@ -32,7 +32,12 @@ export class OpenMeteoPrecipitationProvider implements PrecipitationNowProvider 
           params: {
             latitude: lat,
             longitude: lon,
-            current: 'precipitation,rain,showers,weather_code',
+            // The sky and the rest of the current reading ride in the same
+            // call too: they are what lets Open-Meteo stand in for
+            // OpenWeather's current weather (10-oct-2026), at no extra request.
+            current:
+              'precipitation,rain,showers,weather_code,temperature_2m,cloud_cover,'
+              + 'wind_speed_10m,wind_direction_10m,relative_humidity_2m,is_day',
             // Forecast for the next 6h (24 slots of 15 min) in the SAME call.
             minutely_15: 'precipitation,weather_code',
             forecast_minutely_15: 24,
@@ -129,6 +134,14 @@ export class OpenMeteoPrecipitationProvider implements PrecipitationNowProvider 
           rainMm: num(c.rain),
           showersMm: num(c.showers),
           weatherCode: num(c.weather_code),
+          current: {
+            temperatureC: num(c.temperature_2m),
+            cloudCoverPct: num(c.cloud_cover),
+            windSpeedMs: num(c.wind_speed_10m),
+            windDirectionDeg: num(c.wind_direction_10m),
+            humidityPct: num(c.relative_humidity_2m),
+            isDay: c.is_day === 1 ? true : c.is_day === 0 ? false : null,
+          },
           upcomingSlots,
           upcomingHours,
           // Rounded here, not at render time: the UV index is an integer by

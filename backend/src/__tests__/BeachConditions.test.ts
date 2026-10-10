@@ -8,6 +8,10 @@ import type { WeatherProvider } from '../domain/ports/WeatherProvider';
 import type { FlagProvider } from '../domain/ports/FlagProvider';
 import type { SunshineProvider } from '../domain/ports/SunshineProvider';
 import type { SunshineObservation } from '../domain/entities/Sunshine';
+import type { PrecipitationNow } from '../domain/entities/RainNowcast';
+import type { PrecipitationNowProvider } from '../domain/ports/PrecipitationNowProvider';
+import type { BeachForecastProvider } from '../domain/ports/BeachForecastProvider';
+import type { BeachShortForecast } from '../domain/entities/BeachForecast';
 
 const BEACH: Beach = {
   id: '1', name: 'Playa Test', municipality: 'Test', aemetCode: '0000001',
@@ -39,6 +43,8 @@ function build(opts: {
   sunshine?: SunshineProvider;
   skyEnabled?: boolean;
   correctSky?: SkyCorrector;
+  openMeteo?: PrecipitationNowProvider;
+  aemetForecast?: BeachForecastProvider;
 }) {
   const flags: FlagProvider = { getFlag: async (ref) => opts.flags?.[ref.ref] ?? null };
   const rain = {
@@ -55,6 +61,8 @@ function build(opts: {
     opts.sunshine,
     () => opts.skyEnabled ?? true,
     opts.correctSky ?? ((_n, w) => w),
+    opts.openMeteo,
+    opts.aemetForecast,
   );
 }
 
@@ -112,5 +120,46 @@ describe('BeachConditions', () => {
     const sunshine = { getSunshineNear: async () => { throw new Error('AEMET unavailable'); } } as unknown as SunshineProvider;
     await expect(build({ sunshine }).probeSunshine(BEACH)).rejects.toThrow('AEMET unavailable');
     await expect(build({ sunshine, skyEnabled: false }).probeSunshine(BEACH)).resolves.toBeUndefined();
+  });
+
+  describe('sky chain: OpenWeather → Open-Meteo → AEMET forecast (previsto) → none (10-oct-2026)', () => {
+    const openMeteoNow = (weatherCode: number | null): PrecipitationNow => ({
+      source: 'OpenMeteo', timestamp: 5, precipitationMm: 0, rainMm: 0, showersMm: 0, weatherCode,
+      current: { temperatureC: 21, cloudCoverPct: 40, windSpeedMs: 3, windDirectionDeg: 90, humidityPct: 60, isDay: true },
+    });
+    const meteo = (now: PrecipitationNow): PrecipitationNowProvider => ({ getPrecipitationNow: async () => now });
+    const meteoDown: PrecipitationNowProvider = { getPrecipitationNow: async () => { throw new Error('429'); } };
+    const forecast = (summary: string): BeachForecastProvider => ({
+      getByBeachCode: async () => ({ today: { summary } } as unknown as BeachShortForecast),
+    });
+    const station = weather('AEMET');
+
+    it('OpenWeather wins while it answers', async () => {
+      const { weather: w } = await build({
+        ow: up(weather('OpenWeather')), openMeteo: meteo(openMeteoNow(2)), aemet: up(station),
+      }).now(BEACH);
+      expect(w?.source).toBe('OpenWeather');
+    });
+
+    it("without OpenWeather, Open-Meteo's reading in OpenWeather's words and icons", async () => {
+      const { weather: w } = await build({ openMeteo: meteo(openMeteoNow(2)), aemet: up(station) }).now(BEACH);
+      expect(w).toMatchObject({
+        source: 'Open-Meteo', description: 'nubes dispersas', icon: '03d', temperatureC: 21, cloudinessPct: 40,
+      });
+      expect(w?.previsto).toBeUndefined();
+    });
+
+    it("without either, the station's temperature with today's FORECAST sky, labelled", async () => {
+      const { weather: w } = await build({
+        openMeteo: meteoDown, aemet: up(station), aemetForecast: forecast('Muy nuboso'),
+      }).now(BEACH);
+      expect(w).toMatchObject({ source: 'AEMET', description: 'Muy nuboso', icon: '04d', previsto: true, temperatureC: 20 });
+    });
+
+    it('with no forecast either, no sky at all: never one made up from the station', async () => {
+      const { weather: w } = await build({ openMeteo: meteo(openMeteoNow(null)), aemet: up(station) }).now(BEACH);
+      expect(w).toMatchObject({ source: 'AEMET', description: null, icon: null, temperatureC: 20 });
+      expect(w?.previsto).toBeUndefined();
+    });
   });
 });

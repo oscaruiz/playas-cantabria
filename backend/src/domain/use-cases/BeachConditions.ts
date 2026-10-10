@@ -6,6 +6,9 @@ import { SunshineObservation } from '../entities/Sunshine';
 import { WeatherProvider } from '../ports/WeatherProvider';
 import { FlagProvider } from '../ports/FlagProvider';
 import { SunshineProvider } from '../ports/SunshineProvider';
+import { PrecipitationNowProvider } from '../ports/PrecipitationNowProvider';
+import { BeachForecastProvider } from '../ports/BeachForecastProvider';
+import { weatherFromOpenMeteo, withForecastSky } from '../services/skySources';
 import { resolveFlagForStations } from '../services/flagAggregation';
 import { GetRainNowcast } from './GetRainNowcast';
 
@@ -24,7 +27,10 @@ export type SkyCorrector = (
 ) => Weather | null;
 
 export interface BeachConditionsNow {
-  /** OpenWeather first, AEMET as fallback; sky already corrected. */
+  /**
+   * OpenWeather → Open-Meteo → AEMET's station with today's forecast sky
+   * (`previsto`) → AEMET's station with no sky; sky already corrected.
+   */
   weather: Weather | null;
   /** Aggregated RAW reading: whether it is still current is each caller's policy. */
   flag: FlagStatus | null;
@@ -52,12 +58,15 @@ export class BeachConditions {
     private readonly sunshine: SunshineProvider | undefined,
     private readonly skyCorrectionEnabled: () => boolean,
     private readonly correctSky: SkyCorrector,
+    /** Optional stand-ins for the sky, in order, when OpenWeather has nothing. */
+    private readonly openMeteo?: PrecipitationNowProvider,
+    private readonly aemetForecast?: BeachForecastProvider,
   ) {}
 
   async now(beach: Beach): Promise<BeachConditionsNow> {
     const [weather, flag, rain, sol] = await Promise.all([
-      this.getWeather(beach.latitude, beach.longitude),
-      resolveFlagForStations(beach.flagRef, beach.flagStations, (ref) => this.getFlagSafe(ref)),
+      this.getWeather(beach),
+      this.flagNow(beach),
       this.getRainSafe(beach.latitude, beach.longitude),
       this.getSunshineSafe(beach.latitude, beach.longitude),
     ]);
@@ -79,6 +88,11 @@ export class BeachConditions {
     };
   }
 
+  /** The beach's flag reading right now (aggregated, RAW). Cheap: file + cache. */
+  flagNow(beach: Beach): Promise<FlagStatus | null> {
+    return resolveFlagForStations(beach.flagRef, beach.flagStations, (ref) => this.getFlagSafe(ref));
+  }
+
   /**
    * Throws if the sunshine source is down. A provider outage is not the same
    * as a valid response without a nearby station: the ranking probes once
@@ -92,18 +106,41 @@ export class BeachConditions {
   }
 
   /**
-   * OpenWeather first (reliable, consistent across beaches).
-   * AEMET as fallback only if OpenWeather fails.
+   * OpenWeather first (reliable, consistent across beaches). Then Open-Meteo's
+   * reading, which rides in a call the rain already makes. Then AEMET's
+   * station, whose sky can only be the day's FORECAST, labelled as such, and
+   * otherwise none: a station measures no sky, and the one it used to carry
+   * was made up from temperature and humidity (10-oct-2026). Each step reads
+   * a cache with a stale window, so a provider down for a while still answers
+   * with its last good reading before the next step is tried.
    */
-  private async getWeather(lat: number, lon: number): Promise<Weather | null> {
+  private async getWeather(beach: Beach): Promise<Weather | null> {
+    const { latitude: lat, longitude: lon } = beach;
     try {
       return await this.openWeather.getCurrentByCoords(lat, lon);
-    } catch {
+    } catch { /* next source */ }
+
+    if (this.openMeteo) {
       try {
-        return await this.aemet.getCurrentByCoords(lat, lon);
-      } catch {
-        return null;
-      }
+        const weather = weatherFromOpenMeteo(await this.openMeteo.getPrecipitationNow(lat, lon));
+        if (weather) return weather;
+      } catch { /* next source */ }
+    }
+
+    try {
+      const station = await this.aemet.getCurrentByCoords(lat, lon);
+      return withForecastSky(station, await this.forecastSkyToday(beach));
+    } catch {
+      return null;
+    }
+  }
+
+  private async forecastSkyToday(beach: Beach): Promise<string | null> {
+    if (!this.aemetForecast || beach.sinAemet) return null;
+    try {
+      return (await this.aemetForecast.getByBeachCode(beach.aemetCode)).today.summary;
+    } catch {
+      return null;
     }
   }
 

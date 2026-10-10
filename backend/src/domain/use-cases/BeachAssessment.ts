@@ -38,6 +38,13 @@ export interface FeaturedBeachResult {
   ventanaDia?: DayWindowSignal | null;
   /** Aggregated rain nowcast; the score already reads it, the DTO publishes it. */
   rain?: RainNowcast | null;
+  /**
+   * The flag reading BEFORE the ranking's currency policy (`flag` is after it).
+   * The card judges THIS one at serve time, like the detail does: judged once
+   * at assembly, a ranking built at 11:59 hid the flag the detail showed at
+   * 12:01 (found by Codex). Absent in entries written before it existed.
+   */
+  rawFlag?: FlagStatus | null;
 }
 
 /** Everything observed about one beach, before any judgement. */

@@ -69,15 +69,16 @@ export class DetailsMapper {
     }));
   }
 
-  /** Maps a current observation (OpenWeather current) to TODAY's "real time" block. */
+  /** Maps the current weather (whichever source the chain settled on) to TODAY's "real time" block. */
   static mapTiempoActual(w: Weather): TiempoActualDTO {
     return {
       cielo: w.description ?? null,
-      icono: this.iconToLegacy(w.source, w.icon),
+      icono: this.iconToLegacy(w.icon),
       ...(w.icon ? { esNoche: w.icon.endsWith('n') } : {}),
       temperatura: w.temperatureC ?? null,
       precipitacionMm: w.precipitationMm ?? null,
       fuente: w.source,
+      ...(w.previsto ? { previsto: true } : {}),
       timestamp: new Date(w.timestamp).toISOString(),
     };
   }
@@ -113,7 +114,7 @@ export class DetailsMapper {
       wind: this.describeWind(w.windSpeedMs),
       waves: null,
       uvIndex: null,
-      icon: this.iconToLegacy(w.source, w.icon),
+      icon: this.iconToLegacy(w.icon),
       // The wind DESCRIBES a measured speed; the sensation is derived from the
       // temperature, and nobody reported it.
       ...(w.temperatureC != null ? { estimados: ['sensacion' as const] } : {}),
@@ -174,20 +175,17 @@ export class DetailsMapper {
     return s.charAt(0).toUpperCase() + s.slice(1);
   }
 
-  private static iconToLegacy(source: Weather['source'], icon: string | null): number | null {
+  /** Every source speaks OpenWeather's icon codes (see `domain/services/skySources`). */
+  private static iconToLegacy(icon: string | null): number | null {
     if (!icon) return null;
-    
-    if (source === 'OpenWeather' || source === 'AEMET') {
-      if (icon.startsWith('01')) return 100; // ☀️ Despejado
-      if (icon.startsWith('02')) return 110; // ⛅ Parcialmente nublado
-      if (icon.startsWith('03')) return 110; // ⛅ Nubes dispersas (25-50%)
-      if (icon.startsWith('04')) return 120; // ☁️ Nublado
-      if (icon.startsWith('09') || icon.startsWith('10')) return 200; // 🌧️ Lluvia
-      if (icon.startsWith('11')) return 210; // ⛈️ Tormenta
-      if (icon.startsWith('13')) return 300; // ❄️ Nieve
-      if (icon.startsWith('50')) return 400; // 🌫️ Niebla
-    }
-    
+    if (icon.startsWith('01')) return 100; // ☀️ Despejado
+    if (icon.startsWith('02')) return 110; // ⛅ Parcialmente nublado
+    if (icon.startsWith('03')) return 110; // ⛅ Nubes dispersas (25-50%)
+    if (icon.startsWith('04')) return 120; // ☁️ Nublado
+    if (icon.startsWith('09') || icon.startsWith('10')) return 200; // 🌧️ Lluvia
+    if (icon.startsWith('11')) return 210; // ⛈️ Tormenta
+    if (icon.startsWith('13')) return 300; // ❄️ Nieve
+    if (icon.startsWith('50')) return 400; // 🌫️ Niebla
     return null;
   }
 }

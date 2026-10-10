@@ -41,6 +41,12 @@ export interface FeaturedBeachesFullResult {
   generadoEn?: number;
 }
 
+/** One beach as the ranking in force sees it, and when that ranking was assembled. */
+export interface RankingSnapshot {
+  entry: FeaturedBeachResult;
+  generadoEn: number | null;
+}
+
 export class GetFeaturedBeaches {
   constructor(
     private readonly beachRepo: BeachRepository,
@@ -63,6 +69,28 @@ export class GetFeaturedBeaches {
       this.settings.staleTtlSeconds(),
       () => this.compute(topN),
     );
+  }
+
+  /**
+   * The entry the ranking IN FORCE holds for a beach, without computing or
+   * refreshing anything: opening one detail must never trigger the fan-out
+   * over every beach. Null when there is no ranking yet (cold start), so the
+   * caller computes the conditions itself.
+   *
+   * This is what makes the card and the detail of a beach the same picture:
+   * the detail is built from this entry instead of asking the providers
+   * again at a different instant (10-oct-2026).
+   */
+  snapshotFor(beachId: string): RankingSnapshot | null {
+    const ranking = this.cache.peek<FeaturedBeachesFullResult>(this.settings.cacheKey);
+    const entry = ranking?.resumenTodas.find((r) => r.beach.id === beachId);
+    if (!entry) return null;
+    return { entry, generadoEn: ranking?.generadoEn ?? null };
+  }
+
+  /** When the ranking in force was assembled; null if there is none. */
+  generation(): number | null {
+    return this.cache.peek<FeaturedBeachesFullResult>(this.settings.cacheKey)?.generadoEn ?? null;
   }
 
   private async compute(topN: number): Promise<FeaturedBeachesFullResult> {
@@ -101,7 +129,10 @@ export class GetFeaturedBeaches {
 
     for (const result of enriched) {
       if (!result) continue;
-      const entry = assessBeach(result, this.flagOperators);
+      const entry: FeaturedBeachResult = {
+        ...assessBeach(result, this.flagOperators),
+        rawFlag: result.rawFlag,
+      };
       (entry.score >= MIN_SCORE ? good : caution).push(entry);
       all.push(entry);
     }
@@ -125,6 +156,7 @@ export class GetFeaturedBeaches {
     beach: Beach;
     weather: Weather | null;
     flag: FlagStatus | null;
+    rawFlag: FlagStatus | null;
     enrichment: ForecastEnrichment | null;
     rain: RainNowcast | null;
   }> {
@@ -134,7 +166,14 @@ export class GetFeaturedBeaches {
       // AEMET call that would always 404: the enrichment one is skipped.
       beach.sinAemet ? Promise.resolve(null) : this.getForecastEnrichment(beach.aemetCode),
     ]);
-    return { beach, weather: now.weather, flag: flagForRanking(now.flag), enrichment, rain: now.rain };
+    return {
+      beach,
+      weather: now.weather,
+      flag: flagForRanking(now.flag),
+      rawFlag: now.flag,
+      enrichment,
+      rain: now.rain,
+    };
   }
 
   private async getForecastEnrichment(codigo: string): Promise<ForecastEnrichment | null> {

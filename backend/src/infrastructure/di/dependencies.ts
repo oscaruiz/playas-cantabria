@@ -142,11 +142,13 @@ export function configureDependencies(
       // sky, and the other one shows the same.
       (name, weather, sunshine, raining, now, outlook) =>
         corregirCieloObservado(name, weather, sunshine, raining, now, outlook, c.get('cache'), region.id),
+      c.get('openMeteoPrecipitationProvider'),
+      c.get('aemetBeachForecastProvider'),
     )
   );
 
   container.register('getBeachDetails', (c) =>
-    new GetBeachDetails(c.get('beachRepository'), c.get('beachConditions'))
+    new GetBeachDetails(c.get('beachRepository'), c.get('beachConditions'), c.get('getFeaturedBeaches'))
   );
 
   container.register('getFeaturedBeaches', (c) =>
@@ -173,7 +175,13 @@ export function configureDependencies(
       c.get('openWeatherProvider'),
       c.get('cache'),
       {
-        cacheKey: (beachId) => CacheKeys.detailsByBeachId(region.id, beachId),
+        // Versioned by the ranking in force: the detail is built from the
+        // ranking's entry, so a new ranking must never be answered with a
+        // detail cached from the previous one.
+        cacheKey: (beachId) =>
+          `${CacheKeys.detailsByBeachId(region.id, beachId)}:${
+            c.get<GetFeaturedBeaches>('getFeaturedBeaches').generation() ?? 'live'
+          }`,
         freshTtlSeconds: () => Config.detailsFreshTtlSeconds(),
         staleTtlSeconds: () => Config.detailsStaleTtlSeconds(),
       },

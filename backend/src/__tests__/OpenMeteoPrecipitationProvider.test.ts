@@ -44,6 +44,30 @@ describe('OpenMeteoPrecipitationProvider', () => {
     expect(now.timestamp).toBe(Date.parse('2026-07-15T19:00:00Z'));
   });
 
+  it('trae en la misma llamada la lectura actual que deja a Open-Meteo hacer de suplente del cielo', async () => {
+    const payload = {
+      data: {
+        ...HAPPY_PAYLOAD.data,
+        current: {
+          ...HAPPY_PAYLOAD.data.current,
+          temperature_2m: 17.4, cloud_cover: 90, wind_speed_10m: 5.1,
+          wind_direction_10m: 270, relative_humidity_2m: 88, is_day: 0,
+        },
+      },
+    };
+    const spy = vi.spyOn(http, 'get').mockResolvedValue(payload as any);
+    const provider = new OpenMeteoPrecipitationProvider(new InMemoryCache());
+
+    const now = await provider.getPrecipitationNow(43.3944, -4.2205);
+
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect((spy.mock.calls[0] as any[])[1].params.current).toContain('cloud_cover');
+    expect(now.current).toEqual({
+      temperatureC: 17.4, cloudCoverPct: 90, windSpeedMs: 5.1,
+      windDirectionDeg: 270, humidityPct: 88, isDay: false,
+    });
+  });
+
   it('pide precipitación actual sin API key (endpoint gratuito)', async () => {
     const spy = vi.spyOn(http, 'get').mockResolvedValue(HAPPY_PAYLOAD as any);
     const provider = new OpenMeteoPrecipitationProvider(new InMemoryCache());

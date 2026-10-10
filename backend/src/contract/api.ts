@@ -25,7 +25,7 @@ export interface CruzRojaStationDTO {
 }
 
 export interface WeatherDTO {
-  source: 'AEMET' | 'OpenWeather';
+  source: 'AEMET' | 'OpenWeather' | 'Open-Meteo';
   timestamp: number;
   temperatura: number | null;
   viento: number | null;
@@ -133,7 +133,7 @@ export type ClimaDiaDTO = {
 };
 
 export type ClimaDTO = {
-  fuente: 'AEMET' | 'OpenWeather';
+  fuente: 'AEMET' | 'OpenWeather' | 'Open-Meteo';
   ultimaActualizacion: string;
   hoy: ClimaDiaDTO;
   manana: ClimaDiaDTO | null;
@@ -186,7 +186,14 @@ export type TiempoActualDTO = {
   icono: number | null;
   temperatura: number | null;
   precipitacionMm: number | null;
-  fuente: 'OpenWeather' | 'AEMET';
+  /**
+   * Who described the sky now. 'Open-Meteo' stands in when OpenWeather has
+   * nothing; 'AEMET' is a station reading whose sky, if any, is the FORECAST
+   * (see `previsto`). `cielo` null means nobody described it.
+   */
+  fuente: 'OpenWeather' | 'AEMET' | 'Open-Meteo';
+  /** `cielo` is AEMET's forecast for today, not an observation: label it so. */
+  previsto?: boolean;
   timestamp: string;
   lluvia?: LluviaDTO | null;
   /** Next few hours, already trimmed to the beach window. Additive field. */
@@ -300,6 +307,14 @@ export type DetailsDTO = {
    * only this field lets the client say so instead of implying "just now".
    */
   generadoEn?: string;
+  /**
+   * When the ranking this detail's current conditions were taken from was
+   * assembled (its `timestamp`), or null when the detail computed them itself
+   * because there was no ranking yet. Equal to the ranking the client paints
+   * means the card and the detail are the same picture; different means one
+   * of the two has to be fetched again.
+   */
+  rankingGeneradoEn?: string | null;
 };
 
 // ---------------------------------------------------------------------------
@@ -380,6 +395,8 @@ export interface FeaturedBeachDTO {
   lon: number;
   temperatura: number | null;
   descripcionClima: string | null;
+  /** `descripcionClima` is a forecast (AEMET), not the sky observed now. */
+  climaPrevisto?: boolean;
   iconoClima: string | null;
   vientoMs: number | null;
   bandera: 'Verde' | 'Amarilla' | 'Roja' | null;

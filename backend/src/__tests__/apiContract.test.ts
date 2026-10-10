@@ -317,6 +317,7 @@ describe('API contract — GET /api/beaches/:id/details', () => {
       // When the backend ASSEMBLED this, which is not when it served it: the
       // endpoint answers from a stale-while-revalidate cache.
       generadoEn: expect.any(String),
+      rankingGeneradoEn: null,
     });
   });
 
@@ -382,6 +383,7 @@ describe('API contract — GET /api/beaches/:id/details', () => {
       cruzRoja: null,
       prediccionCompleta: null,
       generadoEn: expect.any(String),
+      rankingGeneradoEn: null,
     });
   });
 });

@@ -200,8 +200,12 @@ export class AemetWeatherProvider implements WeatherProvider, SunshineProvider {
           source: 'AEMET',
           timestamp,
           temperatureC: firstNumber((o) => o.ta),
-          description: this.generateAemetDescription(latest),
-          icon: this.generateAemetIcon(latest),
+          // A station measures no sky. These used to be made up from the
+          // temperature and humidity ("Templado y húmedo", cloudy above 80 %)
+          // and reached the screen as the current sky; `BeachConditions` puts
+          // AEMET's forecast sky here instead, labelled as such (10-oct-2026).
+          description: null,
+          icon: null,
           // prec: only the most recent row (an old accumulation would give false "raining").
           precipitationMm: typeof latest.prec === 'number' ? latest.prec : null,
           windSpeedMs: firstNumber((o) => o.vmax), // ✅ FIXED: vmax is wind speed
@@ -256,57 +260,5 @@ export class AemetWeatherProvider implements WeatherProvider, SunshineProvider {
       // none: the beach is left without AEMET data only if there truly is nothing.
       return arr.length > 0 ? arr : todas;
     });
-  }
-
-  /**
-   * 📝 Generate description based on AEMET data
-   */
-  private generateAemetDescription(obs: AemetObs): string | null {
-    const temp = obs.ta;
-    const humidity = obs.hr;
-    const pressure = obs.pres || obs.pres_nmar;
-    
-    if (typeof temp !== 'number') return null;
-    
-    let desc = '';
-
-    // Temperature
-    if (temp < 10) desc += 'Frío';
-    else if (temp < 20) desc += 'Templado';
-    else if (temp < 30) desc += 'Cálido';
-    else desc += 'Muy cálido';
-    
-    // Humidity
-    if (typeof humidity === 'number') {
-      if (humidity > 80) desc += ' y húmedo';
-      else if (humidity < 40) desc += ' y seco';
-    }
-    
-    // Pressure (weather trend)
-    if (typeof pressure === 'number') {
-      if (pressure > 1020) desc += ', tiempo estable';
-      else if (pressure < 1000) desc += ', tiempo inestable';
-    }
-    
-    return desc || null;
-  }
-
-  /**
-   * 🎨 Generate icon based on AEMET data
-   */
-  private generateAemetIcon(obs: AemetObs): string | null {
-    const temp = obs.ta;
-    const humidity = obs.hr;
-    
-    if (typeof temp !== 'number') return null;
-    
-    // Simple logic based on temperature and humidity
-    if (typeof humidity === 'number' && humidity > 80) {
-      return '04d'; // Cloudy/humid
-    } else if (typeof humidity === 'number' && humidity < 40) {
-      return '01d'; // Clear/dry
-    } else {
-      return '02d'; // Partly cloudy
-    }
   }
 }

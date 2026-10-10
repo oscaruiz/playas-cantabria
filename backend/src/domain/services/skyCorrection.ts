@@ -289,9 +289,8 @@ export function decidirCorreccionCielo(
  * Returns a copy of the `Weather` with the observed sky correction. Temperature, wind,
  * humidity and pressure are preserved: only the sky is disputed.
  *
- * `source` is kept INTACT on purpose: `buildRankingReason` in BeachScorer only
- * uses the description if `source === 'OpenWeather'`, so changing it here would
- * leave the ranking reason without the sky part.
+ * `source` is kept INTACT on purpose: it says who described the sky, and the
+ * correction only adjusts that description, it does not become a new source.
  */
 export function aplicarCorreccionCielo(weather: Weather, decision: DecisionCielo): Weather {
   if (!decision.aplicar || !decision.nivel) return weather;
