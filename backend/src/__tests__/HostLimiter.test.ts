@@ -49,6 +49,44 @@ describe('HostLimiter — techo de concurrencia por proveedor', () => {
     expect(limiter.enfriamientoRestanteMs('opendata.aemet.es')).toBe(60_000);
   });
 
+  it('sin Retry-After, cada 429 seguido dobla el enfriamiento hasta el techo', () => {
+    // A host blocked for hours (Open-Meteo on the shared Render IP, 7/9-oct-2026)
+    // must not get its whole concurrency back every minute.
+    const ahora = 1_000_000;
+    const limiter = new HostLimiter({}, () => ahora);
+
+    const esperas = Array.from({ length: 6 }, () => {
+      limiter.registrar429('api.open-meteo.com', undefined);
+      return limiter.enfriamientoRestanteMs('api.open-meteo.com');
+    });
+
+    expect(esperas).toEqual([60_000, 120_000, 240_000, 480_000, 600_000, 600_000]);
+    expect(limiter.snapshot()['api.open-meteo.com'].racha429).toBe(6);
+  });
+
+  it('una respuesta buena reinicia la racha: el siguiente 429 vuelve a 60s', () => {
+    const ahora = 1_000_000;
+    const limiter = new HostLimiter({}, () => ahora);
+
+    limiter.registrar429('api.open-meteo.com', undefined);
+    limiter.registrar429('api.open-meteo.com', undefined);
+    limiter.registrarExito('api.open-meteo.com');
+    limiter.registrar429('api.open-meteo.com', undefined);
+
+    expect(limiter.enfriamientoRestanteMs('api.open-meteo.com')).toBe(60_000);
+  });
+
+  it('el Retry-After del servidor manda aunque haya racha', () => {
+    const ahora = 1_000_000;
+    const limiter = new HostLimiter({}, () => ahora);
+
+    limiter.registrar429('api.openweathermap.org', undefined);
+    limiter.registrar429('api.openweathermap.org', undefined);
+    limiter.registrar429('api.openweathermap.org', '30');
+
+    expect(limiter.enfriamientoRestanteMs('api.openweathermap.org')).toBe(30_000);
+  });
+
   it('acota el enfriamiento aunque el proveedor pida horas', () => {
     const ahora = 1_000_000;
     const limiter = new HostLimiter({}, () => ahora);

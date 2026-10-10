@@ -9,6 +9,11 @@
  *
  * Queueing does no harm: with stale-while-revalidate the user receives the
  * previous value while the refresh waits its turn.
+ *
+ * The cooldown escalates with consecutive 429s. A flat 60 s let the host's
+ * whole concurrency go out again every minute against a quota that was still
+ * exhausted: Open-Meteo blocks the shared Render IP for hours, and on
+ * 7/9-oct-2026 that was ~4 real 429s a minute, prolonging the block.
  */
 
 const LIMITES: Record<string, number> = {
@@ -38,7 +43,7 @@ export const RATE_PER_MINUTE: Record<string, number> = {
 
 const MINUTE_MS = 60_000;
 
-/** Default cooldown if the 429 carries no Retry-After. */
+/** Default cooldown if the 429 carries no Retry-After; doubles per consecutive 429. */
 const ENFRIAMIENTO_POR_DEFECTO_MS = 60_000;
 const ENFRIAMIENTO_MAXIMO_MS = 600_000;
 
@@ -47,6 +52,8 @@ export class HostLimiter {
   private colas = new Map<string, Array<() => void>>();
   private enfriadoHasta = new Map<string, number>();
   private sent = new Map<string, number[]>();
+  /** Consecutive 429s per host; a success resets it. */
+  private rachas429 = new Map<string, number>();
 
   constructor(
     private readonly limites: Record<string, number> = LIMITES,
@@ -87,14 +94,25 @@ export class HostLimiter {
     return restante;
   }
 
-  /** After a 429: nobody calls that host again until the Retry-After passes. */
+  /**
+   * After a 429: nobody calls that host again until the Retry-After passes.
+   * Without one, the default doubles with each consecutive 429 (60 s, 2, 4,
+   * 8 min) up to the ceiling; the server's own Retry-After always wins.
+   */
   registrar429(host: string, retryAfter: string | number | undefined): void {
+    const racha = (this.rachas429.get(host) ?? 0) + 1;
+    this.rachas429.set(host, racha);
     const segundos = typeof retryAfter === 'string' ? Number(retryAfter) : retryAfter;
     const ms =
       Number.isFinite(segundos) && (segundos as number) > 0
-        ? Math.min((segundos as number) * 1000, ENFRIAMIENTO_MAXIMO_MS)
-        : ENFRIAMIENTO_POR_DEFECTO_MS;
-    this.enfriadoHasta.set(host, this.now() + ms);
+        ? (segundos as number) * 1000
+        : ENFRIAMIENTO_POR_DEFECTO_MS * 2 ** (racha - 1);
+    this.enfriadoHasta.set(host, this.now() + Math.min(ms, ENFRIAMIENTO_MAXIMO_MS));
+  }
+
+  /** A response that was not a 429: the host is answering again. */
+  registrarExito(host: string): void {
+    this.rachas429.delete(host);
   }
 
   async adquirir(host: string): Promise<void> {
@@ -127,18 +145,20 @@ export class HostLimiter {
     if (siguiente) siguiente();
   }
 
-  snapshot(): Record<string, { activos: number; encolados: number; enfriamientoMs: number }> {
+  snapshot(): Record<string, { activos: number; encolados: number; enfriamientoMs: number; racha429: number }> {
     const hosts = new Set([
       ...this.activos.keys(),
       ...this.colas.keys(),
       ...this.enfriadoHasta.keys(),
+      ...this.rachas429.keys(),
     ]);
-    const out: Record<string, { activos: number; encolados: number; enfriamientoMs: number }> = {};
+    const out: Record<string, { activos: number; encolados: number; enfriamientoMs: number; racha429: number }> = {};
     for (const h of hosts) {
       out[h] = {
         activos: this.activos.get(h) ?? 0,
         encolados: this.colas.get(h)?.length ?? 0,
         enfriamientoMs: this.enfriamientoRestanteMs(h),
+        racha429: this.rachas429.get(h) ?? 0,
       };
     }
     return out;

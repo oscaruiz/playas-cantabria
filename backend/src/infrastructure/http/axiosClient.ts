@@ -106,7 +106,9 @@ const liberar = (cfg: any) => {
 
 http.interceptors.response.use(
   (resp) => {
-    httpMetrics.record(hostOf(resp.config?.url, resp.config?.baseURL), resp.status);
+    const host = hostOf(resp.config?.url, resp.config?.baseURL);
+    httpMetrics.record(host, resp.status);
+    hostLimiter.registrarExito(host);
     liberar(resp.config);
     return resp;
   },
