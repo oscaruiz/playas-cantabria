@@ -195,8 +195,9 @@ Environment variables (or `.env`):
   de dos niveles (`TieredCache`) y sobrevive al dormido y a los despliegues de Render free.
 - `SKY_CORRECTION` — corrector de cielo por insolación observada de AEMET (`inso`).
   `on` por defecto: corrige el cielo a peor cuando las estaciones no ven sol y el modelo
-  dice despejado. `shadow` calcula y cuenta en `/api/_diag/sky` sin tocar la respuesta;
-  `off` lo desactiva. Solo actúa en franja de playa. Usa el mismo valor en CI que en el
+  dice despejado, y a «nubes dispersas» cuando una estación a ≤40 km lleva 3 h seguidas de
+  sol pleno y el modelo dice nublado. `shadow` calcula y cuenta en `/api/_diag/sky` sin tocar
+  la respuesta; `off` lo desactiva. Solo actúa de 11 a 21 h (todo el año) y de día. Usa el mismo valor en CI que en el
   servidor, o el primer `/featured` tras arrancar sale del snapshot sin corregir.
 - `DEBUG_WEATHER=1` — enables detailed logs from all providers
 - `DIAG_PROBE_TOKEN` — optional bearer token enabling the live probes

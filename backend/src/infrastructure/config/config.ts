@@ -191,7 +191,7 @@ function franjaYTemporada(now: Date): { enTemporada: boolean; enFranja: boolean 
 /**
  * Are we in the bathing season (June–September, Madrid time)?
  *
- * Shares its definition with `ttlFactor` and `enFranjaDePlaya`: out of season
+ * Shares its definition with `ttlFactor`: out of season
  * there are no hoisted flags, so anything that watches over flag freshness has
  * to keep quiet or it teaches people to ignore it.
  */
@@ -200,15 +200,15 @@ export function enTemporadaDePlaya(now: Date = new Date()): boolean {
 }
 
 /**
- * Are we in the in-season beach window (11:00–21:00 Madrid time)?
+ * Are we in the beach window (11:00–21:00 Madrid time), any month?
  *
- * Shares its definition with `ttlFactor` on purpose: it is the same idea of
- * "right now there are people looking at the beach". Used by the sky corrector,
- * which must only act during the day and afternoon.
+ * Used by the sky corrector, which must only act during the day and afternoon.
+ * It used to be in-season only, and on 10-oct the app showed the whole coast
+ * overcast in sunshine with the stations saying so: people look at the beach
+ * in October too. After dark is the decider's own night-icon guard.
  */
 export function enFranjaDePlaya(now: Date = new Date()): boolean {
-  const { enTemporada, enFranja } = franjaYTemporada(now);
-  return enTemporada && enFranja;
+  return franjaYTemporada(now).enFranja;
 }
 
 export type ModoCorreccionCielo = 'off' | 'shadow' | 'on';

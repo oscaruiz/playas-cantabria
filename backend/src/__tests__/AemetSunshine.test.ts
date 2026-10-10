@@ -83,6 +83,20 @@ describe('AemetWeatherProvider.getSunshineNear', () => {
     expect(res[0].observadoEn).toBe(Date.parse(FINT));
   });
 
+  it('devuelve el historial de horas consecutivas, de la más reciente hacia atrás', async () => {
+    const llanes = { idema: '1183X', ubi: 'LLANES', lat: 43.42, lon: -4.75 };
+    mockAemet([
+      { ...llanes, fint: '2026-10-10T15:00:00+0000', inso: 60 },
+      { ...llanes, fint: '2026-10-10T13:00:00+0000', inso: 59 },
+      { ...llanes, fint: '2026-10-10T14:00:00+0000', inso: 60 },
+      // A gap: 11:00 is missing, so 10:00 does not belong to the same spell.
+      { ...llanes, fint: '2026-10-10T10:00:00+0000', inso: 60 },
+    ]);
+    const res = await provider().getSunshineNear(43.4, -4.35);
+
+    expect(res[0].historial).toEqual([1, 1, 59 / 60]);
+  });
+
   it('descarta valores fuera de [0, 60] por si AEMET cambiara la unidad', async () => {
     mockAemet([
       { idema: 'RARA', ubi: 'X', lat: 43.47, lon: -3.79, fint: FINT, inso: 999 },

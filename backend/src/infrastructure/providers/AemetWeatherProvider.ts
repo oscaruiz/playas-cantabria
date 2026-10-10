@@ -62,6 +62,21 @@ export function isInsideObservationBboxes(
  * a percentage) the values would stop falling in [0, 60] and we prefer going
  * without correction over degrading the sky with a scale that is no longer ours.
  */
+/** Sunshine fractions of a station's consecutive hourly rows, newest first. */
+function historialHorario(filas: AemetObs[]): number[] {
+  const HORA_MS = 60 * 60 * 1000;
+  const ordenadas = filas
+    .filter((f) => f.fint)
+    .map((f) => ({ t: parseAemetTime(f.fint as string), fraccion: (f.inso as number) / 60 }))
+    .sort((a, b) => b.t - a.t);
+  const out: number[] = [];
+  for (let i = 0; i < ordenadas.length; i++) {
+    if (i > 0 && ordenadas[i - 1].t - ordenadas[i].t !== HORA_MS) break;
+    out.push(ordenadas[i].fraccion);
+  }
+  return out;
+}
+
 function esInsolacionUsable(inso: unknown): inso is number {
   return typeof inso === 'number' && Number.isFinite(inso) && inso >= 0 && inso <= 60;
 }
@@ -120,9 +135,11 @@ export class AemetWeatherProvider implements WeatherProvider, SunshineProvider {
       // the most recent of each one that also carries `inso` in range: a
       // freshly published row can come in incomplete.
       const porEstacion = new Map<string, AemetObs>();
+      const filas = new Map<string, AemetObs[]>();
       for (const s of arr) {
         if (!s.idema || typeof s.lat !== 'number' || typeof s.lon !== 'number') continue;
         if (!esInsolacionUsable(s.inso)) continue;
+        filas.set(s.idema, [...(filas.get(s.idema) ?? []), s]);
         const previa = porEstacion.get(s.idema);
         if (!previa || (s.fint ?? '') > (previa.fint ?? '')) porEstacion.set(s.idema, s);
       }
@@ -141,6 +158,7 @@ export class AemetWeatherProvider implements WeatherProvider, SunshineProvider {
           idema: s.idema as string,
           ubicacion: s.ubi ?? null,
           observadoEn: s.fint ? parseAemetTime(s.fint) : Date.now(),
+          historial: historialHorario(filas.get(s.idema as string) ?? []),
         };
       })
       .sort((a, b) => a.distanciaKm - b.distanciaKm)

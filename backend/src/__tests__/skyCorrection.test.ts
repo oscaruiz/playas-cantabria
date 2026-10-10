@@ -440,3 +440,48 @@ describe('decidirCorreccionCielo — consenso entre estaciones', () => {
     expect(decidirCorreccionCielo(despejado(), [parayas, rancio], ctx()).aplicar).toBe(true);
   });
 });
+
+describe('decidirCorreccionCielo — sol sostenido en estación lejana', () => {
+  // 10-oct: Llanes (32 km) logged 60/60 min three hours running while
+  // OpenWeather had Gerra at 100 % cloud and Open-Meteo at 88 % for the next hour.
+  const cubierto = () => despejado({ description: 'nubes', icon: '04d', conditionCode: 804, cloudinessPct: 100 });
+  const llanes = (historial: number[], extra: Partial<SunshineObservation> = {}) =>
+    obs({ insoMin: historial[0] * 60, fraccion: historial[0], distanciaKm: 32, historial, ...extra });
+
+  it('mejora a nubes dispersas con tres horas seguidas de sol pleno', () => {
+    const d = decidirCorreccionCielo(cubierto(), [llanes([1, 1, 1])], ctx({ nubesInmediatasPct: 88 }));
+    expect(d).toMatchObject({ aplicar: true, nivel: 'dispersas' });
+  });
+
+  it('no mejora con solo dos horas de sol pleno', () => {
+    const d = decidirCorreccionCielo(cubierto(), [llanes([1, 1, 0.5])], ctx({ nubesInmediatasPct: 88 }));
+    expect(d.aplicar).toBe(false);
+  });
+
+  it('no mejora desde más de 40 km', () => {
+    const d = decidirCorreccionCielo(cubierto(), [llanes([1, 1, 1], { distanciaKm: 42 })], ctx());
+    expect(d.aplicar).toBe(false);
+  });
+
+  it('no mejora si una estación cercana no ve sol', () => {
+    const d = decidirCorreccionCielo(
+      cubierto(),
+      [llanes([1, 1, 1]), obs({ idema: '1109X', distanciaKm: 35, insoMin: 0, fraccion: 0 })],
+      ctx(),
+    );
+    expect(d).toMatchObject({ aplicar: false, motivo: 'sin-consenso' });
+  });
+
+  it('no toca un modelo que ya dice poco nuboso o despejado', () => {
+    for (const icon of ['01d', '02d', '03d']) {
+      const d = decidirCorreccionCielo(despejado({ icon }), [llanes([1, 1, 1])], ctx());
+      expect(d.aplicar).toBe(false);
+    }
+  });
+
+  it('no corrige de noche aunque sea dentro de la franja', () => {
+    // December: sunset at 17:50 Madrid, the window runs to 21:00.
+    const d = decidirCorreccionCielo(despejado({ icon: '01n' }), [obs()], ctx());
+    expect(d).toMatchObject({ aplicar: false, motivo: 'fuera-de-franja' });
+  });
+});

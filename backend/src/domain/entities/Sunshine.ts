@@ -21,4 +21,10 @@ export interface SunshineObservation {
   ubicacion: string | null;
   /** Epoch (ms) of the observation (`fint`), NOT of when we downloaded it. */
   observadoEn: number;
+  /**
+   * Sunshine fractions of the consecutive hourly rows ending at this one,
+   * newest first (`[fraccion, previous hour, ...]`). Lets the decider tell a
+   * sustained clear spell from a single sunny hour.
+   */
+  historial?: number[];
 }

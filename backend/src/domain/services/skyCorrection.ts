@@ -68,6 +68,16 @@ const UMBRAL_DESPEJADO = 0.85;
 /** Moderate sunshine is enough only when the immediate local model also says clear. */
 const UMBRAL_SOL_CON_CORROBORACION = 0.5;
 const UMBRAL_NUBES_DESPEJADO = 10;
+/**
+ * Hours in a row of near-full sun (>= UMBRAL_SOL_MEJORA_EXCEPCIONAL) that let a
+ * station up to MAX_KM_PARA_EMPEORAR away improve a cloudy model to "nubes
+ * dispersas" with no corroboration from the model itself. On 10-oct Llanes
+ * (32 km) logged 60/60 min for three hours while OpenWeather and Open-Meteo
+ * both had Gerra at 82-100 % cloud. One sunny hour can be a gap; three is a
+ * clear spell the grid missed. It stops at "dispersas": the station is not at
+ * the beach.
+ */
+const HORAS_SOL_SOSTENIDO = 3;
 
 export type MotivoDecision =
   | 'corregido'
@@ -152,6 +162,10 @@ export function decidirCorreccionCielo(
   // the sun was below the horizon for part of that hour. Starting at 11:00
   // Madrid time that cannot happen.
   if (!ctx.enFranjaDePlaya) return { aplicar: false, motivo: 'fuera-de-franja' };
+  // Out of season the 11:00-21:00 window runs past sunset (17:50 in December).
+  // The provider's own night icon follows the real sunset; an hour of zero
+  // sun after dark is not a stratus layer.
+  if (weather.icon?.endsWith('n')) return { aplicar: false, motivo: 'fuera-de-franja' };
 
   // They arrive sorted by distance: the first one decides, the rest are witnesses.
   const observacion = observaciones[0];
@@ -216,13 +230,20 @@ export function decidirCorreccionCielo(
     observacion.fraccion >= UMBRAL_SOL_CON_CORROBORACION
     && typeof ctx.nubesInmediatasPct === 'number'
     && ctx.nubesInmediatasPct <= UMBRAL_NUBES_DESPEJADO;
-  const nivel = despejadoCorroborado ? 'despejado' : nivelPara(observacion.fraccion);
+  const historial = observacion.historial ?? [observacion.fraccion];
+  const primeraSinSol = historial.findIndex((f) => f < UMBRAL_SOL_MEJORA_EXCEPCIONAL);
+  const horasSolPleno = primeraSinSol === -1 ? historial.length : primeraSinSol;
+  const solSostenido =
+    horasSolPleno >= HORAS_SOL_SOSTENIDO && observacion.distanciaKm <= MAX_KM_PARA_EMPEORAR;
+  const nivel = despejadoCorroborado
+    ? 'despejado'
+    : solSostenido ? 'dispersas' : nivelPara(observacion.fraccion);
   if (!nivel) return { aplicar: false, motivo: 'sol-suficiente', ...base };
 
   // Improving a cloudy model is useful, but more geographically sensitive
   // than detecting a widespread stratus layer. Require a closer station and
   // stronger sunshine than the downgrade path.
-  const esMejora = nivel === 'despejado';
+  const esMejora = nivel === 'despejado' || solSostenido;
   const severidadModelo = weather.icon ? SEVERIDAD_MODELO[weather.icon] : undefined;
   if (esMejora && severidadModelo === NIVELES.despejado.severidad) {
     return { aplicar: false, motivo: 'sol-suficiente', ...base };
@@ -239,6 +260,7 @@ export function decidirCorreccionCielo(
     && typeof ctx.nubesInmediatasPct === 'number'
     && ctx.nubesInmediatasPct <= UMBRAL_NUBES_DESPEJADO;
   const mejoraLejanaPermitida = mejoraExcepcionalCorroborada
+    || solSostenido
     || (
       observacion.distanciaKm <= MAX_KM_PARA_EMPEORAR
       && mejoraLejanaCorroborada
@@ -278,6 +300,7 @@ export function decidirCorreccionCielo(
     severidadModelo === undefined
     || severidadModelo === NIVELES[nivel].severidad
     || (!esMejora && severidadModelo > NIVELES[nivel].severidad)
+    || (esMejora && severidadModelo < NIVELES[nivel].severidad)
   ) {
     return { aplicar: false, motivo: 'modelo-ya-nublado', ...base };
   }
