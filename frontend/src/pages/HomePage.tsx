@@ -363,6 +363,7 @@ const HomePage: React.FC = () => {
     updatedMs,
     fromPreviousVisit,
     loading: featuredLoading,
+    refreshing,
     error: featuredError,
     retrying,
     retry,
@@ -522,7 +523,7 @@ const HomePage: React.FC = () => {
           {featuredLoading && (
             <div className="hp-loading">
               <IonSpinner name="crescent" />
-              <span>{t('home.buscando')}</span>
+              <span>{t(refreshing ? 'home.actualizando' : 'home.buscando')}</span>
             </div>
           )}
 
