@@ -10,7 +10,8 @@ import React from 'react';
 import { render, screen, waitFor, act } from '@testing-library/react';
 import { useRanking } from './useRanking';
 import { API_UPDATED_MESSAGE } from '../../hooks/useServiceWorkerRefresh';
-import { installFetchMock, restoreFetch, route } from '../../test/http/fakeFetch';
+import { installFetchMock, restoreFetch, route, deferred } from '../../test/http/fakeFetch';
+import type { RouteSpec } from '../../test/http/fakeFetch';
 import { FEATURED_PATH as FEATURED } from '../../test/apiRoutes';
 import type { FeaturedBeachesResponse } from '../../services/api';
 
@@ -153,6 +154,52 @@ describe('useRanking', () => {
     } finally {
       jest.useRealTimers();
     }
+  });
+
+  describe('online, with a copy from an earlier visit', () => {
+    beforeEach(() => {
+      Object.defineProperty(navigator, 'onLine', { configurable: true, get: () => true });
+    });
+
+    it('keeps it off screen while the real answer is on its way, and paints that', async () => {
+      // Opening the app at night painted the afternoon's sky with "hace 5h"
+      // and only then corrected itself.
+      const late = deferred<RouteSpec>();
+      let calls = 0;
+      installFetchMock([
+        route(FEATURED, () => (calls++ === 0 ? { json: ranking(300, 'cielo de la tarde') } : late.promise)),
+      ]);
+
+      render(<Probe />);
+      await waitFor(() => expect(calls).toBe(2));
+      expect(screen.getByText('cargando')).toBeInTheDocument();
+      expect(screen.queryByText('cielo de la tarde')).not.toBeInTheDocument();
+
+      await act(async () => { late.resolve({ json: ranking(0, 'cielo de la noche') }); });
+
+      expect(await screen.findByText('cielo de la noche')).toBeInTheDocument();
+    });
+
+    it('holds it as loading, then paints it with its notice if nothing better came', async () => {
+      jest.useFakeTimers('modern');
+      jest.spyOn(Date, 'now').mockImplementation(() => now);
+      try {
+        installFetchMock([route(FEATURED, { json: ranking(300, 'cielo que no cambia') })]);
+
+        render(<Probe />);
+        await waitFor(() => expect(screen.getByText('cargando')).toBeInTheDocument());
+        await act(async () => { await Promise.resolve(); });
+        expect(screen.queryByText('cielo que no cambia')).not.toBeInTheDocument();
+
+        now += 31 * 1000;
+        await act(async () => { jest.advanceTimersByTime(31 * 1000); });
+
+        expect(await screen.findByText('cielo que no cambia')).toBeInTheDocument();
+        expect(screen.getByText('de visita anterior')).toBeInTheDocument();
+      } finally {
+        jest.useRealTimers();
+      }
+    });
   });
 
   it('paints the ranking the service worker delivers late', async () => {

@@ -49,6 +49,12 @@ export interface RankingInUse {
   fromPreviousVisit: boolean;
   /** No answer yet, of any kind. */
   loading: boolean;
+  /**
+   * A copy from an earlier visit is being held back while the real answer is
+   * on its way (`HOLD_PREVIOUS_VISIT_MS`): `ranking` is null and `loading` true
+   * meanwhile, so screens can say "updating" instead of "searching".
+   */
+  refreshing: boolean;
   /** The request failed and there is nothing to paint. */
   error: boolean;
   /** A retry is in flight. */
@@ -70,6 +76,28 @@ const AUTO_RETRY_EVERY_MS = 60 * 1000;
  */
 let lastAutoRetryMs = 0;
 
+/**
+ * How long a copy from an earlier visit is kept OFF the screen while a real
+ * answer may still arrive.
+ *
+ * Opening the app at night painted the afternoon's sky with "actualizado hace
+ * 5h" next to it, and only then corrected itself: the service worker gives up
+ * on the network at three seconds and hands over its stored copy, while the
+ * backend is still waking up. Showing "updating" for a few seconds is honest;
+ * showing hours-old conditions as the page is not. Past this wait the copy is
+ * painted after all, with its notice — the backend may really be down, and an
+ * old sky with a warning beats an endless spinner. Long enough for a Render
+ * cold start to answer most of the time; a slower one still repaints when the
+ * worker's late message lands.
+ */
+const HOLD_PREVIOUS_VISIT_MS = 30 * 1000;
+
+/**
+ * Which copy is being held, and since when. Module-level so every mounted
+ * screen holds the same copy for the same wait instead of restarting it.
+ */
+let held: { updatedMs: number; sinceMs: number } | null = null;
+
 export function useRanking(): RankingInUse {
   const ranking = useSyncExternalStore(
     subscribeRanking,
@@ -78,6 +106,7 @@ export function useRanking(): RankingInUse {
   );
   const [error, setError] = useState(false);
   const [retrying, setRetrying] = useState(false);
+  const [, repaint] = useReducer((n: number) => n + 1, 0);
 
   // Only guards the two flags above. The ranking needs no such guard — it is
   // shared state and every screen wants it — but a screen the user navigated
@@ -107,9 +136,11 @@ export function useRanking(): RankingInUse {
 
   // A page left open for twenty minutes keeps painting what it loaded then.
   // This does not force anything: while the module cache is fresh it answers
-  // without asking the backend.
+  // without asking the backend. The repaint re-judges the age right away, so a
+  // ranking that went stale while the tab slept is held back before it shows.
   useRevalidateOnReturn(
     useCallback(() => {
+      repaint();
       getFeaturedBeaches().catch(() => { /* what is painted still stands */ });
     }, []),
   );
@@ -138,11 +169,27 @@ export function useRanking(): RankingInUse {
   const shouldRevalidate = ageMs != null && ageMs > RANKING_REVALIDATE_AGE_MS;
   const fromPreviousVisit = ageMs != null && ageMs > STALE_RANKING_THRESHOLD_MS;
 
+  // Offline there is no answer coming: the stored copy is all there is, at once.
+  if (fromPreviousVisit && held?.updatedMs !== updatedMs && navigator.onLine !== false) {
+    held = { updatedMs: updatedMs as number, sinceMs: Date.now() };
+  }
+  // A failed request ends the wait too: nothing better is on its way.
+  const holding =
+    fromPreviousVisit &&
+    !error &&
+    held?.updatedMs === updatedMs &&
+    Date.now() - held.sinceMs < HOLD_PREVIOUS_VISIT_MS;
+
+  useEffect(() => {
+    if (!holding || !held) return;
+    const timer = setTimeout(repaint, held.sinceMs + HOLD_PREVIOUS_VISIT_MS - Date.now() + 50);
+    return () => clearTimeout(timer);
+  }, [holding]);
+
   // Growing old is an event nothing else announces. A ranking that was nine
   // minutes old when the screen opened is due one minute later, and a phone left
   // face-up on the towel renders nothing in between: without this, a screen open
   // and untouched would never refresh at all — there is no polling anywhere.
-  const [, repaint] = useReducer((n: number) => n + 1, 0);
   useEffect(() => {
     if (updatedMs == null || shouldRevalidate) return;
     // `actualizadoMs` and not the age as a dependency: the age changes on every
@@ -173,11 +220,25 @@ export function useRanking(): RankingInUse {
     return () => clearInterval(timer);
   }, [shouldRevalidate, retry]);
 
+  if (holding) {
+    return {
+      ranking: null,
+      updatedMs: null,
+      fromPreviousVisit: false,
+      loading: true,
+      refreshing: true,
+      error: false,
+      retrying,
+      retry,
+    };
+  }
+
   return {
     ranking,
     updatedMs,
     fromPreviousVisit,
     loading: ranking == null && !error,
+    refreshing: false,
     error,
     retrying,
     retry,

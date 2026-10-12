@@ -26,8 +26,14 @@ HTMLCanvasElement.prototype.getContext = () => null;
 // jsdom exposes navigator.language = 'en-US'; we pin Spanish so that
 // tests asserting Spanish text don't depend on language detection.
 // (The i18n tests do localStorage.clear() when they need to test it.)
+//
+// The ranking fixtures are dated July 2026, so against the real clock every one
+// of them is "from a previous visit", which `useRanking` holds off screen for a
+// while when online. Reporting offline keeps that wait out of the suites that
+// are not about it; `useRanking.test` and `homePage.swRefresh.test` go online.
 beforeEach(() => {
   localStorage.setItem('app_idioma', 'es');
+  Object.defineProperty(navigator, 'onLine', { configurable: true, get: () => false });
 });
 
 // @testing-library/react 13 calls `act` from react-dom/test-utils, which
