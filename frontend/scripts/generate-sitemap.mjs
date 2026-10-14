@@ -69,13 +69,12 @@ const rutas = [
   ...municipalitiesOf(playas).map((m) => municipalityPath(m)),
   ...nonEmptyLandings(playas).map((l) => `/${l.id}`),
 ];
-const hoy = new Date().toISOString().slice(0, 10);
 
 const sitemap =
   '<?xml version="1.0" encoding="UTF-8"?>\n' +
   '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
   rutas
-    .map((r) => `  <url><loc>${origen}${r}</loc><lastmod>${hoy}</lastmod></url>`)
+    .map((r) => `  <url><loc>${origen}${r}</loc></url>`)
     .join('\n') +
   '\n</urlset>\n';
 

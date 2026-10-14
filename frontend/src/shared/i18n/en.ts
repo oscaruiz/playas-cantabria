@@ -258,7 +258,7 @@ export const en = {
     'What {marca} processes: optional geolocation, local storage, providers and your rights.',
   'seo.tituloMapa': '{region} beach map | {marca}',
   'seo.descMapa': 'Interactive map with every beach in {region} and its status.',
-  'seo.tituloDetalle': '{nombre}: flag, weather and tides today | {marca}',
+  'seo.tituloDetalle': '{nombre} beach ({municipio}): flag, weather and tides today | {marca}',
   'seo.descDetalle': 'Status of {nombre} beach, in {municipio}: current flag, weather, forecast and today\'s tides.',
   'seo.tituloMunicipio': 'Beaches in {municipio}: current conditions | {marca}',
   'seo.descMunicipio': 'The beaches of {municipio}, in {region}, each linking to today\'s flag, weather and tides.',
@@ -288,6 +288,10 @@ export const en = {
   'landing.playas-con-socorrista.intro': 'Beaches in {region} with a registered lifeguard post. Today\'s flag and hours load on each beach\'s page.',
   'landing.playas-para-surf.titulo': 'Surf beaches in {region}',
   'landing.playas-para-surf.intro': 'Beaches flagged for surf in the {region} catalog. Today\'s sea conditions are on each beach\'s page.',
+  'landing.playas-con-perros.titulo': 'Dog-friendly beaches in {region}',
+  'landing.playas-con-perros.intro': 'Beaches in the {region} catalog marked as pet-friendly. Rules and hours can change by season: check with the town council before going.',
+  'landing.playas-nudistas.titulo': 'Nudist beaches in {region}',
+  'landing.playas-nudistas.intro': 'Beaches in the {region} catalog marked as nudist.',
 
   // ---- Attributions required by each source ----
   // AEMET's notice keeps its official Spanish wording: it is the phrase the

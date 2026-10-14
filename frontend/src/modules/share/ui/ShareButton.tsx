@@ -35,7 +35,7 @@ const ShareButton: React.FC<{
   const onPress = async () => {
     if (status === 'generando') return;
     const now = new Date();
-    const title = t('seo.tituloDetalle', { nombre: beach.nombre });
+    const title = t('seo.tituloDetalle', { nombre: beach.nombre, municipio: beach.municipio });
 
     let image: Blob | null = null;
     if (scored) {

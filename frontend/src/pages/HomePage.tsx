@@ -452,8 +452,11 @@ const HomePage: React.FC = () => {
         >
           <BrandLogo />
           <div className="brand-text">
-            <h1 className="hp-sticky-title">{t('app.titulo')}</h1>
-            <p className="hp-sticky-subtitle">{t('home.subtitulo')}</p>
+            {/* The h1 is the subtitle, not the brand: "playas de {region}" is
+                what people search for. Both are fully styled by class, so
+                swapping the tags changes nothing on screen. */}
+            <p className="hp-sticky-title">{t('app.titulo')}</p>
+            <h1 className="hp-sticky-subtitle">{t('home.subtitulo')}</h1>
           </div>
         </div>
         <HeaderActions />

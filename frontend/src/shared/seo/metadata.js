@@ -15,7 +15,7 @@
 'use strict';
 
 const SEO_TEMPLATES = {
-  tituloInicio: '{marca}: la mejor playa para hoy',
+  tituloInicio: 'Playas de {region} hoy: la mejor playa para ir | {marca}',
   descInicio:
     'Compara las playas de {region} ahora mismo: puntuación, bandera, tiempo y previsión para elegir playa hoy.',
   tituloLista: 'Todas las playas de {region} | {marca}',
@@ -23,10 +23,10 @@ const SEO_TEMPLATES = {
     'Listado completo de las playas de {region}, con buscador, distancia, banderas y servicios.',
   tituloMapa: 'Mapa de playas de {region} | {marca}',
   descMapa: 'Mapa interactivo con todas las playas de {region} y su estado.',
-  tituloDetalle: '{nombre}: bandera, tiempo y mareas hoy | {marca}',
+  tituloDetalle: 'Playa de {nombre} ({municipio}): bandera, tiempo y mareas hoy | {marca}',
   descDetalle:
-    'Estado de la playa de {nombre}, en {municipio}: bandera actual, tiempo, previsión y mareas de hoy.',
-  tituloMunicipio: 'Playas de {municipio}: estado actual | {marca}',
+    'Playa de {nombre}, en {municipio}: bandera actual, tiempo, previsión y mareas de hoy, más cómo llegar, parking y servicios.',
+  tituloMunicipio: 'Playas de {municipio}, {region}: estado y servicios | {marca}',
   descMunicipio:
     'Las playas de {municipio}, en {region}, con enlace al estado de hoy de cada una: bandera, tiempo y mareas.',
   tituloAcerca: 'Acerca de y condiciones | {marca}',

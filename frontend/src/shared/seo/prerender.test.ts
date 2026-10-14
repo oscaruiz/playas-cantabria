@@ -36,7 +36,7 @@ describe('scripts/prerender.mjs', () => {
     expect(output).toMatch(/rutas generadas/);
 
     const sheet = readFileSync(join(dir, 'playas', 'suances', 'la-concha', 'index.html'), 'utf8');
-    expect(sheet).toContain('<title>La Concha: bandera, tiempo y mareas hoy | Playucas.es</title>');
+    expect(sheet).toContain('<title>Playa de La Concha (Suances): bandera, tiempo y mareas hoy | Playucas.es</title>');
     expect(sheet).toContain('<h1>Playa de La Concha</h1>');
     expect(sheet).toContain('Suances');
     // Honesty: the static page must not claim live data; it says it loads.
@@ -45,6 +45,25 @@ describe('scripts/prerender.mjs', () => {
     expect(sheet).toContain('/playas/suances/la-concha');
     // Crawlable navigation out of the page.
     expect(sheet).toContain('href="/playas"');
+    // Richer crawlable content: prose, how to get there, nearby beaches.
+    expect(sheet).toContain('La playa de La Concha está en Suances (Cantabria) y mide unos 1000 m de largo y 60 m de ancho.');
+    expect(sheet).toContain('Cómo llegar y aparcar en La Concha');
+    expect(sheet).toContain('No figura como playa apta para perros.');
+    expect(sheet).toContain('Playas cerca de La Concha');
+  });
+
+  it('beach pages carry Beach + BreadcrumbList JSON-LD with only catalog facts', () => {
+    runPrerender(dir);
+    const sheet = readFileSync(join(dir, 'playas', 'suances', 'la-concha', 'index.html'), 'utf8');
+    const match = sheet.match(/<script type="application\/ld\+json">([^<]*)<\/script>/);
+    expect(match).not.toBeNull();
+    const graph = JSON.parse((match as RegExpMatchArray)[1])['@graph'];
+    const beach = graph.find((n: { '@type': string }) => n['@type'] === 'Beach');
+    expect(beach.name).toBe('Playa de La Concha');
+    expect(beach.address.addressLocality).toBe('Suances');
+    expect(beach.url).toMatch(/\/playas\/suances\/la-concha$/);
+    const crumbs = graph.find((n: { '@type': string }) => n['@type'] === 'BreadcrumbList');
+    expect(crumbs.itemListElement).toHaveLength(3);
   });
 
   it('the index and the listing carry links to every beach', () => {
@@ -60,7 +79,7 @@ describe('scripts/prerender.mjs', () => {
 
     // The root index.html is ALSO rewritten (route "/").
     const start = readFileSync(join(dir, 'index.html'), 'utf8');
-    expect(start).toContain('<h1>Playucas.es</h1>');
+    expect(start).toContain('<h1>Playas de Cantabria</h1>');
     expect(start).not.toContain('<div id="root"></div>');
   });
 
@@ -73,7 +92,7 @@ describe('scripts/prerender.mjs', () => {
     expect(start).toContain('html.with-js .prerender{display:none}');
     expect(start.indexOf('with-js')).toBeLessThan(start.indexOf('class="prerender"'));
     // Hidden for the user, still there for whoever parses the HTML.
-    expect(start).toContain('<h1>Playucas.es</h1>');
+    expect(start).toContain('<h1>Playas de Cantabria</h1>');
   });
 
   it('generates municipality and landing pages (Phase 6) from the same selectors', () => {

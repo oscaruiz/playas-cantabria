@@ -87,6 +87,23 @@ const LANDINGS = [
         'Playas del catálogo de {region} señaladas para surf. El estado del mar de hoy se consulta en la ficha de cada playa.',
     },
   },
+  {
+    id: 'playas-con-perros',
+    filtro: (p) => p.atributos?.mascotas === true,
+    textos: {
+      titulo: 'Playas para perros en {region}',
+      intro:
+        'Playas del catálogo de {region} marcadas como aptas para mascotas. Las normas y horarios pueden cambiar según la temporada: confírmalos con el ayuntamiento antes de ir.',
+    },
+  },
+  {
+    id: 'playas-nudistas',
+    filtro: (p) => p.atributos?.nudista === true,
+    textos: {
+      titulo: 'Playas nudistas en {region}',
+      intro: 'Playas del catálogo de {region} marcadas como nudistas.',
+    },
+  },
 ];
 
 /** Landings with at least one beach: empty categories are never published. */

@@ -67,8 +67,12 @@ function escaparHtml(texto) {
     .replace(/"/g, '&quot;');
 }
 
-/** Head tags for a route. Canonical/og:url only when the origin is known. */
-function etiquetasHead(titulo, descripcion, ruta) {
+/**
+ * Head tags for a route. Canonical/og:url and JSON-LD only when the origin is
+ * known: structured data needs absolute URLs. `datos` is a function of the
+ * absolute-URL builder so callers never concatenate the origin themselves.
+ */
+function etiquetasHead(titulo, descripcion, ruta, datos) {
   const t = escaparHtml(titulo);
   const d = escaparHtml(descripcion);
   const lineas = [
@@ -82,8 +86,144 @@ function etiquetasHead(titulo, descripcion, ruta) {
     const url = escaparHtml(`${origen}${ruta}`);
     lineas.push(`<link rel="canonical" href="${url}" />`);
     lineas.push(`<meta property="og:url" content="${url}" />`);
+    if (datos) {
+      // `<` escaped so a catalog string can never close the script tag.
+      const json = JSON.stringify(datos((r) => `${origen}${r}`)).replace(/</g, '\\u003c');
+      lineas.push(`<script type="application/ld+json">${json}</script>`);
+    }
   }
   return lineas.join('\n    ');
+}
+
+function migas(abs, pasos) {
+  return {
+    '@type': 'BreadcrumbList',
+    itemListElement: pasos.map(([nombre, ruta], i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: nombre,
+      item: abs(ruta),
+    })),
+  };
+}
+
+function listaPlayas(abs, lista) {
+  return {
+    '@type': 'ItemList',
+    itemListElement: lista.map((p, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: `Playa de ${p.nombre}`,
+      url: abs(beachPath(p)),
+    })),
+  };
+}
+
+function conContexto(...nodos) {
+  return { '@context': 'https://schema.org', '@graph': nodos };
+}
+
+function datosPlaya(p) {
+  return (abs) =>
+    conContexto(
+      {
+        '@type': 'Beach',
+        name: `Playa de ${p.nombre}`,
+        url: abs(beachPath(p)),
+        geo: { '@type': 'GeoCoordinates', latitude: p.lat, longitude: p.lon },
+        address: {
+          '@type': 'PostalAddress',
+          addressLocality: p.municipio,
+          addressRegion: region.name,
+          addressCountry: 'ES',
+        },
+        // Only attributes the catalog states, true or false; absent = unknown, omitted.
+        amenityFeature: Object.entries(p.atributos ?? {})
+          .filter(([clave, valor]) => typeof valor === 'boolean' && ATTR_LABELS[clave])
+          .map(([clave, valor]) => ({
+            '@type': 'LocationFeatureSpecification',
+            name: ATTR_LABELS[clave],
+            value: valor,
+          })),
+      },
+      migas(abs, [
+        ['Inicio', '/'],
+        [p.municipio, municipalityPath(p.municipio)],
+        [`Playa de ${p.nombre}`, beachPath(p)],
+      ])
+    );
+}
+
+/** Great-circle distance in km (haversine). */
+function distanciaKm(a, b) {
+  const rad = (g) => (g * Math.PI) / 180;
+  const dLat = rad(b.lat - a.lat);
+  const dLon = rad(b.lon - a.lon);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLon / 2) ** 2;
+  return 6371 * 2 * Math.asin(Math.sqrt(h));
+}
+
+function cercanas(p, n = 4) {
+  return playas
+    .filter((o) => o !== p)
+    .map((o) => ({ playa: o, km: distanciaKm(p, o) }))
+    .sort((a, b) => a.km - b.km)
+    .slice(0, n);
+}
+
+/**
+ * One prose sentence built only from catalog facts. Type, sand and access stay
+ * in the lists below: they are free-form catalog text ("Dunas / humedal",
+ * "En coche desde Monte") that does not read as prose once spliced in.
+ */
+function descripcionPlaya(p) {
+  let texto = `La playa de ${p.nombre} está en ${p.municipio} (${region.name})`;
+  if (p.longitud) {
+    texto += ` y mide unos ${p.longitud} m de largo${p.anchura ? ` y ${p.anchura} m de ancho` : ''}`;
+  }
+  return `<p>${escaparHtml(`${texto}.`)}</p>`;
+}
+
+function comoLlegar(p) {
+  const filas = [];
+  if (Array.isArray(p.acceso) && p.acceso.length > 0) filas.push(['Acceso', p.acceso.join(' · ')]);
+  if (p.parkingDescripcion) filas.push(['Parking', p.parkingDescripcion]);
+  if (p.bus) filas.push(['Autobús', p.bus]);
+  filas.push(['Coordenadas', `${p.lat.toFixed(5)}, ${p.lon.toFixed(5)}`]);
+  const mapa = `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lon}`;
+  return `<h2>Cómo llegar y aparcar en ${escaparHtml(p.nombre)}</h2>
+      <ul>
+        ${filas.map(([k, v]) => `<li><strong>${escaparHtml(k)}:</strong> ${escaparHtml(v)}</li>`).join('\n        ')}
+      </ul>
+      <p><a href="${escaparHtml(mapa)}" rel="nofollow noopener">Ver la ruta en Google Maps</a></p>`;
+}
+
+/** Yes/no answers for what people search for; absent attribute = unknown, said nothing. */
+function normasPlaya(p) {
+  const a = p.atributos ?? {};
+  const frases = [];
+  if (a.mascotas === true) frases.push('Figura como apta para perros y otras mascotas.');
+  if (a.mascotas === false) frases.push('No figura como playa apta para perros.');
+  if (a.nudista === true) frases.push('Es una playa nudista.');
+  if (a.surf === true) frases.push('Está señalada como playa para surf.');
+  if (a.accesible === true) frases.push('Está marcada como accesible.');
+  if (a.socorrismo === true) frases.push('Tiene puesto de socorrismo.');
+  if (frases.length === 0) return '';
+  const titulo = typeof a.mascotas === 'boolean' ? '¿Se admiten perros? Normas y servicios' : 'Normas y servicios';
+  return `<h2>${titulo}</h2>
+      <p>${escaparHtml(frases.join(' '))}</p>`;
+}
+
+function enlacesCercanas(p) {
+  return `<h2>Playas cerca de ${escaparHtml(p.nombre)}</h2>
+      <ul>
+        ${cercanas(p)
+          .map(
+            ({ playa, km }) =>
+              `<li><a href="${beachPath(playa)}">Playa de ${escaparHtml(playa.nombre)}</a> (${escaparHtml(playa.municipio)}, a ${km.toFixed(1)} km)</li>`
+          )
+          .join('\n        ')}
+      </ul>`;
 }
 
 /** Static facts of a beach as list items. Only what the catalog states. */
@@ -94,9 +234,7 @@ function hechosPlaya(p) {
   if (p.longitud) {
     filas.push(['Dimensiones', `${p.longitud} m${p.anchura ? ` × ${p.anchura} m` : ''}`]);
   }
-  if (Array.isArray(p.acceso) && p.acceso.length > 0) filas.push(['Acceso', p.acceso.join(' · ')]);
-  if (p.parkingDescripcion) filas.push(['Parking', p.parkingDescripcion]);
-  if (p.bus) filas.push(['Bus', p.bus]);
+  // Access, parking and bus live in comoLlegar(), not repeated here.
   if (p.hospitalDistancia != null) filas.push(['Hospital', `a ${p.hospitalDistancia} km`]);
   return filas
     .map(([k, v]) => `<li><strong>${escaparHtml(k)}:</strong> ${escaparHtml(v)}</li>`)
@@ -135,12 +273,17 @@ function bloqueContenido(interior) {
 function contenidoPlaya(p) {
   return bloqueContenido(
     `<h1>Playa de ${escaparHtml(p.nombre)}</h1>
-      <p>${escaparHtml(p.municipio)} · ${escaparHtml(region.name)}</p>
+      <p><a href="${municipalityPath(p.municipio)}">${escaparHtml(p.municipio)}</a> · ${escaparHtml(region.name)}</p>
+      ${descripcionPlaya(p)}
+      ${AVISO_ESTATICO}
+      <h2>Datos de la playa</h2>
       <ul>
         ${hechosPlaya(p)}
       </ul>
       ${serviciosPlaya(p)}
-      ${AVISO_ESTATICO}`
+      ${comoLlegar(p)}
+      ${normasPlaya(p)}
+      ${enlacesCercanas(p)}`
   );
 }
 
@@ -155,8 +298,13 @@ function contenidoListado() {
 
 function contenidoInicio() {
   return bloqueContenido(
-    `<h1>${escaparHtml(region.branding.appName)}</h1>
-      <p>Compara las playas de ${escaparHtml(region.name)} y elige la mejor para hoy: puntuación, bandera, tiempo y mareas al abrir la aplicación.</p>
+    `<h1>Playas de ${escaparHtml(region.name)}</h1>
+      <p>${escaparHtml(region.branding.appName)} compara las playas de ${escaparHtml(region.name)} y elige la mejor para hoy: puntuación, bandera, tiempo y mareas al abrir la aplicación.</p>
+      <h2>Playas de ${escaparHtml(region.name)} por municipio</h2>
+      <p>${municipalitiesOf(playas)
+        .map((m) => `<a href="${municipalityPath(m)}">${escaparHtml(m)}</a>`)
+        .join(' · ')}</p>
+      <h2>Todas las playas de ${escaparHtml(region.name)}</h2>
       <ul>
         ${enlacesPlayas([...playas].sort((a, b) => a.nombre.localeCompare(b.nombre)))}
       </ul>`
@@ -188,25 +336,25 @@ const OCULTAR_CON_JS =
   '<style>html.with-js .prerender{display:none}</style>';
 
 /** Injects head tags + title + root content into the built template. */
-function paginaHtml(titulo, descripcion, ruta, contenido) {
+function paginaHtml(titulo, descripcion, ruta, contenido, datos) {
   let html = plantilla;
-  const conTitulo = html.replace(/<title>[^<]*<\/title>/, `<title>${escaparHtml(titulo)}</title>`);
+  const conTitulo = html.replace(/<title>[^<]*<\/title>/, () => `<title>${escaparHtml(titulo)}</title>`);
   if (conTitulo === html) {
     throw new Error('la plantilla no tiene <title>');
   }
   html = conTitulo.replace(
     '</head>',
-    `    ${etiquetasHead(titulo, descripcion, ruta)}\n    ${OCULTAR_CON_JS}\n  </head>`
+    () => `    ${etiquetasHead(titulo, descripcion, ruta, datos)}\n    ${OCULTAR_CON_JS}\n  </head>`
   );
-  const conRoot = html.replace('<div id="root"></div>', `<div id="root">${contenido}</div>`);
+  const conRoot = html.replace('<div id="root"></div>', () => `<div id="root">${contenido}</div>`);
   if (conRoot === html) {
     throw new Error('la plantilla no tiene <div id="root"></div> vacío');
   }
   return conRoot;
 }
 
-function escribirRuta(ruta, titulo, descripcion, contenido) {
-  const html = paginaHtml(titulo, descripcion, ruta, contenido);
+function escribirRuta(ruta, titulo, descripcion, contenido, datos) {
+  const html = paginaHtml(titulo, descripcion, ruta, contenido, datos);
   const destino = ruta === '/' ? plantillaHtml : join(rutaBuild, ...ruta.split('/').filter(Boolean), 'index.html');
   mkdirSync(dirname(destino), { recursive: true });
   writeFileSync(destino, html);
@@ -244,9 +392,10 @@ try {
   for (const p of playas) {
     escribirRuta(
       beachPath(p),
-      fillTemplate(SEO_TEMPLATES.tituloDetalle, { ...vars, nombre: p.nombre }),
+      fillTemplate(SEO_TEMPLATES.tituloDetalle, { ...vars, nombre: p.nombre, municipio: p.municipio }),
       fillTemplate(SEO_TEMPLATES.descDetalle, { ...vars, nombre: p.nombre, municipio: p.municipio }),
-      contenidoPlaya(p)
+      contenidoPlaya(p),
+      datosPlaya(p)
     );
     generadas += 1;
   }
@@ -307,7 +456,16 @@ try {
         ${enlacesPlayas(propias)}
       </ul>
       ${AVISO_ESTATICO}`
-      )
+      ),
+      (abs) =>
+        conContexto(
+          migas(abs, [
+            ['Inicio', '/'],
+            ['Municipios', '/municipios'],
+            [`Playas de ${municipio}`, ruta],
+          ]),
+          listaPlayas(abs, propias)
+        )
     );
     generadas += 1;
   }
@@ -327,7 +485,15 @@ try {
       <ul>
         ${enlacesPlayas(propias)}
       </ul>`
-      )
+      ),
+      (abs) =>
+        conContexto(
+          migas(abs, [
+            ['Inicio', '/'],
+            [titulo, `/${landing.id}`],
+          ]),
+          listaPlayas(abs, propias)
+        )
     );
     generadas += 1;
   }

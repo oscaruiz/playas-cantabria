@@ -194,7 +194,7 @@ const BeachDetailPage: React.FC = () => {
           without remounting the Ionic view stack with a client redirect. */}
       {data && (
         <SeoHead
-          title={t('seo.tituloDetalle', { nombre: data.nombre })}
+          title={t('seo.tituloDetalle', { nombre: data.nombre, municipio: data.municipio })}
           description={t('seo.descDetalle', { nombre: data.nombre, municipio: data.municipio })}
           canonicalPath={beachPath(data)}
         />

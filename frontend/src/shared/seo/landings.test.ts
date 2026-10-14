@@ -48,6 +48,18 @@ describe('landing selectors (static catalog data only)', () => {
     expect(filter({})).toBe(false);
   });
 
+  it('dogs and nudist: only the explicit attribute', () => {
+    for (const [id, attr] of [
+      ['playas-con-perros', 'mascotas'],
+      ['playas-nudistas', 'nudista'],
+    ]) {
+      const filter = byId(id).filtro;
+      expect(filter({ atributos: { [attr]: true } })).toBe(true);
+      expect(filter({ atributos: { [attr]: false } })).toBe(false);
+      expect(filter({})).toBe(false);
+    }
+  });
+
   it('there is no families landing: the catalog has no such data', () => {
     expect(
       LANDINGS.find((l: { id: string }) => l.id === 'playas-para-familias')
@@ -60,12 +72,14 @@ describe('empty categories are never published', () => {
     expect(nonEmptyLandings([])).toEqual([]);
   });
 
-  it('in the real catalog of the built region all four have beaches', () => {
+  it('in the real catalog of the built region all six have beaches', () => {
     expect(nonEmptyLandings(catalogoReal).map((l: { id: string }) => l.id)).toEqual([
       'playas-con-webcam',
       'playas-accesibles',
       'playas-con-socorrista',
       'playas-para-surf',
+      'playas-con-perros',
+      'playas-nudistas',
     ]);
   });
 });

@@ -310,6 +310,10 @@ export const es = {
   'landing.playas-con-socorrista.intro': LANDING_TEXTS['playas-con-socorrista'].intro,
   'landing.playas-para-surf.titulo': LANDING_TEXTS['playas-para-surf'].titulo,
   'landing.playas-para-surf.intro': LANDING_TEXTS['playas-para-surf'].intro,
+  'landing.playas-con-perros.titulo': LANDING_TEXTS['playas-con-perros'].titulo,
+  'landing.playas-con-perros.intro': LANDING_TEXTS['playas-con-perros'].intro,
+  'landing.playas-nudistas.titulo': LANDING_TEXTS['playas-nudistas'].titulo,
+  'landing.playas-nudistas.intro': LANDING_TEXTS['playas-nudistas'].intro,
 
   // ---- Atribuciones exigidas por cada fuente ----
   // El `{fuente}` de cada frase es el nombre acreditado, y va enlazado a los
