@@ -39,8 +39,8 @@ function useCase(cache: InMemoryCache) {
 }
 
 describe('GetFeaturedBeaches — caída de insolación AEMET', () => {
-  it('falla el cálculo si no existe un ranking anterior que preservar', async () => {
-    await expect(useCase(new InMemoryCache()).execute()).rejects.toThrow('AEMET unavailable');
+  it('computes an uncorrected ranking when there is no previous one to preserve', async () => {
+    await expect(useCase(new InMemoryCache()).execute()).resolves.toBeDefined();
   });
 
   it('conserva el ranking stale en vez de reemplazarlo por cielos sin corregir', async () => {

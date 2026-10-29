@@ -98,8 +98,10 @@ export class GetFeaturedBeaches {
 
     // If AEMET sunshine is down, reject this refresh so getOrSetStale keeps
     // serving the last corrected ranking instead of replacing all skies with
-    // uncorrected OpenWeather 04d.
-    if (beaches.length > 0) await this.conditions.probeSunshine(beaches[0]);
+    // uncorrected OpenWeather 04d. With no ranking to preserve (cold start, stale
+    // window expired) an uncorrected ranking beats a 500 (29-oct-2026: AEMET 401).
+    const hasRanking = this.cache.peek(this.settings.cacheKey) !== undefined;
+    if (beaches.length > 0 && hasRanking) await this.conditions.probeSunshine(beaches[0]);
 
     const enriched: Array<Awaited<ReturnType<GetFeaturedBeaches['enrichBeach']>> | null> =
       new Array(beaches.length).fill(null);
